@@ -28,6 +28,12 @@ This directory contains the backend.
   from the chapel github repository; the standard library does
   include architecture/os specific chapel code
 
+- license
+
+  the backend is under the Boost Software License Version 1.0
+
+  https://www.boost.org/LICENSE_1_0.txt
+
 - date
 
   Feb, 2023
