@@ -1,0 +1,2 @@
+useAndImport-useExcept1d.chpl:21: In function 'main':
+useAndImport-useExcept1d.chpl:23: error: 'A' undeclared (first use this function)

@@ -1,0 +1,1 @@
+funcPtr5.chpl:5: error: passing iterators by name is not yet supported

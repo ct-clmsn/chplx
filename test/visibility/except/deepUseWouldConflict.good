@@ -1,0 +1,2 @@
+deepUseSetup.chpl:4: error: symbol a is multiply defined
+deepUseSetup.chpl:12: note: also defined here

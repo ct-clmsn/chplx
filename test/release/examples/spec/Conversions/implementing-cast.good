@@ -1,0 +1,2 @@
+x is (intValue = 1) : myInteger
+y is 1 : int(64)

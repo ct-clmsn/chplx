@@ -1,0 +1,1 @@
+dist-assoc-bulkadd.chpl:7: error: incompatible argument(s) or this domain type does not support 'bulkAdd'

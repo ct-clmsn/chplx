@@ -1,0 +1,3 @@
+warning: Ambiguous module source file -- using ./AutoMath.chpl over $CHPL_HOME/modules/standard/AutoMath.chpl
+In my math!
+In my foo2

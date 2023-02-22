@@ -1,0 +1,5 @@
+perfkeys: PUTs:, PUTs:
+files: remote-array-write-access-no-wideopt-no-cache.dat, remote-array-write-access-no-wideopt-cache.dat
+graphkeys: no-cache PUTs, cache PUTs
+ylabel: Count
+graphtitle: remote-array-write-access

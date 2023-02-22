@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+testname=$1
+outfile=$2
+
+# obscure internal module line numbers
+regex='\|CHPL_HOME/modules|s/:[0-9:]*:/:nnnn:/'
+
+head -n 3 $outfile | sed -e "$regex" $tmpfile > $outfile.2
+
+mv $outfile.2 $outfile

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+outfile=$2
+
+sed -e "s:\CTypes\.chpl\:[0-9]*:CTypes\.chpl\:xyz:g" $outfile > $outfile.tmp
+cp $outfile.tmp $outfile

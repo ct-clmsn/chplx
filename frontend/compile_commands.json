@@ -1,0 +1,1392 @@
+[
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++    -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -std=gnu++14 -o CMakeFiles/git-sha-obj.dir/util/git-version.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/git-version.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/git-version.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/immediates/ifa_vars.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/immediates/ifa_vars.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/immediates/ifa_vars.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/immediates/hash_multipliers.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/immediates/hash_multipliers.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/immediates/hash_multipliers.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/immediates/num.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/immediates/num.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/immediates/num.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/parsing/bison-chpl-lib.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/parsing/bison-chpl-lib.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/parsing/bison-chpl-lib.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/parsing/flex-chpl-lib.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/parsing/flex-chpl-lib.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/parsing/flex-chpl-lib.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/parsing/parser-stats.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/parsing/parser-stats.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/parsing/parser-stats.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/parsing/Parser.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/parsing/Parser.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/parsing/Parser.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/parsing/parsing-queries.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/parsing/parsing-queries.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/parsing/parsing-queries.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/compiler-configuration.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/compiler-configuration.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/compiler-configuration.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/Context.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/Context.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/Context.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/ErrorBase.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/ErrorBase.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/ErrorBase.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/error-classes-list.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/error-classes-list.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/error-classes-list.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/ErrorMessage.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/ErrorMessage.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/ErrorMessage.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/ErrorWriter.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/ErrorWriter.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/ErrorWriter.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/ID.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/ID.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/ID.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/Location.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/Location.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/Location.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/framework/UniqueString.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/framework/UniqueString.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/framework/UniqueString.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/Resolver.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/Resolver.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/Resolver.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/call-init-deinit.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/call-init-deinit.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/call-init-deinit.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/can-pass.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/can-pass.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/can-pass.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/signature-checks.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/signature-checks.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/signature-checks.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/copy-elision.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/copy-elision.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/copy-elision.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/default-functions.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/default-functions.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/default-functions.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/disambiguation.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/disambiguation.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/disambiguation.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/InitResolver.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/InitResolver.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/InitResolver.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/intents.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/intents.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/intents.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/prims.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/prims.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/prims.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/resolution-queries.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/resolution-queries.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/resolution-queries.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/resolution-types.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/resolution-types.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/resolution-types.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/return-type-inference.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/return-type-inference.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/return-type-inference.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/scope-queries.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/scope-queries.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/scope-queries.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/scope-types.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/scope-types.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/scope-types.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/split-init.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/split-init.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/split-init.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/resolution/VarScopeVisitor.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/resolution/VarScopeVisitor.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/resolution/VarScopeVisitor.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/AnyType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/AnyType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/AnyType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/BasicClassType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/BasicClassType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/BasicClassType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/BoolType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/BoolType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/BoolType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/BuiltinType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/BuiltinType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/BuiltinType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/CStringType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/CStringType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/CStringType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/ClassType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/ClassType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/ClassType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/ClassTypeDecorator.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/ClassTypeDecorator.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/ClassTypeDecorator.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/ComplexType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/ComplexType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/ComplexType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/CompositeType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/CompositeType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/CompositeType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/EnumType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/EnumType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/EnumType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/ErroneousType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/ErroneousType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/ErroneousType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/ImagType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/ImagType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/ImagType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/IntType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/IntType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/IntType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/NilType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/NilType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/NilType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/NothingType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/NothingType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/NothingType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/Param.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/Param.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/Param.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/PrimitiveType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/PrimitiveType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/PrimitiveType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/QualifiedType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/QualifiedType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/QualifiedType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/RealType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/RealType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/RealType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/RecordType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/RecordType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/RecordType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/TupleType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/TupleType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/TupleType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/Type.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/Type.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/Type.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/TypeTag.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/TypeTag.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/TypeTag.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/UintType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/UintType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/UintType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/UnionType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/UnionType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/UnionType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/UnknownType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/UnknownType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/UnknownType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/types/VoidType.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/types/VoidType.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/types/VoidType.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/AggregateDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/AggregateDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/AggregateDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/AnonFormal.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/AnonFormal.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/AnonFormal.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Array.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Array.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Array.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/AstList.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/AstList.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/AstList.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/AstNode.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/AstNode.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/AstNode.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/AstTag.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/AstTag.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/AstTag.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/As.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/As.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/As.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Attributes.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Attributes.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Attributes.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Begin.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Begin.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Begin.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Block.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Block.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Block.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/BoolLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/BoolLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/BoolLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/BracketLoop.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/BracketLoop.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/BracketLoop.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Break.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Break.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Break.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Builder.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Builder.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Builder.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/BuilderResult.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/BuilderResult.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/BuilderResult.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/BytesLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/BytesLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/BytesLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Call.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Call.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Call.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Catch.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Catch.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Catch.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/chpl-syntax-printer.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/chpl-syntax-printer.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/chpl-syntax-printer.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Class.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Class.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Class.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Cobegin.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Cobegin.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Cobegin.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Coforall.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Coforall.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Coforall.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Comment.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Comment.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Comment.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Conditional.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Conditional.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Conditional.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Continue.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Continue.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Continue.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/CStringLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/CStringLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/CStringLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Decl.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Decl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Decl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Defer.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Defer.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Defer.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Delete.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Delete.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Delete.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Domain.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Domain.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Domain.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Dot.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Dot.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Dot.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/DoWhile.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/DoWhile.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/DoWhile.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/EmptyStmt.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/EmptyStmt.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/EmptyStmt.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Enum.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Enum.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Enum.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/EnumElement.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/EnumElement.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/EnumElement.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/ErroneousExpression.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/ErroneousExpression.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/ErroneousExpression.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/ExternBlock.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/ExternBlock.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/ExternBlock.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/FnCall.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/FnCall.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/FnCall.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/For.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/For.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/For.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Forall.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Forall.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Forall.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Foreach.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Foreach.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Foreach.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Formal.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Formal.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Formal.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/ForwardingDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/ForwardingDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/ForwardingDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Function.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Function.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Function.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/FunctionSignature.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/FunctionSignature.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/FunctionSignature.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Identifier.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Identifier.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Identifier.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/ImagLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/ImagLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/ImagLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Implements.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Implements.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Implements.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Import.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Import.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Import.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Include.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Include.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Include.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/IndexableLoop.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/IndexableLoop.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/IndexableLoop.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/IntLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/IntLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/IntLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Interface.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Interface.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Interface.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Label.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Label.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Label.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Let.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Let.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Let.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Literal.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Literal.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Literal.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Local.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Local.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Local.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Loop.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Loop.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Loop.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Manage.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Manage.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Manage.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Module.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Module.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Module.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/MultiDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/MultiDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/MultiDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/NamedDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/NamedDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/NamedDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/New.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/New.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/New.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/NumericLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/NumericLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/NumericLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/On.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/On.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/On.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/OpCall.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/OpCall.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/OpCall.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/post-parse-checks.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/post-parse-checks.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/post-parse-checks.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Pragma.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Pragma.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Pragma.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/PrimCall.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/PrimCall.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/PrimCall.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/PrimOp.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/PrimOp.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/PrimOp.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Qualifier.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Qualifier.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Qualifier.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Range.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Range.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Range.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/RealLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/RealLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/RealLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Record.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Record.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Record.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Reduce.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Reduce.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Reduce.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/ReduceIntent.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/ReduceIntent.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/ReduceIntent.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Require.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Require.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Require.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Return.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Return.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Return.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Scan.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Scan.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Scan.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Select.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Select.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Select.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Serial.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Serial.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Serial.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/SimpleBlockLike.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/SimpleBlockLike.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/SimpleBlockLike.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/StringLikeLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/StringLikeLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/StringLikeLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/StringLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/StringLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/StringLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Sync.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Sync.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Sync.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/TaskVar.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/TaskVar.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/TaskVar.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Throw.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Throw.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Throw.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Try.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Try.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Try.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Tuple.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Tuple.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Tuple.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/TupleDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/TupleDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/TupleDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/TypeDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/TypeDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/TypeDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/TypeQuery.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/TypeQuery.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/TypeQuery.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/UintLiteral.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/UintLiteral.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/UintLiteral.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Use.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Use.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Use.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Union.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Union.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Union.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/VarArgFormal.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/VarArgFormal.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/VarArgFormal.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Variable.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Variable.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Variable.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/VarLikeDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/VarLikeDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/VarLikeDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/VisibilityClause.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/VisibilityClause.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/VisibilityClause.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/When.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/When.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/When.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/While.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/While.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/While.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/WithClause.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/WithClause.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/WithClause.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Yield.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Yield.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Yield.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/uast/Zip.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/uast/Zip.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/uast/Zip.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -std=gnu11 -o CMakeFiles/ChplFrontend-obj.dir/util/my_aligned_alloc.c.o -c /Users/ctaylor/git/chapel/frontend/lib/util/my_aligned_alloc.c",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/my_aligned_alloc.c"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -std=gnu11 -o CMakeFiles/ChplFrontend-obj.dir/util/my_strerror_r.c.o -c /Users/ctaylor/git/chapel/frontend/lib/util/my_strerror_r.c",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/my_strerror_r.c"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/assertions.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/assertions.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/assertions.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/bitmap.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/bitmap.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/bitmap.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/break.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/break.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/break.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/chplenv.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/chplenv.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/chplenv.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/filesystem.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/filesystem.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/filesystem.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/printf.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/printf.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/printf.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/string-escapes.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/string-escapes.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/string-escapes.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/subprocess.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/subprocess.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/subprocess.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/terminal.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/terminal.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/terminal.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/lib",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/lib  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -fPIC -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/ChplFrontend-obj.dir/util/version-info.cpp.o -c /Users/ctaylor/git/chapel/frontend/lib/util/version-info.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/lib/util/version-info.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/util/linters",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++    -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/fieldsUsed.dir/fieldsUsed.cpp.o -c /Users/ctaylor/git/chapel/frontend/util/linters/fieldsUsed.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/util/linters/fieldsUsed.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/tests-common.dir/test-common.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/test-common.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/test-common.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/tests-common.dir/test-parsing.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/test-parsing.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/test-parsing.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/opt/homebrew/opt/llvm@15/include -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/tests-common.dir/test-resolution.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/test-resolution.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/test-resolution.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/framework",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testRecursionFails.dir/testRecursionFails.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/framework/testRecursionFails.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/framework/testRecursionFails.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/framework",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testDependencies.dir/testDependencies.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/framework/testDependencies.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/framework/testDependencies.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/framework",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testIds.dir/testIds.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/framework/testIds.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/framework/testIds.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/framework",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testUniqueString.dir/testUniqueString.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/framework/testUniqueString.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/framework/testUniqueString.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParsingQueries.dir/testParsingQueries.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParsingQueries.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParsingQueries.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParse.dir/testParse.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParse.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParse.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseAggregate.dir/testParseAggregate.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseAggregate.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseAggregate.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseArrayDomainRange.dir/testParseArrayDomainRange.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseArrayDomainRange.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseArrayDomainRange.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseAttributes.dir/testParseAttributes.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseAttributes.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseAttributes.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseBegin.dir/testParseBegin.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseBegin.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseBegin.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseBracketLoop.dir/testParseBracketLoop.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseBracketLoop.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseBracketLoop.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseChecks.dir/testParseChecks.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseChecks.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseChecks.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseCobegin.dir/testParseCobegin.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseCobegin.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseCobegin.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseConditional.dir/testParseConditional.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseConditional.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseConditional.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseCoforall.dir/testParseCoforall.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseCoforall.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseCoforall.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseComments.dir/testParseComments.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseComments.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseComments.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseDefer.dir/testParseDefer.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseDefer.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseDefer.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseDelete.dir/testParseDelete.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseDelete.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseDelete.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseDoWhile.dir/testParseDoWhile.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseDoWhile.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseDoWhile.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseEnums.dir/testParseEnums.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseEnums.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseEnums.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseFor.dir/testParseFor.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseFor.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseFor.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseForall.dir/testParseForall.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseForall.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseForall.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseForeach.dir/testParseForeach.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseForeach.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseForeach.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseForwardingDecl.dir/testParseForwardingDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseForwardingDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseForwardingDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseFunctions.dir/testParseFunctions.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseFunctions.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseFunctions.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseImport.dir/testParseImport.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseImport.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseImport.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseInclude.dir/testParseInclude.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseInclude.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseInclude.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseInterface.dir/testParseInterface.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseInterface.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseInterface.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseLabelContinueBreak.dir/testParseLabelContinueBreak.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseLabelContinueBreak.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseLabelContinueBreak.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseLocal.dir/testParseLocal.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseLocal.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseLocal.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseModuleInclude.dir/testParseModuleInclude.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseModuleInclude.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseModuleInclude.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseModules.dir/testParseModules.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseModules.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseModules.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseMultiVar.dir/testParseMultiVar.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseMultiVar.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseMultiVar.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseNew.dir/testParseNew.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseNew.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseNew.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseNumericLiterals.dir/testParseNumericLiterals.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseNumericLiterals.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseNumericLiterals.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseOn.dir/testParseOn.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseOn.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseOn.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseReturn.dir/testParseReturn.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseReturn.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseReturn.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseSelect.dir/testParseSelect.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseSelect.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseSelect.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseSerial.dir/testParseSerial.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseSerial.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseSerial.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseStringBytesLiterals.dir/testParseStringBytesLiterals.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseStringBytesLiterals.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseStringBytesLiterals.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseSync.dir/testParseSync.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseSync.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseSync.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseTryCatchThrow.dir/testParseTryCatchThrow.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseTryCatchThrow.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseTryCatchThrow.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseTupleVar.dir/testParseTupleVar.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseTupleVar.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseTupleVar.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseUse.dir/testParseUse.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseUse.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseUse.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseVariables.dir/testParseVariables.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseVariables.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseVariables.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseWhile.dir/testParseWhile.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseWhile.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseWhile.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseYield.dir/testParseYield.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseYield.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseYield.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/parsing",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParseEmptyStmt.dir/testParseEmptyStmt.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/parsing/testParseEmptyStmt.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/parsing/testParseEmptyStmt.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testCallInitDeinit.dir/testCallInitDeinit.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testCallInitDeinit.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testCallInitDeinit.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testCanPass.dir/testCanPass.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testCanPass.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testCanPass.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testClasses.dir/testClasses.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testClasses.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testClasses.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testCopyElision.dir/testCopyElision.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testCopyElision.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testCopyElision.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testDisambiguation.dir/testDisambiguation.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testDisambiguation.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testDisambiguation.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testEnums.dir/testEnums.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testEnums.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testEnums.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testErrorGuard.dir/testErrorGuard.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testErrorGuard.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testErrorGuard.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testErrors.dir/testErrors.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testErrors.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testErrors.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testFieldAccess.dir/testFieldAccess.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testFieldAccess.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testFieldAccess.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testFindDecl.dir/testFindDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testFindDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testFindDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testFunctionCalls.dir/testFunctionCalls.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testFunctionCalls.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testFunctionCalls.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testGenericDefaults.dir/testGenericDefaults.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testGenericDefaults.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testGenericDefaults.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testIf.dir/testIf.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testIf.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testIf.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testInitSemantics.dir/testInitSemantics.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testInitSemantics.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testInitSemantics.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testInteractive.dir/testInteractive.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testInteractive.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testInteractive.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testLocation.dir/testLocation.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testLocation.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testLocation.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testLoopIndexVars.dir/testLoopIndexVars.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testLoopIndexVars.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testLoopIndexVars.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testMethodCalls.dir/testMethodCalls.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testMethodCalls.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testMethodCalls.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testMultiDecl.dir/testMultiDecl.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testMultiDecl.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testMultiDecl.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testNew.dir/testNew.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testNew.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testNew.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testOperatorOverloads.dir/testOperatorOverloads.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testOperatorOverloads.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testOperatorOverloads.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParamFolding.dir/testParamFolding.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testParamFolding.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testParamFolding.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParamIf.dir/testParamIf.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testParamIf.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testParamIf.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testParams.dir/testParams.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testParams.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testParams.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testPoi.dir/testPoi.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testPoi.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testPoi.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testProcThis.dir/testProcThis.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testProcThis.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testProcThis.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testRanges.dir/testRanges.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testRanges.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testRanges.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testResolve.dir/testResolve.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testResolve.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testResolve.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testReturnTypes.dir/testReturnTypes.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testReturnTypes.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testReturnTypes.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testScopeResolve.dir/testScopeResolve.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testScopeResolve.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testScopeResolve.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testSplitInit.dir/testSplitInit.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testSplitInit.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testSplitInit.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testTaskIntents.dir/testTaskIntents.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testTaskIntents.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testTaskIntents.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testTuples.dir/testTuples.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testTuples.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testTuples.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testTypeAndInit.dir/testTypeAndInit.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testTypeAndInit.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testTypeAndInit.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testTypeConstruction.dir/testTypeConstruction.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testTypeConstruction.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testTypeConstruction.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testTypeOperators.dir/testTypeOperators.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testTypeOperators.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testTypeOperators.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testTypeQueries.dir/testTypeQueries.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testTypeQueries.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testTypeQueries.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/resolution",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testVarArgs.dir/testVarArgs.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/resolution/testVarArgs.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/resolution/testVarArgs.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/uast",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testBuildIDs.dir/testBuildIDs.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/uast/testBuildIDs.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/uast/testBuildIDs.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/uast",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testConsistentEnums.dir/testConsistentEnums.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/uast/testConsistentEnums.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/uast/testConsistentEnums.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/uast",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testVisit.dir/testVisit.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/uast/testVisit.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/uast/testVisit.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/uast",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testStringify.dir/testStringify.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/uast/testStringify.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/uast/testStringify.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/util",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testIteratorAdapters.dir/testIteratorAdapters.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/util/testIteratorAdapters.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/util/testIteratorAdapters.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/util",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testLLVMsupport.dir/testLLVMsupport.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/util/testLLVMsupport.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/util/testLLVMsupport.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/util",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testQueryTimingAndTrace.dir/testQueryTimingAndTrace.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/util/testQueryTimingAndTrace.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/util/testQueryTimingAndTrace.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/util",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testQuoteStrings.dir/testQuoteStrings.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/util/testQuoteStrings.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/util/testQuoteStrings.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/util",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testSubprocess.dir/testSubprocess.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/util/testSubprocess.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/util/testSubprocess.cpp"
+},
+{
+  "directory": "/Users/ctaylor/git/chapel/frontend/frontend/test/util",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/c++  -I/Users/ctaylor/git/chapel/frontend/include -I/Users/ctaylor/git/chapel/frontend/frontend/include -I/Users/ctaylor/git/chapel/frontend/test -I/opt/homebrew/opt/llvm@15/include  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -I/opt/homebrew/include -std=gnu++14 -o CMakeFiles/testAssertions.dir/testAssertions.cpp.o -c /Users/ctaylor/git/chapel/frontend/test/util/testAssertions.cpp",
+  "file": "/Users/ctaylor/git/chapel/frontend/test/util/testAssertions.cpp"
+}
+]

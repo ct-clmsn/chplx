@@ -1,0 +1,16 @@
+atomic int(64)
+1
+atomic uint(64)
+2
+atomic int(8)
+3
+atomic int(64)
+4
+atomic real(64)
+1.0
+atomic real(32)
+2.0
+atomic real(64)
+3.0
+atomic bool
+true

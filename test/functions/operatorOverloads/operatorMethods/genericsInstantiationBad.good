@@ -1,0 +1,9 @@
+genericsInstantiationBad.chpl:N: In function 'main':
+genericsInstantiationBad.chpl:N: error: unresolved call '==(Foo(int(64)), Foo(real(64)))'
+$CHPL_HOME/modules/internal/ChapelBase.chpl:N: note: this candidate did not match: ==(a: _nilType, b: _nilType)
+genericsInstantiationBad.chpl:N: note: because actual argument #1 with type 'Foo(int(64))'
+$CHPL_HOME/modules/internal/ChapelBase.chpl:N: note: is passed to formal 'a: nil'
+genericsInstantiationBad.chpl:N: note: other candidates are:
+$CHPL_HOME/modules/internal/ChapelBase.chpl:N: note:   ==(a: bool, b: bool)
+$CHPL_HOME/modules/internal/ChapelBase.chpl:N: note:   ==(a: borrowed object?, b: borrowed object?)
+note: and N other candidates, use --print-all-candidates to see them

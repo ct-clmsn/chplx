@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+
+
+myfile = os.path.basename(__file__)
+
+perftest = ''
+(base,suffix) = myfile.split('.')
+if suffix != "compopts":
+  perftest = base
+
+do_llvm = os.getenv('CHPL_TARGET_COMPILER', 'none') == 'llvm'
+do_cache = os.getenv('CHPL_SANITIZE_EXE') == 'none'
+
+basecompopts='--fast '
+
+commutil = os.path.join(os.path.dirname(__file__), 'CommUtil.chpl')
+if not os.path.exists(commutil):
+  basecompopts += '-M ../ '
+
+
+def f(options, configname):
+  s = basecompopts + options
+  if perftest != '':
+    s += ' # ' + perftest + '-' + configname
+  print(s)
+
+# Include this argument to print out an error if a passed maximum count
+# is not attained. Note that the perf testing only reports on counts
+# where the maximum is not passed.
+checkMaxAttained=' -scheckMaxAttained=true'
+
+
+# Test combinations of wide-opt and remote cache
+
+f('--no-llvm-wide-opt --no-cache-remote ' + checkMaxAttained, 'no-wideopt-no-cache')
+if do_cache:
+    f('--no-llvm-wide-opt --cache-remote', 'no-wideopt-cache')
+
+if do_llvm:
+  f('--llvm-wide-opt --no-cache-remote', 'wideopt-no-cache')
+  if do_cache:
+    f('--llvm-wide-opt --cache-remote', 'wideopt-cache')

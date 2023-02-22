@@ -1,0 +1,8 @@
+warning: The prototype GPU support implies --no-checks. This may impact debuggability. To suppress this warning, compile with --no-checks explicitly
+1 1 1 1 1 1 1 1 1 1
+2 2 2 2 2 2 2 2 2 2
+3 3 3 3 3 3 3 3 3 3
+32 32 32 32 32 32 32 32 32 32
+103 103 103 103 103 103 103 103 103 103
+109 109 109 109 109 109 109 109 109 109
+110 110 110 110 110 110 110 110 110 110

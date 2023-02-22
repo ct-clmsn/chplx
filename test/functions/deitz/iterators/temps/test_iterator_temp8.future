@@ -1,0 +1,18 @@
+error message: Incorrect error message when zippering in a tuple with an array
+
+The original intent of this test was to test nested zippered
+iteration, which is not something we support any more.  The test was
+updated incorrectly.
+
+The current error message states that we are trying to zipper a
+heterogeneous tuple, but that is incorrect.
+
+
+In this example:
+
+  for ij in zip((i1(), i2()), i1()) do
+    writeln(ij);
+
+the first tuple (i1(), i2()) is a tuple of arrays, yet their types are
+represented by the iterator record, so that the test for homogenous
+tuple fails during function resolution.

@@ -1,0 +1,4 @@
+0: test-memLog.chpl:10: allocate <BYTES> of C at <ADDR>
+0: test-memLog.chpl:11: free at <ADDR>
+1: test-memLog.chpl:10: allocate <BYTES> of C at <ADDR>
+1: test-memLog.chpl:11: free at <ADDR>

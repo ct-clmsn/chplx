@@ -1,0 +1,13 @@
+
+[A]
+
+[A.B]
+job = "programmer"
+name = "sam"
+number = 7
+
+[A.C]
+job = "programmer"
+name = "Ben"
+
+

@@ -1,0 +1,15 @@
+init (default)
+block ending
+deinit 0
+init (default)
+init= 0
+(x = 0)
+block ending
+deinit 0
+deinit 0
+init (default)
+returning
+deinit 0
+init (default)
+block ending
+deinit 0

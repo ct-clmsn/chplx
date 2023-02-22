@@ -1,0 +1,2 @@
+created {x = 1}
+defer action: deleting {x = 1}

@@ -1,0 +1,50 @@
+
+Start analyzing forall (preventMultiCallIter.chpl:35)
+| Couldn't determine loop domain: will attempt dynamic optimizations only (preventMultiCallIter.chpl:35)
+|
+|  Start analyzing call (preventMultiCallIter.chpl:36)
+|  This call is a dynamic optimization candidate (preventMultiCallIter.chpl:36)
+|
+|  Start analyzing call (preventMultiCallIter.chpl:37)
+|  This call is a dynamic optimization candidate (preventMultiCallIter.chpl:37)
+|
+|  Start analyzing call (preventMultiCallIter.chpl:38)
+|  This call is a dynamic optimization candidate (preventMultiCallIter.chpl:38)
+|
+End analyzing forall (preventMultiCallIter.chpl:35)
+
+Local access attempt reverted. All static checks failed or code is unreachable.(preventMultiCallIter.chpl:36)
+Local access attempt reverted. All static checks failed or code is unreachable.(preventMultiCallIter.chpl:37)
+Local access attempt reverted. All static checks failed or code is unreachable.(preventMultiCallIter.chpl:38)
+standalone iterator invoked
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+default _array accessor was called
+3 3 3 3 3 3 3 3 3 3

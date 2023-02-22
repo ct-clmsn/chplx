@@ -1,0 +1,4 @@
+Aggregation helper files/implementation
+
+Contains some simplified versions of histo/indexgather to help with performance
+tuning/optimizations, but aren't run as part of nightly testing.

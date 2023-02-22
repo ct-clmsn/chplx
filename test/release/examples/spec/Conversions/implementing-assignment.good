@@ -1,0 +1,4 @@
+a is (intValue = 1) : myInteger
+b is (intValue = 2) : myInteger
+c is (intValue = 3) : myInteger
+d is (intValue = 4) : myInteger

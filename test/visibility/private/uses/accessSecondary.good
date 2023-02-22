@@ -1,0 +1,2 @@
+accessSecondary.chpl:8: error: unresolved call 'Foo.other()'
+accessSecondary.chpl:8: note: because no functions named other found in scope

@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+testname=$1
+outfile=$2
+sort $outfile > $outfile.2
+mv $outfile.2 $outfile

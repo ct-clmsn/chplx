@@ -1,0 +1,2 @@
+in generic MyNode.foo()
+in specific MyNode(int).foo()

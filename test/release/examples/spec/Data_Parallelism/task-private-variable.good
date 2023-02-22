@@ -1,0 +1,10 @@
+shadow var: 0  yield: after coforall
+shadow var: 0  yield: after coforall
+shadow var: 0  yield: before coforall
+shadow var: 0  yield: before coforall
+shadow var: 1  yield: inside coforall
+shadow var: 1  yield: inside coforall
+shadow var: 2  yield: inside coforall
+shadow var: 2  yield: inside coforall
+shadow var: 3  yield: inside coforall
+shadow var: 3  yield: inside coforall

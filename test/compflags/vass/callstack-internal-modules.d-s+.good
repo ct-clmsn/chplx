@@ -1,0 +1,4 @@
+callstack-internal-modules.chpl:27: In function 'foo':
+callstack-internal-modules.chpl:28: error: Unsupported atomic type: string
+  callstack-internal-modules.chpl:24: called as foo() from function 'bar'
+  callstack-internal-modules.chpl:20: called as bar() from function 'main'

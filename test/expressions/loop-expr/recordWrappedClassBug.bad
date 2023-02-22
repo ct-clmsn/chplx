@@ -1,0 +1,1 @@
+recordWrappedClassBug.chpl:15: error: const actual is passed to a 'ref' formal of chpl__initCopy()

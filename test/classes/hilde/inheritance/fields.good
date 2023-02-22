@@ -1,0 +1,2 @@
+fields.chpl:22: error: Derived.sbName override keyword required for method matching signature of superclass method
+fields.chpl:16: error: Derived.field override keyword required for method matching signature of superclass method

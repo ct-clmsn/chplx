@@ -1,0 +1,5 @@
+perfkeys: GETs:, GETs:
+files: array-assign-get-no-wideopt-no-cache.dat, array-assign-get-no-wideopt-cache.dat
+graphkeys: no-cache GETs, cache GETs
+ylabel: Count
+graphtitle: array-assign-get

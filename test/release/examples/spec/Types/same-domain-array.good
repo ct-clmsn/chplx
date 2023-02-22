@@ -1,0 +1,6 @@
+A.domain {1..4}
+A 1 2 3 4
+B.domain {1..4}
+B 0 0 0 0
+C.domain {1..4}
+C 0 0 0 0

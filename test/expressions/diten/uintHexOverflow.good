@@ -1,0 +1,1 @@
+uintHexOverflow.chpl:1: syntax error: integer literal overflow: '0x10000000000000000' is too big for a 64-bit unsigned integer

@@ -1,0 +1,14 @@
+bug: function-scoped enum can't be initialized with global param
+#7681
+
+In the following code:
+
+    enumScopeTest();
+    param x = 2;
+    proc enumScopeTest() {
+      enum Numbers {one=x, two, three};
+      writeln(Numbers.one);
+    }
+
+the enum constant 'one' gets initialized to 'x' before 'x' gets resolved.
+Should this work?

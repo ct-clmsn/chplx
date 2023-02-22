@@ -1,0 +1,4 @@
+1
+2
+3
+thisMethod.chpl:9: error: halt reached - ThreeArray index out of bounds: 4

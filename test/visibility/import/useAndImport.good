@@ -1,0 +1,2 @@
+useAndImport.chpl:19: In function 'main':
+useAndImport.chpl:21: error: 'A' undeclared (first use this function)

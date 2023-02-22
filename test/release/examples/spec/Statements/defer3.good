@@ -1,0 +1,6 @@
+created {x = 1}
+{x = 1}
+defer action: deleting {x = 1}
+created {x = 2}
+{x = 2}
+defer action: deleting {x = 2}

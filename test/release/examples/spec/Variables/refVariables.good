@@ -1,0 +1,5 @@
+refInt = 62
+myInt = 73
+refToExpr = 62
+myArr[3] = 73
+myConstRef = 52

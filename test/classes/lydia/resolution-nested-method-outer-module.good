@@ -1,0 +1,4 @@
+resolution-nested-method-outer-module.chpl:12: In function 'modifyIt':
+resolution-nested-method-outer-module.chpl:17: error: ambiguous call 'foo.bar()'
+resolution-nested-method-outer-module.chpl:5: note: candidates are: foo.bar()
+resolution-nested-method-outer-module.chpl:18: note:                 foo.bar()

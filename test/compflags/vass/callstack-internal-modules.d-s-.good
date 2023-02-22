@@ -1,0 +1,2 @@
+callstack-internal-modules.chpl:27: In function 'foo':
+callstack-internal-modules.chpl:28: error: Unsupported atomic type: string

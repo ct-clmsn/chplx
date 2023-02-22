@@ -1,0 +1,2 @@
+overloaded.chpl:10: error: field 'covered' has same name as parent class field
+overloaded.chpl:2: note: parent class field declared here

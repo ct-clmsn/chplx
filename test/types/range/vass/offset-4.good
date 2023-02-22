@@ -1,0 +1,1 @@
+offset-4.chpl:3: error: can't invoke 'offset' on an unstrided range with no low bound

@@ -1,0 +1,6 @@
+perfkeys: total time (front end), total time (middle end), total time (back end)
+
+repeat-files: compilerPerformance.dat
+
+graphtitle: Average Compilation Time Per Pass Group
+ylabel: Time (seconds)

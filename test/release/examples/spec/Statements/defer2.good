@@ -1,0 +1,5 @@
+before inner block
+created {x = 1}
+in inner block
+defer action: deleting {x = 1}
+after inner block

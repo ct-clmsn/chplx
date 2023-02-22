@@ -1,0 +1,2 @@
+day18-retNil2.chpl:5: In function 'nilOrNot':
+day18-retNil2.chpl:9: error: could not coerce a value of type 'nil' to type 'C?'

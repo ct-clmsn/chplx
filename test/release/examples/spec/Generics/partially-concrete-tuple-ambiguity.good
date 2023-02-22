@@ -1,0 +1,1 @@
+partially-concrete-tuple-ambiguity.chpl:5: error: ambiguous call 'f(2*real(64))'

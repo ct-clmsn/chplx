@@ -1,0 +1,2 @@
+$CHPL_HOME/modules/internal/Atomics.chpl:nnnn: In function 'chpl__atomicType':
+$CHPL_HOME/modules/internal/Atomics.chpl:nnnn: error: Unsupported atomic type: string

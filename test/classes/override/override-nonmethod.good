@@ -1,0 +1,2 @@
+override-nonmethod.chpl:3: In method 'Y':
+override-nonmethod.chpl:10: error: 'override' cannot be applied to non-method 'Z'

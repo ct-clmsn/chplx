@@ -1,0 +1,149 @@
+#!/usr/bin/env perl
+
+use File::Temp qw/ tempdir /;
+use File::Path qw/ mkpath /;
+use Cwd qw/ realpath /;
+
+#$TMP = shift @ARGV;
+
+$ORIG_CHPL_HOME = $ENV{"CHPL_HOME"};
+$BINSUBDIR=`$ORIG_CHPL_HOME/util/chplenv/chpl_bin_subdir.py --host`;
+chomp $BINSUBDIR;
+
+$ORIG_CHPL = "$ORIG_CHPL_HOME/bin/$BINSUBDIR/chpl";
+
+$ORIG_CWD = $ENV{"PWD"};
+
+$ORIG_PATH = $ENV{"PATH"};
+$TMP = tempdir( CLEANUP => 1 );
+
+
+$HOME = "$TMP/chplhome";
+$HOME2 = "$TMP/chplhome2";
+$HOME3 = "$TMP/chplhome3";
+$HOMEBIN = "$TMP/chplhome/bin/$BINSUBDIR";
+$HOME2BIN = "$TMP/chplhome2/bin/$BINSUBDIR";
+$HOME3BIN = "$TMP/chplhome3/bin/$BINSUBDIR";
+$HOMELINK = "$TMP/linktohome";
+$HOMELINKBIN = "$TMP/linktohome/bin/$BINSUBDIR";
+$HOMELINKLIB = "$TMP/linktohome/lib";
+$BIN = "$TMP/bin";
+$BINLINK = "$TMP/linktobin";
+$TMPOUT = "$TMP/cmdout";
+$TMPERR = "$TMP/cmderr";
+
+mkpath($HOME);
+mkpath($HOME2);
+mkpath($HOME3);
+mkpath($HOMEBIN);
+mkpath($HOME2BIN);
+mkpath($HOME3BIN);
+mkpath($BIN);
+
+# Copy util dir because that's what the compiler will check for
+0 == system("cp -R $ORIG_CHPL_HOME/util $HOME") or die "could not cp -R $ORIG_CHPL_HOME/util $HOME";
+0 == system("cp -R $ORIG_CHPL_HOME/util $HOME2") or die "could not cp -R $ORIG_CHPL_HOME/util $HOME2";
+symlink("$ORIG_CHPL_HOME/make", "$HOME/make");
+symlink("$ORIG_CHPL_HOME/make", "$HOME2/make");
+symlink("$ORIG_CHPL_HOME/lib", "$HOME/lib");
+symlink("$ORIG_CHPL_HOME/lib", "$HOME2/lib");
+symlink("$ORIG_CHPL_HOME/lib", "$HOME3/lib");
+symlink("$ORIG_CHPL_HOME/third-party", "$HOME/third-party");
+symlink("$ORIG_CHPL_HOME/third-party", "$HOME2/third-party");
+
+0 == system("cp -R $ORIG_CHPL $HOMEBIN") or die "could not cp -R $ORIG_CHPL $HOMEBIN";
+0 == system("cp -R $ORIG_CHPL $HOME2BIN") or die "could not cp -R $ORIG_CHPL $HOME2BIN";
+0 == system("cp -R $ORIG_CHPL $HOME3BIN") or die "could not cp -R $ORIG_CHPL $HOME3BIN";
+0 == system("cp -R $ORIG_CHPL $BIN") or die "could not cp -R $ORIG_CHPL $BIN";
+# Set up some symlinks for testing.
+symlink($HOME,$HOMELINK);
+symlink($BIN,$BINLINK);
+
+# Check these combinations:
+# 0 CHPL_HOME includes bin we ran
+check("0a", $HOME, $HOMEBIN, "chpl", $HOME, "$HOMEBIN/chpl", "");
+check("0b", $HOMELINK, $HOMEBIN, "chpl", $HOMELINK, "$HOMEBIN/chpl", "");
+check("0c", $HOME, $HOMELINKBIN, "chpl", $HOME, "$HOMEBIN/chpl", "");
+check("0d", $HOMELINK, $HOMELINKBIN, "chpl", $HOMELINK, "$HOMEBIN/chpl", "");
+check("0e", $HOME, $HOMEBIN, "$HOMEBIN/chpl", $HOME, "$HOMEBIN/chpl", "");
+chdir $HOMEBIN;
+check("0f", $HOME, "", "./chpl", $HOME, "$HOMEBIN/chpl", "");
+chdir $ORIG_CWD;
+
+# 1 CHPL_HOME and PATH_TO_BIN mismatched
+check("1a", $HOME, $HOME2BIN, "chpl", $HOME, "$HOME2BIN/chpl", "mismatch");
+
+# 2 CHPL_HOME is not really a CHPL_HOME
+check("2a", $HOME3, $HOME3BIN, "chpl", "", "", "not a");
+
+# 4 no CHPL_HOME set but can figure it out from PATH_TO_BIN
+check("3a", "", $HOMEBIN, "chpl", $HOME, "$HOMEBIN/chpl", "");
+check("3b", "", $HOME2BIN, "chpl", $HOME2, "$HOME2BIN/chpl", "");
+check("3c", "", $HOMELINKBIN, "chpl", $HOME, "$HOMEBIN/chpl", "");
+check("3d", "", $HOMEBIN, "$HOMEBIN/chpl", $HOME, "$HOMEBIN/chpl", "");
+chdir $HOMEBIN;
+check("3e", "", "", "./chpl", $HOME, "$HOMEBIN/chpl", "");
+chdir $ORIG_CWD;
+
+
+sub check {
+  my $name = shift;
+  my $sethome = shift;
+  my $setpath = shift;
+  my $exe = shift;
+  my $expecthome = shift;
+  my $expectexe = shift;
+  my $expecterror = shift;
+
+  if( $sethome ne "" ) {
+    $ENV{"CHPL_HOME"} = $sethome;
+  } else {
+    delete $ENV{"CHPL_HOME"};
+  }
+  if( $setpath ne "" ) {
+    $ENV{"PATH"} = "$setpath:$ORIG_PATH";
+  } else {
+    $ENV{"PATH"} = $ORIG_PATH;
+  }
+
+  #print "PATH is " . $ENV{"PATH"} . "\n";
+  #print "RUNNING $exe --print-chpl-home\n";
+  $got = `$exe --print-chpl-home 2>&1`;
+  #print "GOT IS $got\n";
+
+  my @lines = split('\n', $got);
+  my $prefix_line = "configured prefix";
+  my ($gothome, $gotexe) = ("", "") ;
+  #If we configured with a prefix, the --print-chpl-home output includes an extra line.
+  if (index($lines[-1] , $prefix_line) != -1) { #configured with prefix
+    ($gothome, $gotexe) = split('\t', $lines[-2]);
+  } else { #not configured with prefix
+    ($gothome, $gotexe) = split('\t', $lines[-1]);
+  }
+  #print "[Success compiling --print-chpl-home]\n";
+  if ($expecthome ne "") {
+    if( realpath($gothome) eq realpath($expecthome) ) {
+      print "[Success matching compflags/ferguson/home --print-chpl-home home $name]\n";
+    } else {
+      print "[Error matching compflags/ferguson/home --print-chpl-home home $name (got $gothome but expected $expecthome)]\n";
+    }
+  }
+  if ($expectexe ne "") {
+    if( realpath($gotexe) eq realpath($expectexe) ) {
+      print "[Success matching compflags/ferguson/home --print-chpl-home exe $name]\n";
+    } else {
+      print "[Error matching compflags/ferguson/home --print-chpl-home exe $name (got $gotexe but expected $expectexe)]\n";
+    }
+  }
+  if ($expecterror ne "") {
+    if( $got =~ /$expecterror/i ) {
+      print "[Success matching compflags/ferguson/home --print-chpl-home errs $name]\n";
+      # OK
+    } else {
+      my $errs = $got;
+      $errs =~ tr/\n/ /;
+      print "[Error matching compflags/ferguson/home --print-chpl-home errs $name did not find $expecterror in $errs]\n";
+    }
+  }
+}
+

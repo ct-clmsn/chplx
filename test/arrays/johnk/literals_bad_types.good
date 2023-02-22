@@ -1,0 +1,1 @@
+literals_bad_types.chpl:1: error: can't compute a unified element type for this array

@@ -1,0 +1,1 @@
+ref-return-intent-pair.chpl:8: error: halt reached - cannot assign value to A(1) if A(0) <= 0

@@ -1,0 +1,5 @@
+error message: need more details
+
+In this test, the compiler correctly indicates that the interface constraint
+was not satisfied. However, it also should explain what constraint it was and
+why it was not satisfied.

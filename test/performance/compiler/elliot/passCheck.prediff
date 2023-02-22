@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+# This test serves as a sentinel for compiler performance testing to prevent
+# a pass group (like front-end, back-end, or middle end) from being moved,
+# deleted, or renamed. These groups represent top-level "stages" of the
+# compiler, and should remain as-is in the --print-passes output. They are
+# intended to abstract over the exact details of passes and their ordering,
+# so that graph historical data doesn't have to be modified whenever passes
+# change.
+#
+# compilerPerformance.perfkeys is used by compiler performance testing to time
+# the pass groups. It is also used by this test to let you know if you broke
+# compiler performance testing. Prior to this, compiler performance tracking quickly
+# became out of date with missing passes and timings being associated with the
+# wrong pass. Note that you should _not_ be modifying compilerPerformance.perfkeys 
+# to fix compiler performance testing (at the very least, the fix would
+# require updating .dat and .graph files, but as mentioned above, the whole
+# purpose of the three pass groups is to avoid doing this in the future).
+# Instead, you should probably just make sure the three pass groups are
+# still present and named as before.
+
+import sys
+
+logfile = sys.argv[2]
+
+loglines = []
+with open(logfile, 'r') as f:
+    loglines = f.readlines()
+
+# remove all of the actual times from --print-passes. It outputs
+# '<passname> : <time for pass>' and we want to remove <time for pass>
+with open(logfile, 'w') as f:
+    for line in loglines:
+      splitline = line.split(':')[0].strip() + ' :'
+      # Only look at the pass groups (front-end, middle-end, back-end)
+      if line.strip().startswith('total time'):
+          f.write(splitline + '\n')
+      # --print-passes prints detailed output after printing the total
+      # time for each pass. This just strips all that output which
+      # occurs after the total is printed.
+      if line.strip().startswith('total time :') :
+        break
+
+
+# copy the compilerPerformance perf keys as the .good file for this test. That
+# way we don't have to update the .good and the perfkeys. Ignore comments and
+# empty lines in the compilerPerformance.perfkeys file
+passes = []
+with open('../compilerPerformance.perfkeys', 'r') as f:
+    passes = f.readlines()
+passes = [ p for p in passes if p.strip() and not p.strip().startswith('#') ]
+
+with open('passCheck.good', 'w') as f:
+    f.writelines(passes)

@@ -1,0 +1,1 @@
+sparse-error.chpl:9: error: halt reached - attempting to assign a 'zero' value in a sparse array: (1, 5)

@@ -1,0 +1,10 @@
+# Note: Do _not_ change this file just to make the test 'passCheck' stop
+# failing. That test serves as a sentinel to alert you that compiler
+# performance is broken. Simply fixing that test does _not_ fix compiler
+# performance testing.
+#
+# See passCheck.prediff for more details.
+total time (front end) :
+total time (middle end) :
+total time (back end) :
+total time :
