@@ -7,14 +7,102 @@
  */
 #include "chpl/uast/AstNode.h"
 #include "chpl/uast/Module.h"
-#include "symbols.hpp"
 
 #include <ostream>
+#include <optional>
+#include <variant>
 #include <string>
 #include <vector>
 #include <unordered_map>
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
+
+struct byte_kind {};
+struct int_kind {};
+struct real_kind {};
+struct complex_kind {};
+struct string_kind {};
+
+struct range_kind {
+   std::vector<std::int64_t> points;
+
+   range_kind() : points() {}
+};
+
+struct domain_kind {
+   std::vector<range_kind> ranges;
+
+   domain_kind() : ranges() {};
+};
+
+using simple_kinds = std::variant<
+   std::monostate,
+   byte_kind,
+   int_kind,
+   real_kind,
+   complex_kind,
+   string_kind,
+   range_kind,
+   domain_kind
+>;
+
+struct func_base_kind {};
+struct record_base_kind {};
+struct class_base_kind {};
+
+using complex_kinds = std::variant<
+   std::monostate,
+   func_base_kind,
+   record_base_kind,
+   class_base_kind
+>;
+
+using kind_instance_types = std::variant<
+   std::monostate,
+   simple_kinds,
+   complex_kinds
+>;
+
+struct array_kind {
+   kind_instance_types kind;
+   domain_kind dom;   
+
+   array_kind() : kind(), dom() {}
+};
+
+using kind_types = std::variant<
+   std::monostate,
+   kind_instance_types,
+   array_kind
+>;
+
+struct func_kind : public func_base_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+};
+
+struct record_kind : public record_base_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+};
+
+struct class_kind : public class_base_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+};
+
+struct SymbolBase {
+    std::optional<kind_types> kind;
+    std::optional<std::string> identifier;
+
+    SymbolBase() : kind(), identifier() {}
+};
+
+struct Symbol : public SymbolBase {
+    std::optional<SymbolBase> parent;
+
+    Symbol() : SymbolBase(), parent() {}
+};
 
 struct SymbolTable {
 
@@ -31,7 +119,7 @@ struct SymbolTable {
       // new scopes are appended to
       // the end of the symboltable
       //
-      entries.push_back( std::unordered_map<std::string, chpl::backend::symbols::Symbol>{} );
+      entries.push_back( std::unordered_map<std::string, Symbol>{} );
       return entries.size();
    }
 
@@ -40,12 +128,16 @@ struct SymbolTable {
       return entries.size();
    }
 
-   void addEntry(std::string & entry_str, chpl::backend::symbols::Symbol & s) {
+   void addEntry(std::string & entry_str, Symbol & s) {
       entries.back().insert({entry_str, s});
    }
 
-   std::optional<chpl::backend::symbols::Symbol> find(std::string const& entry_str) const {
-      using itr_t = std::vector<std::unordered_map<std::string, chpl::backend::symbols::Symbol>>::const_iterator;
+   void addEntry(std::string & entry_str, Symbol && s) {
+      entries.back().insert({entry_str, s});
+   }
+
+   std::optional<Symbol> find(std::string const& entry_str) const {
+      using itr_t = std::vector<std::unordered_map<std::string, Symbol>>::const_iterator;
       const itr_t itr_beg = std::begin(entries);
 
       // search through scopes backwards
@@ -60,7 +152,25 @@ struct SymbolTable {
       return {};
    }
 
-   std::vector< std::unordered_map<std::string, chpl::backend::symbols::Symbol> > entries;
+   std::vector< std::unordered_map<std::string, Symbol> > entries;
+};
+
+enum class HeaderEnum {
+    std_vector = 0,
+    std_unordered_map,
+    std_optional,
+    std_variant,
+    std_algorithm,
+    std_numeric,
+    hpx_lco_channel,
+    hpx_lco_future,
+    hpx_algorithm,
+    hpx_numeric,
+    hpx_components,
+    hpx_partitioned_vector,
+    hpx_unordered_map,
+    hpx_spmd,
+    HeaderCount
 };
 
 struct Visitor {
@@ -71,16 +181,27 @@ struct Visitor {
    Visitor(Visitor * v) = delete;
    Visitor(Visitor const* v) = delete;
 
-   Visitor(std::ostream & fstrm)
-      : symboltable(), fstrm_(fstrm) {
+   Visitor(std::string const& chapel_file_path_str, std::ostream & fstrm)
+      : indent(0), fstrm_(fstrm), chpl_file_path_str(chapel_file_path_str), sym(), symnode(), symboltable(), headers() {
    }
 
    bool enter(const uast::AstNode * node);
    void exit(const uast::AstNode * node);
 
-   SymbolTable symboltable;
-   std::ostream & fstrm_;
+   void generateSourceHeader();
+   void generateSourceFooter();
+   void generate_hpx_main_beg();
+   void generate_hpx_main_end();
+   void generateApplicationHeader();
 
+   std::size_t indent; 
+   std::ostream & fstrm_;
+   std::string chpl_file_path_str;
+   std::optional<Symbol> sym;
+   std::optional<uast::AstNode const*> symnode;
+   SymbolTable symboltable;
+   std::vector<HeaderEnum> headers;
 };
+
 
 } /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chpl */

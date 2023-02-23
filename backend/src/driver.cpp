@@ -16,8 +16,10 @@
 #include "hpx/visitor.hpp"
 #include "ErrorGuard.h"
 
+#include <optional>
 #include <string>
 #include <regex>
+#include <filesystem>
 #include <algorithm>
 #include <streambuf>
 #include <fstream>
@@ -38,7 +40,7 @@ int main(int argc, char ** argv) {
    Context * ctx = &context;
    ErrorGuard guard(ctx);
 
-   std::string filePath{};
+   std::optional<std::string> filePath{};
 
    // https://azrael.digipen.edu/~mmead/www/Courses/CS180/getopt.html
    //
@@ -57,9 +59,22 @@ int main(int argc, char ** argv) {
       }
    }
 
-   std::ifstream is(filePath);
+   if(!filePath.has_value()) {
+      std::cerr << "chplx : error, file not provided" << std::endl << std::flush;
+      return 0;
+   }
+
+   {
+      std::filesystem::path pth{*filePath};
+      if(!std::filesystem::exists(pth)) {
+         std::cerr << "chplx : error, file does not exist error\t" << *filePath << std::endl << std::flush;
+         return 0;
+      }
+   }
+
+   std::ifstream is(*filePath);
    if(!is.good()) {
-      std::cerr << "chplx : error, file not found\t" << filePath << std::endl << std::flush;
+      std::cerr << "chplx : error, file open error\t" << *filePath << std::endl << std::flush;
       return 0;
    }
 
@@ -68,10 +83,10 @@ int main(int argc, char ** argv) {
       std::istreambuf_iterator<char>()
    );
 
-   chpl::parsing::setFileText(ctx, filePath, fileContent);
+   chpl::parsing::setFileText(ctx, *filePath, fileContent);
 
    uast::BuilderResult const& br =
-      parsing::parseFileToBuilderResult(ctx, chpl::UniqueString::get(ctx, filePath), {});
+      parsing::parseFileToBuilderResult(ctx, chpl::UniqueString::get(ctx, *filePath), {});
 
    for (auto & e : br.errors()) {
       ctx->report(e);
@@ -85,6 +100,9 @@ int main(int argc, char ** argv) {
    // chapel standard library contains compile time
    // generated code that includes OS and architecture
    // specific implementations
+   //
+   // need to figure out how multi-module name
+   // resolution works
    //
    //const auto& rr =
    //   chpl::resolution::resolveModule(ctx, mod->id());
@@ -100,11 +118,11 @@ int main(int argc, char ** argv) {
       {
          std::regex file_regex{ R"([ \w-]+?(?=\.))" };
          auto words_begin = 
-            std::sregex_iterator(filePath.begin(), filePath.end(), file_regex);
+            std::sregex_iterator(filePath->begin(), filePath->end(), file_regex);
          auto words_end = std::sregex_iterator();
 
          if( std::distance(words_begin, words_end) != 1) {
-            std::cerr << "Invalid input file encountered\t" << filePath << std::endl;
+            std::cerr << "Invalid input file encountered\t" << *filePath << std::endl;
             return -1;
          }
 
@@ -113,10 +131,23 @@ int main(int argc, char ** argv) {
       }
 
       std::ofstream ofs(ofilePath);
-      chpl::ast::visitors::hpx::Visitor v{ofs};
+      {
+         chpl::ast::visitors::hpx::Visitor v{ofilePath, ofs};
 
-      AstNode const* ast = static_cast<AstNode const*>(mod);
-      ast->traverse(v);
+         v.generateSourceHeader();
+         v.generate_hpx_main_beg();
+
+         v.indent += 1;
+         AstNode const* ast = static_cast<AstNode const*>(mod);
+         ast->traverse(v);
+
+         v.generate_hpx_main_end();
+         v.generateSourceFooter();
+         v.generateApplicationHeader();
+      }
+
+      ofs.flush();
+      ofs.close();
    }
 
    return 1;
