@@ -143,6 +143,7 @@ int main(int argc, char ** argv) {
 
          v.generate_hpx_main_end();
          v.generateSourceFooter();
+
          v.generateApplicationHeader();
       }
 

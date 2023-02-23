@@ -21,7 +21,6 @@ void Visitor::generateSourceHeader() {
    {
       const auto pos = chpl_file_path_str.find(".");
       const std::string prefix = chpl_file_path_str.substr(0, pos);
-      fstrm_ << "#pragma once" << std::endl << std::endl;
       fstrm_ << "#include \"" << prefix << ".hpp\"" << std::endl << std::endl;
    }
 
@@ -32,8 +31,7 @@ void Visitor::generateSourceFooter() {
    fstrm_ << std::endl
           << "int main(int argc, char ** argv) {" << std::endl
           << "    return hpx::init(argc, argv);" << std::endl
-          << "}" << std::endl << std::endl
-          << "#endif";
+          << "}" << std::endl << std::endl;
 }
 
 void Visitor::generate_hpx_main_beg() {
@@ -61,7 +59,7 @@ void Visitor::generateApplicationHeader() {
          os << "#include<vector>" << std::endl;
       }
    }
-   os << "#endif";
+   os << std::endl << "#endif";
 
    os.flush();
    os.close();
