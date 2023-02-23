@@ -31,7 +31,7 @@ void Visitor::generateSourceFooter() {
    fstrm_ << std::endl
           << "int main(int argc, char ** argv) {" << std::endl
           << "    return hpx::init(argc, argv);" << std::endl
-          << "}" << std::endl << std::endl;
+          << "}";
 }
 
 void Visitor::generate_hpx_main_beg() {
@@ -43,7 +43,7 @@ void Visitor::generate_hpx_main_beg() {
 void Visitor::generate_hpx_main_end() {
    fstrm_ << std::endl
           << "    return hpx::finalize();" << std::endl
-          << "}" << std::endl << std::endl;
+          << "}" << std::endl;
 }
 
 void Visitor::generateApplicationHeader() {
