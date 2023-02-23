@@ -6,13 +6,69 @@
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include "hpx/visitor.hpp"
+#include "chpl/uast/all-uast.h"
+
+#include <variant>
+#include <fstream>
+
+#define INDENT "    "
 
 using namespace chpl::uast;
  
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
+void Visitor::generateSourceHeader() {
+   {
+      const auto pos = chpl_file_path_str.find(".");
+      const std::string prefix = chpl_file_path_str.substr(0, pos);
+      fstrm_ << "#pragma once" << std::endl << std::endl;
+      fstrm_ << "#include \"" << prefix << ".hpp\"" << std::endl << std::endl;
+   }
+
+   fstrm_ << "#include <hpx/hpx_init.hpp>" << std::endl;
+}
+
+void Visitor::generateSourceFooter() {
+   fstrm_ << std::endl
+          << "int main(int argc, char ** argv) {" << std::endl
+          << "    return hpx::init(argc, argv);" << std::endl
+          << "}" << std::endl << std::endl
+          << "#endif";
+}
+
+void Visitor::generate_hpx_main_beg() {
+      fstrm_ << std::endl
+             << "int hpx_main(int argc, char ** argv) {" << std::endl
+             << std::endl;
+}
+
+void Visitor::generate_hpx_main_end() {
+   fstrm_ << std::endl
+          << "    return hpx::finalize();" << std::endl
+          << "}" << std::endl << std::endl;
+}
+
+void Visitor::generateApplicationHeader() {
+   const auto pos = chpl_file_path_str.find(".");
+   const std::string prefix = chpl_file_path_str.substr(0, pos);
+
+   std::ofstream os{prefix + ".hpp"};
+   os << "#pragma once" << std::endl << std::endl;
+   os << "#ifndef __" << prefix << "_HPP__" << std::endl << std::endl;
+
+   for(const auto & header : headers) {
+      if(header == HeaderEnum::std_vector) {
+         os << "#include<vector>" << std::endl;
+      }
+   }
+   os << "#endif";
+
+   os.flush();
+   os.close();
+}
+
 bool Visitor::enter(const uast::AstNode * ast) {
-std::cout << "nodehere\t" << ast->tag() << std::endl;
+//std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
@@ -31,6 +87,15 @@ std::cout << "nodehere\t" << ast->tag() << std::endl;
     case asttags::Delete:
     break;
     case asttags::Domain:
+    {
+        if(sym.has_value()) {
+            if(sym->kind.has_value()) {
+                if(std::holds_alternative<array_kind>(*(sym->kind))) {
+                    std::get<array_kind>(*(sym->kind)).dom = domain_kind{};
+                }
+            }
+        }
+    }
     break;
     case asttags::Dot:
     break;
@@ -43,6 +108,18 @@ std::cout << "nodehere\t" << ast->tag() << std::endl;
     case asttags::FunctionSignature:
     break;
     case asttags::Identifier:
+    {
+        std::string identifier_str{reinterpret_cast<Identifier const*>(ast)->name().c_str()};
+
+
+       if(sym->kind.has_value()) {
+          if(std::holds_alternative<array_kind>(*(sym->kind))) {
+             if(identifier_str == "int") {
+                std::get<array_kind>(*(sym->kind)).kind = int_kind{};
+             }
+          }
+       }
+    }
     break;
     case asttags::Import:
     break;
@@ -53,6 +130,15 @@ std::cout << "nodehere\t" << ast->tag() << std::endl;
     case asttags::New:
     break;
     case asttags::Range:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<array_kind>(*(sym->kind))) {
+                std::get<array_kind>(*(sym->kind)).dom.ranges.push_back(range_kind{});
+             }
+          }
+       }
+    }
     break;
     case asttags::Require:
     break;
@@ -77,6 +163,16 @@ std::cout << "nodehere\t" << ast->tag() << std::endl;
     case asttags::ImagLiteral:
     break;
     case asttags::IntLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<array_kind>(*(sym->kind))) {
+                array_kind & symref = std::get<array_kind>(*(sym->kind));
+                symref.dom.ranges[symref.dom.ranges.size()-1].points.push_back( reinterpret_cast<IntLiteral const*>(ast)->value() );
+             }
+          }
+       }
+    }
     break;
     case asttags::RealLiteral:
     break;
@@ -131,6 +227,13 @@ std::cout << "nodehere\t" << ast->tag() << std::endl;
     case asttags::VarArgFormal:
     break;
     case asttags::Variable:
+    {
+//std::cout << "variable\tname?\t" << reinterpret_cast<NamedDecl const*>(ast)->name().c_str() << "\tis_init?\t" << (reinterpret_cast<Variable const*>(ast)->initExpression() == nullptr) << "\tis_type?\t" << (reinterpret_cast<Variable const*>(ast)->typeExpression() == nullptr) << std::endl;
+       Symbol var{};
+       var.identifier = std::string{reinterpret_cast<NamedDecl const*>(ast)->name().c_str()};
+       sym = std::move(var);
+       symnode = ast;
+    }
     break;
     case asttags::END_VarLikeDecl:
     break;
@@ -181,6 +284,11 @@ std::cout << "nodehere\t" << ast->tag() << std::endl;
     case asttags::START_IndexableLoop:
     break;
     case asttags::BracketLoop:
+    {
+        if(sym.has_value()) {
+            sym->kind = array_kind{};
+        }
+    }
     break;
     case asttags::Coforall:
     break;
@@ -234,7 +342,7 @@ std::cout << "nodehere\t" << ast->tag() << std::endl;
 }
 
 void Visitor::exit(const uast::AstNode * ast) {
-std::cout << ast->tag() << std::endl;
+//std::cout << "exit\t" << ast->tag() << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
@@ -353,6 +461,39 @@ std::cout << ast->tag() << std::endl;
     case asttags::VarArgFormal:
     break;
     case asttags::Variable:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+
+             if(std::holds_alternative<array_kind>(*(sym->kind))) {
+                headers.push_back(HeaderEnum::std_vector);
+                array_kind & symref = std::get<array_kind>(*(sym->kind));
+
+                for(std::size_t i = 0; i < indent; ++i) {
+                    fstrm_ << INDENT; 
+                }
+
+                fstrm_ << "std::vector<";
+
+                if(std::holds_alternative<simple_kinds>(symref.kind)) {
+                   simple_kinds & sk_sym = std::get<simple_kinds>(symref.kind);
+
+                   if(std::holds_alternative<int_kind>(sk_sym)) {
+                      fstrm_ << "std::int64_t";
+                   }
+                }
+                assert( sym->identifier.has_value() );
+                fstrm_ << "> " << (*(sym->identifier)) << ";" << std::endl;
+             }
+          }
+
+          assert( sym->identifier.has_value() );
+          symboltable.addEntry((*(sym->identifier)), std::move(*sym));
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::END_VarLikeDecl:
     break;
