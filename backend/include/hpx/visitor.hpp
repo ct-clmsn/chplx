@@ -157,6 +157,7 @@ struct SymbolTable {
 
 enum class HeaderEnum {
     std_vector = 0,
+    std_complex,
     std_unordered_map,
     std_optional,
     std_variant,
@@ -182,7 +183,7 @@ struct Visitor {
    Visitor(Visitor const* v) = delete;
 
    Visitor(std::string const& chapel_file_path_str, std::ostream & fstrm)
-      : indent(0), fstrm_(fstrm), chpl_file_path_str(chapel_file_path_str), sym(), symnode(), symboltable(), headers() {
+      : indent(0), fstrm_(fstrm), chpl_file_path_str(chapel_file_path_str), sym(), symnode(), symboltable(), headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false) {
    }
 
    bool enter(const uast::AstNode * node);
@@ -200,7 +201,7 @@ struct Visitor {
    std::optional<Symbol> sym;
    std::optional<uast::AstNode const*> symnode;
    SymbolTable symboltable;
-   std::vector<HeaderEnum> headers;
+   std::vector<bool> headers;
 };
 
 

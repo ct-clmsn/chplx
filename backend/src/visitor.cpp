@@ -54,9 +54,14 @@ void Visitor::generateApplicationHeader() {
    os << "#pragma once" << std::endl << std::endl;
    os << "#ifndef __" << prefix << "_HPP__" << std::endl << std::endl;
 
-   for(const auto & header : headers) {
-      if(header == HeaderEnum::std_vector) {
-         os << "#include<vector>" << std::endl;
+   for(std::size_t i = 0; i < static_cast<std::size_t>(HeaderEnum::HeaderCount); ++i) {
+      if(headers[i]) {
+         if(i == static_cast<std::size_t>(HeaderEnum::std_vector)) {
+            os << "#include<vector>" << std::endl;
+         }
+         else if(i == static_cast<std::size_t>(HeaderEnum::std_complex)) {
+            os << "#include<complex>" << std::endl;
+         }
       }
    }
    os << std::endl << "#endif";
@@ -114,6 +119,18 @@ bool Visitor::enter(const uast::AstNode * ast) {
           if(std::holds_alternative<array_kind>(*(sym->kind))) {
              if(identifier_str == "int") {
                 std::get<array_kind>(*(sym->kind)).kind = int_kind{};
+             }
+             else if(identifier_str == "byte") {
+                std::get<array_kind>(*(sym->kind)).kind = byte_kind{};
+             }
+             else if(identifier_str == "real") {
+                std::get<array_kind>(*(sym->kind)).kind = real_kind{};
+             }
+             else if(identifier_str == "complex") {
+                std::get<array_kind>(*(sym->kind)).kind = complex_kind{};
+             }
+             else if(identifier_str == "string") {
+                std::get<array_kind>(*(sym->kind)).kind = string_kind{};
              }
           }
        }
@@ -464,7 +481,7 @@ void Visitor::exit(const uast::AstNode * ast) {
           if(sym->kind.has_value()) {
 
              if(std::holds_alternative<array_kind>(*(sym->kind))) {
-                headers.push_back(HeaderEnum::std_vector);
+                headers[static_cast<std::size_t>(HeaderEnum::std_vector)] = true;
                 array_kind & symref = std::get<array_kind>(*(sym->kind));
 
                 for(std::size_t i = 0; i < indent; ++i) {
@@ -478,6 +495,19 @@ void Visitor::exit(const uast::AstNode * ast) {
 
                    if(std::holds_alternative<int_kind>(sk_sym)) {
                       fstrm_ << "std::int64_t";
+                   }
+                   else if(std::holds_alternative<byte_kind>(sk_sym)) {
+                      fstrm_ << "std::uint8_t";
+                   }
+                   else if(std::holds_alternative<real_kind>(sk_sym)) {
+                      fstrm_ << "double";
+                   }
+                   else if(std::holds_alternative<complex_kind>(sk_sym)) {
+                      headers[static_cast<std::size_t>(HeaderEnum::std_complex)] = true;
+                      fstrm_ << "std::complex<double>";
+                   }
+                   else if(std::holds_alternative<string_kind>(sk_sym)) {
+                      fstrm_ << "std::string";
                    }
                 }
                 assert( sym->identifier.has_value() );

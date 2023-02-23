@@ -7,6 +7,8 @@
 
 //var a = [1,2,3,4,5];
 var a : [1..10] int;
+var b : [1..10] real;
+var c : [1..10] complex;
 
 //var a = {1..10};
 //var a : domain(1) = {1..10};
