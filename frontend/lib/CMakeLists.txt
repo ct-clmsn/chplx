@@ -77,7 +77,13 @@ target_compile_options(ChplFrontend-obj PUBLIC
 # Don't build the git-sha-obj into ChplFrontend if CHPL_DONT_BUILD_SHA is set
 # in the environment. Note that the value doesn't matter, just the presence of
 # the var
-add_library(ChplFrontend SHARED
+if(MSVC)
+  set(ChplFrontend_MODE STATIC)
+else()
+  set(ChplFrontend_MODE SHARED)
+endif()
+
+add_library(ChplFrontend ${ChplFrontend_MODE}
             $<TARGET_OBJECTS:ChplFrontend-obj>
             $<TARGET_OBJECTS:git-sha-obj>)
 
@@ -109,6 +115,9 @@ if(APPLE)
 elseif(CYGWIN)
   # (we also get linker errors on Cygwin if it uses INTERFACE here)
   target_link_libraries(ChplFrontend PUBLIC ${CHPL_LLVM_LINK_ARGS})
+elseif(MSVC)
+  # (we also get linker errors on Cygwin if it uses INTERFACE here)
+  target_link_libraries(ChplFrontend PUBLIC ${CHPL_LLVM_LINK_ARGS} ${llvm_libs})
 else()
   # Using PUBLIC here causes problems in some configurations with LLVM<14
   # when the LLVM libraries are included in the .so generated here

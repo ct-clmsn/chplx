@@ -26,6 +26,20 @@
 
 #include "chpl/util/version-info.h"
 
+#if defined(_MSC_VER)
+#include <stdlib.h>
+int setenv(const char *name, const char *value, int overwrite)
+{
+    int errcode = 0;
+    if(!overwrite) {
+        size_t envsize = 0;
+        errcode = getenv_s(&envsize, nullptr, 0, name);
+        if(errcode || envsize) return errcode;
+    }
+    return _putenv_s(name, value);
+}
+#endif
+
 namespace chpl {
 
 static void parseChplEnv(std::string& output, ChplEnvMap& into) {

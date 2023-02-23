@@ -33,7 +33,7 @@ This project is split into 2 directories and 2 projects, frontend and backend.
   - `cd build`
   - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -DHPX_DIR=$(PATH_TO_HPX)/lib/cmake/HPX ..`
 
-  Backend useage example
+  Backend usage example
 
   `./chplx -f ../../test/release/examples/primers/arrays.chpl`
 
@@ -48,7 +48,7 @@ This project is split into 2 directories and 2 projects, frontend and backend.
 
   - license 
   
-  The backend is under the Boost Software License Verison 1.0
+  The backend is under the Boost Software License Version 1.0
 
   https://www.boost.org/LICENSE_1_0.txt
 

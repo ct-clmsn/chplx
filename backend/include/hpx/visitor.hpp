@@ -8,6 +8,7 @@
 #include "chpl/uast/AstNode.h"
 #include "chpl/uast/Module.h"
 
+#include <optional>
 #include <ostream>
 #include <optional>
 #include <variant>

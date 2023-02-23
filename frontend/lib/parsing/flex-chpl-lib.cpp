@@ -255,6 +255,10 @@
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
+#if defined(_MSC_VER)
+#include <io.h>
+#define isatty(fd) _isatty(fd)
+#endif
 
 /* end standard C headers. */
 

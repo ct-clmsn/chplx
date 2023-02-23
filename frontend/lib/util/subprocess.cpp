@@ -25,12 +25,19 @@
 #include <cstdlib>
 #include <cstring>
 #include <sys/types.h>
+
+#ifndef _MSC_VER
 #include <sys/wait.h>
 #include <unistd.h>
+#else
+#define popen(cmd, m) _popen(cmd, m)
+#define pclose(d) _pclose(d)
+#endif
 
 namespace chpl {
 
 
+#ifndef _MSC_VER
 // TODO: body of this function should call llvm::sys::ExecuteAndWait instead
 // see: https://llvm.org/doxygen/namespacellvm_1_1sys.html#a67688ad4697f1d516a7c71e41d78c5ba
 int executeAndWait(const std::vector<std::string>& commandVec,
@@ -103,6 +110,7 @@ int executeAndWait(const std::vector<std::string>& commandVec,
   // this can be reached if the 'fork' failed
   return -1;
 }
+#endif
 
 llvm::ErrorOr<std::string> getCommandOutput(const std::string& command) {
   // Run arbitrary command and return result

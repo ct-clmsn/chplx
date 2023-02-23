@@ -46,8 +46,9 @@ message(STATUS "Using libclang from ${Clang_DIR}")
 
 target_include_directories(fieldsUsed PUBLIC
                            ${LLVM_INCLUDE_DIRS}
+                           ${CLANG_INCLUDE_DIRS}
                            ${CHPL_INCLUDE_DIR})
 
-target_link_libraries(fieldsUsed clang-cpp ${llvm_libs} ${CHPL_LLVM_LINK_ARGS})
+target_link_libraries(fieldsUsed clangAST clangASTMatchers clangFrontend clangTooling ${llvm_libs} ${CHPL_LLVM_LINK_ARGS}) #clang-cpp 
 # TODO: Why is this needed when it was not needed before?
 target_compile_options(fieldsUsed PRIVATE SHELL:$<$<COMPILE_LANGUAGE:CXX>:${CHPL_LLVM_COMP_ARGS}>)

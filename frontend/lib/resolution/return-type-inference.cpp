@@ -283,7 +283,7 @@ QualifiedType ReturnTypeInferrer::returnedType() {
       context->error(astForErr, "could not determine return type for function");
       retType = QualifiedType(QualifiedType::UNKNOWN, ErroneousType::get(context));
     }
-    return retType.getValue();
+    return retType.value();
   }
 }
 

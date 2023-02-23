@@ -1697,7 +1697,7 @@ bool Resolver::enter(const uast::Conditional* cond) {
       r.setType(CHPL_TYPE_ERROR(context, IncompatibleIfBranches, cond,
                                 returnTypes[0], returnTypes[1]));
     } else if (ifType) {
-      r.setType(ifType.getValue());
+      r.setType(ifType.value());
     }
   }
   return false;
@@ -2133,7 +2133,7 @@ void Resolver::exit(const Range* range) {
                                  suppliedTypes[0], suppliedTypes[1]));
       return;
     } else {
-      idxType = idxTypeResult.getValue();
+      idxType = idxTypeResult.value();
     }
   } else {
     // No bounds. Use default.

@@ -19,6 +19,11 @@
 
 #include "chpl/util/string-escapes.h"
 
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
 namespace chpl {
 
 bool stringContainsZeroBytes(const char* s, size_t len) {
