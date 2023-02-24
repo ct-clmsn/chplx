@@ -48,7 +48,13 @@ struct domain_kind {
    domain_kind() : ranges() {};
 };
 
-using simple_kinds = std::variant<
+struct func_kind;
+struct record_kind;
+struct class_kind;
+struct array_kind;
+struct associative_kind;
+
+using kind_types = std::variant<
    std::monostate,
    undefined_kind,
    template_kind,
@@ -58,53 +64,40 @@ using simple_kinds = std::variant<
    complex_kind,
    string_kind,
    range_kind,
-   domain_kind
+   domain_kind,
+   std::shared_ptr<func_kind>,
+   std::shared_ptr<record_kind>,
+   std::shared_ptr<class_kind>,
+   std::shared_ptr<array_kind>,
+   std::shared_ptr<associative_kind>
 >;
 
-struct func_base_kind {};
-struct record_base_kind {};
-struct class_base_kind {};
+struct func_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+};
 
-using complex_kinds = std::variant<
-   std::monostate,
-   func_base_kind,
-   record_base_kind,
-   class_base_kind
->;
+struct record_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+};
 
-using kind_instance_types = std::variant<
-   std::monostate,
-   simple_kinds,
-   complex_kinds
->;
+struct class_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+};
 
 struct array_kind {
-   kind_instance_types kind;
+   kind_types kind;
    domain_kind dom;   
 
    array_kind() : kind(), dom() {}
 };
 
-using kind_types = std::variant<
-   std::monostate,
-   kind_instance_types,
-   array_kind
->;
-
-struct func_kind : public func_base_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
-};
-
-struct record_kind : public record_base_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
-};
-
-struct class_kind : public class_base_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
-};
+struct associative_kind {
+   kind_types key_kind;
+   kind_types value_kind;
+}; 
 
 struct SymbolBase {
     std::optional<kind_types> kind;
@@ -143,23 +136,27 @@ struct SymbolTable {
       return entries.size();
    }
 
-   void addEntry(std::string & entry_str, Symbol & s) {
-      entries.back().insert({entry_str, s});
+   void addEntry(std::string const entry_str, Symbol s) {
+      entries[entries.size()-1].insert(std::make_pair(entry_str, s));
    }
 
-   void addEntry(std::string & entry_str, Symbol && s) {
-      entries.back().insert({entry_str, s});
+   std::optional<Symbol> scopedFind(std::string const& entry_str) const {
+      const std::size_t idx = entries.size()-1;
+      auto itr = entries[idx].find(entry_str);
+      if(itr != std::end(entries[idx])) {
+         return itr->second;
+      }
+
+      return {};
    }
 
    std::optional<Symbol> find(std::string const& entry_str) const {
-      using itr_t = std::vector<std::unordered_map<std::string, Symbol>>::const_iterator;
-      const itr_t itr_beg = std::begin(entries);
-
       // search through scopes backwards
       //
-      for(itr_t i = std::end(entries); i != itr_beg; --i) {
-         auto entry = i->find(entry_str);
-         if( entry != std::end(*i) ) {
+      const int entries_size = entries.size() - 1;
+      for(int i = entries_size; i > -1; i--) {
+         auto entry = entries[i].find(entry_str);
+         if( entry != std::end(entries[i]) ) {
             return entry->second;
          }
       } 
@@ -200,6 +197,46 @@ struct Visitor {
 
    Visitor(std::string const& chapel_file_path_str, std::ostream & fstrm)
       : indent(0), fstrm_(fstrm), chpl_file_path_str(chapel_file_path_str), sym(), symnode(), symboltable(), headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false) {
+
+      Symbol strsym{};
+      strsym.kind = string_kind{};
+      strsym.identifier = "string";
+      symboltable.addEntry(*(strsym.identifier), strsym);
+
+      Symbol intsym{};
+      intsym.kind = int_kind{};
+      intsym.identifier = "int";
+      symboltable.addEntry(*(intsym.identifier), intsym);
+
+      Symbol realsym{};
+      realsym.kind = real_kind{};
+      realsym.identifier = "real";
+      symboltable.addEntry(*(realsym.identifier), realsym);
+
+      Symbol bytesym{};
+      bytesym.kind = byte_kind{};
+      bytesym.identifier = "byte";
+      symboltable.addEntry(*(bytesym.identifier), bytesym);
+
+      Symbol cmplxsym{};
+      cmplxsym.kind = complex_kind{};
+      cmplxsym.identifier = "complex";
+      symboltable.addEntry(*(cmplxsym.identifier), cmplxsym);
+
+      Symbol rngsym{};
+      rngsym.kind = range_kind{};
+      rngsym.identifier = "range";
+      symboltable.addEntry(*(rngsym.identifier), rngsym);
+
+      Symbol domsym{};
+      domsym.kind = domain_kind{};
+      domsym.identifier = "domain";
+      symboltable.addEntry(*(domsym.identifier), domsym);
+
+      Symbol unksym{};
+      unksym.kind = undefined_kind{};
+      unksym.identifier = "?";
+      symboltable.addEntry(*(unksym.identifier), unksym);
    }
 
    bool enter(const uast::AstNode * node);

@@ -11,6 +11,7 @@
 #include <variant>
 #include <fstream>
 #include <cctype>
+#include <numeric>
 
 #define INDENT "    "
 
@@ -57,9 +58,10 @@ void Visitor::generate_hpx_main_end() {
 void Visitor::generateApplicationHeader() {
    const auto pos = chpl_file_path_str.find(".");
    std::string prefix = chpl_file_path_str.substr(0, pos);
-   upper(prefix);
 
    std::ofstream os{prefix + ".hpp"};
+   upper(prefix);
+
    os << "#pragma once" << std::endl << std::endl;
    os << "#ifndef __" << prefix << "_HPP__" << std::endl;
    os << "#define __" << prefix << "_HPP__" << std::endl << std::endl;
@@ -107,8 +109,8 @@ bool Visitor::enter(const uast::AstNode * ast) {
     {
         if(sym.has_value()) {
             if(sym->kind.has_value()) {
-                if(std::holds_alternative<array_kind>(*(sym->kind))) {
-                    std::get<array_kind>(*(sym->kind)).dom = domain_kind{};
+                if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
+                    std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom = std::move(domain_kind{});
                 }
             }
         }
@@ -129,21 +131,10 @@ bool Visitor::enter(const uast::AstNode * ast) {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
 
        if(sym->kind.has_value()) {
-          if(std::holds_alternative<array_kind>(*(sym->kind))) {
-             if(identifier_str == "int") {
-                std::get<array_kind>(*(sym->kind)).kind = int_kind{};
-             }
-             else if(identifier_str == "byte") {
-                std::get<array_kind>(*(sym->kind)).kind = byte_kind{};
-             }
-             else if(identifier_str == "real") {
-                std::get<array_kind>(*(sym->kind)).kind = real_kind{};
-             }
-             else if(identifier_str == "complex") {
-                std::get<array_kind>(*(sym->kind)).kind = complex_kind{};
-             }
-             else if(identifier_str == "string") {
-                std::get<array_kind>(*(sym->kind)).kind = string_kind{};
+          if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
+             auto fsym = symboltable.find(identifier_str);
+             if(fsym.has_value()) {
+                std::get<std::shared_ptr<array_kind>>( *(sym->kind))->kind = *(fsym->kind);
              }
           }
        }
@@ -161,8 +152,8 @@ bool Visitor::enter(const uast::AstNode * ast) {
     {
        if(sym.has_value()) {
           if(sym->kind.has_value()) {
-             if(std::holds_alternative<array_kind>(*(sym->kind))) {
-                std::get<array_kind>(*(sym->kind)).dom.ranges.push_back(range_kind{});
+             if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
+                std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom.ranges.push_back(range_kind{});
              }
           }
        }
@@ -194,9 +185,9 @@ bool Visitor::enter(const uast::AstNode * ast) {
     {
        if(sym.has_value()) {
           if(sym->kind.has_value()) {
-             if(std::holds_alternative<array_kind>(*(sym->kind))) {
-                array_kind & symref = std::get<array_kind>(*(sym->kind));
-                symref.dom.ranges[symref.dom.ranges.size()-1].points.push_back( dynamic_cast<IntLiteral const*>(ast)->value() );
+             if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
+                std::shared_ptr<array_kind> & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
+                symref->dom.ranges[symref->dom.ranges.size()-1].points.push_back( dynamic_cast<IntLiteral const*>(ast)->value() );
              }
           }
        }
@@ -314,7 +305,7 @@ bool Visitor::enter(const uast::AstNode * ast) {
     case asttags::BracketLoop:
     {
         if(sym.has_value()) {
-            sym->kind = array_kind{};
+            sym->kind = std::make_shared<array_kind>();
         }
     }
     break;
@@ -493,9 +484,9 @@ void Visitor::exit(const uast::AstNode * ast) {
        if(sym.has_value()) {
           if(sym->kind.has_value()) {
 
-             if(std::holds_alternative<array_kind>(*(sym->kind))) {
+             if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
                 headers[static_cast<std::size_t>(HeaderEnum::std_vector)] = true;
-                array_kind & symref = std::get<array_kind>(*(sym->kind));
+                std::shared_ptr<array_kind> & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
 
                 for(std::size_t i = 0; i < indent; ++i) {
                     fstrm_ << INDENT; 
@@ -503,34 +494,53 @@ void Visitor::exit(const uast::AstNode * ast) {
 
                 fstrm_ << "std::vector<";
 
-                if(std::holds_alternative<simple_kinds>(symref.kind)) {
-                   simple_kinds & sk_sym = std::get<simple_kinds>(symref.kind);
-
-                   if(std::holds_alternative<int_kind>(sk_sym)) {
-                      fstrm_ << "std::int64_t";
-                   }
-                   else if(std::holds_alternative<byte_kind>(sk_sym)) {
-                      fstrm_ << "std::uint8_t";
-                   }
-                   else if(std::holds_alternative<real_kind>(sk_sym)) {
-                      fstrm_ << "double";
-                   }
-                   else if(std::holds_alternative<complex_kind>(sk_sym)) {
-                      headers[static_cast<std::size_t>(HeaderEnum::std_complex)] = true;
-                      fstrm_ << "std::complex<double>";
-                   }
-                   else if(std::holds_alternative<string_kind>(sk_sym)) {
-                      headers[static_cast<std::size_t>(HeaderEnum::std_string)] = true;
-                      fstrm_ << "std::string";
-                   }
+                if(std::holds_alternative<int_kind>(symref->kind)) {
+                   fstrm_ << "std::int64_t";
+                }
+                else if(std::holds_alternative<byte_kind>(symref->kind)) {
+                   fstrm_ << "std::uint8_t";
+                }
+                else if(std::holds_alternative<real_kind>(symref->kind)) {
+                   fstrm_ << "double";
+                }
+                else if(std::holds_alternative<complex_kind>(symref->kind)) {
+                   headers[static_cast<std::size_t>(HeaderEnum::std_complex)] = true;
+                   fstrm_ << "std::complex<double>";
+                }
+                else if(std::holds_alternative<string_kind>(symref->kind)) {
+                   headers[static_cast<std::size_t>(HeaderEnum::std_string)] = true;
+                   fstrm_ << "std::string";
                 }
                 assert( sym->identifier.has_value() );
-                fstrm_ << "> " << (*(sym->identifier)) << ";" << std::endl;
+
+                int range_size = 1;
+                for(const auto & rng : symref->dom.ranges) {
+                   if(rng.points.size() == 2) {
+                      range_size *= ( (rng.points[1] - rng.points[0]) + 1 );
+                   }
+                   else if(rng.points.size() == 1) {
+                      range_size *= rng.points[0];
+                   }
+                }
+
+                if(range_size > 1) {
+                   fstrm_ << "> " << (*(sym->identifier)) << "(" << range_size << ");" << std::endl;
+                }
+                else {
+                   fstrm_ << "> " << (*(sym->identifier)) << "{};" << std::endl;
+                }
              }
           }
 
           assert( sym->identifier.has_value() );
-          symboltable.addEntry((*(sym->identifier)), std::move(*sym));
+
+          auto lusym = symboltable.scopedFind((*(sym->identifier)));
+          if(!lusym) {
+             symboltable.addEntry((*(sym->identifier)), *sym);
+          }
+          else {
+             std::cerr << "chplx : " << (*(sym->identifier)) << " identifier already defined in current scope" << std::endl;
+          }
 
           sym.reset();
           symnode.reset();
