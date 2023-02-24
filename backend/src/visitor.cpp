@@ -516,7 +516,7 @@ void Visitor::exit(const uast::AstNode * ast) {
                 int range_size = 1;
                 for(const auto & rng : symref->dom.ranges) {
                    if(rng.points.size() == 2) {
-                      range_size *= ( (rng.points[1] - rng.points[0]) + 1 );
+                      range_size *= ( (rng.points[1] - rng.points[0]) + rng.points[0] );
                    }
                    else if(rng.points.size() == 1) {
                       range_size *= rng.points[0];
