@@ -158,6 +158,7 @@ struct SymbolTable {
 
 enum class HeaderEnum {
     std_vector = 0,
+    std_string,
     std_complex,
     std_unordered_map,
     std_optional,

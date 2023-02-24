@@ -10,6 +10,7 @@
 
 #include <variant>
 #include <fstream>
+#include <cctype>
 
 #define INDENT "    "
 
@@ -17,14 +18,21 @@ using namespace chpl::uast;
  
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
+static inline void upper(std::string & s) {
+   std::transform(std::begin(s), std::end(s), std::begin(s), 
+      [](const unsigned char c){ return std::toupper(c); } // correct
+   );
+}
+
 void Visitor::generateSourceHeader() {
+
+   fstrm_ << "#include <hpx/hpx_init.hpp>" << std::endl << std::endl;
+
    {
       const auto pos = chpl_file_path_str.find(".");
       const std::string prefix = chpl_file_path_str.substr(0, pos);
-      fstrm_ << "#include \"" << prefix << ".hpp\"" << std::endl << std::endl;
+      fstrm_ << "#include \"" << prefix << ".hpp\"" << std::endl;
    }
-
-   fstrm_ << "#include <hpx/hpx_init.hpp>" << std::endl;
 }
 
 void Visitor::generateSourceFooter() {
@@ -48,7 +56,8 @@ void Visitor::generate_hpx_main_end() {
 
 void Visitor::generateApplicationHeader() {
    const auto pos = chpl_file_path_str.find(".");
-   const std::string prefix = chpl_file_path_str.substr(0, pos);
+   std::string prefix = chpl_file_path_str.substr(0, pos);
+   upper(prefix);
 
    std::ofstream os{prefix + ".hpp"};
    os << "#pragma once" << std::endl << std::endl;
@@ -63,8 +72,12 @@ void Visitor::generateApplicationHeader() {
          else if(i == static_cast<std::size_t>(HeaderEnum::std_complex)) {
             os << "#include <complex>" << std::endl;
          }
+         else if(i == static_cast<std::size_t>(HeaderEnum::std_string)) {
+            os << "#include<string>" << std::endl;
+         }
       }
    }
+
    os << std::endl << "#endif";
 
    os.flush();
@@ -113,8 +126,7 @@ bool Visitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Identifier:
     {
-        std::string identifier_str{reinterpret_cast<Identifier const*>(ast)->name().c_str()};
-
+       std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
 
        if(sym->kind.has_value()) {
           if(std::holds_alternative<array_kind>(*(sym->kind))) {
@@ -184,7 +196,7 @@ bool Visitor::enter(const uast::AstNode * ast) {
           if(sym->kind.has_value()) {
              if(std::holds_alternative<array_kind>(*(sym->kind))) {
                 array_kind & symref = std::get<array_kind>(*(sym->kind));
-                symref.dom.ranges[symref.dom.ranges.size()-1].points.push_back( reinterpret_cast<IntLiteral const*>(ast)->value() );
+                symref.dom.ranges[symref.dom.ranges.size()-1].points.push_back( dynamic_cast<IntLiteral const*>(ast)->value() );
              }
           }
        }
@@ -246,7 +258,7 @@ bool Visitor::enter(const uast::AstNode * ast) {
     {
 //std::cout << "variable\tname?\t" << reinterpret_cast<NamedDecl const*>(ast)->name().c_str() << "\tis_init?\t" << (reinterpret_cast<Variable const*>(ast)->initExpression() == nullptr) << "\tis_type?\t" << (reinterpret_cast<Variable const*>(ast)->typeExpression() == nullptr) << std::endl;
        Symbol var{};
-       var.identifier = std::string{reinterpret_cast<NamedDecl const*>(ast)->name().c_str()};
+       var.identifier = std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()};
        sym = std::move(var);
        symnode = ast;
     }
@@ -508,6 +520,7 @@ void Visitor::exit(const uast::AstNode * ast) {
                       fstrm_ << "std::complex<double>";
                    }
                    else if(std::holds_alternative<string_kind>(sk_sym)) {
+                      headers[static_cast<std::size_t>(HeaderEnum::std_string)] = true;
                       fstrm_ << "std::string";
                    }
                 }
