@@ -540,6 +540,7 @@ void Visitor::exit(const uast::AstNode * ast) {
           }
           else {
              std::cerr << "chplx : " << (*(sym->identifier)) << " identifier already defined in current scope" << std::endl;
+             return;
           }
 
           sym.reset();
