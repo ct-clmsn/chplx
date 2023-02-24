@@ -13,7 +13,7 @@ This directory contains the backend.
   - `cd backend`
   - `mkdir build`
   - `cd build`
-  - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -DHPX_DIR=$(PATH_TO_HPX)/lib/cmake/HPX ..`
+  - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -Dfmt_DIR=$(PATH_TO_FMT)/lib/cmake/fmt ..`
 
   Backend usage example
 

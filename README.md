@@ -15,7 +15,7 @@ This project is split into 2 directories and 2 projects, frontend and backend.
   - cd frontend
   - mkdir build
   - cd build
-  - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -DHPX_DIR=$(PATH_TO_HPX)/lib/cmake/HPX -DCHPL_HOME=$(PATH_TO_CHAPEL) ..`
+  - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -DCHPL_HOME=$(PATH_TO_CHAPEL) ..`
 
   - license
 
@@ -31,7 +31,7 @@ This project is split into 2 directories and 2 projects, frontend and backend.
   - `cd backend`
   - `mkdir build`
   - `cd build`
-  - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -DHPX_DIR=$(PATH_TO_HPX)/lib/cmake/HPX ..`
+  - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -Dfmt_DIR=$(PATH_TO_FMT)/lib/cmake/fmt ..`
 
   Backend usage example
 

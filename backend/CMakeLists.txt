@@ -23,6 +23,7 @@ project(chplx VERSION ${CHPL_VERSION})
 
 find_package(LLVM REQUIRED CONFIG)
 find_package(Clang REQUIRED CONFIG)
+find_package(fmt REQUIRED CONFIG)
 #find_package(HPX REQUIRED CONFIG)
 
 link_directories(${LD_LIBRARY_PATH})
