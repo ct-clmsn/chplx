@@ -416,7 +416,7 @@ static bool doLookupInImports(Context* context,
                                                   visibility,
                                                   skipPrivateVisibilities);
         if (foundIds) {
-          result.push_back(std::move(foundIds.getValue()));
+          result.push_back(std::move(foundIds.value()));
           found = true;
         }
       }

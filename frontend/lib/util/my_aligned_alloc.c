@@ -23,6 +23,11 @@
 
 #include "my_aligned_alloc.h" // requires size_t already defined
 
+#if defined(_MSC_VER)
+#include <malloc.h>
+#define aligned_alloc(alignment, size) _aligned_malloc(alignment, size)
+#endif
+
 void *my_aligned_alloc(size_t alignment, size_t size) {
   // This is a workaround for aligned_alloc() seemingly not being
   // available on Mac OS X < 10.15, despite it claiming to support

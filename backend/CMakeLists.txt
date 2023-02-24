@@ -23,18 +23,26 @@ project(chplx VERSION ${CHPL_VERSION})
 
 find_package(LLVM REQUIRED CONFIG)
 find_package(Clang REQUIRED CONFIG)
-find_package(HPX REQUIRED CONFIG)
+#find_package(HPX REQUIRED CONFIG)
 
 link_directories(${LD_LIBRARY_PATH})
 
 add_definitions(${LLVM_DEFINITIONS})
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
-add_executable(chplx src/visitor.cpp src/driver.cpp)
+add_compile_definitions($<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>)
+
+set(chplx_sources src/visitor.cpp src/driver.cpp)
+if(MSVC)
+  set(chplx_sources ${chplx_sources} src/getopt.c)
+endif()
+
+add_executable(chplx ${chplx_sources})
 
 target_include_directories(chplx PUBLIC
                            ${LLVM_INCLUDE_DIRS}
                            ${CMAKE_CURRENT_SOURCE_DIR}/../frontend/include
                            ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(chplx PUBLIC -L. -L${CMAKE_CURRENT_SOURCE_DIR}/../frontend/build/lib -lChplFrontend ${llvm_libs})
+target_link_directories(chplx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../frontend/build/lib)
+target_link_libraries(chplx PUBLIC ChplFrontend ${llvm_libs})

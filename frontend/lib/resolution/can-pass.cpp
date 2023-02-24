@@ -1105,7 +1105,7 @@ commonType(Context* context,
   if (requiredKind) {
     // The caller enforces a particular kind on us. Make sure that the
     // computed properties line up with the kind.
-    auto requiredProperties = KindProperties::fromKind(requiredKind.getValue());
+    auto requiredProperties = KindProperties::fromKind(requiredKind.value());
     requiredProperties.strictCombineWith(properties);
     properties = requiredProperties;
   }
@@ -1136,7 +1136,7 @@ commonType(Context* context,
   }
 
   bool paramRequired = requiredKind &&
-    requiredKind.getValue() == QualifiedType::PARAM;
+    requiredKind.value() == QualifiedType::PARAM;
   if (bestKind == QualifiedType::PARAM && !paramRequired) {
     // We couldn't unify the types as params, but maybe if we downgrade
     // them to values, it'll work.

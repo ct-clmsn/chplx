@@ -15,7 +15,7 @@ This directory contains the backend.
   - `cd build`
   - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -DHPX_DIR=$(PATH_TO_HPX)/lib/cmake/HPX ..`
 
-  Backend useage example
+  Backend usage example
 
   `./chplx -f ../../test/release/examples/primers/arrays.chpl`
 

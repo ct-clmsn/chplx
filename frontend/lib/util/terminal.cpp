@@ -22,7 +22,13 @@
 #include "chpl/util/terminal.h"
 #include <cstring>
 #include <map>
+#ifndef YY_NO_UNISTD_H
 #include <unistd.h>
+#endif
+#if defined(_MSC_VER)
+#include <io.h>
+#define isatty(fd) _isatty(fd)
+#endif
 
 namespace chpl {
 

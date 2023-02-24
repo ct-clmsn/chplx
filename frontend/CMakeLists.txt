@@ -98,8 +98,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/chpl/config/config.h.cmake
                ${CMAKE_CURRENT_SOURCE_DIR}/include/chpl/config/config.h)
 
 
-# request C++14
-set(CMAKE_CXX_STANDARD 14)
+# request C++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # request C11
@@ -146,6 +146,9 @@ if( DYNO_ENABLE_ASSERTIONS )
     endforeach()
   endif()
 endif()
+
+add_compile_definitions($<$<BOOL:${MSVC}>:YY_NO_UNISTD_H>)
+add_compile_definitions($<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>)
 
 # set include directories for -I
 include_directories(include)

@@ -52,15 +52,16 @@ void Visitor::generateApplicationHeader() {
 
    std::ofstream os{prefix + ".hpp"};
    os << "#pragma once" << std::endl << std::endl;
-   os << "#ifndef __" << prefix << "_HPP__" << std::endl << std::endl;
+   os << "#ifndef __" << prefix << "_HPP__" << std::endl;
+   os << "#define __" << prefix << "_HPP__" << std::endl << std::endl;
 
    for(std::size_t i = 0; i < static_cast<std::size_t>(HeaderEnum::HeaderCount); ++i) {
       if(headers[i]) {
          if(i == static_cast<std::size_t>(HeaderEnum::std_vector)) {
-            os << "#include<vector>" << std::endl;
+            os << "#include <vector>" << std::endl;
          }
          else if(i == static_cast<std::size_t>(HeaderEnum::std_complex)) {
-            os << "#include<complex>" << std::endl;
+            os << "#include <complex>" << std::endl;
          }
       }
    }

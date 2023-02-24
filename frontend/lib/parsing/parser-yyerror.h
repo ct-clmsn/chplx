@@ -20,7 +20,7 @@
 
 #include <string>
 
-extern const char* yychpl_get_text(yyscan_t scanner);
+extern char* yychpl_get_text(yyscan_t scanner);
 
 namespace {
 enum ErrorKind {

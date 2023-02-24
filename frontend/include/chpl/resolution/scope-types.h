@@ -225,7 +225,7 @@ class BorrowedIdsWithName {
     if (isIdVisible(idAndVis, arePrivateIdsIgnored)) {
       return BorrowedIdsWithName(std::move(idAndVis), arePrivateIdsIgnored);
     }
-    return llvm::None;
+    return std::nullopt;
   }
 
   static BorrowedIdsWithName
@@ -234,7 +234,7 @@ class BorrowedIdsWithName {
                                        uast::Decl::Visibility::PUBLIC,
                                        arePrivateIdsIgnored);
     assert(maybeIds);
-    return maybeIds.getValue();
+    return maybeIds.value();
   }
 
   /** Return the number of IDs stored here */
@@ -382,8 +382,8 @@ class Scope {
       // There might not be any IDs that are visible to us, so borrow returns
       // an optional list.
       auto borrowedIds = search->second.borrow(arePrivateIdsIgnored);
-      if (borrowedIds.hasValue()) {
-        result.push_back(std::move(borrowedIds.getValue()));
+      if (borrowedIds.has_value()) {
+        result.push_back(std::move(borrowedIds.value()));
         return true;
       }
     }

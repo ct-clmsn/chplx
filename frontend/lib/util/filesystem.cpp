@@ -30,8 +30,15 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef YY_NO_UNISTD_H
 #include <unistd.h>
+#endif
+#ifndef _MSC_VER
 #include <pwd.h>
+#else
+#include <io.h>
+#define mkdtemp(...) _mktemp(__VA_ARGS__)
+#endif
 
 namespace chpl {
 
@@ -145,13 +152,17 @@ std::error_code makeTempDir(std::string dirPrefix, std::string& tmpDirPathOut) {
   std::string tmpdirprefix = std::string(getTempDir()) + "/" + dirPrefix;
   std::string tmpdirsuffix = ".deleteme-XXXXXX";
 
+#ifndef _MSC_VER
   struct passwd* passwdinfo = getpwuid(geteuid());
   const char* userid;
-  if (passwdinfo == NULL) {
+  if (passwdinfo == nullptr) {
     userid = "anon";
   } else {
     userid = passwdinfo->pw_name;
   }
+#else
+  const char* userid = "anon";
+#endif
   char* myuserid = strdup(userid);
   removeSpacesBackslashesFromString(myuserid);
   std::string tmpDir = tmpdirprefix + std::string(myuserid) + tmpdirsuffix;

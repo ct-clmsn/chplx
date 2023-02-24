@@ -25,6 +25,10 @@
 
 #include "my_strerror_r.h"
 
+#if defined(_MSC_VER)
+#define strerror_r(errno,buf,len) strerror_s(buf,len,errno)
+#endif
+
 int my_strerror_r(int errnum, char* strerrbuf, size_t buflen) {
   return strerror_r(errnum, strerrbuf, buflen);
 }
