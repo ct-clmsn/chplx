@@ -18,6 +18,18 @@
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
+// support for chapel's '?' type
+//
+struct undefined_kind {};
+
+// support for chapel's template/generics "t : ?" types
+//
+struct template_kind {
+   std::string identifier;
+
+   template_kind() : identifier() {}
+};
+
 struct byte_kind {};
 struct int_kind {};
 struct real_kind {};
@@ -38,6 +50,8 @@ struct domain_kind {
 
 using simple_kinds = std::variant<
    std::monostate,
+   undefined_kind,
+   template_kind,
    byte_kind,
    int_kind,
    real_kind,

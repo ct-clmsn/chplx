@@ -73,7 +73,7 @@ void Visitor::generateApplicationHeader() {
             os << "#include <complex>" << std::endl;
          }
          else if(i == static_cast<std::size_t>(HeaderEnum::std_string)) {
-            os << "#include<string>" << std::endl;
+            os << "#include <string>" << std::endl;
          }
       }
    }
