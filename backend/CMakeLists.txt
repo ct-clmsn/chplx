@@ -34,11 +34,14 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 add_compile_definitions($<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>)
 
 set(chplx_sources src/visitor.cpp src/driver.cpp)
+set(chplx_headers include/hpx/visitor.hpp include/ErrorGuard.h)
+
 if(MSVC)
   set(chplx_sources ${chplx_sources} src/getopt.c)
+  set(chplx_headers ${chplx_headers} include/getopt.h)
 endif()
 
-add_executable(chplx ${chplx_sources})
+add_executable(chplx ${chplx_sources} ${chplx_headers})
 
 target_include_directories(chplx PUBLIC
                            ${LLVM_INCLUDE_DIRS}

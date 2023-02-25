@@ -5,16 +5,17 @@
  * Distributed under the Boost Software License, Version 1.0. *(See accompanying
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
+#pragma once
+
 #include "chpl/uast/AstNode.h"
 #include "chpl/uast/Module.h"
 
 #include <optional>
 #include <ostream>
-#include <optional>
-#include <variant>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <variant>
+#include <vector>
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
@@ -27,7 +28,7 @@ struct undefined_kind {};
 struct template_kind {
    std::string identifier;
 
-   template_kind() : identifier() {}
+   template_kind() = default;
 };
 
 struct byte_kind {};
@@ -39,13 +40,13 @@ struct string_kind {};
 struct range_kind {
    std::vector<std::int64_t> points;
 
-   range_kind() : points() {}
+   range_kind() = default;
 };
 
 struct domain_kind {
    std::vector<range_kind> ranges;
 
-   domain_kind() : ranges() {};
+   domain_kind() = default;
 };
 
 struct func_kind;
@@ -91,7 +92,7 @@ struct array_kind {
    kind_types kind;
    domain_kind dom;   
 
-   array_kind() : kind(), dom() {}
+   array_kind() = default;
 };
 
 struct associative_kind {
@@ -103,13 +104,13 @@ struct SymbolBase {
     std::optional<kind_types> kind;
     std::optional<std::string> identifier;
 
-    SymbolBase() : kind(), identifier() {}
+    SymbolBase() = default;
 };
 
 struct Symbol : public SymbolBase {
     std::optional<SymbolBase> parent;
 
-    Symbol() : SymbolBase(), parent() {}
+    Symbol() = default;
 };
 
 struct SymbolTable {
@@ -127,7 +128,7 @@ struct SymbolTable {
       // new scopes are appended to
       // the end of the symboltable
       //
-      entries.push_back( std::unordered_map<std::string, Symbol>{} );
+      entries.emplace_back();
       return entries.size();
    }
 
@@ -136,13 +137,13 @@ struct SymbolTable {
       return entries.size();
    }
 
-   void addEntry(std::string const entry_str, Symbol s) {
+   void addEntry(std::string const& entry_str, Symbol s) {
       entries[entries.size()-1].insert(std::make_pair(entry_str, s));
    }
 
    std::optional<Symbol> scopedFind(std::string const& entry_str) const {
       const std::size_t idx = entries.size()-1;
-      auto itr = entries[idx].find(entry_str);
+      auto const itr = entries[idx].find(entry_str);
       if(itr != std::end(entries[idx])) {
          return itr->second;
       }
@@ -195,8 +196,8 @@ struct Visitor {
    Visitor(Visitor * v) = delete;
    Visitor(Visitor const* v) = delete;
 
-   Visitor(std::string const& chapel_file_path_str, std::ostream & fstrm)
-      : indent(0), fstrm_(fstrm), chpl_file_path_str(chapel_file_path_str), sym(), symnode(), symboltable(), headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false) {
+   Visitor(std::string chapel_file_path_str, std::ostream & fstrm)
+      : indent(0), fstrm_(fstrm), chpl_file_path_str(std::move(chapel_file_path_str)), sym(), symnode(), symboltable(), headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false) {
 
       Symbol strsym{};
       strsym.kind = string_kind{};
