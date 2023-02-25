@@ -208,6 +208,7 @@ struct Visitor {
    void generate_hpx_main_end();
    void generateApplicationHeader();
 
+   void emitIndent();
    void emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
    void emitArrayKindLit(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
    void emitByteKind(uast::AstNode const* ast, byte_kind & sym);
