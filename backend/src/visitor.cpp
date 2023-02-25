@@ -730,11 +730,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              if(std::holds_alternative<bool_kind>(*(sym->kind))) {
                 auto & symref = std::get<bool_kind>(*(sym->kind));
                 emitBoolKindLit(ast, symref);
+                sym.reset();
+                symnode.reset();
              }
           }
-
-          sym.reset();
-          symnode.reset();
        }
     }
     break;
@@ -745,11 +744,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              if(std::holds_alternative<complex_kind>(*(sym->kind))) {
                 auto & symref = std::get<complex_kind>(*(sym->kind));
                 emitComplexKindLit(ast, symref);
+                sym.reset();
+                symnode.reset();
              }
           }
-
-          sym.reset();
-          symnode.reset();
        }
     }
     break;
@@ -760,11 +758,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              if(std::holds_alternative<int_kind>(*(sym->kind))) {
                 auto & symref = std::get<int_kind>(*(sym->kind));
                 emitIntKindLit(ast, symref);
+                sym.reset();
+                symnode.reset();
              }
           }
-
-          sym.reset();
-          symnode.reset();
        }
     }
     break;
@@ -775,11 +772,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              if(std::holds_alternative<real_kind>(*(sym->kind))) {
                 auto & symref = std::get<real_kind>(*(sym->kind));
                 emitRealKindLit(ast, symref);
+                sym.reset();
+                symnode.reset();
              }
           }
-
-          sym.reset();
-          symnode.reset();
        }
     }
     break;
@@ -790,11 +786,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              if(std::holds_alternative<int_kind>(*(sym->kind))) {
                 auto & symref = std::get<int_kind>(*(sym->kind));
                 emitIntKindLit(ast, symref);
+                sym.reset();
+                symnode.reset();
              }
           }
-
-          sym.reset();
-          symnode.reset();
        }
     }
     break;
@@ -807,11 +802,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              if(std::holds_alternative<byte_kind>(*(sym->kind))) {
                 auto & symref = std::get<byte_kind>(*(sym->kind));
                 emitByteKindLit(ast, symref);
+                sym.reset();
+                symnode.reset();
              }
           }
-
-          sym.reset();
-          symnode.reset();
        }
     }
     break;
@@ -822,11 +816,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              if(std::holds_alternative<string_kind>(*(sym->kind))) {
                 auto & symref = std::get<string_kind>(*(sym->kind));
                 emitStringKindLit(ast, symref);
+                sym.reset();
+                symnode.reset();
              }
           }
-
-          sym.reset();
-          symnode.reset();
        }
     }
     break;
@@ -837,11 +830,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              if(std::holds_alternative<string_kind>(*(sym->kind))) {
                 auto & symref = std::get<string_kind>(*(sym->kind));
                 emitStringKindLit(ast, symref);
+                sym.reset();
+                symnode.reset();
              }
           }
-
-          sym.reset();
-          symnode.reset();
        }
     }
     break;
