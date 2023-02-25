@@ -185,6 +185,13 @@ bool Visitor::enter(const uast::AstNode * ast) {
              }
           }
        }
+       else {
+          auto fsym = symboltable.find(identifier_str);
+          if(fsym.has_value()) {
+             sym->kind = (*(fsym->kind));
+          }
+       }
+
     }
     break;
     case asttags::Import:
@@ -403,6 +410,131 @@ bool Visitor::enter(const uast::AstNode * ast) {
    return true;
 }
 
+void Visitor::emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & symref) {
+
+   headers[static_cast<std::size_t>(HeaderEnum::std_vector)] = true;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "std::vector<";
+
+   if(std::holds_alternative<int_kind>(symref->kind)) {
+         fstrm_ << "std::int64_t";
+   }
+   else if(std::holds_alternative<byte_kind>(symref->kind)) {
+         fstrm_ << "std::uint8_t";
+   }
+   else if(std::holds_alternative<real_kind>(symref->kind)) {
+         fstrm_ << "double";
+   }
+   else if(std::holds_alternative<complex_kind>(symref->kind)) {
+         headers[static_cast<std::size_t>(HeaderEnum::std_complex)] = true;
+         fstrm_ << "std::complex<double>";
+   }
+   else if(std::holds_alternative<string_kind>(symref->kind)) {
+         headers[static_cast<std::size_t>(HeaderEnum::std_string)] = true;
+         fstrm_ << "std::string";
+   }
+   assert( sym->identifier.has_value() );
+
+   int range_size = 1;
+   for(const auto & rng : symref->dom.ranges) {
+      if(rng.points.size() == 2) {
+         range_size *= ( (rng.points[1] - rng.points[0]) + rng.points[0] );
+      }
+      else if(rng.points.size() == 1) {
+         range_size *= rng.points[0];
+      }
+   }
+
+   if(range_size > 1) {
+      fstrm_ << "> " << (*(sym->identifier)) << "(" << range_size << ");" << std::endl;
+   }
+   else {
+      fstrm_ << "> " << (*(sym->identifier)) << "{};" << std::endl;
+   }
+}
+
+void Visitor::emitByteKind(uast::AstNode const* ast, byte_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "std::uint8_t " << (*(sym->identifier)) << ";" << std::endl;
+
+}
+
+void Visitor::emitIntKind(uast::AstNode const* ast, int_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "int " << (*(sym->identifier)) << ";" << std::endl;
+
+}
+
+void Visitor::emitRealKind(uast::AstNode const* ast, real_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "double " << (*(sym->identifier)) << ";" << std::endl;
+}
+
+void Visitor::emitComplexKind(uast::AstNode const* ast, complex_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "std::complex<double> " << (*(sym->identifier)) << "{};" << std::endl;
+}
+
+void Visitor::emitStringKind(uast::AstNode const* ast, string_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "std::string " << (*(sym->identifier)) << "{};" << std::endl;
+}
+
 void Visitor::exit(const uast::AstNode * ast) {
 //std::cout << "exit\t" << ast->tag() << std::endl;
    switch(ast->tag()) {
@@ -528,56 +660,28 @@ void Visitor::exit(const uast::AstNode * ast) {
           if(sym->kind.has_value()) {
 
              if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-                headers[static_cast<std::size_t>(HeaderEnum::std_vector)] = true;
                 auto & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
-
-                for(std::size_t i = 0; i < indent; ++i) {
-                    fstrm_ << INDENT; 
-                }
-     
-                auto fpth = br.filePath();
-                fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-                for(std::size_t i = 0; i < indent; ++i) {
-                    fstrm_ << INDENT; 
-                }
-                fstrm_ << "std::vector<";
-
-                if(std::holds_alternative<int_kind>(symref->kind)) {
-                   fstrm_ << "std::int64_t";
-                }
-                else if(std::holds_alternative<byte_kind>(symref->kind)) {
-                   fstrm_ << "std::uint8_t";
-                }
-                else if(std::holds_alternative<real_kind>(symref->kind)) {
-                   fstrm_ << "double";
-                }
-                else if(std::holds_alternative<complex_kind>(symref->kind)) {
-                   headers[static_cast<std::size_t>(HeaderEnum::std_complex)] = true;
-                   fstrm_ << "std::complex<double>";
-                }
-                else if(std::holds_alternative<string_kind>(symref->kind)) {
-                   headers[static_cast<std::size_t>(HeaderEnum::std_string)] = true;
-                   fstrm_ << "std::string";
-                }
-                assert( sym->identifier.has_value() );
-
-                int range_size = 1;
-                for(const auto & rng : symref->dom.ranges) {
-                   if(rng.points.size() == 2) {
-                      range_size *= ( (rng.points[1] - rng.points[0]) + rng.points[0] );
-                   }
-                   else if(rng.points.size() == 1) {
-                      range_size *= rng.points[0];
-                   }
-                }
-
-                if(range_size > 1) {
-                   fstrm_ << "> " << (*(sym->identifier)) << "(" << range_size << ");" << std::endl;
-                }
-                else {
-                   fstrm_ << "> " << (*(sym->identifier)) << "{};" << std::endl;
-                }
+                emitArrayKind(ast, symref);
+             }
+             else if(std::holds_alternative<byte_kind>(*(sym->kind))) {
+                auto & symref = std::get<byte_kind>(*(sym->kind));
+                emitByteKind(ast, symref);
+             }
+             else if(std::holds_alternative<int_kind>(*(sym->kind))) {
+                auto & symref = std::get<int_kind>(*(sym->kind));
+                emitIntKind(ast, symref);
+             }
+             else if(std::holds_alternative<real_kind>(*(sym->kind))) {
+                auto & symref = std::get<real_kind>(*(sym->kind));
+                emitRealKind(ast, symref);
+             }
+             else if(std::holds_alternative<complex_kind>(*(sym->kind))) {
+                auto & symref = std::get<complex_kind>(*(sym->kind));
+                emitComplexKind(ast, symref);
+             }
+             else if(std::holds_alternative<string_kind>(*(sym->kind))) {
+                auto & symref = std::get<string_kind>(*(sym->kind));
+                emitStringKind(ast, symref);
              }
           }
 

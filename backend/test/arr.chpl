@@ -6,9 +6,17 @@
 //
 
 //var a = [1,2,3,4,5];
+var v : real;
+var w : byte;
+var x : int;
+var y : complex;
+var z : string;
+
 var a : [1..10] int;
 var b : [1..10] real;
 var c : [1..10] complex;
+var d : [1..10] string;
+var e : [1..10] byte;
 
 //var a = {1..10};
 //var a : domain(1) = {1..10};

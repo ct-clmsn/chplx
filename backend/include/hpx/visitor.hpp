@@ -206,6 +206,13 @@ struct Visitor {
    void generate_hpx_main_end();
    void generateApplicationHeader();
 
+   void emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
+   void emitByteKind(uast::AstNode const* ast, byte_kind & sym);
+   void emitIntKind(uast::AstNode const* ast, int_kind & sym);
+   void emitRealKind(uast::AstNode const* ast, real_kind & sym);
+   void emitComplexKind(uast::AstNode const* ast, complex_kind & sym);
+   void emitStringKind(uast::AstNode const* ast, string_kind & sym);
+
    chpl::uast::BuilderResult const& br;
    std::size_t indent; 
    std::ostream & fstrm_;
