@@ -25,6 +25,10 @@ Visitor::Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& 
      sym(), symnode(), symboltable(),
      headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false)
 {
+   // populate the symbol table with a base set of entries:
+   //
+   // bool, string, int, real, byte, complex, range, domain, template
+   //
    Symbol bsym{};
    bsym.kind = bool_kind{};
    bsym.identifier = "bool";
