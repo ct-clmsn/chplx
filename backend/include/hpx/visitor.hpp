@@ -7,6 +7,10 @@
  */
 #pragma once
 
+#ifndef __CHPLX_VISITOR_HPP__
+#define __CHPLX_VISITOR_HPP__
+
+#include "chpl/uast/Builder.h"
 #include "chpl/uast/AstNode.h"
 #include "chpl/uast/Module.h"
 
@@ -19,14 +23,10 @@
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-// support for chapel's '?' type
-//
-struct undefined_kind {};
-
-// support for chapel's template/generics "t : ?" types
+// support for chapel's template/generics '?" and "t : ?" types
 //
 struct template_kind {
-   std::string identifier;
+   std::optional<std::string> identifier;
 
    template_kind() = default;
 };
@@ -57,7 +57,6 @@ struct associative_kind;
 
 using kind_types = std::variant<
    std::monostate,
-   undefined_kind,
    template_kind,
    byte_kind,
    int_kind,
@@ -196,49 +195,7 @@ struct Visitor {
    Visitor(Visitor * v) = delete;
    Visitor(Visitor const* v) = delete;
 
-   Visitor(std::string chapel_file_path_str, std::ostream & fstrm)
-      : indent(0), fstrm_(fstrm), chpl_file_path_str(std::move(chapel_file_path_str)), sym(), symnode(), symboltable(), headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false) {
-
-      Symbol strsym{};
-      strsym.kind = string_kind{};
-      strsym.identifier = "string";
-      symboltable.addEntry(*(strsym.identifier), strsym);
-
-      Symbol intsym{};
-      intsym.kind = int_kind{};
-      intsym.identifier = "int";
-      symboltable.addEntry(*(intsym.identifier), intsym);
-
-      Symbol realsym{};
-      realsym.kind = real_kind{};
-      realsym.identifier = "real";
-      symboltable.addEntry(*(realsym.identifier), realsym);
-
-      Symbol bytesym{};
-      bytesym.kind = byte_kind{};
-      bytesym.identifier = "byte";
-      symboltable.addEntry(*(bytesym.identifier), bytesym);
-
-      Symbol cmplxsym{};
-      cmplxsym.kind = complex_kind{};
-      cmplxsym.identifier = "complex";
-      symboltable.addEntry(*(cmplxsym.identifier), cmplxsym);
-
-      Symbol rngsym{};
-      rngsym.kind = range_kind{};
-      rngsym.identifier = "range";
-      symboltable.addEntry(*(rngsym.identifier), rngsym);
-
-      Symbol domsym{};
-      domsym.kind = domain_kind{};
-      domsym.identifier = "domain";
-      symboltable.addEntry(*(domsym.identifier), domsym);
-
-      Symbol unksym{};
-      unksym.kind = undefined_kind{};
-      unksym.identifier = "?";
-      symboltable.addEntry(*(unksym.identifier), unksym);
-   }
+   Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& chapel_file_path_str, std::ostream & fstrm);
 
    bool enter(const uast::AstNode * node);
    void exit(const uast::AstNode * node);
@@ -249,6 +206,7 @@ struct Visitor {
    void generate_hpx_main_end();
    void generateApplicationHeader();
 
+   chpl::uast::BuilderResult const& br;
    std::size_t indent; 
    std::ostream & fstrm_;
    std::string chpl_file_path_str;
@@ -260,3 +218,5 @@ struct Visitor {
 
 
 } /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chpl */
+
+#endif

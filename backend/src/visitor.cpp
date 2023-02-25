@@ -19,6 +19,53 @@ using namespace chpl::uast;
  
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
+Visitor::Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& chapel_file_path_str, std::ostream & fstrm)
+   : br(chapel_br), indent(0), fstrm_(fstrm),
+     chpl_file_path_str(chapel_file_path_str),
+     sym(), symnode(), symboltable(),
+     headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false)
+{
+   Symbol strsym{};
+   strsym.kind = string_kind{};
+   strsym.identifier = "string";
+   symboltable.addEntry(*(strsym.identifier), strsym);
+
+   Symbol intsym{};
+   intsym.kind = int_kind{};
+   intsym.identifier = "int";
+   symboltable.addEntry(*(intsym.identifier), intsym);
+
+   Symbol realsym{};
+   realsym.kind = real_kind{};
+   realsym.identifier = "real";
+   symboltable.addEntry(*(realsym.identifier), realsym);
+
+   Symbol bytesym{};
+   bytesym.kind = byte_kind{};
+   bytesym.identifier = "byte";
+   symboltable.addEntry(*(bytesym.identifier), bytesym);
+
+   Symbol cmplxsym{};
+   cmplxsym.kind = complex_kind{};
+   cmplxsym.identifier = "complex";
+   symboltable.addEntry(*(cmplxsym.identifier), cmplxsym);
+
+   Symbol rngsym{};
+   rngsym.kind = range_kind{};
+   rngsym.identifier = "range";
+   symboltable.addEntry(*(rngsym.identifier), rngsym);
+
+   Symbol domsym{};
+   domsym.kind = domain_kind{};
+   domsym.identifier = "domain";
+   symboltable.addEntry(*(domsym.identifier), domsym);
+
+   Symbol tmplsym{};
+   tmplsym.kind = template_kind{};
+   tmplsym.identifier = "?";
+   symboltable.addEntry(*(tmplsym.identifier), tmplsym);
+}
+
 static inline void upper(std::string & s) {
    std::transform(std::begin(s), std::end(s), std::begin(s), 
       [](const unsigned char c){ return std::toupper(c); } // correct
@@ -487,8 +534,14 @@ void Visitor::exit(const uast::AstNode * ast) {
                 for(std::size_t i = 0; i < indent; ++i) {
                     fstrm_ << INDENT; 
                 }
+     
+                auto fpth = br.filePath();
+                fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
 
-                fstrm_ << "std::vector<";
+                for(std::size_t i = 0; i < indent; ++i) {
+                    fstrm_ << INDENT; 
+                }
+                fstrm_ << "chpl::datatypes::hpx::array<";
 
                 if(std::holds_alternative<int_kind>(symref->kind)) {
                    fstrm_ << "std::int64_t";
