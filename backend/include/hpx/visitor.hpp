@@ -209,6 +209,7 @@ struct Visitor {
    void generateApplicationHeader();
 
    void emitIndent();
+   void emitChapelLine(uast::AstNode const* ast);
    void emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
    void emitArrayKindLit(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
    void emitByteKind(uast::AstNode const* ast, byte_kind & sym);

@@ -113,6 +113,15 @@ void Visitor::emitIndent() {
    }
 }
 
+void Visitor::emitChapelLine(uast::AstNode const* ast) {
+   emitIndent();
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   emitIndent();
+}
+
 void Visitor::generateApplicationHeader() {
    const auto pos = chpl_file_path_str.find(".");
    std::string prefix = chpl_file_path_str.substr(0, pos);
@@ -536,129 +545,64 @@ void Visitor::emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind
 }
 
 void Visitor::emitByteKind(uast::AstNode const* ast, byte_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "std::uint8_t " << (*(sym->identifier)) << ";" << std::endl;
-
 }
 
 void Visitor::emitByteKindLit(uast::AstNode const* ast, byte_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "std::uint8_t " << (*(sym->identifier)) << " = " << dynamic_cast<uast::BytesLiteral const*>(ast)->value() << ";" << std::endl;
-
 }
 
 void Visitor::emitIntKind(uast::AstNode const* ast, int_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "std::int64_t " << (*(sym->identifier)) << ";" << std::endl;
-
 }
 
 void Visitor::emitIntKindLit(uast::AstNode const* ast, int_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "std::int64_t " << (*(sym->identifier)) << " = " << dynamic_cast<uast::IntLiteral const*>(ast)->value() << ";" << std::endl;
-
 }
 
 void Visitor::emitRealKind(uast::AstNode const* ast, real_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "double " << (*(sym->identifier)) << ";" << std::endl;
 }
 
 void Visitor::emitRealKindLit(uast::AstNode const* ast, real_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    const double val = dynamic_cast<uast::RealLiteral const*>(ast)->value();
    fstrm_ << "double " << (*(sym->identifier)) << " = " << std::fixed << val << ";" << std::endl;
 }
 
 
 void Visitor::emitComplexKind(uast::AstNode const* ast, complex_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "std::complex<double> " << (*(sym->identifier)) << "{};" << std::endl;
 }
 
 void Visitor::emitComplexKindLit(uast::AstNode const* ast, complex_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "std::complex<double> " << (*(sym->identifier)) << " = " << dynamic_cast<uast::ImagLiteral const*>(ast)->value() << ";" << std::endl;
 }
 
-
 void Visitor::emitStringKind(uast::AstNode const* ast, string_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "std::string " << (*(sym->identifier)) << "{};" << std::endl;
 }
 
 void Visitor::emitStringKindLit(uast::AstNode const* ast, string_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "std::string " << (*(sym->identifier)) << "{\"" << dynamic_cast<uast::StringLiteral const*>(ast)->value() << "\"};" << std::endl;
 }
 
 void Visitor::emitBoolKind(uast::AstNode const* ast, bool_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "bool " << (*(sym->identifier)) << ";" << std::endl;
 }
 
 void Visitor::emitBoolKindLit(uast::AstNode const* ast, bool_kind & symref) {
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
+   emitChapelLine(ast);
    fstrm_ << "bool " << (*(sym->identifier)) << " = " << ( dynamic_cast<uast::BoolLiteral const*>(ast)->value() ? "true" : "false" ) << ";" << std::endl;
 }
 
