@@ -132,7 +132,7 @@ int main(int argc, char ** argv) {
 
       std::ofstream ofs(ofilePath);
       {
-         chpl::ast::visitors::hpx::Visitor v{ofilePath, ofs};
+         chpl::ast::visitors::hpx::Visitor v{br, ofilePath, ofs};
 
          v.generateSourceHeader();
          v.generate_hpx_main_beg();

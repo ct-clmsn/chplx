@@ -541,7 +541,7 @@ void Visitor::exit(const uast::AstNode * ast) {
                 for(std::size_t i = 0; i < indent; ++i) {
                     fstrm_ << INDENT; 
                 }
-                fstrm_ << "chpl::datatypes::hpx::array<";
+                fstrm_ << "std::vector<";
 
                 if(std::holds_alternative<int_kind>(symref->kind)) {
                    fstrm_ << "std::int64_t";
