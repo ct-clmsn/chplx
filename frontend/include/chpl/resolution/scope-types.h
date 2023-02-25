@@ -225,11 +225,12 @@ class BorrowedIdsWithName {
     if (isIdVisible(idAndVis, arePrivateIdsIgnored)) {
       return BorrowedIdsWithName(std::move(idAndVis), arePrivateIdsIgnored);
     }
-#if LLVM_VERSION_MAJOR == 15
+
+    #if LLVM_VERSION_MAJOR == 15
     return llvm::None;
-#else
+    #else
     return std::nullopt;
-#endif
+    #endif
   }
 
   static BorrowedIdsWithName

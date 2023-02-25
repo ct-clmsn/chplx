@@ -46,7 +46,11 @@ llvm::Optional<BorrowedIdsWithName> OwnedIdsWithName::borrow(bool skipPrivateVis
   }
   // The first ID isn't visible; are others?
   if (moreIds_.get() == nullptr) {
+    #if LLVM_VERSION_MAJOR == 15
+    return llvm::None;
+    #else
     return std::nullopt;
+    #endif
   }
 
   for (auto& id : *moreIds_) {
@@ -57,7 +61,11 @@ llvm::Optional<BorrowedIdsWithName> OwnedIdsWithName::borrow(bool skipPrivateVis
   }
 
   // No ID was visible, so we can't borrow.
+  #if LLVM_VERSION_MAJOR == 15
+  return llvm::None;
+  #else
   return std::nullopt;
+  #endif
 }
 
 void BorrowedIdsWithName::stringify(std::ostream& ss,
