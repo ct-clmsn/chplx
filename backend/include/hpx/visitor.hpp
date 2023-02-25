@@ -32,6 +32,7 @@ struct template_kind {
 };
 
 struct byte_kind {};
+struct bool_kind {};
 struct int_kind {};
 struct real_kind {};
 struct complex_kind {};
@@ -59,6 +60,7 @@ using kind_types = std::variant<
    std::monostate,
    template_kind,
    byte_kind,
+   bool_kind,
    int_kind,
    real_kind,
    complex_kind,
@@ -207,11 +209,19 @@ struct Visitor {
    void generateApplicationHeader();
 
    void emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
+   void emitArrayKindLit(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
    void emitByteKind(uast::AstNode const* ast, byte_kind & sym);
+   void emitByteKindLit(uast::AstNode const* ast, byte_kind & sym);
    void emitIntKind(uast::AstNode const* ast, int_kind & sym);
+   void emitIntKindLit(uast::AstNode const* ast, int_kind & symref);
    void emitRealKind(uast::AstNode const* ast, real_kind & sym);
+   void emitRealKindLit(uast::AstNode const* ast, real_kind & sym);
    void emitComplexKind(uast::AstNode const* ast, complex_kind & sym);
+   void emitComplexKindLit(uast::AstNode const* ast, complex_kind & sym);
    void emitStringKind(uast::AstNode const* ast, string_kind & sym);
+   void emitStringKindLit(uast::AstNode const* ast, string_kind & sym);
+   void emitBoolKind(uast::AstNode const* ast, bool_kind & sym);
+   void emitBoolKindLit(uast::AstNode const* ast, bool_kind & sym);
 
    chpl::uast::BuilderResult const& br;
    std::size_t indent; 

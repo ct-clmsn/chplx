@@ -6,6 +6,8 @@
 //
 
 //var a = [1,2,3,4,5];
+
+var u : bool;
 var v : real;
 var w : byte;
 var x : int;
@@ -17,6 +19,12 @@ var b : [1..10] real;
 var c : [1..10] complex;
 var d : [1..10] string;
 var e : [1..10] byte;
+var f : [1..10] bool;
+
+var g = 1;
+var h = true;
+var i = "value";
+var j = 1.0;
 
 //var a = {1..10};
 //var a : domain(1) = {1..10};

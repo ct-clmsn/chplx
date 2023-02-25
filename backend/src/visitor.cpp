@@ -25,6 +25,11 @@ Visitor::Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& 
      sym(), symnode(), symboltable(),
      headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false)
 {
+   Symbol bsym{};
+   bsym.kind = bool_kind{};
+   bsym.identifier = "bool";
+   symboltable.addEntry(*(bsym.identifier), bsym);
+
    Symbol strsym{};
    strsym.kind = string_kind{};
    strsym.identifier = "string";
@@ -230,8 +235,24 @@ bool Visitor::enter(const uast::AstNode * ast) {
     case asttags::START_Literal:
     break;
     case asttags::BoolLiteral:
+    {
+        if(sym) {
+           auto fsym = symboltable.find("bool");
+           if(fsym.has_value()) {
+             sym->kind = (*(fsym->kind));
+           }
+        }
+    }
     break;
     case asttags::ImagLiteral:
+    {
+        if(sym) {
+           auto fsym = symboltable.find("complex");
+           if(fsym.has_value()) {
+             sym->kind = (*(fsym->kind));
+           }
+        }
+    }
     break;
     case asttags::IntLiteral:
     {
@@ -241,19 +262,65 @@ bool Visitor::enter(const uast::AstNode * ast) {
               symref->dom.ranges[symref->dom.ranges.size()-1].points.push_back( dynamic_cast<IntLiteral const*>(ast)->value() );
            }
         }
+        else {
+           auto fsym = symboltable.find("int");
+           if(fsym.has_value()) {
+              sym->kind = (*(fsym->kind));
+           }
+        }
     }
     break;
     case asttags::RealLiteral:
+    {
+        if(sym) {
+           auto fsym = symboltable.find("real");
+           if(fsym.has_value()) {
+             sym->kind = (*(fsym->kind));
+           }
+        }
+    }
     break;
     case asttags::UintLiteral:
+    {
+        if(sym) {
+           auto fsym = symboltable.find("int");
+           if(fsym.has_value()) {
+             sym->kind = (*(fsym->kind));
+           }
+        }
+    }
     break;
     case asttags::START_StringLikeLiteral:
     break;
     case asttags::BytesLiteral:
+    {
+        if(sym) {
+           auto fsym = symboltable.find("byte");
+           if(fsym.has_value()) {
+             sym->kind = (*(fsym->kind));
+           }
+        }
+    }
     break;
     case asttags::CStringLiteral:
+    {
+        if(sym) {
+           auto fsym = symboltable.find("string");
+           if(fsym.has_value()) {
+             sym->kind = (*(fsym->kind));
+           }
+        }
+    }
     break;
     case asttags::StringLiteral:
+    {
+        if(sym) {
+           auto fsym = symboltable.find("string");
+           if(fsym.has_value()) {
+             sym->kind = (*(fsym->kind));
+           }
+        }
+    }
     break;
     case asttags::END_StringLikeLiteral:
     break;
@@ -435,6 +502,9 @@ void Visitor::emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind
    else if(std::holds_alternative<real_kind>(symref->kind)) {
          fstrm_ << "double";
    }
+   else if(std::holds_alternative<bool_kind>(symref->kind)) {
+         fstrm_ << "bool";
+   }
    else if(std::holds_alternative<complex_kind>(symref->kind)) {
          headers[static_cast<std::size_t>(HeaderEnum::std_complex)] = true;
          fstrm_ << "std::complex<double>";
@@ -478,6 +548,21 @@ void Visitor::emitByteKind(uast::AstNode const* ast, byte_kind & symref) {
 
 }
 
+void Visitor::emitByteKindLit(uast::AstNode const* ast, byte_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "std::uint8_t " << (*(sym->identifier)) << " = " << dynamic_cast<uast::BytesLiteral const*>(ast)->value() << ";" << std::endl;
+
+}
+
 void Visitor::emitIntKind(uast::AstNode const* ast, int_kind & symref) {
    for(std::size_t i = 0; i < indent; ++i) {
       fstrm_ << INDENT; 
@@ -489,7 +574,22 @@ void Visitor::emitIntKind(uast::AstNode const* ast, int_kind & symref) {
    for(std::size_t i = 0; i < indent; ++i) {
          fstrm_ << INDENT; 
    }
-   fstrm_ << "int " << (*(sym->identifier)) << ";" << std::endl;
+   fstrm_ << "std::int64_t " << (*(sym->identifier)) << ";" << std::endl;
+
+}
+
+void Visitor::emitIntKindLit(uast::AstNode const* ast, int_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "std::int64_t " << (*(sym->identifier)) << " = " << dynamic_cast<uast::IntLiteral const*>(ast)->value() << ";" << std::endl;
 
 }
 
@@ -507,6 +607,22 @@ void Visitor::emitRealKind(uast::AstNode const* ast, real_kind & symref) {
    fstrm_ << "double " << (*(sym->identifier)) << ";" << std::endl;
 }
 
+void Visitor::emitRealKindLit(uast::AstNode const* ast, real_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   const double val = dynamic_cast<uast::RealLiteral const*>(ast)->value();
+   fstrm_ << "double " << (*(sym->identifier)) << " = " << std::fixed << val << ";" << std::endl;
+}
+
+
 void Visitor::emitComplexKind(uast::AstNode const* ast, complex_kind & symref) {
    for(std::size_t i = 0; i < indent; ++i) {
       fstrm_ << INDENT; 
@@ -521,6 +637,21 @@ void Visitor::emitComplexKind(uast::AstNode const* ast, complex_kind & symref) {
    fstrm_ << "std::complex<double> " << (*(sym->identifier)) << "{};" << std::endl;
 }
 
+void Visitor::emitComplexKindLit(uast::AstNode const* ast, complex_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "std::complex<double> " << (*(sym->identifier)) << " = " << dynamic_cast<uast::ImagLiteral const*>(ast)->value() << ";" << std::endl;
+}
+
+
 void Visitor::emitStringKind(uast::AstNode const* ast, string_kind & symref) {
    for(std::size_t i = 0; i < indent; ++i) {
       fstrm_ << INDENT; 
@@ -533,6 +664,48 @@ void Visitor::emitStringKind(uast::AstNode const* ast, string_kind & symref) {
          fstrm_ << INDENT; 
    }
    fstrm_ << "std::string " << (*(sym->identifier)) << "{};" << std::endl;
+}
+
+void Visitor::emitStringKindLit(uast::AstNode const* ast, string_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "std::string " << (*(sym->identifier)) << "{\"" << dynamic_cast<uast::StringLiteral const*>(ast)->value() << "\"};" << std::endl;
+}
+
+void Visitor::emitBoolKind(uast::AstNode const* ast, bool_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "bool " << (*(sym->identifier)) << ";" << std::endl;
+}
+
+void Visitor::emitBoolKindLit(uast::AstNode const* ast, bool_kind & symref) {
+   for(std::size_t i = 0; i < indent; ++i) {
+      fstrm_ << INDENT; 
+   }
+     
+   auto fpth = br.filePath();
+   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
+
+   for(std::size_t i = 0; i < indent; ++i) {
+         fstrm_ << INDENT; 
+   }
+   fstrm_ << "bool " << (*(sym->identifier)) << " = " << ( dynamic_cast<uast::BoolLiteral const*>(ast)->value() ? "true" : "false" ) << ";" << std::endl;
 }
 
 void Visitor::exit(const uast::AstNode * ast) {
@@ -597,22 +770,126 @@ void Visitor::exit(const uast::AstNode * ast) {
     case asttags::START_Literal:
     break;
     case asttags::BoolLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<bool_kind>(*(sym->kind))) {
+                auto & symref = std::get<bool_kind>(*(sym->kind));
+                emitBoolKindLit(ast, symref);
+             }
+          }
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::ImagLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<complex_kind>(*(sym->kind))) {
+                auto & symref = std::get<complex_kind>(*(sym->kind));
+                emitComplexKindLit(ast, symref);
+             }
+          }
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::IntLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<int_kind>(*(sym->kind))) {
+                auto & symref = std::get<int_kind>(*(sym->kind));
+                emitIntKindLit(ast, symref);
+             }
+          }
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::RealLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<real_kind>(*(sym->kind))) {
+                auto & symref = std::get<real_kind>(*(sym->kind));
+                emitRealKindLit(ast, symref);
+             }
+          }
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::UintLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<int_kind>(*(sym->kind))) {
+                auto & symref = std::get<int_kind>(*(sym->kind));
+                emitIntKindLit(ast, symref);
+             }
+          }
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::START_StringLikeLiteral:
     break;
     case asttags::BytesLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<byte_kind>(*(sym->kind))) {
+                auto & symref = std::get<byte_kind>(*(sym->kind));
+                emitByteKindLit(ast, symref);
+             }
+          }
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::CStringLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<string_kind>(*(sym->kind))) {
+                auto & symref = std::get<string_kind>(*(sym->kind));
+                emitStringKindLit(ast, symref);
+             }
+          }
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::StringLiteral:
+    {
+       if(sym.has_value()) {
+          if(sym->kind.has_value()) {
+             if(std::holds_alternative<string_kind>(*(sym->kind))) {
+                auto & symref = std::get<string_kind>(*(sym->kind));
+                emitStringKindLit(ast, symref);
+             }
+          }
+
+          sym.reset();
+          symnode.reset();
+       }
+    }
     break;
     case asttags::END_StringLikeLiteral:
     break;
@@ -682,6 +959,10 @@ void Visitor::exit(const uast::AstNode * ast) {
              else if(std::holds_alternative<string_kind>(*(sym->kind))) {
                 auto & symref = std::get<string_kind>(*(sym->kind));
                 emitStringKind(ast, symref);
+             }
+             else if(std::holds_alternative<bool_kind>(*(sym->kind))) {
+                auto & symref = std::get<bool_kind>(*(sym->kind));
+                emitBoolKind(ast, symref);
              }
           }
 
