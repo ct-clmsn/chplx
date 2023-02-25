@@ -80,7 +80,7 @@ void Visitor::generateApplicationHeader() {
       }
    }
 
-   os << std::endl << "#endif";
+   os << std::endl << "#endif" << std::endl;
 
    os.flush();
    os.close();
@@ -110,7 +110,7 @@ bool Visitor::enter(const uast::AstNode * ast) {
         if(sym.has_value()) {
             if(sym->kind.has_value()) {
                 if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-                    std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom = std::move(domain_kind{});
+                    std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom = domain_kind{};
                 }
             }
         }
@@ -130,7 +130,7 @@ bool Visitor::enter(const uast::AstNode * ast) {
     {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
 
-       if(sym->kind.has_value()) {
+       if(sym && sym->kind.has_value()) {
           if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
              auto fsym = symboltable.find(identifier_str);
              if(fsym.has_value()) {
@@ -150,13 +150,11 @@ bool Visitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Range:
     {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-                std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom.ranges.push_back(range_kind{});
-             }
-          }
-       }
+        if(sym && sym->kind.has_value()) {
+           if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
+              std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom.ranges.push_back(range_kind{});
+           }
+        }
     }
     break;
     case asttags::Require:
@@ -183,14 +181,12 @@ bool Visitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::IntLiteral:
     {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-                std::shared_ptr<array_kind> & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
-                symref->dom.ranges[symref->dom.ranges.size()-1].points.push_back( dynamic_cast<IntLiteral const*>(ast)->value() );
-             }
-          }
-       }
+        if(sym && sym->kind.has_value()) {
+           if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
+              std::shared_ptr<array_kind> & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
+              symref->dom.ranges[symref->dom.ranges.size()-1].points.push_back( dynamic_cast<IntLiteral const*>(ast)->value() );
+           }
+        }
     }
     break;
     case asttags::RealLiteral:
@@ -486,7 +482,7 @@ void Visitor::exit(const uast::AstNode * ast) {
 
              if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
                 headers[static_cast<std::size_t>(HeaderEnum::std_vector)] = true;
-                std::shared_ptr<array_kind> & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
+                auto & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
 
                 for(std::size_t i = 0; i < indent; ++i) {
                     fstrm_ << INDENT; 
