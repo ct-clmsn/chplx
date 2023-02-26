@@ -19,6 +19,12 @@ using namespace chpl::uast;
  
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
+template <typename Kind>
+void Visitor::addSymbolEntry(char const* type) {
+   Symbol sym{{Kind{}, type}, {}};
+   symboltable.addEntry(*sym.identifier, sym);
+}
+
 Visitor::Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& chapel_file_path_str, std::ostream & fstrm)
    : br(chapel_br), indent(0), fstrm_(fstrm),
      chpl_file_path_str(chapel_file_path_str),
@@ -29,53 +35,18 @@ Visitor::Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& 
    //
    // bool, string, int, real, byte, complex, range, domain, template
    //
-   Symbol bsym{};
-   bsym.kind = bool_kind{};
-   bsym.identifier = "bool";
-   symboltable.addEntry(*(bsym.identifier), bsym);
-
-   Symbol strsym{};
-   strsym.kind = string_kind{};
-   strsym.identifier = "string";
-   symboltable.addEntry(*(strsym.identifier), strsym);
-
-   Symbol intsym{};
-   intsym.kind = int_kind{};
-   intsym.identifier = "int";
-   symboltable.addEntry(*(intsym.identifier), intsym);
-
-   Symbol realsym{};
-   realsym.kind = real_kind{};
-   realsym.identifier = "real";
-   symboltable.addEntry(*(realsym.identifier), realsym);
-
-   Symbol bytesym{};
-   bytesym.kind = byte_kind{};
-   bytesym.identifier = "byte";
-   symboltable.addEntry(*(bytesym.identifier), bytesym);
-
-   Symbol cmplxsym{};
-   cmplxsym.kind = complex_kind{};
-   cmplxsym.identifier = "complex";
-   symboltable.addEntry(*(cmplxsym.identifier), cmplxsym);
-
-   Symbol rngsym{};
-   rngsym.kind = range_kind{};
-   rngsym.identifier = "range";
-   symboltable.addEntry(*(rngsym.identifier), rngsym);
-
-   Symbol domsym{};
-   domsym.kind = domain_kind{};
-   domsym.identifier = "domain";
-   symboltable.addEntry(*(domsym.identifier), domsym);
-
-   Symbol tmplsym{};
-   tmplsym.kind = template_kind{};
-   tmplsym.identifier = "?";
-   symboltable.addEntry(*(tmplsym.identifier), tmplsym);
+   addSymbolEntry<bool_kind>("bool");
+   addSymbolEntry<string_kind>("string");
+   addSymbolEntry<int_kind>("int");
+   addSymbolEntry<real_kind>("real");
+   addSymbolEntry<byte_kind>("byte");
+   addSymbolEntry<complex_kind>("complex");
+   addSymbolEntry<range_kind>("range");
+   addSymbolEntry<domain_kind>("domain");
+   addSymbolEntry<template_kind>("?");
 }
 
-static inline void upper(std::string & s) {
+static void upper(std::string & s) {
    std::transform(std::begin(s), std::end(s), std::begin(s), 
       [](const unsigned char c){ return std::toupper(c); } // correct
    );
@@ -92,34 +63,34 @@ void Visitor::generateSourceHeader() {
    }
 }
 
-void Visitor::generateSourceFooter() {
+void Visitor::generateSourceFooter() const {
    fstrm_ << std::endl
           << "int main(int argc, char ** argv) {" << std::endl
           << "    return hpx::init(argc, argv);" << std::endl
           << "}";
 }
 
-void Visitor::generate_hpx_main_beg() {
+void Visitor::generate_hpx_main_beg() const {
       fstrm_ << std::endl
              << "int hpx_main(int argc, char ** argv) {" << std::endl
              << std::endl;
 }
 
-void Visitor::generate_hpx_main_end() {
+void Visitor::generate_hpx_main_end() const {
    fstrm_ << std::endl
           << "    return hpx::finalize();" << std::endl
           << "}" << std::endl;
 }
 
-void Visitor::emitIndent() {
+void Visitor::emitIndent() const {
    for(std::size_t i = 0; i < indent; ++i) {
          fstrm_ << INDENT; 
    }
 }
 
-void Visitor::emitChapelLine(uast::AstNode const* ast) {
+void Visitor::emitChapelLine(uast::AstNode const* ast) const {
    emitIndent();
-     
+
    auto fpth = br.filePath();
    fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
 
@@ -548,66 +519,102 @@ void Visitor::emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind
    }
 }
 
-void Visitor::emitByteKind(uast::AstNode const* ast, byte_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "std::uint8_t " << (*(sym->identifier)) << ";" << std::endl;
+template <typename T>
+void Visitor::emit(uast::AstNode const* ast, T &, char const* type) const {
+   fstrm_ << type << " " << (*(sym->identifier)) << ";" << std::endl;
 }
 
-void Visitor::emitByteKindLit(uast::AstNode const* ast, byte_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "std::uint8_t " << (*(sym->identifier)) << " = " << dynamic_cast<uast::BytesLiteral const*>(ast)->value() << ";" << std::endl;
+template <typename Kind, typename T>
+void Visitor::emitLit(uast::AstNode const* ast, T &, char const* type) const {
+   fstrm_ << type << " " << (*(sym->identifier)) << " = " << dynamic_cast<Kind const*>(ast)->value() << ";" << std::endl;
 }
 
-void Visitor::emitIntKind(uast::AstNode const* ast, int_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "std::int64_t " << (*(sym->identifier)) << ";" << std::endl;
+struct symbol_visitor {
+
+   template <typename T>
+   void emit(T & kind, char const* type) const {
+      visitor.emitChapelLine(ast);
+      visitor.emit(ast, kind, type);
+   }
+
+   void operator()(byte_kind & kind) const {
+      emit(kind, "std::uint8_t");
+   }
+   void operator()(int_kind & kind) const {
+      emit(kind, "std::int64_t");
+   }
+   void operator()(real_kind & kind) const {
+      emit(kind, "double");
+   }
+   void operator()(complex_kind & kind) const {
+      emit(kind, "std::complex<double>");
+   }
+   void operator()(string_kind & kind) const {
+      emit(kind, "std::string");
+   }
+   void operator()(bool_kind & kind) const {
+      emit(kind, "bool");
+   }
+
+   template <typename T>
+   constexpr void operator()(T & kind) const {}
+
+   Visitor& visitor;
+   const uast::AstNode * ast;
+};
+
+bool Visitor::emit(const uast::AstNode * ast, std::optional<Symbol> & sym) {
+   if(sym && sym->kind.has_value()) {
+       std::visit(symbol_visitor{*this, ast}, *sym->kind);
+       sym.reset();
+       symnode.reset();
+       return true;
+   }
+   return false;
 }
 
-void Visitor::emitIntKindLit(uast::AstNode const* ast, int_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "std::int64_t " << (*(sym->identifier)) << " = " << dynamic_cast<uast::IntLiteral const*>(ast)->value() << ";" << std::endl;
-}
+struct symbol_visitor_literal {
 
-void Visitor::emitRealKind(uast::AstNode const* ast, real_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "double " << (*(sym->identifier)) << ";" << std::endl;
-}
+   template <typename Kind, typename T>
+   void emit(T & kind, char const* type) const {
+      visitor.emitChapelLine(ast);
+      visitor.emitLit<Kind>(ast, kind, type);
+   }
 
-void Visitor::emitRealKindLit(uast::AstNode const* ast, real_kind & symref) {
-   emitChapelLine(ast);
-   const double val = dynamic_cast<uast::RealLiteral const*>(ast)->value();
-   fstrm_ << "double " << (*(sym->identifier)) << " = " << std::fixed << val << ";" << std::endl;
-}
+   void operator()(byte_kind & kind) const {
+      emit<uast::BytesLiteral>(kind, "std::uint8_t");
+   }
+   void operator()(int_kind & kind) const {
+      emit<uast::IntLiteral>(kind, "std::int64_t");
+   }
+   void operator()(real_kind & kind) const {
+      emit<uast::RealLiteral>(kind, "double");
+   }
+   void operator()(complex_kind & kind) const {
+      emit<uast::ImagLiteral>(kind, "std::complex<double>");
+   }
+   void operator()(string_kind & kind) const {
+      emit<uast::StringLiteral>(kind, "std::string");
+   }
+   void operator()(bool_kind & kind) const {
+      emit<uast::BoolLiteral>(kind, "bool");
+   }
 
+   template <typename T>
+   constexpr void operator()(T & kind) const {}
 
-void Visitor::emitComplexKind(uast::AstNode const* ast, complex_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "std::complex<double> " << (*(sym->identifier)) << "{};" << std::endl;
-}
+   Visitor& visitor;
+   const uast::AstNode * ast;
+};
 
-void Visitor::emitComplexKindLit(uast::AstNode const* ast, complex_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "std::complex<double> " << (*(sym->identifier)) << " = " << dynamic_cast<uast::ImagLiteral const*>(ast)->value() << ";" << std::endl;
-}
-
-void Visitor::emitStringKind(uast::AstNode const* ast, string_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "std::string " << (*(sym->identifier)) << "{};" << std::endl;
-}
-
-void Visitor::emitStringKindLit(uast::AstNode const* ast, string_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "std::string " << (*(sym->identifier)) << "{\"" << dynamic_cast<uast::StringLiteral const*>(ast)->value() << "\"};" << std::endl;
-}
-
-void Visitor::emitBoolKind(uast::AstNode const* ast, bool_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "bool " << (*(sym->identifier)) << ";" << std::endl;
-}
-
-void Visitor::emitBoolKindLit(uast::AstNode const* ast, bool_kind & symref) {
-   emitChapelLine(ast);
-   fstrm_ << "bool " << (*(sym->identifier)) << " = " << ( dynamic_cast<uast::BoolLiteral const*>(ast)->value() ? "true" : "false" ) << ";" << std::endl;
+bool Visitor::emit_literal(const uast::AstNode * ast, std::optional<Symbol> & sym) {
+   if(sym && sym->kind.has_value()) {
+       std::visit(symbol_visitor_literal{*this, ast}, *sym->kind);
+       sym.reset();
+       symnode.reset();
+       return true;
+   }
+   return false;
 }
 
 void Visitor::exit(const uast::AstNode * ast) {
@@ -672,119 +679,31 @@ void Visitor::exit(const uast::AstNode * ast) {
     case asttags::START_Literal:
     break;
     case asttags::BoolLiteral:
-    {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<bool_kind>(*(sym->kind))) {
-                auto & symref = std::get<bool_kind>(*(sym->kind));
-                emitBoolKindLit(ast, symref);
-                sym.reset();
-                symnode.reset();
-             }
-          }
-       }
-    }
-    break;
+       emit_literal(ast, sym);
+       break;
     case asttags::ImagLiteral:
-    {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<complex_kind>(*(sym->kind))) {
-                auto & symref = std::get<complex_kind>(*(sym->kind));
-                emitComplexKindLit(ast, symref);
-                sym.reset();
-                symnode.reset();
-             }
-          }
-       }
-    }
-    break;
+       emit_literal(ast, sym);
+       break;
     case asttags::IntLiteral:
-    {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<int_kind>(*(sym->kind))) {
-                auto & symref = std::get<int_kind>(*(sym->kind));
-                emitIntKindLit(ast, symref);
-                sym.reset();
-                symnode.reset();
-             }
-          }
-       }
-    }
-    break;
+       emit_literal(ast, sym);
+       break;
     case asttags::RealLiteral:
-    {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<real_kind>(*(sym->kind))) {
-                auto & symref = std::get<real_kind>(*(sym->kind));
-                emitRealKindLit(ast, symref);
-                sym.reset();
-                symnode.reset();
-             }
-          }
-       }
-    }
-    break;
+       emit_literal(ast, sym);
+       break;
     case asttags::UintLiteral:
-    {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<int_kind>(*(sym->kind))) {
-                auto & symref = std::get<int_kind>(*(sym->kind));
-                emitIntKindLit(ast, symref);
-                sym.reset();
-                symnode.reset();
-             }
-          }
-       }
-    }
-    break;
+       emit_literal(ast, sym);
+       break;
     case asttags::START_StringLikeLiteral:
     break;
     case asttags::BytesLiteral:
-    {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<byte_kind>(*(sym->kind))) {
-                auto & symref = std::get<byte_kind>(*(sym->kind));
-                emitByteKindLit(ast, symref);
-                sym.reset();
-                symnode.reset();
-             }
-          }
-       }
-    }
-    break;
+       emit_literal(ast, sym);
+       break;
     case asttags::CStringLiteral:
-    {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<string_kind>(*(sym->kind))) {
-                auto & symref = std::get<string_kind>(*(sym->kind));
-                emitStringKindLit(ast, symref);
-                sym.reset();
-                symnode.reset();
-             }
-          }
-       }
-    }
-    break;
+       emit_literal(ast, sym);
+       break;
     case asttags::StringLiteral:
-    {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-             if(std::holds_alternative<string_kind>(*(sym->kind))) {
-                auto & symref = std::get<string_kind>(*(sym->kind));
-                emitStringKindLit(ast, symref);
-                sym.reset();
-                symnode.reset();
-             }
-          }
-       }
-    }
-    break;
+       emit_literal(ast, sym);
+       break;
     case asttags::END_StringLikeLiteral:
     break;
     case asttags::END_Literal:
@@ -827,38 +746,7 @@ void Visitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Variable:
     {
-       if(sym.has_value()) {
-          if(sym->kind.has_value()) {
-
-             if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-                auto & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
-                emitArrayKind(ast, symref);
-             }
-             else if(std::holds_alternative<byte_kind>(*(sym->kind))) {
-                auto & symref = std::get<byte_kind>(*(sym->kind));
-                emitByteKind(ast, symref);
-             }
-             else if(std::holds_alternative<int_kind>(*(sym->kind))) {
-                auto & symref = std::get<int_kind>(*(sym->kind));
-                emitIntKind(ast, symref);
-             }
-             else if(std::holds_alternative<real_kind>(*(sym->kind))) {
-                auto & symref = std::get<real_kind>(*(sym->kind));
-                emitRealKind(ast, symref);
-             }
-             else if(std::holds_alternative<complex_kind>(*(sym->kind))) {
-                auto & symref = std::get<complex_kind>(*(sym->kind));
-                emitComplexKind(ast, symref);
-             }
-             else if(std::holds_alternative<string_kind>(*(sym->kind))) {
-                auto & symref = std::get<string_kind>(*(sym->kind));
-                emitStringKind(ast, symref);
-             }
-             else if(std::holds_alternative<bool_kind>(*(sym->kind))) {
-                auto & symref = std::get<bool_kind>(*(sym->kind));
-                emitBoolKind(ast, symref);
-             }
-          }
+       if (emit(ast, sym)) {
 
           assert( sym->identifier.has_value() );
 

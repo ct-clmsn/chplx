@@ -139,7 +139,7 @@ struct SymbolTable {
    }
 
    void addEntry(std::string const& entry_str, Symbol s) {
-      entries[entries.size()-1].insert(std::make_pair(entry_str, s));
+      entries[entries.size()-1].insert(std::make_pair(entry_str, std::move(s)));
    }
 
    std::optional<Symbol> scopedFind(std::string const& entry_str) const {
@@ -192,38 +192,43 @@ enum class HeaderEnum {
 struct Visitor {
 
    Visitor() = delete;
-   Visitor(Visitor & v) = delete;
+
    Visitor(Visitor const& v) = delete;
+   Visitor(Visitor && v) = delete;
+
+   Visitor& operator=(Visitor const&) = delete;
+   Visitor& operator=(Visitor &&) = delete;
+
    Visitor(Visitor * v) = delete;
    Visitor(Visitor const* v) = delete;
 
    Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& chapel_file_path_str, std::ostream & fstrm);
+   ~Visitor() = default;
+
+   template <typename Kind>
+   void addSymbolEntry(char const* type);
 
    bool enter(const uast::AstNode * node);
    void exit(const uast::AstNode * node);
 
    void generateSourceHeader();
-   void generateSourceFooter();
-   void generate_hpx_main_beg();
-   void generate_hpx_main_end();
+   void generateSourceFooter() const;
+   void generate_hpx_main_beg() const;
+   void generate_hpx_main_end() const;
    void generateApplicationHeader();
 
-   void emitIndent();
-   void emitChapelLine(uast::AstNode const* ast);
+   void emitIndent() const;
+   void emitChapelLine(uast::AstNode const* ast) const;
    void emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
    void emitArrayKindLit(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
-   void emitByteKind(uast::AstNode const* ast, byte_kind & sym);
-   void emitByteKindLit(uast::AstNode const* ast, byte_kind & sym);
-   void emitIntKind(uast::AstNode const* ast, int_kind & sym);
-   void emitIntKindLit(uast::AstNode const* ast, int_kind & symref);
-   void emitRealKind(uast::AstNode const* ast, real_kind & sym);
-   void emitRealKindLit(uast::AstNode const* ast, real_kind & sym);
-   void emitComplexKind(uast::AstNode const* ast, complex_kind & sym);
-   void emitComplexKindLit(uast::AstNode const* ast, complex_kind & sym);
-   void emitStringKind(uast::AstNode const* ast, string_kind & sym);
-   void emitStringKindLit(uast::AstNode const* ast, string_kind & sym);
-   void emitBoolKind(uast::AstNode const* ast, bool_kind & sym);
-   void emitBoolKindLit(uast::AstNode const* ast, bool_kind & sym);
+
+   template <typename T>
+   void emit(uast::AstNode const* ast, T & sym, char const* type) const;
+   template <typename Kind, typename T>
+   void emitLit(uast::AstNode const* ast, T & sym, char const* type) const;
+
+   bool emit(const uast::AstNode * ast, std::optional<Symbol> & sym);
+   bool emit_literal(const uast::AstNode * ast, std::optional<Symbol> & sym);
 
    chpl::uast::BuilderResult const& br;
    std::size_t indent; 
