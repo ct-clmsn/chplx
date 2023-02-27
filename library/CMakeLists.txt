@@ -20,23 +20,42 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(chplx_library VERSION ${CHPLX_VERSION})
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# global dependencies
 find_package(fmt REQUIRED CONFIG)
 find_package(HPX REQUIRED CONFIG)
 
 add_compile_definitions($<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
+include(CHPLX_Utils)
+
+# options
+if(WIN32)
+  set(HPX_WITH_PSEUDO_DEPENDENCIES OFF CACHE INTERNAL "" FORCE)
+else()
+  set(HPX_WITH_PSEUDO_DEPENDENCIES ON CACHE INTERNAL "" FORCE)
+endif()
+
+# create library target
 set(chplx_library_detail_headers
     include/chplx/detail/range_index_generator.hpp)
 source_group("Header Files/chplx/detail" FILES
     ${chplx_library_detail_headers})
 
 set(chplx_library_headers
-    include/chplx/generate_indicies.hpp
+    include/chplx/adapt_range.hpp
+    include/chplx/adapt_tuple.hpp
+    include/chplx/coforall_loop.hpp
+    include/chplx/for_loop.hpp
+    include/chplx/forall_loop.hpp
+    include/chplx/nothing.hpp
     include/chplx/range.hpp
+    include/chplx/types.hpp
     include/chplx/version.hpp)
 source_group("Header Files/chplx" FILES
     ${chplx_library_headers})
-
 
 set(chplx_library_sources src/version.cpp)
 set(chplx_library_headers
@@ -59,4 +78,5 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/include/chplx/config/version.hpp" @ONLY
 )
 
+add_subdirectory(examples)
 add_subdirectory(test)

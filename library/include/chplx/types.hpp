@@ -1,0 +1,170 @@
+//  Copyright (c) 2023 Hartmut Kaiser
+//
+//  SPDX-License-Identifier: BSL-1.0
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
+//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#pragma once
+
+#include <chplx/nothing.hpp>
+#include <chplx/range.hpp>
+
+#include <complex>
+#include <string>
+#include <type_traits>
+
+//  Copyright (c) 2023 Hartmut Kaiser
+//
+//  SPDX-License-Identifier: BSL-1.0
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
+//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#pragma once
+
+#include <chplx/range.hpp>
+
+#include <complex>
+#include <string>
+#include <type_traits>
+
+namespace chplx {
+
+// Returns true if the type T is one the following types, of any width: int,
+// uint, real, imag, complex.
+template <typename T>
+inline constexpr bool isNumericType = std::is_arithmetic_v<T>;
+
+// Returns true if the type T is one the following types, of any width: int,
+// uint.
+template <typename T>
+inline constexpr bool isIntegralType = std::is_integral_v<T>;
+
+// Returns true if the type T is a real type, of any width.
+template <typename T>
+inline constexpr bool isRealType = std::is_floating_point_v<T>;
+
+// Returns true if the type T is an imag type, of any width.
+template <typename T>
+inline constexpr bool isImagType = std::is_floating_point_v<T>;
+
+// Returns true if the type T is an imag type, of any width.
+template <typename T> inline constexpr bool isComplexType = false;
+
+template <typename T>
+inline constexpr bool isComplexType<std::complex<T>> = true;
+
+// Returns true if the type T is the nothing type.
+template <typename T> inline constexpr bool isNothingType = false;
+
+template <> inline constexpr bool isNothingType<nothing> = true;
+
+// Returns true if the type T is a bool type, of any width.
+template <typename T> inline constexpr bool isBoolType = false;
+
+template <> inline constexpr bool isBoolType<bool> = true;
+
+// Returns true if the type T is an int type, of any width.
+template <typename T>
+inline constexpr bool isIntType = std::is_integral_v<T> && std::is_signed_v<T>;
+
+// Returns true if the type T is an uint type, of any width.
+template <typename T>
+inline constexpr bool isUIntType =
+    std::is_integral_v<T> && std::is_unsigned_v<T>;
+
+// Returns true if the type T is a string type.
+template <typename T> inline constexpr bool isStringType = false;
+
+template <> inline constexpr bool isStringType<std::string> = true;
+
+// Returns true if the type t is an enum type.
+template <typename T> inline constexpr bool isEnumType = std::is_enum_v<T>;
+
+// Returns true if the type T is a range type.
+template <typename T> inline constexpr bool isRangeType = false;
+
+template <typename T, BoundedRangeType Bounded, bool Stridable>
+inline constexpr bool isRangeType<Range<T, Bounded, Stridable>> = true;
+
+// Returns true if the value T is one the following types, of any width: int,
+// uint, real, imag, complex.
+template <typename T> [[nodiscard]] constexpr bool isNumericValue(T) noexcept {
+  return std::is_arithmetic_v<T>;
+}
+
+// Returns true if the value T is one the following types, of any width: int,
+// uint.
+template <typename T> [[nodiscard]] constexpr bool isIntegralValue(T) noexcept {
+  return std::is_integral_v<T>;
+}
+
+// Returns true if the value T is a real value, of any width.
+template <typename T> [[nodiscard]] constexpr bool isRealValue(T) noexcept {
+  return std::is_floating_point_v<T>;
+}
+
+// Returns true if the value T is an imag value, of any width.
+template <typename T> [[nodiscard]] constexpr bool isImagValue(T) noexcept {
+  return std::is_floating_point_v<T>;
+}
+
+// Returns true if the value T is an complex value, of any width.
+template <typename T> [[nodiscard]] constexpr bool isComplexValue(T) noexcept {
+  return false;
+}
+
+template <typename T>
+[[nodiscard]] constexpr bool isComplexValue(std::complex<T>) noexcept {
+  return true;
+}
+
+// Returns true if the value T is the nothing value.
+template <typename T> [[nodiscard]] constexpr bool isNothingValue(T) noexcept {
+  return false;
+}
+
+[[nodiscard]] constexpr bool isNothingValue(nothing) noexcept { return true; }
+
+// Returns true if the value T is a bool value, of any width.
+template <typename T> [[nodiscard]] constexpr bool isBoolValue(T) noexcept {
+  return false;
+}
+
+[[nodiscard]] constexpr bool isBoolValue(bool) noexcept { return true; }
+
+// Returns true if the value T is an int value, of any width.
+template <typename T> [[nodiscard]] constexpr bool isIntValue(T) noexcept {
+  return std::is_integral_v<T> && std::is_signed_v<T>;
+}
+
+// Returns true if the value T is an uint value, of any width.
+template <typename T> [[nodiscard]] constexpr bool isUIntValue(T) noexcept {
+  return std::is_integral_v<T> && std::is_unsigned_v<T>;
+}
+
+// Returns true if the value T is a string value.
+template <typename T> [[nodiscard]] constexpr bool isStringValue(T) noexcept {
+  return false;
+}
+
+[[nodiscard]] constexpr bool isStringValue(std::string const &) noexcept {
+  return true;
+}
+
+// Returns true if the value t is an enum value.
+template <typename T> [[nodiscard]] constexpr bool isEnumValue(T) noexcept {
+  return std::is_enum_v<T>;
+}
+
+// Returns true if the value T is a range value.
+template <typename T> [[nodiscard]] constexpr bool isRangeValue(T) noexcept {
+  return false;
+}
+
+template <typename T, BoundedRangeType Bounded, bool Stridable>
+[[nodiscard]] constexpr bool
+isRangeValue(Range<T, Bounded, Stridable> const &) noexcept {
+  return true;
+}
+
+} // namespace chplx

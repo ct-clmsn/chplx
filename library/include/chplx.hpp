@@ -6,6 +6,12 @@
 
 #pragma once
 
-#include <chplx/generate_indicies.hpp>
+#include <chplx/adapt_range.hpp>
+#include <chplx/adapt_tuple.hpp>
+#include <chplx/coforall_loop.hpp>
+#include <chplx/for_loop.hpp>
+#include <chplx/forall_loop.hpp>
+#include <chplx/nothing.hpp>
 #include <chplx/range.hpp>
+#include <chplx/types.hpp>
 #include <chplx/version.hpp>
