@@ -13,7 +13,8 @@
 #include "chpl/parsing/parsing-queries.h"
 #include "chpl/resolution/resolution-queries.h"
 
-#include "hpx/visitor.hpp"
+#include "hpx/symbolbuildingvisitor.hpp"
+#include "hpx/codegenvisitor.hpp"
 #include "ErrorGuard.h"
 
 #include <optional>
@@ -33,6 +34,36 @@ using namespace uast;
 extern char *optarg;
 extern int optind, opterr, optopt;
 const char *optstring;
+
+static void generateSourceHeader(std::ostream & fos, const std::string & fps) {
+
+   fos << "#include <hpx/hpx_init.hpp>" << std::endl << std::endl;
+
+   {
+      const auto pos = fps.find(".");
+      const std::string prefix = fps.substr(0, pos);
+      fos << "#include \"" << prefix << ".hpp\"" << std::endl;
+   }
+}
+
+static void generateSourceFooter(std::ostream & fos) {
+   fos << std::endl
+          << "int main(int argc, char ** argv) {" << std::endl
+          << "    return hpx::init(argc, argv);" << std::endl
+          << "}";
+}
+
+static void generateHpxMainBeg(std::ostream & fos)  {
+      fos << std::endl
+             << "int hpx_main(int argc, char ** argv) {" << std::endl
+             << std::endl;
+}
+
+static void generateHpxMainEnd(std::ostream & fos) {
+   fos << std::endl
+       << "    return hpx::finalize();" << std::endl
+       << "}" << std::endl;
+}
 
 int main(int argc, char ** argv) {
 
@@ -132,19 +163,22 @@ int main(int argc, char ** argv) {
 
       std::ofstream ofs(ofilePath);
       {
-         chpl::ast::visitors::hpx::Visitor v{br, ofilePath, ofs};
+         chpl::ast::visitors::hpx::SymbolBuildingVisitor sbv{br, ofilePath, ofs};
 
-         v.generateSourceHeader();
-         v.generate_hpx_main_beg();
+         generateSourceHeader(ofs, ofilePath);
+         generateHpxMainBeg(ofs);
 
-         v.indent += 1;
          AstNode const* ast = static_cast<AstNode const*>(mod);
-         ast->traverse(v);
+         ast->traverse(sbv);
 
-         v.generate_hpx_main_end();
-         v.generateSourceFooter();
+         chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, br, ofilePath, ofs};
+         cgv.indent += 1;
+         ast->traverse(cgv);
 
-         v.generateApplicationHeader();
+         generateHpxMainEnd(ofs);
+         generateSourceFooter(ofs);
+
+         cgv.generateApplicationHeader();
       }
 
       ofs.flush();

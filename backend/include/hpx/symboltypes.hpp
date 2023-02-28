@@ -8,8 +8,8 @@
  */
 #pragma once
 
-#ifndef __CHPLX_VISITOR_HPP__
-#define __CHPLX_VISITOR_HPP__
+#ifndef __CHPLX_SYMBOLTYPES_HPP__
+#define __CHPLX_SYMBOLTYPES_HPP__
 
 #include "chpl/uast/Builder.h"
 #include "chpl/uast/AstNode.h"
@@ -105,6 +105,7 @@ struct associative_kind {
 struct SymbolBase {
     std::optional<kind_types> kind;
     std::optional<std::string> identifier;
+    bool literalAssigned;
 
     SymbolBase() = default;
 };
@@ -139,13 +140,13 @@ struct SymbolTable {
       return entries.size();
    }
 
-   void addEntry(std::string const& entry_str, Symbol s) {
-      entries[entries.size()-1].insert(std::make_pair(entry_str, std::move(s)));
+   void addEntry(std::string const& ident, Symbol s) {
+      entries[entries.size()-1].insert(std::make_pair(ident, std::move(s)));
    }
 
-   std::optional<Symbol> scopedFind(std::string const& entry_str) const {
+   std::optional<Symbol> scopedFind(std::string const& ident) const {
       const std::size_t idx = entries.size()-1;
-      auto const itr = entries[idx].find(entry_str);
+      auto const itr = entries[idx].find(ident);
       if(itr != std::end(entries[idx])) {
          return itr->second;
       }
@@ -153,12 +154,12 @@ struct SymbolTable {
       return {};
    }
 
-   std::optional<Symbol> find(std::string const& entry_str) const {
+   std::optional<Symbol> find(std::string const& ident) const {
       // search through scopes backwards
       //
       const int entries_size = entries.size() - 1;
       for(int i = entries_size; i > -1; i--) {
-         auto entry = entries[i].find(entry_str);
+         auto entry = entries[i].find(ident);
          if( entry != std::end(entries[i]) ) {
             return entry->second;
          }
@@ -169,72 +170,6 @@ struct SymbolTable {
 
    std::vector< std::unordered_map<std::string, Symbol> > entries;
 };
-
-enum class HeaderEnum {
-    std_vector = 0,
-    std_string,
-    std_complex,
-    std_unordered_map,
-    std_optional,
-    std_variant,
-    std_algorithm,
-    std_numeric,
-    hpx_lco_channel,
-    hpx_lco_future,
-    hpx_algorithm,
-    hpx_numeric,
-    hpx_components,
-    hpx_partitioned_vector,
-    hpx_unordered_map,
-    hpx_spmd,
-    HeaderCount
-};
-
-struct SymbolBuildingVisitor {
-
-   SymbolBuildingVisitor() = delete;
-
-   SymbolBuildingVisitor(SymbolBuildingVisitor const& v) = delete;
-   SymbolBuildingVisitor(SymbolBuildingVisitor && v) = delete;
-
-   SymbolBuildingVisitor& operator=(SymbolBuildingVisitor const&) = delete;
-   SymbolBuildingVisitor& operator=(SymbolBuildingVisitor &&) = delete;
-
-   SymbolBuildingVisitor(SymbolBuildingVisitor * v) = delete;
-   SymbolBuildingVisitor(SymbolBuildingVisitor const* v) = delete;
-
-   SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapel_br, std::string const& chapel_file_path_str, std::ostream & fstrm);
-   ~SymbolBuildingVisitor() = default;
-
-   template <typename Kind>
-   void addSymbolEntry(char const* type);
-
-   bool enter(const uast::AstNode * node);
-   void exit(const uast::AstNode * node);
-
-   void emitIndent() const;
-   void emitChapelLine(uast::AstNode const* ast) const;
-   void emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
-   void emitArrayKindLit(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
-
-   template <typename T>
-   void emit(uast::AstNode const* ast, T & sym, char const* type) const;
-   template <typename Kind, typename T>
-   void emitLit(uast::AstNode const* ast, T & sym, char const* type) const;
-
-   bool emit(const uast::AstNode * ast, std::optional<Symbol> & sym);
-   bool emit_literal(const uast::AstNode * ast, std::optional<Symbol> & sym);
-
-   chpl::uast::BuilderResult const& br;
-   std::size_t indent; 
-   std::ostream & fstrm_;
-   std::string chpl_file_path_str;
-   std::optional<Symbol> sym;
-   std::optional<uast::AstNode const*> symnode;
-   SymbolTable symboltable;
-   std::vector<bool> headers;
-};
-
 
 } /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chpl */
 

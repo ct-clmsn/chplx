@@ -14,6 +14,7 @@ var x : int;
 var y : complex;
 var z : string;
 
+
 var a : [1..10] int;
 var b : [1..10] real;
 var c : [1..10] complex;
@@ -28,3 +29,4 @@ var j = 1.0;
 
 //var a = {1..10};
 //var a : domain(1) = {1..10};
+

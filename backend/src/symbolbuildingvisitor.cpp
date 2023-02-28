@@ -6,7 +6,7 @@
  * Distributed under the Boost Software License, Version 1.0. *(See accompanying
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
-#include "hpx/visitor.hpp"
+#include "hpx/symbolbuildingvisitor.hpp"
 #include "chpl/uast/all-uast.h"
 
 #include <variant>
@@ -14,23 +14,20 @@
 #include <cctype>
 #include <numeric>
 
-#define INDENT "    "
-
 using namespace chpl::uast;
  
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
 template <typename Kind>
-void Visitor::addSymbolEntry(char const* type) {
-   Symbol sym{{Kind{}, type}, {}};
-   symboltable.addEntry(*sym.identifier, sym);
+void SymbolBuildingVisitor::addSymbolEntry(char const* type) {
+   Symbol sym{{Kind{}, std::string{type}, false}, {}};
+   symbolTable.addEntry(*sym.identifier, sym);
 }
 
-Visitor::Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& chapel_file_path_str, std::ostream & fstrm)
-   : br(chapel_br), indent(0), fstrm_(fstrm),
-     chpl_file_path_str(chapel_file_path_str),
-     sym(), symnode(), symboltable(),
-     headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false)
+SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapelBr, std::string const& cfps, std::ostream & fstrm)
+   : br(chapelBr), indent(0), fstrm_(fstrm),
+     chplFilePathStr(cfps),
+     sym(), symnode(), symbolTable()
 {
    // populate the symbol table with a base set of entries:
    //
@@ -47,60 +44,8 @@ Visitor::Visitor(chpl::uast::BuilderResult const& chapel_br, std::string const& 
    addSymbolEntry<template_kind>("?");
 }
 
-static void upper(std::string & s) {
-   std::transform(std::begin(s), std::end(s), std::begin(s), 
-      [](const unsigned char c){ return std::toupper(c); } // correct
-   );
-}
-
-void Visitor::emitIndent() const {
-   for(std::size_t i = 0; i < indent; ++i) {
-         fstrm_ << INDENT; 
-   }
-}
-
-void Visitor::emitChapelLine(uast::AstNode const* ast) const {
-   emitIndent();
-
-   auto fpth = br.filePath();
-   fstrm_ << "#line " << br.idToLocation(ast->id(), fpth).line()  << " \"" << fpth.c_str() << "\"" << std::endl;
-
-   emitIndent();
-}
-
-void Visitor::generateApplicationHeader() {
-   const auto pos = chpl_file_path_str.find(".");
-   std::string prefix = chpl_file_path_str.substr(0, pos);
-
-   std::ofstream os{prefix + ".hpp"};
-   upper(prefix);
-
-   os << "#pragma once" << std::endl << std::endl;
-   os << "#ifndef __" << prefix << "_HPP__" << std::endl;
-   os << "#define __" << prefix << "_HPP__" << std::endl << std::endl;
-
-   for(std::size_t i = 0; i < static_cast<std::size_t>(HeaderEnum::HeaderCount); ++i) {
-      if(headers[i]) {
-         if(i == static_cast<std::size_t>(HeaderEnum::std_vector)) {
-            os << "#include <vector>" << std::endl;
-         }
-         else if(i == static_cast<std::size_t>(HeaderEnum::std_complex)) {
-            os << "#include <complex>" << std::endl;
-         }
-         else if(i == static_cast<std::size_t>(HeaderEnum::std_string)) {
-            os << "#include <string>" << std::endl;
-         }
-      }
-   }
-
-   os << std::endl << "#endif" << std::endl;
-
-   os.flush();
-   os.close();
-}
-
-bool Visitor::enter(const uast::AstNode * ast) {
-std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
+bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
+//std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
@@ -145,14 +90,14 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
 
        if(sym && sym->kind.has_value()) {
           if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-             auto fsym = symboltable.find(identifier_str);
-             if(fsym.has_value()) {
+             auto fsym = symbolTable.find(identifier_str);
+             if(fsym) {
                 std::get<std::shared_ptr<array_kind>>( *(sym->kind))->kind = *(fsym->kind);
              }
           }
        }
        else {
-          auto fsym = symboltable.find(identifier_str);
+          auto fsym = symbolTable.find(identifier_str);
           if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
           }
@@ -198,9 +143,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::BoolLiteral:
     {
         if(sym) {
-           auto fsym = symboltable.find("bool");
+           auto fsym = symbolTable.find("bool");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
+             sym->literalAssigned = true;
            }
         }
     }
@@ -208,9 +154,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::ImagLiteral:
     {
         if(sym) {
-           auto fsym = symboltable.find("complex");
+           auto fsym = symbolTable.find("complex");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
+             sym->literalAssigned = true;
            }
         }
     }
@@ -224,9 +171,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
            }
         }
         else {
-           auto fsym = symboltable.find("int");
+           auto fsym = symbolTable.find("int");
            if(fsym.has_value()) {
               sym->kind = (*(fsym->kind));
+             sym->literalAssigned = true;
            }
         }
     }
@@ -234,9 +182,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::RealLiteral:
     {
         if(sym) {
-           auto fsym = symboltable.find("real");
+           auto fsym = symbolTable.find("real");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
+             sym->literalAssigned = true;
            }
         }
     }
@@ -244,9 +193,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::UintLiteral:
     {
         if(sym) {
-           auto fsym = symboltable.find("int");
+           auto fsym = symbolTable.find("int");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
+             sym->literalAssigned = true;
            }
         }
     }
@@ -256,9 +206,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::BytesLiteral:
     {
         if(sym) {
-           auto fsym = symboltable.find("byte");
+           auto fsym = symbolTable.find("byte");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
+             sym->literalAssigned = true;
            }
         }
     }
@@ -266,9 +217,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::CStringLiteral:
     {
         if(sym) {
-           auto fsym = symboltable.find("string");
+           auto fsym = symbolTable.find("string");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
+             sym->literalAssigned = true;
            }
         }
     }
@@ -276,9 +228,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::StringLiteral:
     {
         if(sym) {
-           auto fsym = symboltable.find("string");
+           auto fsym = symbolTable.find("string");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
+             sym->literalAssigned = true;
            }
         }
     }
@@ -326,7 +279,10 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::Variable:
     {
 //std::cout << "variable\tname?\t" << reinterpret_cast<NamedDecl const*>(ast)->name().c_str() << "\tis_init?\t" << (reinterpret_cast<Variable const*>(ast)->initExpression() == nullptr) << "\tis_type?\t" << (reinterpret_cast<Variable const*>(ast)->typeExpression() == nullptr) << std::endl;
+       //const std::string prefix = std::string{ast->id().symbolPath().c_str()};
+       //const std::string name = std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()};
        Symbol var{};
+       //var.identifier = std::string{prefix + "." + name};
        var.identifier = std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()};
        sym = std::move(var);
        symnode = ast;
@@ -438,160 +394,7 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
    return true;
 }
 
-void Visitor::emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & symref) {
-
-   headers[static_cast<std::size_t>(HeaderEnum::std_vector)] = true;
-
-   emitIndent();
-     
-   auto fpth = br.filePath();
-   emitChapelLine(ast);
-
-   emitIndent();
-   fstrm_ << "std::vector<";
-
-   if(std::holds_alternative<int_kind>(symref->kind)) {
-         fstrm_ << "std::int64_t";
-   }
-   else if(std::holds_alternative<byte_kind>(symref->kind)) {
-         fstrm_ << "std::uint8_t";
-   }
-   else if(std::holds_alternative<real_kind>(symref->kind)) {
-         fstrm_ << "double";
-   }
-   else if(std::holds_alternative<bool_kind>(symref->kind)) {
-         fstrm_ << "bool";
-   }
-   else if(std::holds_alternative<complex_kind>(symref->kind)) {
-         headers[static_cast<std::size_t>(HeaderEnum::std_complex)] = true;
-         fstrm_ << "std::complex<double>";
-   }
-   else if(std::holds_alternative<string_kind>(symref->kind)) {
-         headers[static_cast<std::size_t>(HeaderEnum::std_string)] = true;
-         fstrm_ << "std::string";
-   }
-   assert( sym->identifier.has_value() );
-
-   int range_size = 1;
-   for(const auto & rng : symref->dom.ranges) {
-      if(rng.points.size() == 2) {
-         range_size *= ( (rng.points[1] - rng.points[0]) + rng.points[0] );
-      }
-      else if(rng.points.size() == 1) {
-         range_size *= rng.points[0];
-      }
-   }
-
-   if(range_size > 1) {
-      fstrm_ << "> " << (*(sym->identifier)) << "(" << range_size << ");" << std::endl;
-   }
-   else {
-      fstrm_ << "> " << (*(sym->identifier)) << "{};" << std::endl;
-   }
-}
-
-template <typename T>
-void Visitor::emit(uast::AstNode const* ast, T &, char const* type) const {
-   fstrm_ << type << " " << (*(sym->identifier)) << ";" << std::endl;
-}
-
-template <typename Kind, typename T>
-void Visitor::emitLit(uast::AstNode const* ast, T &, char const* type) const {
-   fstrm_ << type << " " << (*(sym->identifier)) << " = " << dynamic_cast<Kind const*>(ast)->value() << ";" << std::endl;
-}
-
-struct symbol_visitor {
-
-   template <typename T>
-   void emit(T & kind, char const* type) const {
-      visitor.emitChapelLine(ast);
-      visitor.emit(ast, kind, type);
-   }
-
-   void operator()(byte_kind & kind) const {
-      emit(kind, "std::uint8_t");
-   }
-   void operator()(int_kind & kind) const {
-      emit(kind, "std::int64_t");
-   }
-   void operator()(real_kind & kind) const {
-      emit(kind, "double");
-   }
-   void operator()(complex_kind & kind) const {
-      emit(kind, "std::complex<double>");
-   }
-   void operator()(string_kind & kind) const {
-      emit(kind, "std::string");
-   }
-   void operator()(bool_kind & kind) const {
-      emit(kind, "bool");
-   }
-   void operator()(std::shared_ptr<array_kind> & kind) const {
-      emitArrayKind(ast, kind);
-   }
-
-   template <typename T>
-   constexpr void operator()(T & kind) const {}
-
-   Visitor& visitor;
-   const uast::AstNode * ast;
-};
-
-bool Visitor::emit(const uast::AstNode * ast, std::optional<Symbol> & sym) {
-   if(sym && sym->kind.has_value()) {
-       std::visit(symbol_visitor{*this, ast}, *sym->kind);
-       sym.reset();
-       symnode.reset();
-       return true;
-   }
-   return false;
-}
-
-struct symbol_visitor_literal {
-
-   template <typename Kind, typename T>
-   void emit(T & kind, char const* type) const {
-      visitor.emitChapelLine(ast);
-      visitor.emitLit<Kind>(ast, kind, type);
-   }
-
-   void operator()(byte_kind & kind) const {
-      emit<uast::BytesLiteral>(kind, "std::uint8_t");
-   }
-   void operator()(int_kind & kind) const {
-      emit<uast::IntLiteral>(kind, "std::int64_t");
-   }
-   void operator()(real_kind & kind) const {
-      emit<uast::RealLiteral>(kind, "double");
-   }
-   void operator()(complex_kind & kind) const {
-      emit<uast::ImagLiteral>(kind, "std::complex<double>");
-   }
-   void operator()(string_kind & kind) const {
-      emit<uast::StringLiteral>(kind, "std::string");
-   }
-   void operator()(bool_kind & kind) const {
-      emit<uast::BoolLiteral>(kind, "bool");
-   }
-
-   template <typename T>
-   constexpr void operator()(T & kind) const {}
-
-   Visitor& visitor;
-   const uast::AstNode * ast;
-};
-
-bool Visitor::emit_literal(const uast::AstNode * ast) {
-   if(sym && sym->kind.has_value()) {
-       std::visit(symbol_visitor_literal{*this, ast}, *sym->kind);
-       sym.reset();
-       symnode.reset();
-       return true;
-   }
-   return false;
-}
-
-void Visitor::exit(const uast::AstNode * ast) {
+void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
 //std::cout << "exit\t" << ast->tag() << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
@@ -653,31 +456,23 @@ void Visitor::exit(const uast::AstNode * ast) {
     case asttags::START_Literal:
     break;
     case asttags::BoolLiteral:
-       emit_literal(ast);
-       break;
+    break;
     case asttags::ImagLiteral:
-       emit_literal(ast);
-       break;
+    break;
     case asttags::IntLiteral:
-       emit_literal(ast);
-       break;
+    break;
     case asttags::RealLiteral:
-       emit_literal(ast);
-       break;
+    break;
     case asttags::UintLiteral:
-       emit_literal(ast);
-       break;
-    case asttags::START_StringLikeLiteral:
     break;
     case asttags::BytesLiteral:
-       emit_literal(ast);
-       break;
+    break;
     case asttags::CStringLiteral:
-       emit_literal(ast);
-       break;
+    break;
     case asttags::StringLiteral:
-       emit_literal(ast);
-       break;
+    break;
+    case asttags::START_StringLikeLiteral:
+    break;
     case asttags::END_StringLikeLiteral:
     break;
     case asttags::END_Literal:
@@ -719,8 +514,23 @@ void Visitor::exit(const uast::AstNode * ast) {
     case asttags::VarArgFormal:
     break;
     case asttags::Variable:
-       emit(ast);
-       break;
+    {
+        if(sym) {
+            assert( sym->identifier.has_value() );
+
+            auto lusym = symbolTable.scopedFind((*(sym->identifier)));
+            if(!lusym) {
+                symbolTable.addEntry((*(sym->identifier)), *sym);
+                sym.reset();
+                symnode.reset();
+            }
+            else {
+                std::cerr << "chplx : " << (*(sym->identifier)) << " identifier already defined in current scope" << std::endl;
+                return;
+            }
+        }
+    }
+    break;
     case asttags::END_VarLikeDecl:
     break;
     case asttags::Enum:
