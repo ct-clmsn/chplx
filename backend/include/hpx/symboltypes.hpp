@@ -106,6 +106,7 @@ struct SymbolBase {
     std::optional<kind_types> kind;
     std::optional<std::string> identifier;
     bool literalAssigned;
+    std::size_t scopeCoord;
 
     SymbolBase() = default;
 };
@@ -141,7 +142,8 @@ struct SymbolTable {
    }
 
    void addEntry(std::string const& ident, Symbol s) {
-      entries[entries.size()-1].insert(std::make_pair(ident, std::move(s)));
+      s.scopeCoord = entries.size()-1;
+      entries[s.scopeCoord].insert(std::make_pair(ident, std::move(s)));
    }
 
    std::optional<Symbol> scopedFind(std::string const& ident) const {
@@ -163,6 +165,17 @@ struct SymbolTable {
          if( entry != std::end(entries[i]) ) {
             return entry->second;
          }
+      } 
+
+      return {};
+   }
+
+   std::optional<Symbol> find(const std::size_t idx, std::string const& ident) const {
+      // search through scopes backwards
+      //
+      auto entry = entries[idx].find(ident);
+      if( entry != std::end(entries[idx]) ) {
+          return entry->second;
       } 
 
       return {};

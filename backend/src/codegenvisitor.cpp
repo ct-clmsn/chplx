@@ -90,7 +90,8 @@ bool CodegenVisitor::enter(const uast::AstNode * ast) {
        //std::optional<Symbol> sym = symbolTable.scopedFind(prefix + "." + name);
 
        std::string ident{dynamic_cast<NamedDecl const*>(ast)->name().c_str()};
-       std::optional<Symbol> sym = symbolTable.scopedFind(ident);
+       //std::optional<Symbol> sym = symbolTable.scopedFind(ident);
+       std::optional<Symbol> sym = symbolTable.find(scope, ident);
 
        if(!sym->literalAssigned) {
            emit(ast, sym);
@@ -110,7 +111,8 @@ bool CodegenVisitor::enter(const uast::AstNode * ast) {
     case asttags::CStringLiteral:
     case asttags::StringLiteral:
     {
-       std::optional<Symbol> s = symbolTable.scopedFind(*identifier);
+       //std::optional<Symbol> s = symbolTable.scopedFind(*identifier);
+       std::optional<Symbol> s = symbolTable.find(scope, *identifier);
        if(s) {
            emit_literal(ast, s);
            identifier.reset();

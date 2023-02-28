@@ -20,7 +20,7 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
 template <typename Kind>
 void SymbolBuildingVisitor::addSymbolEntry(char const* type) {
-   Symbol sym{{Kind{}, std::string{type}, false}, {}};
+   Symbol sym{{Kind{}, std::string{type}, false, 0}, {}};
    symbolTable.addEntry(*sym.identifier, sym);
 }
 
