@@ -104,6 +104,19 @@ struct Symbol : public SymbolBase {
 
 struct SymbolTable {
 
+   // The symbol table stores symbols using an
+   // n-ary tree, nodes in the tree represent
+   // variable scopes.
+   //
+   // Nodes are added to the tree when a new
+   // scope encountered in the ast.
+   //
+   // The symbol table maintains a pointer
+   // to a portion of the symbol table that
+   // is currently being populated with
+   // symbols.
+   // 
+
    struct SymbolTableNode;
 
    using SymbolTableNodeImpl = std::variant<
@@ -197,11 +210,17 @@ struct SymbolTable {
       return findImpl(stref, idx, ident);
    }
 
+   // used to assign each SymbolTableNode a unique identifier
+   //
    std::size_t symbolTableCount;
-   std::shared_ptr<SymbolTableNode> symbolTableRoot;
-   std::shared_ptr<SymbolTableNode> symbolTableRef;
 
-   //std::vector<std::unordered_map<std::string, Symbol>> entries;
+   // root of the SymbolTable
+   //
+   std::shared_ptr<SymbolTableNode> symbolTableRoot;
+
+   // pointer to the current SymbolTableNode
+   //
+   std::shared_ptr<SymbolTableNode> symbolTableRef;
 };
 
 struct func_kind {
