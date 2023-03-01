@@ -116,6 +116,12 @@ struct SymbolTable {
    // is currently being populated with
    // symbols.
    // 
+   // Queries performed against the symbol table are
+   // started from the current child or 'leaf' node
+   // being populated, the search then continues up
+   // the tree until the desired symbol is found or
+   // the root is reached.
+   // 
 
    struct SymbolTableNode;
 
