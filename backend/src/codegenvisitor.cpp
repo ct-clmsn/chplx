@@ -21,7 +21,7 @@ using namespace chpl::uast;
  
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-CodegenVisitor::CodegenVisitor(const chpl::ast::visitors::hpx::SymbolTable & st, chpl::uast::BuilderResult const& chapelBr, std::string const& chapelFilePath, std::ostream & fstrm)
+CodegenVisitor::CodegenVisitor(chpl::ast::visitors::hpx::SymbolTable & st, chpl::uast::BuilderResult const& chapelBr, std::string const& chapelFilePath, std::ostream & fstrm)
    : br(chapelBr), indent(0), scope(0), fstrm_(fstrm),
      chplFilePathStr(chapelFilePath),
      symbolTable(st),
@@ -183,7 +183,7 @@ void CodegenVisitor::emit(std::string const& ident, uast::AstNode const* ast, T 
 template <typename Kind, typename T>
 void CodegenVisitor::emitLit(std::string const& ident, uast::AstNode const* ast, T & t, char const* type) const {
     if(std::is_same<string_kind, T>::value) {
-        fstrm_ << type << " " << ident << " = \"" << dynamic_cast<Kind const*>(ast)->value() << "\";" << std::endl;
+        fstrm_ << type << " " << ident << "{\"" << dynamic_cast<Kind const*>(ast)->value() << "\"};" << std::endl;
     }
     else if(std::is_same<bool_kind, T>::value) {
         fstrm_ << type << " " << ident << " = " << std::boolalpha << dynamic_cast<Kind const*>(ast)->value() << ";" << std::endl;

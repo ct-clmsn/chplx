@@ -60,7 +60,7 @@ struct CodegenVisitor {
    CodegenVisitor(CodegenVisitor const* v) = delete;
 
    CodegenVisitor(
-      SymbolTable const& symTable,
+      SymbolTable & symTable,
       chpl::uast::BuilderResult const& chapelBr,
       std::string const& chapelFilePathStr,
       std::ostream & fstrm
@@ -89,7 +89,7 @@ struct CodegenVisitor {
    bool emit(const uast::AstNode * ast, std::optional<Symbol> & sym);
    bool emit_literal(const uast::AstNode * ast, std::optional<Symbol> & sym);
 
-   SymbolTable const& symbolTable;
+   SymbolTable & symbolTable;
    chpl::uast::BuilderResult const& br;
    std::size_t indent; 
    std::size_t scope;

@@ -20,7 +20,7 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
 template <typename Kind>
 void SymbolBuildingVisitor::addSymbolEntry(char const* type) {
-   Symbol sym{{Kind{}, std::string{type}, false, 0}, {}};
+   Symbol sym{{Kind{}, std::string{type}, false, symbolTable.symbolTableCount}, {}};
    symbolTable.addEntry(*sym.identifier, sym);
 }
 
@@ -518,7 +518,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
         if(sym) {
             assert( sym->identifier.has_value() );
 
-            auto lusym = symbolTable.scopedFind((*(sym->identifier)));
+            auto lusym = symbolTable.find((*(sym->identifier)));
             if(!lusym) {
                 symbolTable.addEntry((*(sym->identifier)), *sym);
                 sym.reset();

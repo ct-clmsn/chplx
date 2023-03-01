@@ -21,6 +21,8 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <functional>
+#include <memory>
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
@@ -28,7 +30,6 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
 //
 struct template_kind {
    std::optional<std::string> identifier;
-
    template_kind() = default;
 };
 
@@ -38,7 +39,6 @@ struct int_kind {};
 struct real_kind {};
 struct complex_kind {};
 struct string_kind {};
-
 struct range_kind {
    std::vector<std::int64_t> points;
 
@@ -75,21 +75,6 @@ using kind_types = std::variant<
    std::shared_ptr<associative_kind>
 >;
 
-struct func_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
-};
-
-struct record_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
-};
-
-struct class_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
-};
-
 struct array_kind {
    kind_types kind;
    domain_kind dom;   
@@ -106,7 +91,7 @@ struct SymbolBase {
     std::optional<kind_types> kind;
     std::optional<std::string> identifier;
     bool literalAssigned;
-    std::size_t scopeCoord;
+    std::size_t scopeId;
 
     SymbolBase() = default;
 };
@@ -119,69 +104,122 @@ struct Symbol : public SymbolBase {
 
 struct SymbolTable {
 
+   struct SymbolTableNode;
+
+   using SymbolTableNodeImpl = std::variant<
+      std::monostate,
+      std::shared_ptr<SymbolTableNode>
+   >;
+
+   struct SymbolTableNode {
+      std::size_t id;
+      std::unordered_map<std::string, Symbol> entries;
+      std::vector<SymbolTableNodeImpl> children;
+      std::optional<SymbolTableNodeImpl> parent;
+
+      SymbolTableNode() = default;
+   };
+
    SymbolTable(SymbolTable & v) = delete;
    SymbolTable(SymbolTable const& v) = delete;
    SymbolTable(SymbolTable * v) = delete;
    SymbolTable(SymbolTable const* v) = delete;
 
-   SymbolTable() : entries() {
-      pushScope();
+   SymbolTable() : symbolTableCount(0), symbolTableRef() {
+       symbolTableRoot =
+          std::make_shared<SymbolTableNode>(
+             std::move(SymbolTableNode{0, {}, {}, {}})
+          );
+       ++symbolTableCount;
+       symbolTableRef = symbolTableRoot;
    }
 
    std::size_t pushScope() {
       // new scopes are appended to
       // the end of the symboltable
       //
-      entries.emplace_back();
-      return entries.size();
+      ++symbolTableCount;
+      symbolTableRef->children.emplace_back(
+         std::make_shared<SymbolTableNode>(std::move(SymbolTableNode{symbolTableCount, {}, {}, symbolTableRef}))
+      );
+
+      symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(symbolTableRef->children.back());
+      return symbolTableCount;
    }
 
-   std::size_t popScope() {
-      entries.pop_back();
-      return entries.size();
+   void popScope() {
+      if(symbolTableRef->parent && std::holds_alternative<std::shared_ptr<SymbolTableNode>>(*symbolTableRef->parent)) {
+          symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(*symbolTableRef->parent);
+      }
    }
 
    void addEntry(std::string const& ident, Symbol s) {
-      s.scopeCoord = entries.size()-1;
-      entries[s.scopeCoord].insert(std::make_pair(ident, std::move(s)));
+      symbolTableRef->entries.insert(std::make_pair(ident, std::move(s)));
    }
 
-   std::optional<Symbol> scopedFind(std::string const& ident) const {
-      const std::size_t idx = entries.size()-1;
-      auto const itr = entries[idx].find(ident);
-      if(itr != std::end(entries[idx])) {
-         return itr->second;
+   std::optional<Symbol> findImpl(SymbolTableNode& stref, std::string const& ident) {
+      auto entry = stref.entries.find(ident);
+      if(entry != std::end(stref.entries)) {
+          return entry->second;
+      }
+
+      if(!stref.parent) {
+         return {};
+      }
+
+      return findImpl(*std::get<std::shared_ptr<SymbolTableNode>>(*stref.parent), ident);
+   }
+
+   std::optional<Symbol> find(std::string const& ident) {
+      SymbolTableNode& stref = *symbolTableRef; 
+      return findImpl(stref, ident);
+   }
+
+   std::optional<Symbol> findImpl(SymbolTableNode& stref, const std::size_t idx, std::string const& ident) {
+      if(idx != stref.id) {
+         if(!stref.parent) {
+            return {};
+         }
+
+         return findImpl(*std::get<std::shared_ptr<SymbolTableNode>>(*stref.parent), idx, ident);
+      }
+
+      auto entry = stref.entries.find(ident);
+      if(entry != std::end(stref.entries)) {
+            return entry->second;
       }
 
       return {};
    }
 
-   std::optional<Symbol> find(std::string const& ident) const {
-      // search through scopes backwards
-      //
-      const int entries_size = entries.size() - 1;
-      for(int i = entries_size; i > -1; i--) {
-         auto entry = entries[i].find(ident);
-         if( entry != std::end(entries[i]) ) {
-            return entry->second;
-         }
-      } 
-
-      return {};
+   std::optional<Symbol> find(const std::size_t idx, std::string const& ident) {
+      SymbolTableNode& stref = *symbolTableRef; 
+      return findImpl(stref, idx, ident);
    }
 
-   std::optional<Symbol> find(const std::size_t idx, std::string const& ident) const {
-      // search through scopes backwards
-      //
-      auto entry = entries[idx].find(ident);
-      if( entry != std::end(entries[idx]) ) {
-          return entry->second;
-      } 
+   std::size_t symbolTableCount;
+   std::shared_ptr<SymbolTableNode> symbolTableRoot;
+   std::shared_ptr<SymbolTableNode> symbolTableRef;
 
-      return {};
-   }
+   //std::vector<std::unordered_map<std::string, Symbol>> entries;
+};
 
-   std::vector< std::unordered_map<std::string, Symbol> > entries;
+struct func_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+   SymbolTable symbolTable;
+};
+
+struct record_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+   SymbolTable symbolTable;
+};
+
+struct class_kind {
+   std::vector<std::string> identifiers;
+   std::vector<kind_types> kinds;
+   SymbolTable symbolTable;
 };
 
 } /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chpl */
