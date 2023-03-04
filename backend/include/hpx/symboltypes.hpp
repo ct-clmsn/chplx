@@ -11,10 +11,6 @@
 #ifndef __CHPLX_SYMBOLTYPES_HPP__
 #define __CHPLX_SYMBOLTYPES_HPP__
 
-#include "chpl/uast/Builder.h"
-#include "chpl/uast/AstNode.h"
-#include "chpl/uast/Module.h"
-
 #include <optional>
 #include <ostream>
 #include <string>
@@ -90,7 +86,7 @@ struct associative_kind {
 struct SymbolBase {
     std::optional<kind_types> kind;
     std::optional<std::string> identifier;
-    bool literalAssigned;
+    std::optional<std::vector<uast::AstNode const*>> literal;
     std::size_t scopeId;
 
     SymbolBase() = default;
@@ -195,25 +191,51 @@ struct SymbolTable {
    }
 
    std::optional<Symbol> findImpl(SymbolTableNode& stref, const std::size_t idx, std::string const& ident) {
-      if(idx != stref.id) {
-         if(!stref.parent) {
-            return {};
-         }
-
-         return findImpl(*std::get<std::shared_ptr<SymbolTableNode>>(*stref.parent), idx, ident);
+      if(stref.entries.size() < 1) {
+         return {};
       }
 
-      auto entry = stref.entries.find(ident);
-      if(entry != std::end(stref.entries)) {
+      if(idx == stref.id) {
+         auto entry = stref.entries.find(ident);
+         if(entry != std::end(stref.entries)) {
             return entry->second;
+         }
+         return {};
+      }
+
+      for(auto & child : stref.children) {
+         auto chld =
+            findImpl(*std::get<std::shared_ptr<SymbolTableNode>>(child), idx, ident);
+         if(chld) {
+            return chld;
+         }
       }
 
       return {};
    }
 
    std::optional<Symbol> find(const std::size_t idx, std::string const& ident) {
-      SymbolTableNode& stref = *symbolTableRef; 
+      SymbolTableNode& stref = *symbolTableRoot; 
       return findImpl(stref, idx, ident);
+   }
+
+   void dumpImpl(SymbolTableNode const& node) {
+      if(node.entries.size() < 1) {
+         return;
+      }
+
+      for(auto const& entry : node.entries) {
+         std::cout << entry.first << std::endl;
+      }
+
+      for(auto const& child : node.children) {
+         dumpImpl(*std::get<std::shared_ptr<SymbolTableNode>>(child));
+      }
+   }
+
+   void dump() {
+      SymbolTableNode& stref = *symbolTableRoot;
+      dumpImpl(stref);
    }
 
    // used to assign each SymbolTableNode a unique identifier

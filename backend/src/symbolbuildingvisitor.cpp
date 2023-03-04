@@ -20,12 +20,12 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
 template <typename Kind>
 void SymbolBuildingVisitor::addSymbolEntry(char const* type) {
-   Symbol sym{{Kind{}, std::string{type}, false, symbolTable.symbolTableCount}, {}};
+   Symbol sym{{Kind{}, std::string{type}, {}, symbolTable.symbolTableCount}, {}};
    symbolTable.addEntry(*sym.identifier, sym);
 }
 
-SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapelBr, std::string const& cfps, std::ostream & fstrm)
-   : br(chapelBr), indent(0), fstrm_(fstrm),
+SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapelBr, std::string const& cfps)
+   : br(chapelBr), indent(0),
      chplFilePathStr(cfps),
      sym(), symnode(), symbolTable()
 {
@@ -146,7 +146,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            auto fsym = symbolTable.find("bool");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
-             sym->literalAssigned = true;
+             if(sym->literal) {
+                sym->literal->push_back(ast);
+             }
+             else {
+                sym->literal = {ast,};
+             }
            }
         }
     }
@@ -157,7 +162,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            auto fsym = symbolTable.find("complex");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
-             sym->literalAssigned = true;
+             if(sym->literal) {
+                sym->literal->push_back(ast);
+             }
+             else {
+                sym->literal = {ast,};
+             }
            }
         }
     }
@@ -174,7 +184,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            auto fsym = symbolTable.find("int");
            if(fsym.has_value()) {
               sym->kind = (*(fsym->kind));
-             sym->literalAssigned = true;
+              if(sym->literal) {
+                 sym->literal->push_back(ast);
+              }
+              else {
+                 sym->literal = {ast,};
+              }
            }
         }
     }
@@ -185,7 +200,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            auto fsym = symbolTable.find("real");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
-             sym->literalAssigned = true;
+             if(sym->literal) {
+                sym->literal->push_back(ast);
+             }
+             else {
+                sym->literal = {ast,};
+             }
            }
         }
     }
@@ -196,7 +216,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            auto fsym = symbolTable.find("int");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
-             sym->literalAssigned = true;
+             if(sym->literal) {
+                sym->literal->push_back(ast);
+             }
+             else {
+                sym->literal = {ast,};
+             }
            }
         }
     }
@@ -209,7 +234,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            auto fsym = symbolTable.find("byte");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
-             sym->literalAssigned = true;
+             if(sym->literal) {
+                sym->literal->push_back(ast);
+             }
+             else {
+                sym->literal = {ast,};
+             }
            }
         }
     }
@@ -220,7 +250,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            auto fsym = symbolTable.find("string");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
-             sym->literalAssigned = true;
+             if(sym->literal) {
+                sym->literal->push_back(ast);
+             }
+             else {
+                sym->literal = {ast,};
+             }
            }
         }
     }
@@ -231,7 +266,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            auto fsym = symbolTable.find("string");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
-             sym->literalAssigned = true;
+             if(sym->literal) {
+                sym->literal->push_back(ast);
+             }
+             else {
+                sym->literal = {ast,};
+             }
            }
         }
     }

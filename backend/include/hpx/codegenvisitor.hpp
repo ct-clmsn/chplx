@@ -16,6 +16,7 @@
 #include "chpl/uast/Module.h"
 
 #include "symboltypes.hpp"
+#include "programtree.hpp"
 
 #include <optional>
 #include <ostream>
@@ -23,6 +24,8 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+
+using namespace chplx::ast::hpx;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
@@ -61,6 +64,7 @@ struct CodegenVisitor {
 
    CodegenVisitor(
       SymbolTable & symTable,
+      ProgramTree & prgmTree,
       chpl::uast::BuilderResult const& chapelBr,
       std::string const& chapelFilePathStr,
       std::ostream & fstrm
@@ -70,11 +74,11 @@ struct CodegenVisitor {
 
    void generateApplicationHeader();
 
-   template <typename Kind>
-   void addSymbolEntry(char const* type);
+   //template <typename Kind>
+   //void addSymbolEntry(char const* type);
 
-   bool enter(const uast::AstNode * node);
-   void exit(const uast::AstNode * node);
+   //bool enter(const uast::AstNode * node);
+   //void exit(const uast::AstNode * node);
 
    void emitIndent() const;
    void emitChapelLine(uast::AstNode const* ast) const;
@@ -89,7 +93,13 @@ struct CodegenVisitor {
    bool emit(const uast::AstNode * ast, std::optional<Symbol> & sym);
    bool emit_literal(const uast::AstNode * ast, std::optional<Symbol> & sym);
 
+   template<typename T>
+   void visit(T && visitor) {}
+
+   void visit(); 
+
    SymbolTable & symbolTable;
+   ProgramTree & programTree;
    chpl::uast::BuilderResult const& br;
    std::size_t indent; 
    std::size_t scope;

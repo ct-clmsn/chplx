@@ -13,6 +13,9 @@
 #include "chpl/parsing/parsing-queries.h"
 #include "chpl/resolution/resolution-queries.h"
 
+#include "hpx/symboltypes.hpp"
+#include "hpx/programtree.hpp"
+#include "hpx/programtreebuildingvisitor.hpp"
 #include "hpx/symbolbuildingvisitor.hpp"
 #include "hpx/codegenvisitor.hpp"
 #include "ErrorGuard.h"
@@ -163,25 +166,28 @@ int main(int argc, char ** argv) {
          ofilePath = match.str() + ".cpp";
       }
 
+      chplx::ast::hpx::ProgramTree program;
+
+      chpl::ast::visitors::hpx::SymbolBuildingVisitor sbv{br, ofilePath};
+
+      AstNode const* ast = static_cast<AstNode const*>(mod);
+      ast->traverse(sbv);
+
       std::ofstream ofs(ofilePath);
-      {
-         chpl::ast::visitors::hpx::SymbolBuildingVisitor sbv{br, ofilePath, ofs};
+      generateSourceHeader(ofs, ofilePath);
+      generateHpxMainBeg(ofs);
 
-         generateSourceHeader(ofs, ofilePath);
-         generateHpxMainBeg(ofs);
+      chplx::ast::visitors::hpx::ProgramTreeBuildingVisitor pbv{br, sbv.symbolTable, program};
+      ast->traverse(pbv);
 
-         AstNode const* ast = static_cast<AstNode const*>(mod);
-         ast->traverse(sbv);
+      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, program, br, ofilePath, ofs};
+      cgv.indent += 1;
+      cgv.visit();
 
-         chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, br, ofilePath, ofs};
-         cgv.indent += 1;
-         ast->traverse(cgv);
+      generateHpxMainEnd(ofs);
+      generateSourceFooter(ofs);
 
-         generateHpxMainEnd(ofs);
-         generateSourceFooter(ofs);
-
-         cgv.generateApplicationHeader();
-      }
+      cgv.generateApplicationHeader();
 
       ofs.flush();
       ofs.close();
