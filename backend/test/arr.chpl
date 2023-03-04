@@ -8,12 +8,12 @@
 //var a = [1,2,3,4,5];
 
 var u : bool;
+
 var v : real;
 var w : byte;
 var x : int;
 var y : complex;
 var z : string;
-
 
 var a : [1..10] int;
 var b : [1..10] real;

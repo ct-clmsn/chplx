@@ -25,39 +25,29 @@ namespace chplx { namespace ast { namespace hpx {
 
 struct ExpressionBase {
    std::size_t scopeId;
-
-   ExpressionBase() = default;
 };
 
 struct VariableDeclarationExpression : public ExpressionBase {
-   std::string identifier; 
-   kind_types kind;   
+   std::string identifier;
+   kind_types kind;
    std::string chplLine;
-
-   VariableDeclarationExpression() = default;
 };
 
 struct ScalarDeclarationExpression : public VariableDeclarationExpression {
-   ScalarDeclarationExpression() = default;
    void emit(std::ostream & os) const;
 };
 
 struct ScalarDeclarationLiteralExpression : public VariableDeclarationExpression {
    std::string literalValue;
-
-   ScalarDeclarationLiteralExpression() = default;
    void emit(std::ostream & os) const;
 };
 
 struct ArrayDeclarationExpression : public VariableDeclarationExpression {
-   ArrayDeclarationExpression() = default;
    void emit(std::ostream & os) const;
 };
 
 struct ArrayDeclarationLiteralExpression : public VariableDeclarationExpression {
    std::vector<std::string> literalValues;
-
-   ArrayDeclarationLiteralExpression() = default;
    void emit(std::ostream & os) const;
 };
 
