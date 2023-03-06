@@ -37,13 +37,11 @@ struct complex_kind {};
 struct string_kind {};
 struct range_kind {
    std::vector<std::int64_t> points;
-
    range_kind() = default;
 };
 
 struct domain_kind {
    std::vector<range_kind> ranges;
-
    domain_kind() = default;
 };
 
@@ -68,13 +66,13 @@ using kind_types = std::variant<
    std::shared_ptr<record_kind>,
    std::shared_ptr<class_kind>,
    std::shared_ptr<array_kind>,
-   std::shared_ptr<associative_kind>
+   std::shared_ptr<associative_kind>,
+   std::vector<array_kind>
 >;
 
 struct array_kind {
    kind_types kind;
    domain_kind dom;   
-
    array_kind() = default;
 };
 
