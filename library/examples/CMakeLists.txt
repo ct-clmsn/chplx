@@ -4,19 +4,21 @@
 # Distributed under the Boost Software License, Version 1.0. *(See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-add_chplx_pseudo_target(tests)
+add_chplx_pseudo_target(examples)
 
 set(CHPLX_TEST_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # define a function to simplify adding tests
-function(chplx_unit_test target)
+function(chplx_example target)
   add_executable(${target} EXCLUDE_FROM_ALL "${target}.cpp")
-  target_link_libraries(${target} chplx_library HPX::wrap_main)
+  target_link_libraries(${target} chplx_library)
+  set_target_properties(${target} PROPERTIES FOLDER "Examples")
   add_chplx_pseudo_dependencies(${target} chplx_library)
-  set_target_properties(${target} PROPERTIES FOLDER "Tests")
-
-  add_test(NAME ${target} COMMAND ${target})
-  add_chplx_pseudo_dependencies(tests ${target})
+  add_chplx_pseudo_dependencies(examples ${target})
 endfunction()
 
-add_subdirectory(support)
+set(examples print_range)
+
+foreach(example ${examples})
+  chplx_example(${example})
+endforeach()
