@@ -44,96 +44,8 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry<template_kind>("?");
 }
 
-struct ArrayVisitor {
-   template<typename T>
-   void operator()(T & t) {}
-   void operator()(std::shared_ptr<array_kind> & kind) {
-      // establish the root's children and root's domain
-      //
-      if(kind->kind.index() < 1) {
-         kind->kind = std::vector<array_kind>{array_kind{}};
-         kind->dom = std::move(domain_kind{{{{0}}}});
-      }
-      else {
-         std::visit(*this, kind->kind);
-      }
-   }
-   void operator()(array_kind & kind) {
-      if(kind.kind.index() < 1) {
-         kind.kind = std::vector<array_kind>{array_kind{}};
-         kind.dom = std::move(domain_kind{{{{0}}}});
-      }
-      else {
-         std::visit(*this, kind.kind);
-      }
-   }
-   void operator()(std::vector<array_kind> & kind) {
-      for(std::size_t i = 0; i < kind.size(); ++i) {
-         auto & arrkind = kind[i];
-         if(arrkind.kind.index() < 1) {
-            arrkind.kind = std::vector<array_kind>{array_kind{}};
-            arrkind.dom = std::move(domain_kind{{{{0}}}});
-            return;
-         }
-         else if(std::holds_alternative<std::vector<array_kind>>(arrkind.kind)) {
-            auto & vec = std::get<std::vector<array_kind>>(arrkind.kind);
-            
-            if(vec.size() < 1) {
-               vec.emplace_back(array_kind{});
-               arrkind.dom.ranges.emplace_back(range_kind{{0}});
-               return;
-            }
-            else {
-               std::visit(*this, arrkind.kind);
-               return;
-            }
-         }
-         else {
-            std::visit(*this, arrkind.kind);
-         }
-      }
-   }
-};
-
-template<typename Kind>
-struct ArrayLiteralVisitor {
-   template<typename T>
-   void operator()(T & t) {}
-   void operator()(std::shared_ptr<array_kind> & kind) {
-      if(!(kind->kind.index() < 1)) {
-         std::visit(*this, kind->kind);
-      }
-   }
-   void operator()(array_kind & kind) {
-      if(!(kind.kind.index() < 1)) {
-         std::visit(*this, kind.kind);
-      }
-   }
-   void operator()(std::vector<array_kind> & kind) {
-      for(std::size_t i = 0; i < kind.size(); ++i) {
-         auto & arrkind = kind[i];
-         if(std::holds_alternative<std::vector<array_kind>>(arrkind.kind)) {
-            auto & vec = std::get<std::vector<array_kind>>(arrkind.kind);
-            
-            if(vec.size() < 1) {
-               vec.emplace_back(array_kind{Kind{},domain_kind{}});
-                  return;
-            }
-            else {
-               std::visit(*this, arrkind.kind);
-               return;
-            }
-         }
-         else {
-            break;
-         }
-      }
-      kind.emplace_back(array_kind{Kind{}, domain_kind{}});
-   }
-};
-
 bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
-//std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
+std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
@@ -144,8 +56,14 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
         if(sym.has_value() && sym->kind->index() < 1) {
            sym->kind = std::make_shared<array_kind>();
         }
+        else if(std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind.index() < 1) {
+           std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind =
+              std::make_shared<kind_node_type>(kind_node_type{});
+        }
         else {
-           std::visit(ArrayVisitor{}, *sym->kind);
+           std::get<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind)->children.emplace_back(
+              std::make_shared<kind_node_type>(kind_node_type{})
+           );
         }
     }
     break;
@@ -272,29 +190,21 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     {
         if(sym && sym->kind.has_value()) {
            if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-              std::shared_ptr<array_kind> & symref = std::get<std::shared_ptr<array_kind>>(*(sym->kind));
-              std::visit(ArrayLiteralVisitor<int_kind>{}, symref->kind);
+              std::shared_ptr<array_kind> & symref =
+                 std::get<std::shared_ptr<array_kind>>(*(sym->kind));
+
               if(!sym->literal) {
                  sym->literal = std::vector<uast::AstNode const*>{ast};
+                 std::get<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind)->children.emplace_back(
+                    int_kind{}
+                 );
               }
               else {
                  sym->literal->push_back(ast);
+                 std::get<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind)->children.emplace_back(
+                    int_kind{}
+                 );
               }
-/*
-              if(0 < symref->dom.ranges.size()) {
-                 symref->dom.ranges[symref->dom.ranges.size()-1].points.push_back( dynamic_cast<IntLiteral const*>(ast)->value() );
-              }
-              else {
-                 if(symref->kind.index() < 1) {
-                    symref->kind = std::move(int_kind{});
-                 }
-                 if(symref->dom.ranges.size() < 1) {
-                    symref->dom.ranges.emplace_back(range_kind{});
-                 }
-
-                 symref->dom.ranges.back().points.push_back( dynamic_cast<IntLiteral const*>(ast)->value() );
-              }
-*/
            }
         }
         else {

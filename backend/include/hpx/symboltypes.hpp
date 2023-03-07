@@ -50,6 +50,7 @@ struct record_kind;
 struct class_kind;
 struct array_kind;
 struct associative_kind;
+struct kind_node_type;
 
 using kind_types = std::variant<
    std::monostate,
@@ -67,12 +68,16 @@ using kind_types = std::variant<
    std::shared_ptr<class_kind>,
    std::shared_ptr<array_kind>,
    std::shared_ptr<associative_kind>,
-   std::vector<array_kind>
+   std::shared_ptr<kind_node_type>
 >;
+
+struct kind_node_type {
+   std::vector<kind_types> children;
+};
 
 struct array_kind {
    kind_types kind;
-   domain_kind dom;   
+   domain_kind dom;
    array_kind() = default;
 };
 
