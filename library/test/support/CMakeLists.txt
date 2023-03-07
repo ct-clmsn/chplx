@@ -13,6 +13,7 @@ set(tests test_index_generator
     test_for_loop_tuple
     test_print_range
     test_range
+    test_tuple
 )
 
 foreach(test ${tests})

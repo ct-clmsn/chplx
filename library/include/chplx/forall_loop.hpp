@@ -8,6 +8,8 @@
 
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/range.hpp>
+#include <chplx/tuple.hpp>
 
 #include <hpx/algorithm.hpp>
 #include <hpx/execution.hpp>
@@ -15,19 +17,29 @@
 namespace chplx {
 
 // forall loop for tuples
-template <typename... Ts, typename F>
-void forall_loop(std::tuple<Ts...> &t, F &&f) {
+template <typename... Ts, typename F> void forallLoop(Tuple<Ts...> &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
-    hpx::ranges::for_each(hpx::execution::par, tuple_range(t),
-                          std::forward<F>(f));
+    if constexpr (Tuple<Ts...>::isHomogenous()) {
+
+      hpx::ranges::for_each(hpx::execution::par, t, std::forward<F>(f));
+    } else {
+
+      using table =
+          detail::forLoopTable<Tuple<Ts...>, F,
+                               std::make_index_sequence<sizeof...(Ts)>()>;
+
+      hpx::experimental::for_loop(
+          hpx::execution::par, 0, t.size(),
+          [&](std::size_t i) { table::lookupTable[i](t, f); });
+    }
   }
 }
 
 // forall loop for ranges
 template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F>
-void forall_loop(Range<T, BoundedType, Stridable> &r, F &&f) {
+void forallLoop(Range<T, BoundedType, Stridable> &r, F &&f) {
 
   hpx::ranges::experimental::for_loop(hpx::execution::par, r,
                                       std::forward<F>(f));

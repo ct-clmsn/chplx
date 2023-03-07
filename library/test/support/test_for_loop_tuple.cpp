@@ -6,6 +6,7 @@
 
 #include <chplx.hpp>
 
+#include <hpx/hpx_main.hpp>
 #include <hpx/modules/testing.hpp>
 
 #include <atomic>
@@ -14,63 +15,105 @@
 
 std::atomic<int> called(0);
 
-template <typename T> void test_for_loop_tuple(T val) {
+template <typename T> void testForLoopHomogenousTuple(T val) {
 
   {
-    std::tuple<> t;
+    chplx::Tuple<> t;
 
     called = 0;
-    chplx::for_loop(t, [&](auto value) {
+    chplx::forLoop(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
 
-    HPX_TEST_EQ(called.load(), std::tuple_size_v<decltype(t)>);
+    HPX_TEST_EQ(called.load(), t.size());
   }
 
   {
-    std::tuple<T> t{val};
+    chplx::Tuple<T> t{val};
 
     called = 0;
-    chplx::for_loop(t, [&](auto value) {
+    chplx::forLoop(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
 
-    HPX_TEST_EQ(called.load(), std::tuple_size_v<decltype(t)>);
+    HPX_TEST_EQ(called.load(), t.size());
   }
 
   {
-    std::tuple<T, T> t{val, val};
+    chplx::Tuple<T, T> t{val, val};
 
     called = 0;
-    chplx::for_loop(t, [&](auto value) {
+    chplx::forLoop(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
 
-    HPX_TEST_EQ(called.load(), std::tuple_size_v<decltype(t)>);
+    HPX_TEST_EQ(called.load(), t.size());
   }
 
   {
-    std::tuple<T, T, T, T, T, T, T, T, T, T> t{val, val, val, val, val,
-                                               val, val, val, val, val};
+    chplx::Tuple<T, T, T, T, T, T, T, T, T, T> t{val, val, val, val, val,
+                                                 val, val, val, val, val};
 
     called = 0;
-    chplx::for_loop(t, [&](auto value) {
+    chplx::forLoop(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
 
-    HPX_TEST_EQ(called.load(), std::tuple_size_v<decltype(t)>);
+    HPX_TEST_EQ(called.load(), t.size());
   }
+}
+
+template <std::size_t N, typename... Ts, std::size_t... Is>
+void testValue(std::set<std::variant<Ts...>> const &values,
+               chplx::Tuple<Ts...> const &t) {
+
+  HPX_TEST(values.contains(std::variant<Ts...>(std::get<N>(t))));
+}
+
+template <typename... Ts, std::size_t... Is>
+int testValues(std::set<std::variant<Ts...>> const &values,
+               chplx::Tuple<Ts...> const &t, std::index_sequence<Is...>) {
+
+  int count = 0;
+  ((testValue<Is>(values, t), ++count), ...);
+  return count;
+}
+
+template <typename... Ts> void testForLoopTuple(Ts... ts) {
+
+  chplx::Tuple<Ts...> t(ts...);
+
+  int called = 0;
+
+  std::set<std::variant<Ts...>> values;
+  hpx::mutex mtx;
+
+  called = 0;
+  chplx::coforallLoop(t, [&](auto value) {
+    std::lock_guard l(mtx);
+    ++called;
+    auto p = values.insert(value);
+    HPX_TEST(p.second);
+  });
+
+  HPX_TEST_EQ(testValues(values, t, std::make_index_sequence<sizeof...(Ts)>()),
+              t.size());
+  HPX_TEST_EQ(called, t.size());
 }
 
 int main() {
 
-  test_for_loop_tuple<int>(42);
-  test_for_loop_tuple<double>(42.0);
-  test_for_loop_tuple<std::string>("42.0");
+  testForLoopHomogenousTuple<int>(42);
+  testForLoopHomogenousTuple<double>(42.0);
+  testForLoopHomogenousTuple<std::string>("42.0");
+
+  testForLoopTuple(42);
+  testForLoopTuple(42, 43L);
+  testForLoopTuple(42, 43L, std::string("42"));
 
   return hpx::util::report_errors();
 }
