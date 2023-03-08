@@ -8,6 +8,7 @@
 
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/detail/iterator_generator.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
 
@@ -16,9 +17,10 @@
 
 namespace chplx {
 
-// forall loop for tuples
+//-----------------------------------------------------------------------------
+// coforall loop for tuples
 template <typename... Ts, typename F>
-void coforallLoop(Tuple<Ts...> &t, F &&f) {
+void coforallLoop(Tuple<Ts...> const &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
@@ -29,7 +31,8 @@ void coforallLoop(Tuple<Ts...> &t, F &&f) {
 
     if constexpr (Tuple<Ts...>::isHomogenous()) {
 
-      hpx::ranges::for_each(policy.with(scs), t, std::forward<F>(f));
+      hpx::ranges::for_each(policy.with(scs), HomogenousTupleRange(t.base()),
+                            std::forward<F>(f));
     } else {
 
       using table =
@@ -43,15 +46,32 @@ void coforallLoop(Tuple<Ts...> &t, F &&f) {
   }
 }
 
-// forall loop for ranges
+//-----------------------------------------------------------------------------
+// coforall loop for ranges
 template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F>
-void coforallLoop(Range<T, BoundedType, Stridable> &r, F &&f) {
+void coforallLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
 
   hpx::execution::experimental::static_chunk_size scs(1);
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
-  hpx::ranges::experimental::for_loop(policy.with(scs), r, std::forward<F>(f));
+
+  hpx::ranges::experimental::for_loop(
+      policy.with(scs), detail::IteratorGenerator(r), std::forward<F>(f));
+}
+
+//-----------------------------------------------------------------------------
+// coforall loop for domain
+template <int N, typename T, bool Stridable, typename F>
+void coforallLoop(Domain<N, T, Stridable> const &d, F &&f) {
+
+  hpx::execution::experimental::static_chunk_size scs(1);
+  auto policy = hpx::parallel::util::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
+  hpx::ranges::experimental::for_loop(
+      policy.with(scs), detail::IteratorGenerator(d), std::forward<F>(f));
 }
 
 } // namespace chplx

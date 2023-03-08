@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <functional>
 #include <limits>
+#include <ostream>
 #include <tuple>
 
 namespace chplx {
@@ -56,18 +57,6 @@ template <typename... Ts> struct Tuple : std::tuple<Ts...> {
                  chplx::BoundsCategoryType::Open);
   }
 
-  // iteration support
-  [[nodiscard]] constexpr auto begin() const noexcept
-    requires(isHomogenous())
-  {
-    return detail::HomogenousTupleIterator{base()};
-  }
-  [[nodiscard]] constexpr auto end() const noexcept
-    requires(isHomogenous())
-  {
-    return detail::HomogenousTupleIterator{base(), size()};
-  }
-
   // index operator
   [[nodiscard]] decltype(auto) operator[](std::size_t i)
     requires(isHomogenous())
@@ -77,7 +66,7 @@ template <typename... Ts> struct Tuple : std::tuple<Ts...> {
   [[nodiscard]] decltype(auto) operator[](std::size_t i) const
     requires(isHomogenous())
   {
-    return HomogenousTupleRange(*this)[i];
+    return HomogenousTupleRange(base())[i];
   }
 
   // alternative index operator
@@ -89,7 +78,7 @@ template <typename... Ts> struct Tuple : std::tuple<Ts...> {
   [[nodiscard]] decltype(auto) operator()(std::size_t i) const
     requires(isHomogenous())
   {
-    return HomogenousTupleRange(*this)[i];
+    return HomogenousTupleRange(base())[i];
   }
 };
 
@@ -150,6 +139,12 @@ constexpr decltype(auto) unaryOperator(Tuple<Ts...> const &t, Op &&op,
 
   return Tuple(op(std::get<Is>(t))...);
 };
+
+template <typename T, typename Op>
+constexpr decltype(auto) unaryOperator(Tuple<T> const &t, Op &&op,
+                                       std::index_sequence<0>) {
+  return op(std::get<0>(t));
+};
 } // namespace detail
 
 template <typename... Ts>
@@ -197,6 +192,14 @@ constexpr decltype(auto) binaryOperator(Tuple<Ts1...> const &t1,
   return Tuple(op(std::get<Is>(t1), std::get<Is>(t2))...);
 };
 
+template <typename T1, typename T2, typename Op>
+constexpr decltype(auto) binaryOperator(Tuple<T1> const &t1,
+                                        Tuple<T2> const &t2, Op &&op,
+                                        std::index_sequence<0>) {
+  return op(std::get<0>(t1), std::get<0>(t2));
+};
+
+//-----------------------------------------------------------------------------
 template <typename T = void> struct shift_left {
   constexpr decltype(auto) operator()(T const &t1, T const &t2) const {
     return t1 << t2;
@@ -229,6 +232,7 @@ template <> struct shift_right<> {
 } // namespace detail
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator+(Tuple<Ts1...> const &t1,
                                    Tuple<Ts2...> const &t2) {
 
@@ -237,6 +241,7 @@ constexpr decltype(auto) operator+(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator-(Tuple<Ts1...> const &t1,
                                    Tuple<Ts2...> const &t2) {
 
@@ -245,6 +250,7 @@ constexpr decltype(auto) operator-(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator*(Tuple<Ts1...> const &t1,
                                    Tuple<Ts2...> const &t2) {
 
@@ -253,6 +259,7 @@ constexpr decltype(auto) operator*(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator/(Tuple<Ts1...> const &t1,
                                    Tuple<Ts2...> const &t2) {
 
@@ -261,6 +268,7 @@ constexpr decltype(auto) operator/(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator%(Tuple<Ts1...> const &t1,
                                    Tuple<Ts2...> const &t2) {
 
@@ -269,6 +277,7 @@ constexpr decltype(auto) operator%(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator&(Tuple<Ts1...> const &t1,
                                    Tuple<Ts2...> const &t2) {
 
@@ -277,6 +286,7 @@ constexpr decltype(auto) operator&(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator|(Tuple<Ts1...> const &t1,
                                    Tuple<Ts2...> const &t2) {
 
@@ -285,6 +295,7 @@ constexpr decltype(auto) operator|(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator^(Tuple<Ts1...> const &t1,
                                    Tuple<Ts2...> const &t2) {
 
@@ -293,6 +304,7 @@ constexpr decltype(auto) operator^(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator<<(Tuple<Ts1...> const &t1,
                                     Tuple<Ts2...> const &t2) {
 
@@ -301,6 +313,7 @@ constexpr decltype(auto) operator<<(Tuple<Ts1...> const &t1,
 }
 
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 constexpr decltype(auto) operator>>(Tuple<Ts1...> const &t1,
                                     Tuple<Ts2...> const &t2) {
 
@@ -313,10 +326,88 @@ constexpr decltype(auto) operator>>(Tuple<Ts1...> const &t1,
 // matching size. They return a single boolean value indicating whether the two
 // arguments satisfy the corresponding relation.
 template <typename... Ts1, typename... Ts2>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
 [[nodiscard]] constexpr auto operator<=>(Tuple<Ts1...> const &t1,
                                          Tuple<Ts2...> const &t2) {
 
   return t1.base() <=> t2.base();
+}
+
+//-----------------------------------------------------------------------------
+// General purpose lifting
+namespace detail {
+
+template <typename... Ts, typename F>
+constexpr decltype(auto) lift(Tuple<Ts...> const &t, F &&f) {
+  return unaryOperator(t, std::forward<F>(f),
+                       std::make_index_sequence<sizeof...(Ts)>{});
+}
+
+template <typename... Ts1, typename... Ts2, typename F>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
+constexpr decltype(auto)
+    lift(Tuple<Ts1...> const &t1, Tuple<Ts2...> const &t2, F &&f) {
+  return binaryOperator(t1, t2, std::forward<F>(f),
+                        std::make_index_sequence<sizeof...(Ts1)>{});
+}
+
+//-----------------------------------------------------------------------------
+template <typename... Ts, typename Op, typename T, std::size_t... Is>
+constexpr decltype(auto) reduce(Tuple<Ts...> const &t, Op &&op, T init,
+                                std::index_sequence<Is...>) {
+
+  T result = init;
+  auto f = [&](auto next) { result = op(result, static_cast<T>(next)); };
+
+  (f(std::get<Is>(t)), ...);
+
+  return result;
+}
+} // namespace detail
+
+//-----------------------------------------------------------------------------
+// Reduction over tuple elements
+template <typename... Ts, typename F, typename T>
+constexpr decltype(auto) reduce(Tuple<Ts...> const &t, F &&f, T init) {
+
+  return detail::reduce(t, std::forward<F>(f), init,
+                        std::make_index_sequence<sizeof...(Ts)>{});
+}
+
+template <typename T1, typename F, typename T2>
+  requires(!isTupleType<T1>)
+constexpr decltype(auto) reduce(T1 const &t, F &&f, T2 init) {
+
+  return f(init, static_cast<T2>(t));
+}
+
+//-----------------------------------------------------------------------------
+namespace detail {
+
+template <typename Tuple, std::size_t... Is>
+std::ostream &writeTuple(std::ostream &os, Tuple const &t,
+                         std::index_sequence<Is...>) {
+
+  auto p = [&](auto val) { os << "," << val; };
+  (p(std::get<Is + 1>(t)), ...);
+
+  return os;
+}
+} // namespace detail
+
+template <typename... Ts>
+std::ostream &operator<<(std::ostream &os, Tuple<Ts...> const &t) {
+
+  os << "(";
+  if constexpr (sizeof...(Ts) != 0) {
+    os << std::get<0>(t.base());
+    if constexpr (sizeof...(Ts) > 1) {
+      detail::writeTuple(os, t.base(),
+                         std::make_index_sequence<sizeof...(Ts) - 1>());
+    }
+  }
+  os << ")";
+  return os;
 }
 
 } // namespace chplx

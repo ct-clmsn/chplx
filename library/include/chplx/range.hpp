@@ -6,33 +6,21 @@
 
 #pragma once
 
+#include <chplx/adapt_range.hpp>
+#include <chplx/detail/iterator_generator.hpp>
 #include <chplx/types.hpp>
 
 #include <hpx/assert.hpp>
 #include <hpx/config.hpp>
+#include <hpx/modules/type_support.hpp>
 
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <ostream>
 #include <type_traits>
 
 namespace chplx {
-
-/// The value of boundedType determines which bounds of the range are specified
-/// (making the range "bounded", as opposed to infinite, in the corresponding
-/// direction(s)).
-enum class BoundedRangeType {
-  bounded,     ///< both bounds are specified.
-  boundedLow,  ///< the low bound is specified(the high bound is +inf)
-  boundedHigh, ///< the high bound is specified(the low bound is -inf)
-  boundedNone  ///< neither bound is specified (both bounds are inf)
-};
-
-// encode range type
-enum class BoundsCategoryType {
-  None,   // default: not specified
-  Closed, // closed range
-  Open    // open range
-};
 
 enum class RangeInit { noValue };
 
@@ -44,11 +32,11 @@ struct StrideType : std::make_signed<T> {};
 
 template <typename T>
 struct StrideType<T, std::enable_if_t<std::is_enum_v<T>>> {
-  using type = int;
+  using type = std::int64_t;
 };
 
 template <> struct StrideType<bool> {
-  using type = int;
+  using type = std::int64_t;
 };
 
 template <typename T> using StrideType_t = typename StrideType<T>::type;
@@ -421,12 +409,11 @@ constexpr T round_up(T value, T base, S stride) noexcept {
 } // namespace detail
 
 //-----------------------------------------------------------------------------
-template <typename T = int,
-          BoundedRangeType BoundedType = BoundedRangeType::bounded,
-          bool Stridable = false>
+template <typename T, BoundedRangeType BoundedType, bool Stridable>
 struct Range {
 
   using idxType = T;
+  using indexType = T;
 
   static_assert(std::is_integral_v<idxType>,
                 "the index type of a range must be integral");
@@ -484,6 +471,16 @@ struct Range {
       : bounds_(RangeInit::noValue, high, type), stride_(stride),
         alignment_(stride < 0 ? high : detail::MinValue_v<T>) {}
 
+  template <typename T1, bool Stridable1>
+    requires(std::is_convertible_v<T1, T> && (!Stridable1 || Stridable) &&
+             BoundedType == BoundedRangeType::bounded)
+  Range(Range<T1, BoundedRangeType::bounded, Stridable1> const &rhs)
+      : bounds_(rhs.getFirstIndex(), rhs.getLastIndex(),
+                BoundsCategoryType::Open),
+        stride_(rhs.stride()), alignment_(rhs.alignment()) {}
+
+  decltype(auto) these() const { return iterate(*this); }
+
   [[nodiscard]] constexpr auto getFirstIndex() const noexcept {
     return bounds_.getFirstIndex();
   }
@@ -509,7 +506,7 @@ struct Range {
     return alignment_.isAmbiguous() && stride_.hasAmbiguousValue();
   }
 
-  [[nodiscard]] constexpr auto getAlignment() const noexcept {
+  [[nodiscard]] constexpr auto alignment() const noexcept {
     return alignment_.getAlignment();
   }
   void setAlignment(T value) noexcept { alignment_.setAlignment(value); }
@@ -529,8 +526,16 @@ struct Range {
            BoundedType == BoundedRangeType::boundedLow;
   }
 
+  // Returns the range's low bound. If the range does not have a low bound
+  // (e.g., ..10), the behavior is undefined.
   [[nodiscard]] constexpr auto lowBound() const noexcept {
     HPX_ASSERT(hasLowBound());
+    return bounds_.getFirstIndex();
+  }
+
+  // Returns the range'’'s aligned low bound. If this bound is undefined (e.g.,
+  // ..10 by -2), the behavior is undefined.
+  [[nodiscard]] constexpr auto low() const noexcept {
     return bounds_.getFirstIndex();
   }
 
@@ -540,8 +545,16 @@ struct Range {
            BoundedType == BoundedRangeType::boundedHigh;
   }
 
+  // Return the range's high bound. If the range does not have a high bound
+  // (e.g., 1..), the behavior is undefined.
   [[nodiscard]] constexpr auto highBound() const noexcept {
     HPX_ASSERT(hasHighBound());
+    return bounds_.getLastIndex() - 1;
+  }
+
+  // Return the range's high bound. If the range does not have a high bound
+  // (e.g., 1..), the behavior is undefined.
+  [[nodiscard]] constexpr auto high() const noexcept {
     return bounds_.getLastIndex() - 1;
   }
 
@@ -602,6 +615,23 @@ struct Range {
                             -stride_.getStride());
   }
 
+  // Returns true if the range's represented sequence contains ind, false
+  // otherwise. It is an error to invoke contains if the represented sequence is
+  // not defined.
+  [[nodiscard]] constexpr bool contains(idxType ind) {
+    HPX_ASSERT(hasLowBound() && hasHighBound());
+    return low() <= ind && ind <= high();
+  }
+
+  // Returns true if the range other is contained within this one, false
+  // otherwise.
+  template <typename T1, BoundedRangeType Bounded1, bool Stridable1>
+  [[nodiscard]] constexpr bool
+  contains(Range<T1, Bounded1, Stridable1> const &other) {
+    HPX_ASSERT(hasLowBound() && hasHighBound());
+    return low() <= other.low() && other.high() <= high();
+  }
+
   // Assigning one range to another results in the target range copying the low
   // and high bounds, stride, and alignment from the source range.
   //
@@ -617,12 +647,44 @@ struct Range {
   Range &operator=(Range<T1, BoundedType, Stridable1> const &rhs) {
     if (this != &rhs) {
       bounds_ = detail::Bounds<T, BoundedType>(rhs.getFirstIndex(),
-                                               rhs.getLastIndex());
+                                               rhs.getLastIndex() + 1);
       stride_ = detail::Stridable<T, BoundedType, Stridable>(rhs.stride());
       alignment_ =
-          detail::Alignment<T, BoundedType, Stridable>(rhs.getAlignment());
+          detail::Alignment<T, BoundedType, Stridable>(rhs.alignment());
     }
     return *this;
+  }
+
+  // Returns an integer representing the zero-based ordinal value of ind within
+  // the range's sequence of values if it is a member of the sequence.
+  // Otherwise, returns -1. It is an error to invoke indexOrder if the
+  // represented sequence is not defined or the range does not have a first
+  // index. The indexOrder procedure is the reverse of orderToIndex.
+  constexpr std::int64_t indexOrder(idxType idx) const noexcept {
+
+    std::int64_t result;
+    if (stride() > 0) {
+      result = (idx - first() + stride() - 1) / stride();
+    } else {
+      result = (first() - idx - stride() - 1) / -stride();
+    }
+
+    if (result < 0 || result > size()) {
+      return -1;
+    }
+    return result;
+  }
+
+  // Returns the zero-based ord-th element of this range's represented sequence.
+  // It is an error to invoke orderToIndex if the range is not defined, or if
+  // ord is negative or greater than the range's size. The orderToIndex
+  // procedure is the reverse of indexOrder.
+  constexpr idxType orderToIndex(std::int64_t order) const noexcept {
+
+    HPX_ASSERT(order >= 0 && order <= size());
+    auto result = first() + order * stride();
+
+    return result;
   }
 
 private:
@@ -642,6 +704,12 @@ private:
   [[no_unique_address]] detail::Stridable<T, BoundedType, Stridable> stride_;
   [[no_unique_address]] detail::Alignment<T, BoundedType, Stridable> alignment_;
 };
+
+//-----------------------------------------------------------------------------
+template <typename T> Range(T, T) -> Range<T, BoundedRangeType::bounded, false>;
+
+template <typename T>
+Range(T, T, T) -> Range<T, BoundedRangeType::bounded, true>;
 
 //-----------------------------------------------------------------------------
 // Returns true if the type T is a range type.
@@ -711,8 +779,8 @@ operator!=(Range<T1, BoundedType1, Stridable1> const &lhs,
 // range. The alignment equals the align operator's right operand and therefore
 // is not ambiguous.
 template <typename T, BoundedRangeType BoundedType, bool Stridable,
-          typename AlignType,
-          typename = std::enable_if_t<std::is_convertible_v<AlignType, T>>>
+          typename AlignType>
+  requires(std::is_convertible_v<AlignType, T>)
 auto align(Range<T, BoundedType, Stridable> const &rhs, AlignType alignment) {
 
   auto result =
@@ -737,6 +805,7 @@ auto align(Range<T, BoundedType, Stridable> const &rhs, AlignType alignment) {
 //    - the same as that of the base range, otherwise.
 template <typename T, BoundedRangeType BoundedType, bool Stridable,
           typename StepType>
+  requires(std::is_integral_v<StepType>)
 auto by(Range<T, BoundedType, Stridable> const &rhs, StepType step) {
 
   auto result = Range<T, BoundedType, true>(
@@ -753,8 +822,8 @@ auto by(Range<T, BoundedType, Stridable> const &rhs, StepType step) {
 // of the range; if the count is negative, indices are taken from the end of the
 // range.
 template <typename T, BoundedRangeType BoundedType, bool Stridable,
-          typename Count,
-          typename = std::enable_if_t<std::is_integral_v<Count>>>
+          typename Count>
+  requires(std::is_integral_v<Count>)
 auto count(Range<T, BoundedType, Stridable> const &rhs, Count n) {
 
   auto distance = n * rhs.stride();
@@ -795,8 +864,8 @@ auto count(Range<T, BoundedType, Stridable> const &rhs, Count n) {
 // range that is ambiguously aligned. In that case, the resulting range is also
 // ambiguously aligned.
 template <typename T, BoundedRangeType BoundedType, bool Stridable,
-          typename Integral,
-          typename = std::enable_if_t<std::is_integral_v<Integral>>>
+          typename Integral>
+  requires(std::is_integral_v<Integral>)
 constexpr auto operator+(Range<T, BoundedType, Stridable> const &rhs,
                          Integral n) noexcept {
 
@@ -806,14 +875,14 @@ constexpr auto operator+(Range<T, BoundedType, Stridable> const &rhs,
       BoundsCategoryType::Open);
 
   if (rhs.isNaturallyAligned())
-    result.setAlignment(rhs.getAlignment() + n);
+    result.setAlignment(rhs.alignment() + n);
 
   return result;
 }
 
 template <typename Integral, typename T, BoundedRangeType BoundedType,
-          bool Stridable,
-          typename = std::enable_if_t<std::is_integral_v<Integral>>>
+          bool Stridable>
+  requires(std::is_integral_v<Integral>)
 constexpr auto operator+(Integral n,
                          Range<T, BoundedType, Stridable> const &rhs) noexcept {
 
@@ -823,14 +892,14 @@ constexpr auto operator+(Integral n,
       BoundsCategoryType::Open);
 
   if (rhs.isNaturallyAligned())
-    result.setAlignment(rhs.getAlignment() + n);
+    result.setAlignment(rhs.alignment() + n);
 
   return result;
 }
 
 template <typename T, BoundedRangeType BoundedType, bool Stridable,
-          typename Integral,
-          typename = std::enable_if_t<std::is_integral_v<Integral>>>
+          typename Integral>
+  requires(std::is_integral_v<Integral>)
 constexpr auto operator-(Range<T, BoundedType, Stridable> const &rhs,
                          Integral n) noexcept {
 
@@ -840,7 +909,7 @@ constexpr auto operator-(Range<T, BoundedType, Stridable> const &rhs,
       BoundsCategoryType::Open);
 
   if (rhs.isNaturallyAligned())
-    result.setAlignment(rhs.getAlignment() - n);
+    result.setAlignment(rhs.alignment() - n);
 
   return result;
 }
@@ -864,4 +933,21 @@ constexpr auto slice(Range<T1, BoundedType1, Stridable1> const &lhs,
   return result;
 }
 
+//-----------------------------------------------------------------------------
+template <typename T, BoundedRangeType BoundedRange, bool Stridable>
+std::ostream &operator<<(std::ostream &os,
+                         Range<T, BoundedRange, Stridable> const &r) {
+
+  if (r.hasLowBound()) {
+    os << r.lowBound();
+  }
+  os << "..";
+  if (r.hasHighBound()) {
+    os << r.highBound();
+  }
+  if (r.stride() != 1) {
+    os << " by " << r.stride();
+  }
+  return os;
+}
 } // namespace chplx

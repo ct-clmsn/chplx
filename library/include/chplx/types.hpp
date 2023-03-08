@@ -9,11 +9,59 @@
 #include <chplx/nothing.hpp>
 
 #include <complex>
+#include <cstdint>
 #include <string>
 #include <type_traits>
 
 namespace chplx {
 
+//-----------------------------------------------------------------------------
+// Tuples are a way of grouping several values together. The number of
+// components in each tuple must be known at compile-time. However, unlike an
+// array, a tuple can store components of different types.
+template <typename... Ts> struct Tuple;
+
+// The value of boundedType determines which bounds of the range are specified
+// (making the range "bounded", as opposed to infinite, in the corresponding
+// direction(s)).
+enum class BoundedRangeType {
+  bounded,     ///< both bounds are specified.
+  boundedLow,  ///< the low bound is specified(the high bound is +inf)
+  boundedHigh, ///< the high bound is specified(the low bound is -inf)
+  boundedNone  ///< neither bound is specified (both bounds are inf)
+};
+
+// encode range type
+enum class BoundsCategoryType {
+  None,   // default: not specified
+  Closed, // closed range
+  Open    // open range
+};
+
+// A range is a first-class, constant-space representation of a regular sequence
+// of values. These values are typically integers, though ranges over booleans,
+// enums, and other types are also supported. Ranges support serial and parallel
+// iteration over the sequence of values they represent, as well as operations
+// such as counting, striding, intersection, shifting, and comparisons. Ranges
+// form the basis for defining rectangular domains (Domains) and arrays (Arrays)
+// in Chapel.
+template <typename T = std::int64_t,
+          BoundedRangeType BoundedType = BoundedRangeType::bounded,
+          bool Stridable = false>
+struct Range;
+
+// A domain is a first-class representation of an index set. Domains are used to
+// specify iteration spaces, to define the size and shape of arrays (Arrays),
+// and to specify aggregate operations like slicing. A domain can specify a
+// single- or multi-dimensional rectangular iteration space or represent a set
+// of indices of a given type. Domains can also represent a subset of another
+// domain's index set, using either a dense or sparse representation. A domain's
+// indices may potentially be distributed across multiple locales as described
+// in Domain Maps, thus supporting global-view data structures.
+template <int N, typename IndexType = std::int64_t, bool Stridable = false>
+class Domain;
+
+//-----------------------------------------------------------------------------
 // Returns true if the type T is one the following types, of any width: int,
 // uint, real, imag, complex.
 template <typename T>

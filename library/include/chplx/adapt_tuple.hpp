@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <chplx/types.hpp>
+
 #include <hpx/assert.hpp>
 #include <hpx/modules/iterator_support.hpp>
 #include <hpx/modules/type_support.hpp>
