@@ -210,6 +210,8 @@ struct SymbolTable {
    // pointer to the current SymbolTableNode
    //
    std::shared_ptr<SymbolTableNode> symbolTableRef;
+
+   std::vector<SymbolTableNode> lut;
 };
 
 struct func_kind {
