@@ -5,10 +5,17 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-//var a = [1,2,3,4,5];
+var k = [1,2,3,4,5];
+var l = [[1,2], [3,4]];
+var m = [[1],[2], [3,4,5]];
+var n = [[1,2],[1,2]];
+
+var o = [[[1,2],[1,2],[3,4]],[[5,6],[7,8]]];
+
+var p = [[1,2,3,4,5]];
+var q = [[[1,2,3,4,5]]];
 
 var u : bool;
-
 var v : real;
 var w : byte;
 var x : int;

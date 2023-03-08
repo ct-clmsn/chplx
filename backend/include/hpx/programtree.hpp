@@ -19,6 +19,7 @@
 #include <vector>
 #include <ostream>
 
+using namespace chpl;
 using namespace chpl::ast::visitors::hpx;
 
 namespace chplx { namespace ast { namespace hpx {
@@ -38,8 +39,22 @@ struct ScalarDeclarationExpression : public VariableDeclarationExpression {
 };
 
 struct ScalarDeclarationLiteralExpression : public VariableDeclarationExpression {
-   std::string literalValue;
+   std::vector<uast::AstNode const*> literalValue;
    void emit(std::ostream & os) const;
+};
+
+struct ScalarDeclarationLiteralExpressionVisitor {
+    template<typename T>
+    void operator()(T const&) {}
+
+    void operator()(bool_kind const&);
+    void operator()(byte_kind const&);
+    void operator()(int_kind const&);
+    void operator()(real_kind const&);
+    void operator()(string_kind const&);
+
+    uast::AstNode const* ast;
+    std::ostream & os;
 };
 
 struct ArrayDeclarationExpression : public VariableDeclarationExpression {
@@ -47,7 +62,7 @@ struct ArrayDeclarationExpression : public VariableDeclarationExpression {
 };
 
 struct ArrayDeclarationLiteralExpression : public VariableDeclarationExpression {
-   std::vector<std::string> literalValues;
+   std::vector<uast::AstNode const*> literalValues;
    void emit(std::ostream & os) const;
 };
 
@@ -79,7 +94,8 @@ using Statement = std::variant<
    std::shared_ptr<StatementList>,
    ScalarDeclarationExpression,
    ScalarDeclarationLiteralExpression,
-   ArrayDeclarationExpression
+   ArrayDeclarationExpression,
+   ArrayDeclarationLiteralExpression
 >;
 
 /*

@@ -34,6 +34,7 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 add_compile_definitions($<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>)
 
 set(chplx_sources
+   src/symboltypes.cpp
    src/symbolbuildingvisitor.cpp
    src/programtree.cpp
    src/programtreebuildingvisitor.cpp

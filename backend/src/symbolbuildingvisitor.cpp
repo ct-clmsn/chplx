@@ -45,7 +45,7 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
 }
 
 bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
-std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
+//std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
@@ -55,13 +55,13 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     {
         if(sym.has_value() && sym->kind->index() < 1) {
            sym->kind = std::make_shared<array_kind>();
-        }
-        else if(std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind.index() < 1) {
            std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind =
               std::make_shared<kind_node_type>(kind_node_type{});
         }
         else {
-           std::get<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind)->children.emplace_back(
+           std::get<std::shared_ptr<kind_node_type>>(
+              std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind
+           )->children.emplace_back(
               std::make_shared<kind_node_type>(kind_node_type{})
            );
         }
@@ -131,7 +131,7 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     {
         if(sym && sym->kind.has_value()) {
            if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-              std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom.ranges.push_back(range_kind{});
+              std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom->ranges.push_back(range_kind{});
            }
         }
     }
@@ -193,15 +193,18 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
               std::shared_ptr<array_kind> & symref =
                  std::get<std::shared_ptr<array_kind>>(*(sym->kind));
 
-              if(!sym->literal) {
+              if(!sym->literal && symref->dom) {
+                 symref->dom->ranges.back().points.push_back( int_kind::value(ast) );
+              }
+              else if(!sym->literal) {
                  sym->literal = std::vector<uast::AstNode const*>{ast};
-                 std::get<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind)->children.emplace_back(
+                 std::get<std::shared_ptr<kind_node_type>>(symref->kind)->children.emplace_back(
                     int_kind{}
                  );
               }
               else {
                  sym->literal->push_back(ast);
-                 std::get<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind)->children.emplace_back(
+                 std::get<std::shared_ptr<kind_node_type>>(symref->kind)->children.emplace_back(
                     int_kind{}
                  );
               }
@@ -346,9 +349,13 @@ std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << st
     case asttags::Variable:
     {
 //std::cout << "variable\tname?\t" << reinterpret_cast<NamedDecl const*>(ast)->name().c_str() << "\tis_init?\t" << (reinterpret_cast<Variable const*>(ast)->initExpression() == nullptr) << "\tis_type?\t" << (reinterpret_cast<Variable const*>(ast)->typeExpression() == nullptr) << std::endl;
-       Symbol var{};
-       var.identifier = std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()};
-       sym = std::move(var);
+       if(sym) { sym.reset(); }
+       sym = std::make_optional<Symbol>(
+          Symbol{{
+             std::make_optional<kind_types>(),
+             std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()},
+             {}, 0
+          }});
        symnode = ast;
     }
     break;
@@ -466,6 +473,15 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::As:
     break;
     case asttags::Array:
+    {
+        if(sym.has_value()) {
+           std::get<std::shared_ptr<kind_node_type>>(
+              std::get<std::shared_ptr<array_kind>>(*sym->kind)->kind
+           )->children.emplace_back(
+              kind_node_term_type{}
+           );
+        }
+    }
     break;
     case asttags::Attributes:
     break;

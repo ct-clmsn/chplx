@@ -7,6 +7,7 @@
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include "hpx/codegenvisitor.hpp"
+#include "hpx/symboltypes.hpp"
 #include "chpl/uast/all-uast.h"
 
 #include <variant>
@@ -73,33 +74,6 @@ void CodegenVisitor::generateApplicationHeader() {
    os.close();
 }
 
-struct ScalarDeclarationLiteralExpressionVisitor {
-    template<typename T>
-    void operator()(T const&) {}
-
-    void operator()(bool_kind const& kind) {
-       os << " = " << std::boolalpha << dynamic_cast<BoolLiteral const*>(ast)->value() << ";" << std::endl;
-    }
-    void operator()(byte_kind const&) {
-       os << " = " << dynamic_cast<BytesLiteral const*>(ast)->value() << ";" << std::endl;
-    }
-    void operator()(int_kind const&) {
-       os << " = " << dynamic_cast<IntLiteral const*>(ast)->value() << ";" << std::endl;
-    }
-    void operator()(real_kind const&) {
-       os << " = " << std::fixed << dynamic_cast<RealLiteral const*>(ast)->value() << ";" << std::endl;
-    }
-    void operator()(complex_kind const&) {
-       os << "std::complex<double>";
-    }
-    void operator()(string_kind const&) {
-       os << "{\"" << dynamic_cast<StringLiteral const*>(ast)->value() << "\"}" << ";" << std::endl;
-    }
-
-    uast::AstNode const* ast;
-    std::ostream & os;
-};
-
 struct StatementVisitor {
    
    void emitIndent() const {
@@ -150,9 +124,13 @@ struct StatementVisitor {
       os << node.chplLine << std::endl;
       emitIndent();
       node.emit(os);
+      os << " = ";
       std::visit(ScalarDeclarationLiteralExpressionVisitor{(*s->literal)[0], os}, node.kind);
+      os << ";" << std::endl;
    }
    void operator()(ArrayDeclarationLiteralExpression const& node) {
+      std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
+      if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
       emitIndent();
       os << node.chplLine << std::endl;
       emitIndent();

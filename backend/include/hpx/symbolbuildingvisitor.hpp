@@ -48,19 +48,6 @@ struct SymbolBuildingVisitor {
    bool enter(const uast::AstNode * node);
    void exit(const uast::AstNode * node);
 
-   void emitIndent() const;
-   void emitChapelLine(uast::AstNode const* ast) const;
-   void emitArrayKind(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
-   void emitArrayKindLit(uast::AstNode const* ast, std::shared_ptr<array_kind> & sym);
-
-   template <typename T>
-   void emit(uast::AstNode const* ast, T & sym, char const* type) const;
-   template <typename Kind, typename T>
-   void emitLit(uast::AstNode const* ast, T & sym, char const* type) const;
-
-   bool emit(const uast::AstNode * ast, std::optional<Symbol> & sym);
-   bool emit_literal(const uast::AstNode * ast, std::optional<Symbol> & sym);
-
    chpl::uast::BuilderResult const& br;
    std::size_t indent; 
 
