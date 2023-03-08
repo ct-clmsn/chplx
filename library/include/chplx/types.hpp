@@ -7,21 +7,6 @@
 #pragma once
 
 #include <chplx/nothing.hpp>
-#include <chplx/range.hpp>
-
-#include <complex>
-#include <string>
-#include <type_traits>
-
-//  Copyright (c) 2023 Hartmut Kaiser
-//
-//  SPDX-License-Identifier: BSL-1.0
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
-#pragma once
-
-#include <chplx/range.hpp>
 
 #include <complex>
 #include <string>
@@ -79,12 +64,6 @@ template <> inline constexpr bool isStringType<std::string> = true;
 
 // Returns true if the type t is an enum type.
 template <typename T> inline constexpr bool isEnumType = std::is_enum_v<T>;
-
-// Returns true if the type T is a range type.
-template <typename T> inline constexpr bool isRangeType = false;
-
-template <typename T, BoundedRangeType Bounded, bool Stridable>
-inline constexpr bool isRangeType<Range<T, Bounded, Stridable>> = true;
 
 // Returns true if the value T is one the following types, of any width: int,
 // uint, real, imag, complex.
@@ -154,17 +133,6 @@ template <typename T> [[nodiscard]] constexpr bool isStringValue(T) noexcept {
 // Returns true if the value t is an enum value.
 template <typename T> [[nodiscard]] constexpr bool isEnumValue(T) noexcept {
   return std::is_enum_v<T>;
-}
-
-// Returns true if the value T is a range value.
-template <typename T> [[nodiscard]] constexpr bool isRangeValue(T) noexcept {
-  return false;
-}
-
-template <typename T, BoundedRangeType Bounded, bool Stridable>
-[[nodiscard]] constexpr bool
-isRangeValue(Range<T, Bounded, Stridable> const &) noexcept {
-  return true;
 }
 
 } // namespace chplx

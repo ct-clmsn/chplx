@@ -21,7 +21,7 @@ void test_forall_loop_range(chplx::Range<T, BoundedType, Stridable> r) {
   std::set<T> values;
   hpx::mutex mtx;
 
-  chplx::forall_loop(r, [&](auto value) {
+  chplx::forallLoop(r, [&](auto value) {
     std::lock_guard l(mtx);
     ++called;
     auto p = values.insert(value);

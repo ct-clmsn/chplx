@@ -48,10 +48,12 @@ set(chplx_library_headers
     include/chplx/adapt_range.hpp
     include/chplx/adapt_tuple.hpp
     include/chplx/coforall_loop.hpp
+    include/chplx/domain.hpp
     include/chplx/for_loop.hpp
     include/chplx/forall_loop.hpp
     include/chplx/nothing.hpp
     include/chplx/range.hpp
+    include/chplx/tuple.hpp
     include/chplx/types.hpp
     include/chplx/version.hpp)
 source_group("Header Files/chplx" FILES

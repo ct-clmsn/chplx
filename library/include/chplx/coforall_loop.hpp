@@ -8,6 +8,8 @@
 
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/range.hpp>
+#include <chplx/tuple.hpp>
 
 #include <hpx/algorithm.hpp>
 #include <hpx/execution.hpp>
@@ -16,7 +18,7 @@ namespace chplx {
 
 // forall loop for tuples
 template <typename... Ts, typename F>
-void coforall_loop(std::tuple<Ts...> &t, F &&f) {
+void coforallLoop(Tuple<Ts...> &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
@@ -24,14 +26,26 @@ void coforall_loop(std::tuple<Ts...> &t, F &&f) {
     auto policy = hpx::parallel::util::adapt_sharing_mode(
         hpx::execution::par,
         hpx::threads::thread_sharing_hint::do_not_combine_tasks);
-    hpx::ranges::for_each(policy.with(scs), chplx::tuple_range(t),
-                          std::forward<F>(f));
+
+    if constexpr (Tuple<Ts...>::isHomogenous()) {
+
+      hpx::ranges::for_each(policy.with(scs), t, std::forward<F>(f));
+    } else {
+
+      using table =
+          detail::forLoopTable<Tuple<Ts...>, std::decay_t<F>,
+                               std::make_index_sequence<sizeof...(Ts)>>;
+
+      hpx::experimental::for_loop(
+          policy.with(scs), 0, t.size(),
+          [&](std::size_t i) { table::lookupTable[i](t, f); });
+    }
   }
 }
 
 // forall loop for ranges
 template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F>
-void coforall_loop(Range<T, BoundedType, Stridable> &r, F &&f) {
+void coforallLoop(Range<T, BoundedType, Stridable> &r, F &&f) {
 
   hpx::execution::experimental::static_chunk_size scs(1);
   auto policy = hpx::parallel::util::adapt_sharing_mode(

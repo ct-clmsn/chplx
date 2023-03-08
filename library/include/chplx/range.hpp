@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <chplx/types.hpp>
+
 #include <hpx/assert.hpp>
 #include <hpx/config.hpp>
 
@@ -86,18 +88,20 @@ struct Stridable<T, BoundedType, true> {
   StrideType_t<T> stride = StrideType_t<T>(1);
 };
 
-template <typename T, BoundedRangeType BoundedType, bool Stride>
+template <typename T1, BoundedRangeType BoundedType1, bool Stride1, typename T2,
+          BoundedRangeType BoundedType2, bool Stride2>
 [[nodiscard]] constexpr bool
-operator==(Stridable<T, BoundedType, Stride> const &lhs,
-           Stridable<T, BoundedType, Stride> const &rhs) noexcept {
+operator==(Stridable<T1, BoundedType1, Stride1> const &lhs,
+           Stridable<T2, BoundedType2, Stride2> const &rhs) noexcept {
 
   return lhs.getStride() == rhs.getStride();
 }
 
-template <typename T, BoundedRangeType BoundedType, bool Stride>
+template <typename T1, BoundedRangeType BoundedType1, bool Stride1, typename T2,
+          BoundedRangeType BoundedType2, bool Stride2>
 [[nodiscard]] constexpr bool
-operator!=(Stridable<T, BoundedType, Stride> const &lhs,
-           Stridable<T, BoundedType, Stride> const &rhs) noexcept {
+operator!=(Stridable<T1, BoundedType1, Stride1> const &lhs,
+           Stridable<T2, BoundedType2, Stride2> const &rhs) noexcept {
 
   return !(lhs == rhs);
 }
@@ -310,19 +314,21 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedNone> {
   }
 };
 
-template <typename T, BoundedRangeType BoundedType>
+template <typename T1, BoundedRangeType BoundedType1, typename T2,
+          BoundedRangeType BoundedType2>
 [[nodiscard]] constexpr bool
-operator==(Bounds<T, BoundedType> const &lhs,
-           Bounds<T, BoundedType> const &rhs) noexcept {
+operator==(Bounds<T1, BoundedType1> const &lhs,
+           Bounds<T2, BoundedType2> const &rhs) noexcept {
 
   return lhs.getFirstIndex() == rhs.getFirstIndex() &&
          lhs.getLastIndex() == rhs.getLastIndex();
 }
 
-template <typename T, BoundedRangeType BoundedType>
+template <typename T1, BoundedRangeType BoundedType1, typename T2,
+          BoundedRangeType BoundedType2>
 [[nodiscard]] constexpr bool
-operator!=(Bounds<T, BoundedType> const &lhs,
-           Bounds<T, BoundedType> const &rhs) noexcept {
+operator!=(Bounds<T1, BoundedType1> const &lhs,
+           Bounds<T2, BoundedType2> const &rhs) noexcept {
 
   return !(lhs == rhs);
 }
@@ -380,18 +386,20 @@ struct Alignment<T, BoundedRangeType::boundedHigh, false> {
   static constexpr void setAlignment(T) noexcept {}
 };
 
-template <typename T, BoundedRangeType BoundedType, bool Stridable>
+template <typename T1, BoundedRangeType BoundedType1, bool Stridable1,
+          typename T2, BoundedRangeType BoundedType2, bool Stridable2>
 [[nodiscard]] constexpr bool
-operator==(Alignment<T, BoundedType, Stridable> const &lhs,
-           Alignment<T, BoundedType, Stridable> const &rhs) noexcept {
+operator==(Alignment<T1, BoundedType1, Stridable1> const &lhs,
+           Alignment<T2, BoundedType2, Stridable2> const &rhs) noexcept {
 
   return lhs.getAlignment() == rhs.getAlignment();
 }
 
-template <typename T, BoundedRangeType BoundedType, bool Stridable>
+template <typename T1, BoundedRangeType BoundedType1, bool Stridable1,
+          typename T2, BoundedRangeType BoundedType2, bool Stridable2>
 [[nodiscard]] constexpr bool
-operator!=(Alignment<T, BoundedType, Stridable> const &lhs,
-           Alignment<T, BoundedType, Stridable> const &rhs) noexcept {
+operator!=(Alignment<T1, BoundedType1, Stridable1> const &lhs,
+           Alignment<T2, BoundedType2, Stridable2> const &rhs) noexcept {
 
   return !(lhs == rhs);
 }
@@ -634,6 +642,24 @@ private:
   [[no_unique_address]] detail::Stridable<T, BoundedType, Stridable> stride_;
   [[no_unique_address]] detail::Alignment<T, BoundedType, Stridable> alignment_;
 };
+
+//-----------------------------------------------------------------------------
+// Returns true if the type T is a range type.
+template <typename T> inline constexpr bool isRangeType = false;
+
+template <typename T, BoundedRangeType Bounded, bool Stridable>
+inline constexpr bool isRangeType<Range<T, Bounded, Stridable>> = true;
+
+// Returns true if the value T is a range value.
+template <typename T> [[nodiscard]] constexpr bool isRangeValue(T) noexcept {
+  return false;
+}
+
+template <typename T, BoundedRangeType Bounded, bool Stridable>
+[[nodiscard]] constexpr bool
+isRangeValue(Range<T, Bounded, Stridable> const &) noexcept {
+  return true;
+}
 
 //-----------------------------------------------------------------------------
 template <typename T, bool Stridable = false>

@@ -17,7 +17,7 @@ void test_for_loop_range(chplx::Range<T, BoundedType, Stridable> r) {
   T val = r.first();
   T stride = r.stride();
 
-  chplx::for_loop(r, [&](auto value) {
+  chplx::forLoop(r, [&](auto value) {
     ++called;
     HPX_TEST_EQ(value, val);
     val += stride;

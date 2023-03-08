@@ -8,24 +8,41 @@
 
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/range.hpp>
+#include <chplx/tuple.hpp>
 
 namespace chplx {
 
+namespace detail {
+
+// 'iterate'  over non-homogenous tuple
+template <typename... Ts, typename F, std::size_t... Is>
+void forLoop(Tuple<Ts...> &t, F &&f, std::index_sequence<Is...>) {
+
+  (f(std::get<Is>(t)), ...);
+}
+} // namespace detail
+
 // for loop for tuples
-template <typename... Ts, typename F>
-void for_loop(std::tuple<Ts...> &t, F &&f) {
+template <typename... Ts, typename F> void forLoop(Tuple<Ts...> &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
-    for (auto const &e : chplx::tuple_range(t)) {
-      f(e);
+    if constexpr (Tuple<Ts...>::isHomogenous()) {
+      for (auto const &e : t) {
+        f(e);
+      }
     }
+  } else {
+
+    detail::forLoop(t, std::forward<F>(f),
+                    std::make_index_sequence<sizeof...(Ts)>{});
   }
 }
 
 // for loop for ranges
 template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F>
-void for_loop(Range<T, BoundedType, Stridable> &r, F &&f) {
+void forLoop(Range<T, BoundedType, Stridable> &r, F &&f) {
 
   for (auto const &e : chplx::iterate(r)) {
     f(e);
