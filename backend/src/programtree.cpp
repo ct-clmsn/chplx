@@ -148,7 +148,15 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    const std::size_t children_sz = children.size();
    std::size_t vec_count = 0;
 
+   // the following 2 loops could be performed in
+   // parallel
+   //
    // this implementation needs work
+   //
+   // the following loop captures the nesting
+   // depth and gets the first `kind_type`
+   // stored in the literal array then the
+   // loop needs to terminate
    //
    typelist << "std::vector<";
 
@@ -172,6 +180,13 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
 
    typelist << ">";
 
+   // this implementation needs work
+   //
+   // the next loop cycles through the literal list
+   // and generates the correct C++ initializer
+   // list for the vector type generated in the loop
+   // above
+   //
    std::size_t lit = 0;
 
    literallist << "{";
@@ -181,9 +196,9 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
       const bool kntend =
          std::holds_alternative<kind_node_term_type>(children[i]);
       const bool kntbeg =
-         std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i+1]);
+         (i <= children_sz) ? std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i+1]) : false;
       const bool kntendnxt =
-         std::holds_alternative<kind_node_term_type>(children[i+1]);
+         (i <= children_sz) ? std::holds_alternative<kind_node_term_type>(children[i+1]) : false;
 
      if(knt) { literallist << "{"; }
      else {
@@ -197,7 +212,7 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
            literallist << ",";
         }
         else if(!knt && kntend && kntbeg) {
-           literallist << "} , ";
+           literallist << "},";
         }
         else if(kntend){
            literallist << "}";
