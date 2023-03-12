@@ -8,6 +8,7 @@
  */
 #include "hpx/programtree.hpp"
 #include "chpl/uast/all-uast.h"
+#include <fmt/args.h>
 
 #include <variant>
 #include <fstream>
@@ -221,6 +222,61 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    }
 
    os << typelist.str() << " " << identifier << " = " << literallist.str() << ";" << std::endl;
+}
+
+struct ArgumentVisitor {
+    template<typename T>
+    void operator()(T const&) {}
+
+    void operator()(string_kind const&) {
+       os << string_kind::value(node);
+    }
+
+    void operator()(LiteralExpression const& e) {
+       node = e.value;
+       std::visit(*this, e.kind);
+    }
+
+    uast::AstNode const* node;
+    std::stringstream os; 
+};
+
+void FunctionCallExpression::emit(std::ostream & os) const {
+   if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
+      const std::size_t args_sz = arguments.size();
+      if(0 < args_sz) {
+         ArgumentVisitor av{nullptr, {}};
+         std::visit(av, arguments[0]);
+         std::string cxx_fmt_str{av.os.str()};
+
+         fmt::dynamic_format_arg_store<fmt::format_context> store;
+
+         for(std::size_t i = 1; i < args_sz; ++i) {
+            Statement const& stmt = arguments[i];
+            ArgumentVisitor v{nullptr, {}};
+            std::visit(v, stmt);
+            store.push_back(v.os.str());
+         }
+
+         os << fmt::vformat(cxx_fmt_str, store) << std::endl;
+      }
+   }
+}
+
+void BinaryOpExpression::emit(std::ostream & os) const {
+/*
+   if(std::string{op.c_str()} == "[]") {
+      os << (*symbols[0].identifier) << "[" << (*symbols[1].identifier) << "]";
+   }
+   else {
+      os << (*symbols[0].identifier) << op.c_str() << (*symbols[1].identifier);
+   }
+*/
+}
+
+void ForallLoopExpression::emit(std::ostream & os) const {
+   range_kind const& rk = std::get<range_kind>(*index_set.kind);
+   os << "chplx::forallLoop(chplx::Range(" << rk.points[0] << ", " << rk.points[1] << "), [&](auto " << (*iterator.identifier) << ")" << std::endl;
 }
 
 } /* namespace hpx */ } /* namespace ast */ } /* namespace chpl */

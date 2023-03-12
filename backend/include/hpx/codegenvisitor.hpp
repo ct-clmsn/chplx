@@ -38,6 +38,8 @@ enum class HeaderEnum {
     std_variant,
     std_algorithm,
     std_numeric,
+    std_fstream,
+    std_iostream,
     hpx_lco_channel,
     hpx_lco_future,
     hpx_algorithm,
@@ -46,6 +48,7 @@ enum class HeaderEnum {
     hpx_partitioned_vector,
     hpx_unordered_map,
     hpx_spmd,
+    hpx_iostream,
     HeaderCount
 };
 

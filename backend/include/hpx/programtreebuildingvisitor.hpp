@@ -47,6 +47,7 @@ struct ProgramTreeBuildingVisitor {
    ProgramTreeBuildingVisitor(chpl::uast::BuilderResult const& bRes, SymbolTable & st, ProgramTree & p);
    ~ProgramTreeBuildingVisitor() = default;
 
+   std::string emitChapelLine(uast::AstNode const* ast);
    bool enter(const uast::AstNode * node);
    void exit(const uast::AstNode * node);
 
@@ -59,7 +60,7 @@ struct ProgramTreeBuildingVisitor {
    ProgramTree const& program;
 
    std::vector<Statement> & curStmts;
-   std::shared_ptr< std::vector<Statement> > parStmts;
+   //std::shared_ptr< std::vector<Statement> > parStmts;
 
    std::optional<uast::AstTag> prevTag;
 };

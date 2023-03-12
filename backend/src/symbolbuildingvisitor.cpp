@@ -18,11 +18,10 @@ using namespace chpl::uast;
  
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-template <typename Kind>
-void SymbolBuildingVisitor::addSymbolEntry(char const* type) {
-   Symbol sym{{Kind{}, std::string{type}, {}, symbolTable.symbolTableCount}, {}};
-   symbolTable.addEntry(*sym.identifier, sym);
+void SymbolBuildingVisitor::addSymbolEntry(char const* type, Symbol && symbol) {
+   symbolTable.addEntry(*symbol.identifier, symbol);
 }
+
 
 SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapelBr, std::string const& cfps)
    : br(chapelBr), indent(0),
@@ -33,15 +32,27 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    //
    // bool, string, int, real, byte, complex, range, domain, template
    //
-   addSymbolEntry<bool_kind>("bool");
-   addSymbolEntry<string_kind>("string");
-   addSymbolEntry<int_kind>("int");
-   addSymbolEntry<real_kind>("real");
-   addSymbolEntry<byte_kind>("byte");
-   addSymbolEntry<complex_kind>("complex");
-   addSymbolEntry<range_kind>("range");
-   addSymbolEntry<domain_kind>("domain");
-   addSymbolEntry<template_kind>("?");
+
+   addSymbolEntry("bool", Symbol{{bool_kind{}, std::string{"bool"}, {}, symbolTable.symbolTableCount}, {}});
+   addSymbolEntry("string", Symbol{{string_kind{}, std::string{"string"}, {}, symbolTable.symbolTableCount}, {}});
+   addSymbolEntry("int", Symbol{{int_kind{}, std::string{"int"}, {}, symbolTable.symbolTableCount}, {}});
+   addSymbolEntry("real", Symbol{{real_kind{}, std::string{"real"}, {}, symbolTable.symbolTableCount}, {}});
+   addSymbolEntry("byte", Symbol{{byte_kind{}, std::string{"byte"}, {}, symbolTable.symbolTableCount}, {}});
+   addSymbolEntry("complex", Symbol{{complex_kind{}, std::string{"complex"}, {}, symbolTable.symbolTableCount}, {}});
+   addSymbolEntry("range", Symbol{{range_kind{}, std::string{"range"}, {}, symbolTable.symbolTableCount}, {}});
+   addSymbolEntry("domain", Symbol{{domain_kind{}, std::string{"domain"}, {}, symbolTable.symbolTableCount}, {}});
+   addSymbolEntry("?", Symbol{{template_kind{}, std::string{"?"}, {}, symbolTable.symbolTableCount}, {}});
+
+   addSymbolEntry("inlinecxx",
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}}}), std::string{"inlinecxx"}, {}, symbolTable.symbolTableCount}, {}}
+   );
+}
+
+std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
+   auto fp = br.filePath();
+   std::stringstream os{};
+   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << fp.c_str() << "\"";
+   return os.str();
 }
 
 bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
@@ -101,7 +112,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Identifier:
     {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
-
        if(sym && sym->kind.has_value()) {
           if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
              auto fsym = symbolTable.find(identifier_str);
@@ -109,14 +119,13 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 std::get<std::shared_ptr<array_kind>>( *(sym->kind))->kind = *(fsym->kind);
              }
           }
-       }
-       else {
-          auto fsym = symbolTable.find(identifier_str);
-          if(fsym.has_value()) {
-             sym->kind = (*(fsym->kind));
+          else {
+             auto fsym = symbolTable.find(identifier_str);
+             if(fsym.has_value()) {
+                sym->kind = (*(fsym->kind));
+             }
           }
        }
-
     }
     break;
     case asttags::Import:
@@ -129,11 +138,21 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Range:
     {
-        if(sym && sym->kind.has_value()) {
-           if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
-              std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom->ranges.push_back(range_kind{});
-           }
-        }
+       if(sym && sym->kind.has_value()) {
+          if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
+             std::get<std::shared_ptr<array_kind>>(*(sym->kind))->dom->ranges.push_back(range_kind{});
+          }
+       }
+       else {
+          sym = std::make_optional<Symbol>(
+             Symbol{{
+               std::make_optional<kind_types>(range_kind{}),
+               std::string{"range_" + emitChapelLine(ast)},
+               {}, symbolTable.symbolTableCount
+            }});
+
+          symnode = ast;
+       }
     }
     break;
     case asttags::Require:
@@ -156,7 +175,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::BoolLiteral:
     {
-        if(sym) {
+        if(!(sym && sym->kind.has_value() && 0 < sym->kind->index())) {
            auto fsym = symbolTable.find("bool");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
@@ -172,7 +191,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::ImagLiteral:
     {
-        if(sym) {
+        if(!(sym && sym->kind.has_value() && 0 < sym->kind->index())) {
            auto fsym = symbolTable.find("complex");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
@@ -188,7 +207,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::IntLiteral:
     {
-        if(sym && sym->kind.has_value()) {
+        if(sym && sym->kind.has_value() && 0 < sym->kind->index()) {
            if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->kind))) {
               std::shared_ptr<array_kind> & symref =
                  std::get<std::shared_ptr<array_kind>>(*(sym->kind));
@@ -209,6 +228,11 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                  );
               }
            }
+           else if(std::holds_alternative<range_kind>(*(sym->kind))) {
+              range_kind & symref =
+                 std::get<range_kind>(*sym->kind);
+              symref.points.push_back( int_kind::value(ast) );
+           }
         }
         else {
            auto fsym = symbolTable.find("int");
@@ -226,7 +250,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::RealLiteral:
     {
-        if(sym) {
+        if(!(sym && sym->kind.has_value() && 0 < sym->kind->index())) {
            auto fsym = symbolTable.find("real");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
@@ -242,7 +266,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::UintLiteral:
     {
-        if(sym) {
+        if(!(sym && sym->kind.has_value() && 0 < sym->kind->index())) {
            auto fsym = symbolTable.find("int");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
@@ -260,7 +284,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::BytesLiteral:
     {
-        if(sym) {
+        if(!(sym && sym->kind.has_value() && 0 < sym->kind->index())) {
            auto fsym = symbolTable.find("byte");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
@@ -276,7 +300,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::CStringLiteral:
     {
-        if(sym) {
+        if(!(sym && sym->kind.has_value() && 0 < sym->kind->index())) {
            auto fsym = symbolTable.find("string");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
@@ -292,7 +316,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::StringLiteral:
     {
-        if(sym) {
+        if(!(sym && sym->kind.has_value() && 0 < sym->kind->index())) {
            auto fsym = symbolTable.find("string");
            if(fsym.has_value()) {
              sym->kind = (*(fsym->kind));
@@ -419,6 +443,9 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::For:
     break;
     case asttags::Forall:
+    {
+       symbolTable.pushScope(); 
+    }
     break;
     case asttags::Foreach:
     break;
@@ -516,6 +543,13 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::New:
     break;
     case asttags::Range:
+    {
+        if(sym && std::holds_alternative<range_kind>(*(sym->kind))) {
+           symbolTable.addEntry((*(sym->identifier)), *sym);
+           sym.reset();
+           symnode.reset();
+        }
+    }
     break;
     case asttags::Require:
     break;

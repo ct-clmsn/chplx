@@ -65,6 +65,9 @@ void CodegenVisitor::generateApplicationHeader() {
          else if(i == static_cast<std::size_t>(HeaderEnum::std_string)) {
             os << "#include <string>" << std::endl;
          }
+         else if(i == static_cast<std::size_t>(HeaderEnum::std_iostream)) {
+            os << "#include <iostream>" << std::endl;
+         }
       }
    }
 
@@ -135,6 +138,29 @@ struct StatementVisitor {
       os << node.chplLine << std::endl;
       emitIndent();
       node.emit(os);
+   }
+   void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
+      if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*node->symbol.kind)) {
+         headers[static_cast<std::size_t>(HeaderEnum::std_iostream)] = true;
+      }
+      emitIndent();
+      os << node->chplLine << std::endl;
+      emitIndent();
+      node->emit(os);
+   }
+   void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
+      emitIndent();
+      node->emit(os);
+      emitIndent();
+   }
+   void operator()(std::shared_ptr<ForallLoopExpression> const& expr) {
+      emitIndent();
+      expr->emit(os);
+      os << "{";
+      for(const auto& stmt : expr->statements) {
+         std::visit(*this, stmt);
+      }
+      os << "}";
    }
 
    SymbolTable & symbolTable;

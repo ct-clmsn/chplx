@@ -13,8 +13,10 @@
 
 #include "chpl/uast/all-uast.h"
 #include "hpx/variant.hpp"
+#include "fmt/core.h"
 
 #include <optional>
+#include <format>
 #include <ostream>
 #include <string>
 #include <complex>
@@ -88,7 +90,12 @@ struct domain_kind {
    domain_kind() = default;
 };
 
+struct ref_kind;
+struct const_kind;
+struct config_kind;
+struct cxxfunc_kind;
 struct func_kind;
+struct itrfunc_kind;
 struct record_kind;
 struct class_kind;
 struct array_kind;
@@ -107,7 +114,12 @@ using kind_types = std::variant<
    string_kind,
    range_kind,
    domain_kind,
+   std::shared_ptr<ref_kind>,
+   std::shared_ptr<const_kind>,
+   std::shared_ptr<config_kind>,
+   std::shared_ptr<cxxfunc_kind>,
    std::shared_ptr<func_kind>,
+   std::shared_ptr<itrfunc_kind>,
    std::shared_ptr<record_kind>,
    std::shared_ptr<class_kind>,
    std::shared_ptr<array_kind>,
@@ -118,6 +130,24 @@ using kind_types = std::variant<
 
 struct kind_node_type {
    std::vector<kind_types> children;
+};
+
+struct ref_kind {
+   kind_types kind;
+
+   ref_kind() = default;
+};
+
+struct const_kind {
+   kind_types kind;
+
+   const_kind() = default;
+};
+
+struct config_kind {
+   kind_types kind;
+
+   config_kind() = default;
 };
 
 struct array_kind {
@@ -136,14 +166,10 @@ struct SymbolBase {
     std::optional<std::string> identifier;
     std::optional<std::vector<uast::AstNode const*>> literal;
     std::size_t scopeId;
-
-    SymbolBase() = default;
 };
 
 struct Symbol : public SymbolBase {
     std::optional<SymbolBase> parent;
-
-    Symbol() = default;
 };
 
 struct SymbolTable {
@@ -179,12 +205,11 @@ struct SymbolTable {
       std::unordered_map<std::string, Symbol> entries;
       std::vector<SymbolTableNodeImpl> children;
       std::optional<SymbolTableNodeImpl> parent;
-
-      SymbolTableNode() = default;
    };
 
-   SymbolTable(SymbolTable & v) = delete;
-   SymbolTable(SymbolTable const& v) = delete;
+   SymbolTable(SymbolTable const& v) = default;
+   SymbolTable(SymbolTable & v) = default;
+   SymbolTable(SymbolTable && v) = default;
    SymbolTable(SymbolTable * v) = delete;
    SymbolTable(SymbolTable const* v) = delete;
 
@@ -211,13 +236,36 @@ struct SymbolTable {
    //
    std::shared_ptr<SymbolTableNode> symbolTableRef;
 
-   std::vector<SymbolTableNode> lut;
+   // the symboltable contains a tree of variable scopes; each
+   // node in the symboltable tree has a number associated with
+   // it. the numbers are used to: count the symboltable tree
+   // nodes, provide quick access to symbol table tree nodes,
+   // and to minimize the use of pointers across the compiler
+   //
+   // lut is used to quickly access the entire symboltable tree;
+   // the lut helps minimize log-ish look-up queries of the
+   // symboltable tree; the tree should end up being log-ish sized
+   // (it's a k-ary tree).
+   //
+   // note all entities that can be used to access the symboltable
+   // have a 'scopeId' or 'scopePtr' member variable
+   //
+   std::vector<std::shared_ptr<SymbolTableNode>> lut;
 };
 
-struct func_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
+struct funcbase_kind {
    SymbolTable symbolTable;
+   std::optional<std::string> symbolTableSignature;
+   std::vector<kind_types> args; 
+};
+
+struct cxxfunc_kind : public funcbase_kind {
+};
+
+struct func_kind : public funcbase_kind {
+};
+
+struct itrfunc_kind : public func_kind {
 };
 
 struct record_kind {

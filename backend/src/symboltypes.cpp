@@ -18,20 +18,23 @@ SymbolTable::SymbolTable() : symbolTableCount(0), symbolTableRef(), lut() {
       std::make_shared<SymbolTableNode>(
          std::move(SymbolTableNode{0, {}, {}, {}})
       );
-   ++symbolTableCount;
    symbolTableRef = symbolTableRoot;
+   lut.push_back(symbolTableRef);
+   ++symbolTableCount;
 }
 
 std::size_t SymbolTable::pushScope() {
    // new scopes are appended to
    // the end of the symboltable
    //
-   ++symbolTableCount;
    symbolTableRef->children.emplace_back(
       std::make_shared<SymbolTableNode>(std::move(SymbolTableNode{symbolTableCount, {}, {}, symbolTableRef}))
    );
+   symbolTableCount+=1;
 
    symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(symbolTableRef->children.back());
+   lut.push_back(symbolTableRef);
+   
    return symbolTableCount;
 }
 
@@ -67,12 +70,12 @@ std::optional<Symbol> SymbolTable::findImpl(SymbolTableNode& stref, const std::s
    if(stref.entries.size() < 1) {
       return {};
    }
-
    if(idx == stref.id) {
       auto entry = stref.entries.find(ident);
       if(entry != std::end(stref.entries)) {
-         return entry->second;
+         return {entry->second};
       }
+
       return {};
    }
 
@@ -88,7 +91,7 @@ std::optional<Symbol> SymbolTable::findImpl(SymbolTableNode& stref, const std::s
 }
 
 std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const& ident) {
-   SymbolTableNode& stref = *symbolTableRoot; 
+   SymbolTableNode & stref = *lut[idx];
    return findImpl(stref, idx, ident);
 }
 

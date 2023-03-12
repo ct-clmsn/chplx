@@ -16,6 +16,8 @@
 
 #include <string>
 #include <variant>
+#include <utility>
+#include <tuple>
 #include <vector>
 #include <ostream>
 
@@ -66,26 +68,29 @@ struct ArrayDeclarationLiteralExpression : public VariableDeclarationExpression 
    void emit(std::ostream & os) const;
 };
 
-/*
-struct FunctionCallExpression : public ExpressionBase {
-   std::string functionIdentifier;
-   std::vector<std::string> arguments;
+struct ArithmeticOpExpression : public ExpressionBase {
+   std::string op;
+   uast::AstNode const *ast;
 };
 
-struct MethodCallExpression : public ExpressionBase {
-   std::string identifier;
-   std::string methodIdentifier;
-   std::vector<std::string> arguments;
+struct LiteralExpression {
+   kind_types kind;
+   uast::AstNode const * value;
 };
 
+struct VariableExpression {
+   Symbol & sym;
+};
+
+struct UnaryOpExpression;
+struct BinaryOpExpression;
+struct TernaryOpExpression;
+
+struct ScopeExpression;
 struct FunctionDeclarationExpression;
-struct ForallExpression;
-struct IfExpression;
-struct ElseExpression;
-struct BeginExpression;
-struct CobeginExpression;
-struct CoforallExpression;
-*/
+struct FunctionCallExpression;
+
+struct ForallLoopExpression;
 
 struct StatementList;
 
@@ -95,39 +100,70 @@ using Statement = std::variant<
    ScalarDeclarationExpression,
    ScalarDeclarationLiteralExpression,
    ArrayDeclarationExpression,
-   ArrayDeclarationLiteralExpression
->;
-
-/*
+   ArrayDeclarationLiteralExpression,
+   LiteralExpression,
+   VariableExpression,
+   std::shared_ptr<UnaryOpExpression>,
+   std::shared_ptr<BinaryOpExpression>,
+   std::shared_ptr<TernaryOpExpression>,
+   std::shared_ptr<ScopeExpression>,
    std::shared_ptr<FunctionDeclarationExpression>,
    std::shared_ptr<FunctionCallExpression>,
-   std::shared_ptr<MethodCallExpression>,
-   std::shared_ptr<ForallExpression>,
-   std::shared_ptr<IfExpression>,
-   std::shared_ptr<ElseExpression>,
-   std::shared_ptr<BeginExpression>,
-   std::shared_ptr<CobeginExpression>,
-   std::shared_ptr<CoforallExpression>
-*/
-
+   std::shared_ptr<ForallLoopExpression>
+>;
 
 struct StatementList {
    std::vector<Statement> statements;
 };
 
-/*
-struct FunctionDeclarationExpression : public ExpressionBase {
-    std::string identifier;
-    SymbolTable st;
-    std::vector<Statement> statements;
+struct UnaryOpExpression : public ArithmeticOpExpression {
+   std::string op;
+   Symbol & symbol;
 
-    FunctionDeclarationExpression() = default;
+   void emit(std::ostream & os) const;
 };
 
-struct ForExpression : public ExpressionBase {
-    std::vector<Statement> statements;
+struct BinaryOpExpression : public ArithmeticOpExpression {
+   std::pair<Statement, Statement> statements;
+
+   void emit(std::ostream & os) const;
 };
-*/
+
+struct TernaryOpExpression : public ArithmeticOpExpression {
+   std::tuple<Statement, Statement, Statement> statements;
+
+   void emit(std::ostream & os) const;
+};
+
+struct ScopeExpression : public ExpressionBase {
+   std::optional<uast::AstNode const*> node;
+   std::vector<Statement> statements;
+   SymbolTable symbolTable;
+
+   void emit(std::ostream & os) const;
+};
+
+struct FunctionDeclarationExpression : public ScopeExpression {
+   Symbol symbol;
+   std::vector<Statement> statements;
+
+   void emit(std::ostream & os) const;
+};
+
+struct FunctionCallExpression : public ExpressionBase {
+   Symbol symbol;
+   std::vector<Statement> arguments;
+   std::string chplLine;
+
+   void emit(std::ostream & os) const;
+};
+
+struct ForallLoopExpression : public ScopeExpression {
+   Symbol iterator;
+   Symbol index_set;
+
+   void emit(std::ostream & os) const;
+};
 
 struct ProgramTree {
 
@@ -135,6 +171,33 @@ struct ProgramTree {
 
    ProgramTree() : statements() {}
 };
+
+/*
+   std::shared_ptr<MethodCallExpression>,
+   std::shared_ptr<ForallExpression>,
+   std::shared_ptr<IfExpression>,
+   std::shared_ptr<ElseExpression>,
+   std::shared_ptr<BeginExpression>,
+   std::shared_ptr<CobeginExpression>,
+   std::shared_ptr<CoforallExpression>
+
+struct ForExpression : public ExpressionBase {
+    std::vector<Statement> statements;
+};
+
+struct MethodCallExpression : public ExpressionBase {
+   std::string identifier;
+   std::string methodIdentifier;
+   std::vector<std::string> arguments;
+};
+
+struct FunctionDeclarationExpression;
+struct IfExpression;
+struct ElseExpression;
+struct BeginExpression;
+struct CobeginExpression;
+struct CoforallExpression;
+*/
 
 } /* namespace hpx */ } /* namespace ast */ } /* namespace chplx */
 

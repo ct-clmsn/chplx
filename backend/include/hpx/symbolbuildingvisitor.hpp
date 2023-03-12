@@ -45,6 +45,10 @@ struct SymbolBuildingVisitor {
    template <typename Kind>
    void addSymbolEntry(char const* type);
 
+   void addSymbolEntry(char const* type, Symbol && symbol);
+
+   std::string emitChapelLine(uast::AstNode const* ast);
+
    bool enter(const uast::AstNode * node);
    void exit(const uast::AstNode * node);
 
