@@ -9,6 +9,7 @@
 //
 
 inlinecxx("std::cout << \"h\" << std::endl;");
+inlinecxx("std::cout << \"{}\" << std::endl;", "h");
 
 /*
 proc get(Arr : [D] real, i : int) : real {
