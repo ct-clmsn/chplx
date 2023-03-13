@@ -93,12 +93,7 @@ std::optional<Symbol> SymbolTable::findImpl(SymbolTableNode& stref, const std::s
 
 std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const& ident) {
    SymbolTableNode & stref = *lut[idx];
-   std::optional<Symbol> ret = findImpl(stref, idx, ident);
-   while(stref.id != 0) {
-      ret = findImpl(stref, idx, ident);
-      stref = *lut[stref.parentSymbolTableId];
-   }
-   return ret;
+   return findImpl(stref, idx, ident);
 }
 
 void SymbolTable::dumpImpl(SymbolTableNode const& node) {
