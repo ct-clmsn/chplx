@@ -8,6 +8,8 @@
 
 #include <hpx/modules/testing.hpp>
 
+#include <cstddef>
+
 void testBounded() {
 
   // default stride
@@ -518,12 +520,51 @@ void testUnbounded() {
   }
 }
 
+template <typename T, chplx::BoundedRangeType BoundedType, bool Stridable>
+void testIndexOrder(chplx::Range<T, BoundedType, Stridable> const &r,
+                    std::vector<T> const &elements) {
+
+  std::size_t count = 0;
+  for (std::size_t i = 0; i != r.size(); ++i) {
+
+    auto idx = r.orderToIndex(i);
+    HPX_TEST_EQ(idx, elements[i]);
+
+    std::size_t order = r.indexOrder(idx);
+    HPX_TEST_EQ(i, order);
+    ++count;
+  }
+  HPX_TEST_EQ(count, elements.size());
+}
+
+void testIndexOrder() {
+
+  testIndexOrder(chplx::Range(0, 5), {0, 1, 2, 3, 4, 5});
+  testIndexOrder(chplx::Range(0, 5, 2), {0, 2, 4});
+  testIndexOrder(chplx::Range(0, 5, -1), {5, 4, 3, 2, 1, 0});
+  testIndexOrder(chplx::Range(0, 5, -2), {5, 3, 1});
+
+  testIndexOrder(chplx::Range(0, 6, 2), {0, 2, 4, 6});
+  testIndexOrder(chplx::Range(0, 6, -1), {6, 5, 4, 3, 2, 1, 0});
+  testIndexOrder(chplx::Range(0, 6, -2), {6, 4, 2, 0});
+
+  testIndexOrder(chplx::Range(1, 5, 2), {1, 3, 5});
+  testIndexOrder(chplx::Range(1, 5, -1), {5, 4, 3, 2, 1});
+  testIndexOrder(chplx::Range(1, 5, -2), {5, 3, 1});
+
+  testIndexOrder(chplx::Range(1, 6, 2), {1, 3, 5});
+  testIndexOrder(chplx::Range(1, 6, -1), {6, 5, 4, 3, 2, 1});
+  testIndexOrder(chplx::Range(1, 6, -2), {6, 4, 2});
+}
+
 int main() {
 
   testBounded();
   testBoundedLow();
   testBoundedHigh();
   testUnbounded();
+
+  testIndexOrder();
 
   return hpx::util::report_errors();
 }

@@ -10,7 +10,7 @@
 #include <hpx/modules/testing.hpp>
 
 template <typename T, chplx::BoundedRangeType BoundedType, bool Stridable>
-void test_for_loop_range(chplx::Range<T, BoundedType, Stridable> r) {
+void testForLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
 
   int called = 0;
 
@@ -28,16 +28,20 @@ void test_for_loop_range(chplx::Range<T, BoundedType, Stridable> r) {
 
 int main() {
 
-  test_for_loop_range(chplx::Range(0, 10));
-  test_for_loop_range(chplx::BoundedRange<int, true>(0, 10, 2));
-  test_for_loop_range(chplx::Range(0, 10, chplx::BoundsCategoryType::Open));
-  test_for_loop_range(chplx::BoundedRange<int, true>(
+  testForLoopRange(chplx::Range(0, 10));
+  testForLoopRange(chplx::BoundedRange<int, true>(0, 10, 2));
+  testForLoopRange(chplx::Range(0, 10, chplx::BoundsCategoryType::Open));
+  testForLoopRange(chplx::BoundedRange<int, true>(
       0, 10, 2, chplx::BoundsCategoryType::Open));
 
-  test_for_loop_range(chplx::Range(1, 0));
+  testForLoopRange(chplx::Range(1, 0));
 
-  test_for_loop_range(by(chplx::BoundedRange<int, true>(1, 10), -1));
-  test_for_loop_range(by(chplx::BoundedRange<int, true>(1, 10), -2));
+  testForLoopRange(chplx::BoundedRange<int, true>(1, 9, 2));
+  testForLoopRange(
+      chplx::BoundedRange<int, true>(1, 9, 2, chplx::BoundsCategoryType::Open));
+
+  testForLoopRange(by(chplx::BoundedRange<int, true>(1, 10), -1));
+  testForLoopRange(by(chplx::BoundedRange<int, true>(1, 10), -2));
 
   return hpx::util::report_errors();
 }

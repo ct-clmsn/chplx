@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <chplx/adapt_domain.hpp>
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/detail/iterator_generator.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
 
@@ -16,19 +18,22 @@
 
 namespace chplx {
 
+//-----------------------------------------------------------------------------
 // forall loop for tuples
-template <typename... Ts, typename F> void forallLoop(Tuple<Ts...> &t, F &&f) {
+template <typename... Ts, typename F>
+void forallLoop(Tuple<Ts...> const &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
     if constexpr (Tuple<Ts...>::isHomogenous()) {
 
-      hpx::ranges::for_each(hpx::execution::par, t, std::forward<F>(f));
+      hpx::ranges::for_each(hpx::execution::par, HomogenousTupleRange(t.base()),
+                            std::forward<F>(f));
     } else {
 
       using table =
           detail::forLoopTable<Tuple<Ts...>, F,
-                               std::make_index_sequence<sizeof...(Ts)>()>;
+                               std::make_index_sequence<sizeof...(Ts)>>;
 
       hpx::experimental::for_loop(
           hpx::execution::par, 0, t.size(),
@@ -37,12 +42,22 @@ template <typename... Ts, typename F> void forallLoop(Tuple<Ts...> &t, F &&f) {
   }
 }
 
+//-----------------------------------------------------------------------------
 // forall loop for ranges
 template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F>
-void forallLoop(Range<T, BoundedType, Stridable> &r, F &&f) {
+void forallLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
 
-  hpx::ranges::experimental::for_loop(hpx::execution::par, r,
-                                      std::forward<F>(f));
+  hpx::ranges::experimental::for_loop(
+      hpx::execution::par, detail::IteratorGenerator(r), std::forward<F>(f));
+}
+
+//-----------------------------------------------------------------------------
+// forall loop for domain
+template <int N, typename T, bool Stridable, typename F>
+void forallLoop(Domain<N, T, Stridable> const &d, F &&f) {
+
+  hpx::ranges::experimental::for_loop(
+      hpx::execution::par, detail::IteratorGenerator(d), std::forward<F>(f));
 }
 
 } // namespace chplx

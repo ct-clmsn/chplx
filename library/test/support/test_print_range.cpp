@@ -33,7 +33,7 @@ void testWriteRange(char const *expr, Range const &r, char const *expected) {
     // because it is unbounded but defined on booleans or an enum, so - print
     // its entire sequence.
     bool first = true;
-    for (auto i : iterate(r)) {
+    for (auto i : chplx::iterate(r)) {
       if (!first)
         write(strm, ", ");
       write(strm, i);

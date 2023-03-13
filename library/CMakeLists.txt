@@ -39,12 +39,12 @@ else()
 endif()
 
 # create library target
-set(chplx_library_detail_headers
-    include/chplx/detail/range_index_generator.hpp)
+set(chplx_library_detail_headers include/chplx/detail/iterator_generator.hpp)
 source_group("Header Files/chplx/detail" FILES
     ${chplx_library_detail_headers})
 
 set(chplx_library_headers
+    include/chplx/adapt_domain.hpp
     include/chplx/adapt_range.hpp
     include/chplx/adapt_tuple.hpp
     include/chplx/coforall_loop.hpp

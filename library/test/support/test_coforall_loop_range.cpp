@@ -14,44 +14,48 @@
 #include <set>
 
 template <typename T, chplx::BoundedRangeType BoundedType, bool Stridable>
-void test_coforall_loop_range(chplx::Range<T, BoundedType, Stridable> r) {
+void testCoforallLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
 
-  int called = 0;
+  T count = 0;
 
   std::set<T> values;
   hpx::mutex mtx;
 
   chplx::coforallLoop(r, [&](auto value) {
     std::lock_guard l(mtx);
-    ++called;
+    ++count;
     auto p = values.insert(value);
     HPX_TEST(p.second);
   });
 
-  std::size_t count = 0;
+  HPX_TEST_EQ(count, r.size());
+  count = 0;
 
-  for (auto val : chplx::iterate(r)) {
+  for (auto val : r.these()) {
     ++count;
     HPX_TEST(values.contains(val));
   }
 
   HPX_TEST_EQ(count, r.size());
-  HPX_TEST_EQ(called, r.size());
 }
 
 int main() {
 
-  test_coforall_loop_range(chplx::Range(0, 10));
-  test_coforall_loop_range(chplx::BoundedRange<int, true>(0, 10, 2));
-  test_coforall_loop_range(
+  testCoforallLoopRange(chplx::Range(0, 10));
+  testCoforallLoopRange(chplx::BoundedRange<int, true>(0, 10, 2));
+  testCoforallLoopRange(
       chplx::Range(0, 10, chplx::BoundsCategoryType::Open));
-  test_coforall_loop_range(chplx::BoundedRange<int, true>(
+  testCoforallLoopRange(chplx::BoundedRange<int, true>(
       0, 10, 2, chplx::BoundsCategoryType::Open));
 
-  test_coforall_loop_range(chplx::Range(1, 0));
+  testCoforallLoopRange(chplx::BoundedRange<int, true>(1, 9, 2));
+  testCoforallLoopRange(
+      chplx::BoundedRange<int, true>(1, 9, 2, chplx::BoundsCategoryType::Open));
 
-  test_coforall_loop_range(by(chplx::BoundedRange<int, true>(1, 10), -1));
-  test_coforall_loop_range(by(chplx::BoundedRange<int, true>(1, 10), -2));
+  testCoforallLoopRange(chplx::Range(1, 0));
+
+  testCoforallLoopRange(by(chplx::BoundedRange<int, true>(1, 10), -1));
+  testCoforallLoopRange(by(chplx::BoundedRange<int, true>(1, 10), -2));
 
   return hpx::util::report_errors();
 }
