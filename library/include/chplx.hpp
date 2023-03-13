@@ -19,3 +19,4 @@
 #include <chplx/tuple.hpp>
 #include <chplx/types.hpp>
 #include <chplx/version.hpp>
+#include <chplx/zip.hpp>

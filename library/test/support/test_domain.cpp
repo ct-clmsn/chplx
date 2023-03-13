@@ -19,15 +19,15 @@ void testDomain(chplx::Domain<1, T, Stridable> const &d) {
 
   HPX_TEST_EQ(d.stridable(), Stridable);
   HPX_TEST_EQ(d.size(), d.dim(0).size());
-  HPX_TEST_EQ(d.shape(), d.dim(0).size());
-  HPX_TEST_EQ(d.lowBound(), d.dim(0).lowBound());
-  HPX_TEST_EQ(d.low(), d.dim(0).low());
-  HPX_TEST_EQ(d.first(), d.dim(0).first());
-  HPX_TEST_EQ(d.highBound(), d.dim(0).highBound());
-  HPX_TEST_EQ(d.high(), d.dim(0).high());
-  HPX_TEST_EQ(d.last(), d.dim(0).last());
-  HPX_TEST_EQ(d.stride(), d.dim(0).stride());
-  HPX_TEST_EQ(d.alignment(), d.dim(0).alignment());
+  HPX_TEST_EQ(d.shape(), chplx::Tuple(d.dim(0).size()));
+  HPX_TEST_EQ(d.lowBound(), chplx::Tuple(d.dim(0).lowBound()));
+  HPX_TEST_EQ(d.low(), chplx::Tuple(d.dim(0).low()));
+  HPX_TEST_EQ(d.first(), chplx::Tuple(d.dim(0).first()));
+  HPX_TEST_EQ(d.highBound(), chplx::Tuple(d.dim(0).highBound()));
+  HPX_TEST_EQ(d.high(), chplx::Tuple(d.dim(0).high()));
+  HPX_TEST_EQ(d.last(), chplx::Tuple(d.dim(0).last()));
+  HPX_TEST_EQ(d.stride(), chplx::Tuple(d.dim(0).stride()));
+  HPX_TEST_EQ(d.alignment(), chplx::Tuple(d.dim(0).alignment()));
   HPX_TEST(d.isRectangular());
   HPX_TEST(!d.isIrregular());
   HPX_TEST(!d.isAssociative());

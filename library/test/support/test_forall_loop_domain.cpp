@@ -10,6 +10,8 @@
 #include <hpx/modules/testing.hpp>
 #include <hpx/thread.hpp>
 
+#include <cstddef>
+#include <mutex>
 #include <set>
 
 template <int N, typename T, bool Stridable>
@@ -19,7 +21,7 @@ void testForallLoopDomain(chplx::Domain<N, T, Stridable> d) {
   std::set<indexType> values;
   hpx::mutex mtx;
 
-  T count = 0;
+  std::size_t count = 0;
 
   chplx::forallLoop(d, [&](auto value) {
     std::lock_guard l(mtx);
@@ -28,7 +30,7 @@ void testForallLoopDomain(chplx::Domain<N, T, Stridable> d) {
     HPX_TEST(p.second);
   });
 
-  HPX_TEST_EQ(count, d.size());
+  HPX_TEST_EQ(count, static_cast<std::size_t>(d.size()));
   count = 0;
 
   for (auto const &e : d.these()) {
@@ -37,7 +39,7 @@ void testForallLoopDomain(chplx::Domain<N, T, Stridable> d) {
     HPX_TEST(values.contains(e));
   }
 
-  HPX_TEST_EQ(static_cast<std::size_t>(count), values.size());
+  HPX_TEST_EQ(count, values.size());
 }
 
 namespace detail {
@@ -45,7 +47,7 @@ namespace detail {
 //-----------------------------------------------------------------------------
 template <typename... Rs, std::size_t... Is>
 void testForallLoopDomains1D(chplx::Tuple<Rs...> const &r,
-                          std::index_sequence<Is...> s) {
+                             std::index_sequence<Is...> s) {
 
   (testForallLoopDomain(chplx::Domain(std::get<Is>(r))), ...);
 }
@@ -53,14 +55,14 @@ void testForallLoopDomains1D(chplx::Tuple<Rs...> const &r,
 //-----------------------------------------------------------------------------
 template <std::size_t N, typename... Rs, std::size_t... Js>
 void testForallLoopDomains2D(chplx::Tuple<Rs...> const &r,
-                          std::index_sequence<Js...>) {
+                             std::index_sequence<Js...>) {
 
   (testForallLoopDomain(chplx::Domain(std::get<Js>(r), std::get<N>(r))), ...);
 }
 
 template <typename... Rs, std::size_t... Is>
 void testForallLoopDomains2D(chplx::Tuple<Rs...> const &r,
-                          std::index_sequence<Is...> s) {
+                             std::index_sequence<Is...> s) {
 
   (testForallLoopDomains2D<Is>(r, s), ...);
 }
@@ -68,7 +70,7 @@ void testForallLoopDomains2D(chplx::Tuple<Rs...> const &r,
 //-----------------------------------------------------------------------------
 template <std::size_t N, std::size_t M, typename... Rs, std::size_t... Js>
 void testForallLoopDomains3D_2(chplx::Tuple<Rs...> const &r,
-                            std::index_sequence<Js...>) {
+                               std::index_sequence<Js...>) {
 
   (testForallLoopDomain(
        chplx::Domain(std::get<Js>(r), std::get<N>(r), std::get<M>(r))),
@@ -77,14 +79,14 @@ void testForallLoopDomains3D_2(chplx::Tuple<Rs...> const &r,
 
 template <std::size_t N, typename... Rs, std::size_t... Is>
 void testForallLoopDomains3D_1(chplx::Tuple<Rs...> const &r,
-                            std::index_sequence<Is...> s) {
+                               std::index_sequence<Is...> s) {
 
   (testForallLoopDomains3D_2<N, Is>(r, s), ...);
 }
 
 template <typename... Rs, std::size_t... Is>
 void testForallLoopDomains3D(chplx::Tuple<Rs...> const &r,
-                          std::index_sequence<Is...> s) {
+                             std::index_sequence<Is...> s) {
 
   (testForallLoopDomains3D_1<Is>(r, s), ...);
 }
@@ -93,30 +95,30 @@ void testForallLoopDomains3D(chplx::Tuple<Rs...> const &r,
 template <std::size_t N, std::size_t M, std::size_t O, typename... Rs,
           std::size_t... Js>
 void testForallLoopDomains4D_3(chplx::Tuple<Rs...> const &r,
-                            std::index_sequence<Js...>) {
+                               std::index_sequence<Js...>) {
 
   (testForallLoopDomain(chplx::Domain(std::get<Js>(r), std::get<N>(r),
-                                   std::get<M>(r), std::get<O>(r))),
+                                      std::get<M>(r), std::get<O>(r))),
    ...);
 }
 
 template <std::size_t N, std::size_t M, typename... Rs, std::size_t... Is>
 void testForallLoopDomains4D_2(chplx::Tuple<Rs...> const &r,
-                            std::index_sequence<Is...> s) {
+                               std::index_sequence<Is...> s) {
 
   (testForallLoopDomains4D_3<N, M, Is>(r, s), ...);
 }
 
 template <std::size_t N, typename... Rs, std::size_t... Is>
 void testForallLoopDomains4D_1(chplx::Tuple<Rs...> const &r,
-                            std::index_sequence<Is...> s) {
+                               std::index_sequence<Is...> s) {
 
   (testForallLoopDomains4D_2<N, Is>(r, s), ...);
 }
 
 template <typename... Rs, std::size_t... Is>
 void testForallLoopDomains4D(chplx::Tuple<Rs...> const &r,
-                          std::index_sequence<Is...> s) {
+                             std::index_sequence<Is...> s) {
 
   (testForallLoopDomains4D_1<Is>(r, s), ...);
 }

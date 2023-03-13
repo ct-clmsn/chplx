@@ -52,29 +52,4 @@ decltype(auto) iterate(Domain<N, T, Stridable> const &d) noexcept {
   return iterate(detail::IteratorGenerator(d));
 }
 
-//-----------------------------------------------------------------------------
-template <int N, typename T, bool Stridable>
-constexpr bool
-empty(detail::IteratorGenerator<Domain<N, T, Stridable>> const &d) noexcept {
-
-  return d.size == 0;
-}
-
-template <int N, typename T, bool Stridable>
-constexpr auto
-size(detail::IteratorGenerator<Domain<N, T, Stridable>> const &d) noexcept {
-
-  return d.size;
-}
-
-template <int N, typename T, bool Stridable>
-auto subrange(detail::IteratorGenerator<Domain<N, T, Stridable>> const &d,
-              std::ptrdiff_t first, std::size_t size) {
-
-  auto result = detail::IteratorGenerator<Domain<N, T, Stridable>>(
-      d.target, d.first + first, size);
-
-  return result;
-}
-
 } // namespace chplx

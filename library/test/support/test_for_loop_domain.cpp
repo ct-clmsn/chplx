@@ -9,6 +9,7 @@
 #include <hpx/hpx_main.hpp>
 #include <hpx/modules/testing.hpp>
 
+#include <cstddef>
 #include <set>
 
 template <int N, typename T, bool Stridable>
@@ -16,7 +17,7 @@ void testForLoopDomain(chplx::Domain<N, T, Stridable> d) {
 
   std::set<typename chplx::Domain<N, T, Stridable>::indexType> values;
 
-  int count = 0;
+  std::size_t count = 0;
 
   chplx::forLoop(d, [&](auto value) {
     ++count;
@@ -24,7 +25,7 @@ void testForLoopDomain(chplx::Domain<N, T, Stridable> d) {
     HPX_TEST(p.second);
   });
 
-  HPX_TEST_EQ(count, d.size());
+  HPX_TEST_EQ(count, static_cast<std::size_t>(d.size()));
 
   count = 0;
   for (auto const &e : d.these()) {
@@ -33,7 +34,7 @@ void testForLoopDomain(chplx::Domain<N, T, Stridable> d) {
     HPX_TEST(values.contains(e));
   }
 
-  HPX_TEST_EQ(static_cast<std::size_t>(count), values.size());
+  HPX_TEST_EQ(count, values.size());
 }
 
 namespace detail {

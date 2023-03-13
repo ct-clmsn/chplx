@@ -10,6 +10,7 @@
 #include <hpx/modules/testing.hpp>
 #include <hpx/thread.hpp>
 
+#include <cstddef>
 #include <mutex>
 #include <set>
 
@@ -20,7 +21,7 @@ void testCoforallLoopDomain(chplx::Domain<N, T, Stridable> d) {
   std::set<indexType> values;
   hpx::mutex mtx;
 
-  T count = 0;
+  std::size_t count = 0;
 
   chplx::coforallLoop(d, [&](auto value) {
     std::lock_guard l(mtx);
@@ -29,7 +30,7 @@ void testCoforallLoopDomain(chplx::Domain<N, T, Stridable> d) {
     HPX_TEST(p.second);
   });
 
-  HPX_TEST_EQ(count, d.size());
+  HPX_TEST_EQ(count, static_cast<std::size_t>(d.size()));
   count = 0;
 
   for (auto val : d.these()) {
@@ -37,7 +38,7 @@ void testCoforallLoopDomain(chplx::Domain<N, T, Stridable> d) {
     HPX_TEST(values.contains(val));
   }
 
-  HPX_TEST_EQ(count, d.size());
+  HPX_TEST_EQ(count, values.size());
 }
 
 namespace detail {

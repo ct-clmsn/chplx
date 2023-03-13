@@ -38,32 +38,4 @@ decltype(auto) iterate(Range<T, BoundedType, Stridable> const &r) noexcept {
   return iterate(detail::IteratorGenerator(r));
 }
 
-//-----------------------------------------------------------------------------
-template <typename T, BoundedRangeType BoundedType, bool Stridable>
-constexpr auto
-size(detail::IteratorGenerator<Range<T, BoundedType, Stridable>> const
-         &r) noexcept {
-
-  return r.size;
-}
-
-template <typename T, BoundedRangeType BoundedType, bool Stridable>
-constexpr bool
-empty(detail::IteratorGenerator<Range<T, BoundedType, Stridable>> const
-          &r) noexcept {
-
-  return r.size == 0;
-}
-
-template <typename T, BoundedRangeType BoundedType, bool Stridable>
-auto subrange(
-    detail::IteratorGenerator<Range<T, BoundedType, Stridable>> const &r,
-    std::ptrdiff_t first, std::size_t size) {
-
-  auto result = detail::IteratorGenerator<Range<T, BoundedType, Stridable>>(
-      r.target, r.first + first, size);
-
-  return result;
-}
-
 } // namespace chplx

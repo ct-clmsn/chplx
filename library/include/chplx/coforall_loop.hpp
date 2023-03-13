@@ -11,6 +11,7 @@
 #include <chplx/detail/iterator_generator.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
+#include <chplx/zip.hpp>
 
 #include <hpx/algorithm.hpp>
 #include <hpx/execution.hpp>
@@ -20,7 +21,7 @@ namespace chplx {
 //-----------------------------------------------------------------------------
 // coforall loop for tuples
 template <typename... Ts, typename F>
-void coforallLoop(Tuple<Ts...> const &t, F &&f) {
+void coforallLoop(Tuple<Ts...> &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
@@ -72,6 +73,20 @@ void coforallLoop(Domain<N, T, Stridable> const &d, F &&f) {
 
   hpx::ranges::experimental::for_loop(
       policy.with(scs), detail::IteratorGenerator(d), std::forward<F>(f));
+}
+
+//-----------------------------------------------------------------------------
+// forall loop for zippered iteration
+template <typename... Rs, typename F>
+void coforallLoop(detail::ZipRange<Rs...> const &zr, F &&f) {
+
+  hpx::execution::experimental::static_chunk_size scs(1);
+  auto policy = hpx::parallel::util::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
+  hpx::ranges::experimental::for_loop(
+      policy.with(scs), detail::IteratorGenerator(zr), std::forward<F>(f));
 }
 
 } // namespace chplx

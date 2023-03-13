@@ -55,7 +55,8 @@ set(chplx_library_headers
     include/chplx/range.hpp
     include/chplx/tuple.hpp
     include/chplx/types.hpp
-    include/chplx/version.hpp)
+    include/chplx/version.hpp
+    include/chplx/zip.hpp)
 source_group("Header Files/chplx" FILES
     ${chplx_library_headers})
 

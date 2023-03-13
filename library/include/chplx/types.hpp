@@ -10,6 +10,7 @@
 
 #include <complex>
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <type_traits>
 
@@ -183,4 +184,39 @@ template <typename T> [[nodiscard]] constexpr bool isEnumValue(T) noexcept {
   return std::is_enum_v<T>;
 }
 
+namespace detail {
+
+//-----------------------------------------------------------------------------
+template <typename T, typename Enable = std::enable_if_t<!std::is_enum_v<T>>>
+struct MinValue {
+  static constexpr T value = (std::numeric_limits<T>::min)();
+};
+
+template <typename T> struct MinValue<T, std::enable_if_t<std::is_enum_v<T>>> {
+  static constexpr T value = T::minValue;
+};
+
+template <> struct MinValue<bool> {
+  static constexpr bool value = false;
+};
+
+template <typename T> inline constexpr auto MinValue_v = MinValue<T>::value;
+
+//-----------------------------------------------------------------------------
+template <typename T, typename Enable = std::enable_if_t<!std::is_enum_v<T>>>
+struct MaxValue {
+  static constexpr T value = (std::numeric_limits<T>::max)();
+};
+
+template <typename T> struct MaxValue<T, std::enable_if_t<std::is_enum_v<T>>> {
+  static constexpr T value = T::maxValue;
+};
+
+template <> struct MaxValue<bool> {
+  static constexpr bool value = true;
+};
+
+template <typename T> inline constexpr auto MaxValue_v = MaxValue<T>::value;
+
+} // namespace detail
 } // namespace chplx

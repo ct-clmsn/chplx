@@ -12,6 +12,7 @@
 #include <chplx/detail/iterator_generator.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
+#include <chplx/zip.hpp>
 
 #include <hpx/algorithm.hpp>
 #include <hpx/execution.hpp>
@@ -20,8 +21,7 @@ namespace chplx {
 
 //-----------------------------------------------------------------------------
 // forall loop for tuples
-template <typename... Ts, typename F>
-void forallLoop(Tuple<Ts...> const &t, F &&f) {
+template <typename... Ts, typename F> void forallLoop(Tuple<Ts...> &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
@@ -58,6 +58,15 @@ void forallLoop(Domain<N, T, Stridable> const &d, F &&f) {
 
   hpx::ranges::experimental::for_loop(
       hpx::execution::par, detail::IteratorGenerator(d), std::forward<F>(f));
+}
+
+//-----------------------------------------------------------------------------
+// forall loop for zippered iteration
+template <typename... Rs, typename F>
+void forallLoop(detail::ZipRange<Rs...> const &zr, F &&f) {
+
+  hpx::ranges::experimental::for_loop(
+      hpx::execution::par, detail::IteratorGenerator(zr), std::forward<F>(f));
 }
 
 } // namespace chplx

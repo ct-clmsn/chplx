@@ -134,17 +134,19 @@ template <typename... Ts> auto(min)(Tuple<Ts...> const &) {
 namespace detail {
 
 template <typename... Ts, typename Op, std::size_t... Is>
+constexpr decltype(auto) unaryOperator(Tuple<Ts...> &&t, Op &&op,
+                                       std::index_sequence<Is...>) {
+
+  return Tuple(op(std::get<Is>(std::move(t)))...);
+};
+
+template <typename... Ts, typename Op, std::size_t... Is>
 constexpr decltype(auto) unaryOperator(Tuple<Ts...> const &t, Op &&op,
                                        std::index_sequence<Is...>) {
 
   return Tuple(op(std::get<Is>(t))...);
 };
 
-template <typename T, typename Op>
-constexpr decltype(auto) unaryOperator(Tuple<T> const &t, Op &&op,
-                                       std::index_sequence<0>) {
-  return op(std::get<0>(t));
-};
 } // namespace detail
 
 template <typename... Ts>
@@ -336,6 +338,19 @@ template <typename... Ts1, typename... Ts2>
 //-----------------------------------------------------------------------------
 // General purpose lifting
 namespace detail {
+
+template <typename... Ts, typename F>
+constexpr decltype(auto) lift(Tuple<Ts...> &&t, F &&f) {
+  return unaryOperator(std::move(t), std::forward<F>(f),
+                       std::make_index_sequence<sizeof...(Ts)>{});
+}
+
+template <typename... Ts1, typename... Ts2, typename F>
+  requires(sizeof...(Ts1) == sizeof...(Ts2))
+constexpr decltype(auto) lift(Tuple<Ts1...> &&t1, Tuple<Ts2...> &&t2, F &&f) {
+  return binaryOperator(std::move(t1), std::move(t2), std::forward<F>(f),
+                        std::make_index_sequence<sizeof...(Ts1)>{});
+}
 
 template <typename... Ts, typename F>
 constexpr decltype(auto) lift(Tuple<Ts...> const &t, F &&f) {

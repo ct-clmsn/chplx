@@ -16,7 +16,6 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <limits>
 #include <ostream>
 #include <type_traits>
 
@@ -95,38 +94,6 @@ operator!=(Stridable<T1, BoundedType1, Stride1> const &lhs,
 }
 
 //-----------------------------------------------------------------------------
-template <typename T, typename Enable = std::enable_if_t<!std::is_enum_v<T>>>
-struct MinValue {
-  static constexpr T value = (std::numeric_limits<T>::min)();
-};
-
-template <typename T> struct MinValue<T, std::enable_if_t<std::is_enum_v<T>>> {
-  static constexpr T value = T::minValue;
-};
-
-template <> struct MinValue<bool> {
-  static constexpr bool value = false;
-};
-
-template <typename T> inline constexpr auto MinValue_v = MinValue<T>::value;
-
-//-----------------------------------------------------------------------------
-template <typename T, typename Enable = std::enable_if_t<!std::is_enum_v<T>>>
-struct MaxValue {
-  static constexpr T value = (std::numeric_limits<T>::max)();
-};
-
-template <typename T> struct MaxValue<T, std::enable_if_t<std::is_enum_v<T>>> {
-  static constexpr T value = T::maxValue;
-};
-
-template <> struct MaxValue<bool> {
-  static constexpr bool value = true;
-};
-
-template <typename T> inline constexpr auto MaxValue_v = MaxValue<T>::value;
-
-//-----------------------------------------------------------------------------
 template <typename T, BoundedRangeType BoundedType> struct Bounds {
 
   constexpr Bounds(T low, T high,
@@ -153,7 +120,7 @@ template <typename T, BoundedRangeType BoundedType> struct Bounds {
   [[nodiscard]] constexpr auto getLastIndex() const noexcept {
     return lastIndex;
   }
-  [[nodiscard]] static constexpr bool isIterable() noexcept { return true; }
+  [[nodiscard]] static constexpr bool isIterable(T) noexcept { return true; }
 
   [[nodiscard]] constexpr bool hasFirst() const noexcept {
     return firstIndex != MinValue_v<T>;
@@ -203,7 +170,9 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedLow> {
   [[nodiscard]] static constexpr auto getLastIndex() noexcept {
     return MaxValue_v<T>;
   }
-  [[nodiscard]] static constexpr bool isIterable() noexcept { return true; }
+  [[nodiscard]] static constexpr bool isIterable(T stride) noexcept {
+    return stride > 0;
+  }
 
   [[nodiscard]] constexpr bool hasFirst() const noexcept {
     return firstIndex != MinValue_v<T>;
@@ -247,7 +216,9 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedHigh> {
   [[nodiscard]] constexpr auto getLastIndex() const noexcept {
     return lastIndex;
   }
-  [[nodiscard]] static constexpr bool isIterable() noexcept { return false; }
+  [[nodiscard]] static constexpr bool isIterable(T stride) noexcept {
+    return stride < 0;
+  }
 
   [[nodiscard]] static constexpr bool hasFirst() noexcept { return false; }
   [[nodiscard]] constexpr bool hasLast() const noexcept {
@@ -292,7 +263,7 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedNone> {
   [[nodiscard]] static constexpr auto getLastIndex() noexcept {
     return MaxValue_v<T>;
   }
-  [[nodiscard]] static constexpr bool isIterable() noexcept { return false; }
+  [[nodiscard]] static constexpr bool isIterable(T) noexcept { return false; }
 
   [[nodiscard]] static constexpr bool hasFirst() noexcept { return false; }
   [[nodiscard]] static constexpr bool hasLast() noexcept { return false; }
@@ -418,10 +389,10 @@ struct Range {
   static_assert(std::is_integral_v<idxType>,
                 "the index type of a range must be integral");
 
-  constexpr BoundedRangeType boundedType() const noexcept {
+  [[nodiscard]] constexpr BoundedRangeType boundedType() const noexcept {
     return bounds_.boundedType();
   }
-  static constexpr bool stridable() noexcept { return Stridable; }
+  [[nodiscard]] static constexpr bool stridable() noexcept { return Stridable; }
 
   static_assert(std::is_integral_v<idxType> || std::is_enum_v<idxType> ||
                     std::is_same_v<bool, idxType>,
@@ -511,8 +482,8 @@ struct Range {
   }
   void setAlignment(T value) noexcept { alignment_.setAlignment(value); }
 
-  [[nodiscard]] static constexpr bool isIterable() noexcept {
-    return detail::Bounds<T, BoundedType>::isIterable();
+  [[nodiscard]] constexpr bool isIterable() const noexcept {
+    return detail::Bounds<T, BoundedType>::isIterable(stride());
   }
 
   // Returns true if argument r is a fully bounded range, false otherwise.
@@ -533,7 +504,7 @@ struct Range {
     return bounds_.getFirstIndex();
   }
 
-  // Returns the range'’'s aligned low bound. If this bound is undefined (e.g.,
+  // Returns the range's aligned low bound. If this bound is undefined (e.g.,
   // ..10 by -2), the behavior is undefined.
   [[nodiscard]] constexpr auto low() const noexcept {
     return bounds_.getFirstIndex();
@@ -560,6 +531,7 @@ struct Range {
 
   // Returns the number of values represented by this range as an integer.
   [[nodiscard]] constexpr auto size() const noexcept {
+
     HPX_ASSERT(isBounded());
     auto stride = std::abs(stride_.getStride());
     auto num = highBound() - lowBound() + stride;
@@ -593,7 +565,7 @@ struct Range {
     return bounds_.getLastIndex() - 1;
   }
 
-  // Returns true if the range has a first index, false otherwise.
+  // Returns true if the range has a last index, false otherwise.
   [[nodiscard]] constexpr bool hasLast() const noexcept {
 
     if (stride_.getStride() > 0) {
@@ -681,7 +653,7 @@ struct Range {
   // procedure is the reverse of indexOrder.
   constexpr idxType orderToIndex(std::int64_t order) const noexcept {
 
-    HPX_ASSERT(order >= 0 && order <= size());
+    HPX_ASSERT(order >= 0 && ((isBounded() && order <= size()) || hasFirst()));
     auto result = first() + order * stride();
 
     return result;
@@ -710,6 +682,22 @@ template <typename T> Range(T, T) -> Range<T, BoundedRangeType::bounded, false>;
 
 template <typename T>
 Range(T, T, T) -> Range<T, BoundedRangeType::bounded, true>;
+
+template <typename T>
+Range(T, RangeInit = RangeInit::noValue)
+    -> Range<T, BoundedRangeType::boundedLow, false>;
+
+template <typename T>
+Range(RangeInit, T) -> Range<T, BoundedRangeType::boundedHigh, false>;
+
+template <typename T>
+Range(T, RangeInit, T) -> Range<T, BoundedRangeType::boundedLow, true>;
+
+template <typename T>
+Range(RangeInit, T, T) -> Range<T, BoundedRangeType::boundedHigh, true>;
+
+template <typename T>
+Range(RangeInit, RangeInit, T) -> Range<T, BoundedRangeType::boundedNone, true>;
 
 //-----------------------------------------------------------------------------
 // Returns true if the type T is a range type.
