@@ -251,12 +251,15 @@ struct SymbolTable {
    // have a 'scopeId' or 'scopePtr' member variable
    //
    std::vector<std::shared_ptr<SymbolTableNode>> lut;
+
+   std::size_t parentSymbolTableId;
 };
 
 struct funcbase_kind {
    SymbolTable symbolTable;
    std::optional<std::string> symbolTableSignature;
-   std::vector<kind_types> args; 
+   std::vector<Symbol> args; 
+   std::optional<kind_types> retKind;
 };
 
 struct cxxfunc_kind : public funcbase_kind {

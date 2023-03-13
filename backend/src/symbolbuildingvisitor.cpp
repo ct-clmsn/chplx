@@ -56,7 +56,7 @@ std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
 }
 
 bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
-//std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
+std::cout << "node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
@@ -117,6 +117,22 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              auto fsym = symbolTable.find(identifier_str);
              if(fsym) {
                 std::get<std::shared_ptr<array_kind>>( *(sym->kind))->kind = *(fsym->kind);
+             }
+          }
+          else if(std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->kind))) {
+             std::shared_ptr<func_kind> & fk =
+                std::get<std::shared_ptr<func_kind>>(*(sym->kind));
+             if(0 < fk->args.size()) {
+                auto fsym = symbolTable.find(identifier_str);
+                if(fsym.has_value()) {
+                   if(fk->args.back().kind->index() < 1) {
+                      fk->args.back().kind = (*(fsym->kind));
+                   }
+                   else if(!fk->retKind) {
+                      fk->retKind = (*(fsym->kind));
+                      (*fk->symbolTableSignature) += "_" + identifier_str;
+                   }
+                }
              }
           }
           else {
@@ -365,6 +381,24 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::START_VarLikeDecl:
     break;
     case asttags::Formal:
+    {
+       if(sym.has_value() && sym->kind.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->kind))) {
+          std::shared_ptr<func_kind> & fk =
+             std::get<std::shared_ptr<func_kind>>(*(sym->kind));
+
+          std::string ident{dynamic_cast<Formal const*>(ast)->name().c_str()};
+          fk->args.emplace_back(
+             Symbol{{
+                std::make_optional<kind_types>(),
+                ident,
+                {}, 0
+             }}
+          );
+
+          fk->symbolTable.addEntry(ident, fk->args.back());
+          (*fk->symbolTableSignature) += "_" + ident;
+       }
+    }
     break;
     case asttags::TaskVar:
     break;
@@ -460,6 +494,30 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::START_TypeDecl:
     break;
     case asttags::Function:
+    {
+       if(!(sym && sym->kind.has_value() && 0 < sym->kind->index())) {
+          std::string identifier_str{dynamic_cast<Function const*>(ast)->name().c_str()};
+
+          sym = std::make_optional<Symbol>(
+             Symbol{{
+                std::make_optional<kind_types>(
+                   std::make_shared<func_kind>(func_kind{{
+                      SymbolTable{}, {}, {}}})
+                ),
+                {identifier_str},
+                {}, symbolTable.symbolTableCount
+             }});
+
+          std::shared_ptr<func_kind> & fk = 
+             std::get<std::shared_ptr<func_kind>>(*sym->kind);
+
+          fk->symbolTable.parentSymbolTableId = symbolTable.symbolTableCount;
+          ++symbolTable.symbolTableCount;
+          fk->symbolTable.symbolTableCount = symbolTable.symbolTableCount;
+
+          symnode = ast;
+       }
+    }
     break;
     case asttags::Interface:
     break;

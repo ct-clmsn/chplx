@@ -8,8 +8,24 @@
 // `inlinecxx` is defined in the compiler
 //
 
+/*
 inlinecxx("std::cout << \"h\" << std::endl;");
 inlinecxx("std::cout << \"{}\" << std::endl;", "h");
+*/
+
+proc print(i : real) : real {
+//   inlinecxx("std::cout << {} << std::endl;", i);
+   return 1.0;
+}
+
+/*
+proc writeln(args...?k) {
+   inlinecxx("std::cout << ");
+   for arg in args do
+      inlinecxx("{}", a);
+   inlinecx("std::endl;");
+}
+*/
 
 /*
 proc get(Arr : [D] real, i : int) : real {

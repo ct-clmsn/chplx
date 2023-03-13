@@ -13,7 +13,7 @@ using namespace chplx::util;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-SymbolTable::SymbolTable() : symbolTableCount(0), symbolTableRef(), lut() {
+SymbolTable::SymbolTable() : symbolTableCount(0), symbolTableRef(), lut(), parentSymbolTableId(0) {
    symbolTableRoot =
       std::make_shared<SymbolTableNode>(
          std::move(SymbolTableNode{0, {}, {}, {}})
