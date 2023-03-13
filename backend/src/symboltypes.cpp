@@ -70,6 +70,7 @@ std::optional<Symbol> SymbolTable::findImpl(SymbolTableNode& stref, const std::s
    if(stref.entries.size() < 1) {
       return {};
    }
+
    if(idx == stref.id) {
       auto entry = stref.entries.find(ident);
       if(entry != std::end(stref.entries)) {
@@ -92,7 +93,12 @@ std::optional<Symbol> SymbolTable::findImpl(SymbolTableNode& stref, const std::s
 
 std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const& ident) {
    SymbolTableNode & stref = *lut[idx];
-   return findImpl(stref, idx, ident);
+   std::optional<Symbol> ret = findImpl(stref, idx, ident);
+   while(stref.id != 0) {
+      ret = findImpl(stref, idx, ident);
+      stref = *lut[stref.parentSymbolTableId];
+   }
+   return ret;
 }
 
 void SymbolTable::dumpImpl(SymbolTableNode const& node) {
