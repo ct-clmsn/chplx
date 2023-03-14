@@ -9,7 +9,7 @@ name: Linux CI (Debug)
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 jobs:
