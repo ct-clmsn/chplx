@@ -32,6 +32,7 @@ jobs:
               ../hpx \
               -GNinja \
               -DCMAKE_BUILD_TYPE=Release \
+              -DHPX_WITH_CXX_STANDARD=20 \
               -DHPX_WITH_UNITY_BUILD=ON \
               -DHPX_WITH_MALLOC=system \
               -DHPX_WITH_EXAMPLES=OFF \
