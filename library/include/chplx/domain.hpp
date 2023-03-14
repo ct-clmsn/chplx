@@ -146,22 +146,28 @@ public:
       std::conditional_t<std::is_enum_v<idxType>, std::int64_t, idxType>;
 
   // Return true if this is a stridable domain
-  static constexpr bool stridable() noexcept { return Stridable; }
+  [[nodiscard]] static constexpr bool stridable() noexcept { return Stridable; }
 
   // Return the number of indices in this domain as an int.
-  constexpr std::int64_t size() const noexcept {
+  [[nodiscard]] constexpr std::int64_t size() const noexcept {
     return reduce(shape(), std::multiplies<>(), 1);
   }
 
   // Return the number of indices in this domain as the specified type
   template <typename T>
     requires(std::is_integral_v<T>)
-  constexpr T sizeAs() const noexcept {
+  [[nodiscard]] constexpr T sizeAs() const noexcept {
     return reduce(shape(), std::multiplies<>(), static_cast<T>(1));
   }
 
+  // Returns true if this is a fully bounded domain, false otherwise.
+  [[nodiscard]] constexpr bool isBounded() const noexcept {
+    return reduce(detail::lift(indices, [](auto &&r) { return r.isBounded(); }),
+                  std::logical_and<>(), true);
+  }
+
   // Yield the domain indices
-  decltype(auto) these() const { return iterate(*this); }
+  [[nodiscard]] decltype(auto) these() const { return iterate(*this); }
 
   // Return a tuple of ranges describing the bounds of a rectangular domain. For
   // a sparse domain, return the bounds of the parent domain.
@@ -170,94 +176,99 @@ public:
 
   // Return a range representing the boundary of this domain in a particular
   // dimension.
-  constexpr auto dim(int i) const noexcept { return indices[i]; }
+  [[nodiscard]] constexpr auto dim(int i) const noexcept { return indices[i]; }
 
   // Return a tuple of int values representing the size of each dimension.
-  constexpr decltype(auto) shape() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) shape() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.size(); });
   }
 
   // Returns the domain's 'pure' low bound.
-  constexpr decltype(auto) lowBound() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) lowBound() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.lowBound(); });
   }
 
   // Return the lowest index represented by a rectangular domain.
-  constexpr decltype(auto) low() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) low() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.low(); });
   }
 
   // Return the first index in this domain.
-  constexpr decltype(auto) first() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) first() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.first(); });
   }
 
   // Returns the domain's 'pure' high bound.
-  constexpr decltype(auto) highBound() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) highBound() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.highBound(); });
   }
 
   // Return the highest index represented by a rectangular domain.
-  constexpr decltype(auto) high() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) high() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.high(); });
   }
 
   // Return the last index in this domain.
-  constexpr decltype(auto) last() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) last() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.last(); });
   }
 
   // Return the stride of the indices in this domain.
-  constexpr decltype(auto) stride() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) stride() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.stride(); });
   }
 
   // Return the alignment of the indices in this domain
-  constexpr decltype(auto) alignment() const noexcept {
+  [[nodiscard]] constexpr decltype(auto) alignment() const noexcept {
     return detail::lift(indices, [](auto &&r) { return r.alignment(); });
   }
 
   // Return the alignment of the indices in this domain
-  constexpr decltype(auto) contains(indexType const &idx) const noexcept {
+  [[nodiscard]] constexpr decltype(auto)
+  contains(indexType const &idx) const noexcept {
     return detail::lift(indices, idx,
                         [](auto &&r, idxType i) { return r.contains(i); });
   }
 
   // Return the alignment of the indices in this domain
   template <typename IndexType1, bool Stridable1>
-  constexpr decltype(auto)
+  [[nodiscard]] constexpr decltype(auto)
   contains(Domain<N, IndexType1, Stridable1> const &other) const noexcept {
     return detail::lift(indices, other.dims(),
                         [](auto &&r1, auto &&r2) { return r1.contains(r2); });
   }
 
   // Return true if this domain is a rectangular. Otherwise return false.
-  static constexpr bool isRectangular() noexcept { return true; }
+  [[nodiscard]] static constexpr bool isRectangular() noexcept { return true; }
 
   // Return true if d is an irregular domain; e.g. is not rectangular. Otherwise
   // return false.
-  static constexpr bool isIrregular() noexcept { return !isRectangular(); }
+  [[nodiscard]] static constexpr bool isIrregular() noexcept {
+    return !isRectangular();
+  }
 
   // Return true if d is an associative domain. Otherwise return false.
-  static constexpr bool isAssociative() noexcept { return false; }
+  [[nodiscard]] static constexpr bool isAssociative() noexcept { return false; }
 
   // Return true if d is a sparse domain. Otherwise return false.
-  static constexpr bool isSparse() noexcept { return false; }
+  [[nodiscard]] static constexpr bool isSparse() noexcept { return false; }
 
-  static constexpr int rank() noexcept { return N; }
+  [[nodiscard]] static constexpr int rank() noexcept { return N; }
 
   // Returns an integer representing the zero-based ordinal value of ind within
   // the domain's sequence of values if it is a member of the sequence.
   // Otherwise, returns -1. The indexOrder procedure is the reverse of
   // orderToIndex.
-  constexpr std::int64_t indexOrder(indexType idx) const noexcept {
+  [[nodiscard]] constexpr std::int64_t
+  indexOrder(indexType idx) const noexcept {
 
     return detail::IndexOrder<N - 1>::call(*this, idx);
   }
 
   // Returns the zero-based ord-th element of this domain's represented
   // sequence. The orderToIndex procedure is the reverse of indexOrder.
-  constexpr indexType orderToIndex(std::int64_t order) const noexcept {
+  [[nodiscard]] constexpr indexType
+  orderToIndex(std::int64_t order) const noexcept {
 
     return detail::OrderToIndex<N - 1>::template call<N - 1>(*this, order);
   }

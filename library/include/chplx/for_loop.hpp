@@ -12,6 +12,7 @@
 #include <chplx/domain.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
+#include <chplx/zip.hpp>
 
 namespace chplx {
 
@@ -20,15 +21,15 @@ namespace detail {
 
 // 'iterate'  over non-homogenous tuple
 template <typename... Ts, typename F, std::size_t... Is>
-void forLoop(Tuple<Ts...> const &t, F &&f, std::index_sequence<Is...>) {
+void forLoop(Tuple<Ts...> &t, F &&f, std::index_sequence<Is...>) {
 
   (f(std::get<Is>(t)), ...);
 }
+
 } // namespace detail
 
 // for loop for tuples
-template <typename... Ts, typename F>
-void forLoop(Tuple<Ts...> const &t, F &&f) {
+template <typename... Ts, typename F> void forLoop(Tuple<Ts...> &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
@@ -37,11 +38,11 @@ void forLoop(Tuple<Ts...> const &t, F &&f) {
       for (auto const &e : HomogenousTupleRange(t.base())) {
         f(e);
       }
-    }
-  } else {
+    } else {
 
-    detail::forLoop(t, std::forward<F>(f),
-                    std::make_index_sequence<sizeof...(Ts)>{});
+      detail::forLoop(t, std::forward<F>(f),
+                      std::make_index_sequence<sizeof...(Ts)>{});
+    }
   }
 }
 
@@ -61,6 +62,16 @@ template <int N, typename T, bool Stridable, typename F>
 void forLoop(Domain<N, T, Stridable> const &d, F &&f) {
 
   for (auto const &e : d.these()) {
+    f(e);
+  }
+}
+
+//-----------------------------------------------------------------------------
+// for loop for zippered iteration
+template <typename... Rs, typename F>
+void forLoop(detail::ZipRange<Rs...> const &zr, F &&f) {
+
+  for (auto const &e : zr.these()) {
     f(e);
   }
 }

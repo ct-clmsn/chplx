@@ -10,13 +10,14 @@
 #include <hpx/modules/testing.hpp>
 #include <hpx/thread.hpp>
 
+#include <cstddef>
 #include <mutex>
 #include <set>
 
 template <typename T, chplx::BoundedRangeType BoundedType, bool Stridable>
 void testCoforallLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
 
-  T count = 0;
+  std::size_t count = 0;
 
   std::set<T> values;
   hpx::mutex mtx;
@@ -28,7 +29,7 @@ void testCoforallLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
     HPX_TEST(p.second);
   });
 
-  HPX_TEST_EQ(count, r.size());
+  HPX_TEST_EQ(count, static_cast<std::size_t>(r.size()));
   count = 0;
 
   for (auto val : r.these()) {
@@ -36,7 +37,7 @@ void testCoforallLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
     HPX_TEST(values.contains(val));
   }
 
-  HPX_TEST_EQ(count, r.size());
+  HPX_TEST_EQ(count, values.size());
 }
 
 int main() {
