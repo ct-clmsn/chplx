@@ -25,7 +25,7 @@ jobs:
           mkdir -p /tmp/hpx
           cd /tmp/hpx
           git clone \
-              --branch master \
+              --branch for_loop_range_generator \
               --single-branch \
               --depth 1 \
               https://github.com/STEllAR-GROUP/hpx.git
