@@ -26,17 +26,25 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 find_package(fmt REQUIRED CONFIG)
 find_package(HPX REQUIRED CONFIG)
 
-add_compile_definitions($<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>)
+add_compile_definitions(
+  $<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>
+)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 include(CHPLX_Utils)
 
-# options
+# build options
 if(WIN32)
-  set(HPX_WITH_PSEUDO_DEPENDENCIES OFF CACHE INTERNAL "" FORCE)
+  set(CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT OFF)
 else()
-  set(HPX_WITH_PSEUDO_DEPENDENCIES ON CACHE INTERNAL "" FORCE)
+  set(CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT ON)
 endif()
+
+chplx_option(
+  CHPLX_WITH_PSEUDO_DEPENDENCIES BOOL
+  "Enable build pseudo target (default: ${CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT})"
+  ${CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT} ADVANCED
+)
 
 # create library target
 set(chplx_library_detail_headers include/chplx/detail/iterator_generator.hpp)

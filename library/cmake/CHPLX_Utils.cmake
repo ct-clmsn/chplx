@@ -10,4 +10,6 @@ chplx_include(
   Message
   AddPseudoDependencies
   AddPseudoTarget
+  Option
+  ShortenPseudoTarget
 )
