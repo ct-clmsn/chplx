@@ -39,7 +39,7 @@ jobs:
           ninja install
           mkdir - p /tmp/fmt
           cd /tmp/fmt
-          git clone --tags 9.1.0 --single-branch --depth 1 \
+          git clone --branch 9.1.0 --single-branch --depth 1 \
               https://github.com/fmtlib/fmt.git
           mkdir -p build
           cd build
