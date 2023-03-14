@@ -19,9 +19,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-      with:
-          repository: ct-clmsn/chplx.git
-          fetch-depth: 1
     - name: Install dependencies
       shell: bash
       run: |
