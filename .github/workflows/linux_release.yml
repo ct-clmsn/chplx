@@ -24,10 +24,7 @@ jobs:
       run: |
           mkdir -p /tmp/hpx
           cd /tmp/hpx
-          git clone \
-              --branch for_loop_range_generator \
-              --single-branch \
-              --depth 1 \
+          git clone --branch for_loop_range_generator --single-branch --depth 1 \
               https://github.com/STEllAR-GROUP/hpx.git
           mkdir -p build
           cd build
@@ -39,6 +36,17 @@ jobs:
               -DHPX_WITH_MALLOC=system \
               -DHPX_WITH_EXAMPLES=OFF \
               -DHPX_WITH_TESTS=OFF
+          ninja install
+
+          mkdir - p /tmp/fmt
+          cd /tmp/fmt
+          git clone --tags 9.1.0 --single-branch --depth 1 \
+              https://github.com/fmtlib/fmt.git
+          mkdir -p build
+          cd build
+          cmake \
+              ../fmt \
+              -GNinja
           ninja install
     - name: Configure
       shell: bash
