@@ -37,16 +37,13 @@ jobs:
               -DHPX_WITH_EXAMPLES=OFF \
               -DHPX_WITH_TESTS=OFF
           ninja install
-
           mkdir - p /tmp/fmt
           cd /tmp/fmt
           git clone --tags 9.1.0 --single-branch --depth 1 \
               https://github.com/fmtlib/fmt.git
           mkdir -p build
           cd build
-          cmake \
-              ../fmt \
-              -GNinja
+          cmake ../fmt  -GNinja
           ninja install
     - name: Configure
       shell: bash
