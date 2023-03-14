@@ -10,7 +10,7 @@ set(CHPLX_TEST_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # define a function to simplify adding tests
 function(chplx_unit_test target)
-  add_executable(${target} EXCLUDE_FROM_ALL "${target}.cpp")
+  add_executable(${target} "${target}.cpp")
   target_link_libraries(${target} chplx_library HPX::wrap_main)
   add_chplx_pseudo_dependencies(${target} chplx_library)
   set_target_properties(${target} PROPERTIES FOLDER "Tests")

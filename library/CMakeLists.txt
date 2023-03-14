@@ -81,5 +81,8 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/include/chplx/config/version.hpp" @ONLY
 )
 
+enable_testing()
+include(CTest)
+
 add_subdirectory(examples)
 add_subdirectory(test)
