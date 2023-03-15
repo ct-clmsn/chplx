@@ -2,7 +2,7 @@ chplx
 
 Quickstart
 
-This project is split into 2 directories and 2 projects, frontend and backend.
+This project is split into 3 directories and 3 projects, frontend, library, & backend.
 
 - frontend
 
@@ -21,6 +21,16 @@ This project is split into 2 directories and 2 projects, frontend and backend.
   The frontend is taken from the Chapel source directory. Small modifications have been made to the build scripts and
   some files have been moved around to get the front end sufficiently decoupled from the Chapel source tree. Chapel
   is licensed under the Apache License 2.0.
+
+- library
+
+  directory contains a C++ library used by the backend code generator.
+
+  - license
+
+  The backend is under the Boost Software License Version 1.0
+
+  https://www.boost.org/LICENSE_1_0.txt
 
 - backend
 
