@@ -346,7 +346,7 @@ void testBoundedLow() {
     HPX_TEST_EQ(r1.lowBound(), 1);
     HPX_TEST_EQ(r1.stride(), -2);
 
-    HPX_TEST(r1.isIterable());
+    HPX_TEST(!r1.isIterable());
     HPX_TEST(!r1.isNaturallyAligned());
   }
 }
@@ -450,7 +450,7 @@ void testBoundedHigh() {
     HPX_TEST_EQ(r1.highBound(), 10);
     HPX_TEST_EQ(r1.stride(), -2);
 
-    HPX_TEST(!r1.isIterable());
+    HPX_TEST(r1.isIterable());
     HPX_TEST(r1.isNaturallyAligned());
 
     // ..<10 by -2
@@ -469,7 +469,7 @@ void testBoundedHigh() {
     HPX_TEST_EQ(r2.highBound(), 9);
     HPX_TEST_EQ(r2.stride(), -2);
 
-    HPX_TEST(!r2.isIterable());
+    HPX_TEST(r2.isIterable());
     HPX_TEST(r2.isNaturallyAligned());
   }
 }

@@ -67,7 +67,7 @@ void testWriteRange(char const *expr, Range const &r, char const *expected) {
   HPX_TEST_EQ(std::string(expected), strm.str());
 }
 
-constexpr auto open = BoundsCategoryType::Open;
+constexpr auto Open = BoundsCategoryType::Open;
 
 void boundedRanges() {
 
@@ -82,15 +82,15 @@ void boundedRanges() {
   testWriteRange("1..10 by 2", by(BoundedRange<int>(1, 10), 2),
                  "1..10 by 2 = 1, 3, 5, 7, 9");
 
-  testWriteRange("1..<10", BoundedRange<int>(1, 10, open),
+  testWriteRange("1..<10", BoundedRange<int>(1, 10, Open),
                  "1..<10 = 1, 2, 3, 4, 5, 6, 7, 8, 9");
-  testWriteRange("-3..<3", BoundedRange<int>(-3, 3, open),
+  testWriteRange("-3..<3", BoundedRange<int>(-3, 3, Open),
                  "-3..<3 = -3, -2, -1, 0, 1, 2");
-  testWriteRange("1..<10 # 3", count(BoundedRange<int>(1, 10, open), 3),
+  testWriteRange("1..<10 # 3", count(BoundedRange<int>(1, 10, Open), 3),
                  "1..<10 # 3 = 1, 2, 3");
-  testWriteRange("1..<10 # -3", count(BoundedRange<int>(1, 10, open), -3),
+  testWriteRange("1..<10 # -3", count(BoundedRange<int>(1, 10, Open), -3),
                  "1..<10 # -3 = 7, 8, 9");
-  testWriteRange("1..<10 by 2", by(BoundedRange<int>(1, 10, open), 2),
+  testWriteRange("1..<10 by 2", by(BoundedRange<int>(1, 10, Open), 2),
                  "1..<10 by 2 = 1, 3, 5, 7, 9");
 
   testWriteRange("1..0", BoundedRange<int>(1, 0), "1..0 = ");
@@ -152,9 +152,9 @@ void boundedHighRanges() {
   testWriteRange("..5 by -2", by(BoundedRange<int>(RangeInit::noValue, 5), -2),
                  "..5 by -2 = 5, 3, 1, ...");
 
-  testWriteRange("..<5", R<int, false>(RangeInit::noValue, 5, open),
+  testWriteRange("..<5", R<int, false>(RangeInit::noValue, 5, Open),
                  "..<5 = ..., 2, 3, 4");
-  testWriteRange("..<-5", R<int, false>(RangeInit::noValue, -5, open),
+  testWriteRange("..<-5", R<int, false>(RangeInit::noValue, -5, Open),
                  "..<-5 = ..., -8, -7, -6");
 
   testWriteRange("(..5) + 3", BoundedRange<int>(RangeInit::noValue, 5) + 3,

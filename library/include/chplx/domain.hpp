@@ -95,7 +95,7 @@ template <int Ord> struct OrderToIndex {
   template <int Rank, typename Domain>
   static constexpr auto call(Domain const &d, std::int64_t order) noexcept {
 
-    constexpr int N = d.rank() - Ord - 1;
+    constexpr int N = Domain::Rank - Ord - 1;
 
     auto size = OrderToIndex::size<Rank>(d);
     auto this_order = order / size;
@@ -118,7 +118,7 @@ template <> struct OrderToIndex<0> {
   template <int, typename Domain>
   static constexpr auto call(Domain const &d, std::int64_t order) noexcept {
 
-    constexpr int N = d.rank() - 1;
+    constexpr int N = Domain::Rank - 1;
 
     auto const &r = std::get<N>(d.dims());
     return Tuple<typename Domain::idxType>(r.orderToIndex(order % r.size()));
@@ -135,6 +135,9 @@ template <int N, typename IndexType, bool Stridable> class Domain {
   using indicesType = detail::generate_tuple_type_t<N, rangeType>;
 
 public:
+
+  static constexpr int Rank = N;
+
   using indexType = detail::generate_tuple_type_t<N, IndexType>;
 
   // Return the type of the indices of this domain
