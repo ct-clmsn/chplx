@@ -177,7 +177,8 @@ int main(int argc, char ** argv) {
       generateSourceHeader(ofs, ofilePath);
       generateHpxMainBeg(ofs);
 
-      chplx::ast::visitors::hpx::ProgramTreeBuildingVisitor pbv{br, sbv.symbolTable, program};
+      //chplx::ast::visitors::hpx::ProgramTreeBuildingVisitor pbv{br, sbv.symbolTable, program};
+      chplx::ast::visitors::hpx::ProgramTreeBuildingVisitor pbv{{}, nullptr, 0, br, sbv.symbolTable, program, program.statements, {}};
       ast->traverse(pbv);
 
       chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, program, br, ofilePath, ofs};

@@ -16,7 +16,6 @@
 #include "fmt/core.h"
 
 #include <optional>
-#include <format>
 #include <ostream>
 #include <string>
 #include <complex>
@@ -36,6 +35,8 @@ struct template_kind {
    std::optional<std::string> identifier;
    template_kind() = default;
 };
+
+struct nil_kind {};
 
 struct byte_kind {
    using uast_type = uast::BytesLiteral;
@@ -106,6 +107,7 @@ struct kind_node_term_type {};
 using kind_types = std::variant<
    std::monostate,
    template_kind,
+   nil_kind,
    byte_kind,
    bool_kind,
    int_kind,

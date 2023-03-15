@@ -13,9 +13,9 @@ inlinecxx("std::cout << \"h\" << std::endl;");
 inlinecxx("std::cout << \"{}\" << std::endl;", "h");
 */
 
-proc print(i : real) : real {
-//   inlinecxx("std::cout << {} << std::endl;", i);
-   return 1.0;
+proc print(i : real) {
+   //inlinecxx("std::cout << {} << std::endl;", i);
+   //inlinecxx("std::cout << \"a\" << std::endl;");
 }
 
 /*

@@ -137,7 +137,6 @@ struct TernaryOpExpression : public ArithmeticOpExpression {
 
 struct ScopeExpression : public ExpressionBase {
    std::optional<uast::AstNode const*> node;
-   std::vector<Statement> statements;
    SymbolTable symbolTable;
 
    void emit(std::ostream & os) const;
@@ -146,6 +145,7 @@ struct ScopeExpression : public ExpressionBase {
 struct FunctionDeclarationExpression : public ScopeExpression {
    Symbol symbol;
    std::vector<Statement> statements;
+   std::string chplLine;
 
    void emit(std::ostream & os) const;
 };
@@ -159,6 +159,7 @@ struct FunctionCallExpression : public ExpressionBase {
 };
 
 struct ForallLoopExpression : public ScopeExpression {
+   std::vector<Statement> statements;
    Symbol iterator;
    Symbol index_set;
 

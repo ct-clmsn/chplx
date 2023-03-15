@@ -20,11 +20,13 @@ using namespace chpl::ast::visitors::hpx;
 
 namespace chplx { namespace ast { namespace visitors { namespace hpx {
 
+/*
 ProgramTreeBuildingVisitor::ProgramTreeBuildingVisitor(chpl::uast::BuilderResult const& bRes, SymbolTable & st, ProgramTree & p)
    : stmt(), node(), scopePtr(0),
      br(bRes), symbolTable(st), program(p), curStmts(p.statements)
 {
 }
+*/
 
 struct VariableVisitor {
 
@@ -271,10 +273,19 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        FnCall const* astptr = 
           dynamic_cast<FnCall const*>(ast);
 
-       curStmts.emplace_back(
-          std::make_shared<FunctionCallExpression>(
-             FunctionCallExpression{{scopePtr}, {}, {}, emitChapelLine(ast)}
-       ));
+       if(0 < curStmts.size() && std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(curStmts.back())) {
+          auto & fndecl = std::get<std::shared_ptr<FunctionDeclarationExpression>>(curStmts.back());
+          fndecl->statements.emplace_back(
+             std::make_shared<FunctionCallExpression>(
+                FunctionCallExpression{{scopePtr}, {}, {}, emitChapelLine(ast)}
+          ));
+       }
+       else {
+          curStmts.emplace_back(
+             std::make_shared<FunctionCallExpression>(
+                FunctionCallExpression{{scopePtr}, {}, {}, emitChapelLine(ast)}
+          ));
+       }
 
 /*
       std::string identifier =
@@ -444,6 +455,53 @@ std::cout << identifier << std::endl;
     case asttags::START_TypeDecl:
     break;
     case asttags::Function:
+    {
+       // pattern to repeat in the symbol table builder
+       //
+       struct ProgramTreeFunctionVisitor {
+          bool enter(uast::AstNode const* ast) {
+             const auto tag = ast->tag();
+             if(tag == asttags::Function && !complete) {
+                lookup += std::string{dynamic_cast<Function const*>(ast)->name().c_str()};
+             }
+             else if(tag == asttags::Identifier && !complete) {
+                lookup += "_" + std::string{dynamic_cast<Identifier const*>(ast)->name().c_str()};
+             }
+             else if(tag == asttags::Block && !complete) {
+                complete = true;
+             }
+             return true;
+          }
+
+          void exit(uast::AstNode const* ast) {
+          }
+
+          bool complete;
+          std::string lookup;
+       };
+
+       if(node.has_value() && ast != (*node)) {
+
+          ProgramTreeFunctionVisitor v{false, {}};
+          ast->traverse(v);
+
+          std::optional<Symbol> sym =
+             symbolTable.find(scopePtr, v.lookup);
+
+          if(sym) {
+             curStmts.emplace_back(
+                std::make_shared<FunctionDeclarationExpression>(
+                   FunctionDeclarationExpression{{{scopePtr}, ast, {}}, *sym, {}, emitChapelLine(ast)}
+             ));
+
+             auto & fndecl = std::get<std::shared_ptr<FunctionDeclarationExpression>>(curStmts.back());
+
+             ++scopePtr;
+             ProgramTreeBuildingVisitor iv{{}, ast, scopePtr, br, fndecl->symbolTable, program, fndecl->statements, prevTag};
+             ast->traverse(v);
+          }
+       }
+    }
     break;
     case asttags::Interface:
     break;

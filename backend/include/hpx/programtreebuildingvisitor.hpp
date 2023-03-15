@@ -33,19 +33,7 @@ namespace chplx { namespace ast { namespace visitors { namespace hpx {
 
 struct ProgramTreeBuildingVisitor {
 
-   ProgramTreeBuildingVisitor() = delete;
-
-   ProgramTreeBuildingVisitor(ProgramTreeBuildingVisitor const&) = delete;
-   ProgramTreeBuildingVisitor(ProgramTreeBuildingVisitor &&) = delete;
-
-   ProgramTreeBuildingVisitor& operator=(ProgramTreeBuildingVisitor const&) = delete;
-   ProgramTreeBuildingVisitor& operator=(ProgramTreeBuildingVisitor &&) = delete;
-
-   ProgramTreeBuildingVisitor(ProgramTreeBuildingVisitor * v) = delete;
-   ProgramTreeBuildingVisitor(ProgramTreeBuildingVisitor const* v) = delete;
-
-   ProgramTreeBuildingVisitor(chpl::uast::BuilderResult const& bRes, SymbolTable & st, ProgramTree & p);
-   ~ProgramTreeBuildingVisitor() = default;
+   //ProgramTreeBuildingVisitor(chpl::uast::BuilderResult const& bRes, SymbolTable & st, ProgramTree & p);
 
    std::string emitChapelLine(uast::AstNode const* ast);
    bool enter(const uast::AstNode * node);
@@ -60,8 +48,6 @@ struct ProgramTreeBuildingVisitor {
    ProgramTree const& program;
 
    std::vector<Statement> & curStmts;
-   //std::shared_ptr< std::vector<Statement> > parStmts;
-
    std::optional<uast::AstTag> prevTag;
 };
 
