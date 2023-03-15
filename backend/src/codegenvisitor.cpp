@@ -192,7 +192,13 @@ struct StatementVisitor {
          FuncDeclArgVisitor fdav{os};
          std::visit(fdav, *(fk->retKind));
 
-         os << ' ' << (*(node->symbol.identifier)) << '(';
+         std::string const& fn_sig_ref =
+            (*(node->symbol.identifier));
+
+         const std::size_t pos =
+            fn_sig_ref.find("_");
+
+         os << ' ' << fn_sig_ref.substr(0, (pos != std::string::npos) ? pos : fn_sig_ref.size() ) << '(';
 
          const std::size_t args_sz = fk->args.size();
 
