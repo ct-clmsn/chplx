@@ -533,6 +533,9 @@ struct Range {
   [[nodiscard]] constexpr auto size() const noexcept {
 
     HPX_ASSERT(isBounded());
+    if (highBound() <= lowBound()) {
+      return 0;
+    }
     auto stride = std::abs(stride_.getStride());
     auto num = highBound() - lowBound() + stride;
     return stride == 1 ? num : num / stride;
