@@ -1,5 +1,4 @@
-c[hp]l
- [hp]x
+chplx
 
 Quickstart
 
