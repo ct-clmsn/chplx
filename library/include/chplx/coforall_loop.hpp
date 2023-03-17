@@ -24,25 +24,22 @@ template <typename... Ts, typename F>
 void coforallLoop(Tuple<Ts...> &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
-
-    hpx::execution::experimental::static_chunk_size scs(1);
-    auto policy = hpx::parallel::util::adapt_sharing_mode(
-        hpx::execution::par,
-        hpx::threads::thread_sharing_hint::do_not_combine_tasks);
-
     if constexpr (Tuple<Ts...>::isHomogenous()) {
 
-      hpx::ranges::for_each(policy.with(scs), HomogenousTupleRange(t.base()),
-                            std::forward<F>(f));
+      hpx::parallel::execution::bulk_async_execute(
+          hpx::execution::par.executor(), [&](auto val) { f(val); },
+          HomogenousTupleRange(t.base()))
+          .get();
     } else {
 
       using table =
           detail::forLoopTable<Tuple<Ts...>, std::decay_t<F>,
                                std::make_index_sequence<sizeof...(Ts)>>;
 
-      hpx::experimental::for_loop(
-          policy.with(scs), 0, t.size(),
-          [&](std::size_t i) { table::lookupTable[i](t, f); });
+      hpx::parallel::execution::bulk_async_execute(
+          hpx::execution::par.executor(),
+          [&](std::size_t i) { table::lookupTable[i](t, f); }, t.size())
+          .get();
     }
   }
 }
@@ -52,13 +49,10 @@ void coforallLoop(Tuple<Ts...> &t, F &&f) {
 template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F>
 void coforallLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
 
-  hpx::execution::experimental::static_chunk_size scs(1);
-  auto policy = hpx::parallel::util::adapt_sharing_mode(
-      hpx::execution::par,
-      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
-
-  hpx::ranges::experimental::for_loop(
-      policy.with(scs), detail::IteratorGenerator(r), std::forward<F>(f));
+  hpx::parallel::execution::bulk_async_execute(
+      hpx::execution::par.executor(),
+      [&](std::size_t idx) { return f(r.orderToIndex(idx)); }, r.size())
+      .get();
 }
 
 //-----------------------------------------------------------------------------
@@ -66,13 +60,10 @@ void coforallLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
 template <int N, typename T, bool Stridable, typename F>
 void coforallLoop(Domain<N, T, Stridable> const &d, F &&f) {
 
-  hpx::execution::experimental::static_chunk_size scs(1);
-  auto policy = hpx::parallel::util::adapt_sharing_mode(
-      hpx::execution::par,
-      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
-
-  hpx::ranges::experimental::for_loop(
-      policy.with(scs), detail::IteratorGenerator(d), std::forward<F>(f));
+  hpx::parallel::execution::bulk_async_execute(
+      hpx::execution::par.executor(),
+      [&](std::size_t idx) { return f(d.orderToIndex(idx)); }, d.size())
+      .get();
 }
 
 //-----------------------------------------------------------------------------
@@ -80,13 +71,10 @@ void coforallLoop(Domain<N, T, Stridable> const &d, F &&f) {
 template <typename... Rs, typename F>
 void coforallLoop(detail::ZipRange<Rs...> const &zr, F &&f) {
 
-  hpx::execution::experimental::static_chunk_size scs(1);
-  auto policy = hpx::parallel::util::adapt_sharing_mode(
-      hpx::execution::par,
-      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
-
-  hpx::ranges::experimental::for_loop(
-      policy.with(scs), detail::IteratorGenerator(zr), std::forward<F>(f));
+  hpx::parallel::execution::bulk_async_execute(
+      hpx::execution::par.executor(),
+      [&](std::size_t idx) { return f(zr.orderToIndex(idx)); }, zr.size())
+      .get();
 }
 
 } // namespace chplx
