@@ -6,9 +6,12 @@
 
 #pragma once
 
+#include <chplx/adapt_domain.hpp>
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/assoc_domain.hpp>
 #include <chplx/detail/iterator_generator.hpp>
+#include <chplx/domain.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
 #include <chplx/zip.hpp>
@@ -59,6 +62,17 @@ void coforallLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
 // coforall loop for domain
 template <int N, typename T, bool Stridable, typename F>
 void coforallLoop(Domain<N, T, Stridable> const &d, F &&f) {
+
+  hpx::parallel::execution::bulk_async_execute(
+      hpx::execution::par.executor(),
+      [&](std::size_t idx) { return f(d.orderToIndex(idx)); }, d.size())
+      .get();
+}
+
+//-----------------------------------------------------------------------------
+// coforall loop for associative domain
+template <typename T, typename F>
+void coforallLoop(AssocDomain<T> const &d, F &&f) {
 
   hpx::parallel::execution::bulk_async_execute(
       hpx::execution::par.executor(),

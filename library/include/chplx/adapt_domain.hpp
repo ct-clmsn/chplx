@@ -11,11 +11,10 @@
 #include <chplx/tuple.hpp>
 #include <chplx/types.hpp>
 
-#include <hpx/assert.hpp>
 #include <hpx/config.hpp>
 #include <hpx/generator.hpp>
 
-#include <cstdlib>
+#include <iterator>
 
 namespace chplx {
 
@@ -50,6 +49,25 @@ template <int N, typename T, bool Stridable>
 decltype(auto) iterate(Domain<N, T, Stridable> const &d) noexcept {
 
   return iterate(detail::IteratorGenerator(d));
+}
+
+//-----------------------------------------------------------------------------
+// iteration support for associative domain
+template <typename T>
+hpx::generator<T>
+iterate(detail::IteratorGenerator<AssocDomain<T>> d) noexcept {
+
+  auto size = d.size;
+  for (auto it = std::next(d.target.values().begin(), d.first); size-- != 0;
+       ++it) {
+    co_yield *it;
+  }
+}
+
+//-----------------------------------------------------------------------------
+template <typename T> decltype(auto) iterate(AssocDomain<T> const &d) noexcept {
+
+  return iterate(detail::IteratorGenerator(d, 0, d.size()));
 }
 
 } // namespace chplx
