@@ -26,11 +26,15 @@ namespace chplx {
 template <typename... Ts, typename F, typename... Args>
 void coforall(Tuple<Ts...> &t, F &&f, Args &&...args) {
 
+  auto policy = hpx::parallel::util::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
   if constexpr (sizeof...(Ts) != 0) {
     if constexpr (Tuple<Ts...>::isHomogenous()) {
 
       hpx::parallel::execution::bulk_async_execute(
-          hpx::execution::par.executor(),
+          policy.executor(),
           [&](auto val, Args &&...fargs) {
             f(val, std::forward<Args>(fargs)...);
           },
@@ -44,7 +48,7 @@ void coforall(Tuple<Ts...> &t, F &&f, Args &&...args) {
                                Args...>;
 
       hpx::parallel::execution::bulk_async_execute(
-          hpx::execution::par.executor(),
+          policy.executor(),
           [&](std::size_t i, Args &&...fargs) {
             table::lookupTable[i](t, f, std::forward<Args>(fargs)...);
           },
@@ -61,8 +65,12 @@ template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F,
 void coforall(Range<T, BoundedType, Stridable> const &r, F &&f,
               Args &&...args) {
 
+  auto policy = hpx::parallel::util::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
   hpx::parallel::execution::bulk_async_execute(
-      hpx::execution::par.executor(),
+      policy.executor(),
       [&](std::size_t idx, Args &&...fargs) {
         return f(r.orderToIndex(idx), std::forward<Args>(fargs)...);
       },
@@ -75,8 +83,12 @@ void coforall(Range<T, BoundedType, Stridable> const &r, F &&f,
 template <int N, typename T, bool Stridable, typename F, typename... Args>
 void coforall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
 
+  auto policy = hpx::parallel::util::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
   hpx::parallel::execution::bulk_async_execute(
-      hpx::execution::par.executor(),
+      policy.executor(),
       [&](std::size_t idx, Args &&...fargs) {
         return f(d.orderToIndex(idx), std::forward<Args>(fargs)...);
       },
@@ -89,8 +101,12 @@ void coforall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
 template <typename T, typename F, typename... Args>
 void coforall(AssocDomain<T> const &d, F &&f, Args &&...args) {
 
+  auto policy = hpx::parallel::util::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
   hpx::parallel::execution::bulk_async_execute(
-      hpx::execution::par.executor(),
+      policy.executor(),
       [&](std::size_t idx, Args &&...fargs) {
         return f(d.orderToIndex(idx), std::forward<Args>(fargs)...);
       },
@@ -103,8 +119,12 @@ void coforall(AssocDomain<T> const &d, F &&f, Args &&...args) {
 template <typename... Rs, typename F, typename... Args>
 void coforall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
 
+  auto policy = hpx::parallel::util::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
   hpx::parallel::execution::bulk_async_execute(
-      hpx::execution::par.executor(),
+      policy.executor(),
       [&](std::size_t idx, Args &&...fargs) {
         return f(zr.orderToIndex(idx), std::forward<Args>(fargs)...);
       },
