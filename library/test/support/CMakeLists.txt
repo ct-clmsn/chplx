@@ -6,6 +6,8 @@
 
 set(tests
     test_assoc_domain
+    test_begin
+    test_cobegin
     test_coforall_loop_assoc_domain
     test_coforall_loop_domain
     test_coforall_loop_range
