@@ -9,6 +9,7 @@
 #include <chplx/adapt_domain.hpp>
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/assoc_domain.hpp>
 #include <chplx/domain.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
@@ -60,6 +61,16 @@ void forLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
 // for loop for domains
 template <int N, typename T, bool Stridable, typename F>
 void forLoop(Domain<N, T, Stridable> const &d, F &&f) {
+
+  for (auto const &e : d.these()) {
+    f(e);
+  }
+}
+
+//-----------------------------------------------------------------------------
+// for loop for associative domains
+template <typename T, typename F>
+void forLoop(AssocDomain<T> const &d, F &&f) {
 
   for (auto const &e : d.these()) {
     f(e);

@@ -9,7 +9,9 @@
 #include <chplx/adapt_domain.hpp>
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/assoc_domain.hpp>
 #include <chplx/detail/iterator_generator.hpp>
+#include <chplx/domain.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
 #include <chplx/zip.hpp>
@@ -58,6 +60,16 @@ void forallLoop(Domain<N, T, Stridable> const &d, F &&f) {
 
   hpx::ranges::experimental::for_loop(
       hpx::execution::par, detail::IteratorGenerator(d), std::forward<F>(f));
+}
+
+//-----------------------------------------------------------------------------
+// forall loop for associative domains
+template <typename T, typename F>
+void forallLoop(AssocDomain<T> const &d, F &&f) {
+
+  hpx::ranges::experimental::for_loop(hpx::execution::par,
+                                      detail::IteratorGenerator(d, 0, d.size()),
+                                      std::forward<F>(f));
 }
 
 //-----------------------------------------------------------------------------

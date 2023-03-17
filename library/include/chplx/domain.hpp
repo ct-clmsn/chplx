@@ -79,7 +79,7 @@ template <> struct IndexOrder<0> {
 template <int Ord> struct OrderToIndex {
 
   template <typename... Ts, typename T0, std::size_t... Is>
-  static constexpr auto explode(T0 idxN, Tuple<Ts...> const &idx,
+  static constexpr auto flatten(T0 idxN, Tuple<Ts...> const &idx,
                                 std::index_sequence<Is...>) noexcept {
 
     return Tuple<T0, std::decay_t<Ts>...>(idxN, std::get<Is>(idx)...);
@@ -103,7 +103,7 @@ template <int Ord> struct OrderToIndex {
     auto idx = OrderToIndex<Ord - 1>::template call<Rank>(
         d, order - this_order * size);
 
-    return explode(idx0, idx, std::make_index_sequence<Ord>());
+    return flatten(idx0, idx, std::make_index_sequence<Ord>());
   }
 };
 
@@ -135,7 +135,6 @@ template <int N, typename IndexType, bool Stridable> class Domain {
   using indicesType = detail::generate_tuple_type_t<N, rangeType>;
 
 public:
-
   static constexpr int Rank = N;
 
   using indexType = detail::generate_tuple_type_t<N, IndexType>;
@@ -241,6 +240,9 @@ public:
                         [](auto &&r1, auto &&r2) { return r1.contains(r2); });
   }
 
+  // Return true if the domain has no indices.
+  [[nodiscard]] constexpr bool isEmpty() const noexcept { return size() == 0; }
+
   // Return true if this domain is a rectangular. Otherwise return false.
   [[nodiscard]] static constexpr bool isRectangular() noexcept { return true; }
 
@@ -295,19 +297,41 @@ namespace detail {
 
 template <typename... Rs> struct common_range_index {
 
-  using type = std::common_type_t<typename Rs::idxType...>;
+  using type = std::common_type_t<typename std::decay_t<Rs>::idxType...>;
 };
 
 template <typename... Rs>
 using common_range_index_t = typename common_range_index<Rs...>::type;
 
+template <typename... Rs>
+inline constexpr bool common_stridable_v =
+    (std::decay_t<Rs>::stridable() || ...);
+
 } // namespace detail
 
 template <typename R, typename... Rs>
   requires(isRangeType<R> && (isRangeType<Rs> && ...))
-Domain(R, Rs...)
-    -> Domain<sizeof...(Rs) + 1, detail::common_range_index_t<R, Rs...>,
-              R::stridable() || (Rs::stridable() || ...)>;
+Domain(R, Rs...) -> Domain<static_cast<int>(sizeof...(Rs) + 1),
+                           detail::common_range_index_t<R, Rs...>,
+                           detail::common_stridable_v<R, Rs...>>;
+
+//-----------------------------------------------------------------------------
+// Returns true if the type T is a domain type.
+template <typename T> inline constexpr bool isDomainType = false;
+
+template <int N, typename T, bool Stridable>
+inline constexpr bool isDomainType<Domain<N, T, Stridable>> = true;
+
+// Returns true if the value T is a domain value.
+template <typename T> [[nodiscard]] constexpr bool isDomainValue(T) noexcept {
+  return false;
+}
+
+template <int N, typename T, bool Stridable>
+[[nodiscard]] constexpr bool
+isDomainValue(Domain<N, T, Stridable> const &) noexcept {
+  return true;
+}
 
 //-----------------------------------------------------------------------------
 // Equality operators are defined to test if two domains are equivalent or not

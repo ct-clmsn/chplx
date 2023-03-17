@@ -62,6 +62,11 @@ struct Range;
 template <int N, typename IndexType = std::int64_t, bool Stridable = false>
 class Domain;
 
+// An associative domain type is parameterized by idxType, the type of the
+// indices that it stores.
+template <typename IndexType>
+class AssocDomain;
+
 //-----------------------------------------------------------------------------
 // Returns true if the type T is one the following types, of any width: int,
 // uint, real, imag, complex.

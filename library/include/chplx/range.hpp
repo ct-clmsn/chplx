@@ -534,7 +534,7 @@ struct Range {
 
     HPX_ASSERT(isBounded());
     if (highBound() <= lowBound()) {
-      return 0;
+      return static_cast<decltype(stride_.getStride())>(0);
     }
     auto stride = std::abs(stride_.getStride());
     auto num = highBound() - lowBound() + stride;

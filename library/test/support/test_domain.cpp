@@ -14,6 +14,9 @@ template <typename T, bool Stridable>
 void testDomain(chplx::Domain<1, T, Stridable> const &d) {
 
   chplx::Domain<1, T, Stridable> d1;
+  HPX_TEST((chplx::isDomainType<chplx::Domain<1, T, Stridable>>));
+  HPX_TEST(chplx::isDomainValue(d1));
+
   HPX_TEST_EQ(d, d);
   HPX_TEST_NEQ(d, d1);
 
@@ -28,6 +31,8 @@ void testDomain(chplx::Domain<1, T, Stridable> const &d) {
   HPX_TEST_EQ(d.last(), chplx::Tuple(d.dim(0).last()));
   HPX_TEST_EQ(d.stride(), chplx::Tuple(d.dim(0).stride()));
   HPX_TEST_EQ(d.alignment(), chplx::Tuple(d.dim(0).alignment()));
+
+  HPX_TEST(d.isBounded());
   HPX_TEST(d.isRectangular());
   HPX_TEST(!d.isIrregular());
   HPX_TEST(!d.isAssociative());
@@ -38,6 +43,9 @@ template <typename T, bool Stridable>
 void testDomain(chplx::Domain<2, T, Stridable> const &d) {
 
   chplx::Domain<2, T, Stridable> d1;
+  HPX_TEST((chplx::isDomainType<chplx::Domain<2, T, Stridable>>));
+  HPX_TEST(chplx::isDomainValue(d1));
+
   HPX_TEST_EQ(d, d);
   HPX_TEST_NEQ(d, d1);
 
@@ -234,7 +242,7 @@ int main() {
 
     testDomain1D(chplx::Tuple(r1, r2, r3, r4));
     testDomain2D(chplx::Tuple(r1, r2, r3, r4));
-
+    
     testIndexOrder1D(chplx::Tuple(r1, r2, r3, r4));
     testIndexOrder2D(chplx::Tuple(r1, r2, r3, r4));
     testIndexOrder3D(chplx::Tuple(r1, r2, r3, r4));
@@ -245,10 +253,10 @@ int main() {
     auto constexpr r2 = chplx::BoundedRange<int, true>(1, 9, -1);
     auto constexpr r3 = chplx::BoundedRange<int, true>(1, 9, 2);
     auto constexpr r4 = chplx::BoundedRange<int, true>(1, 9, -2);
-
+  
     testDomain1D(chplx::Tuple(r1, r2, r3, r4));
     testDomain2D(chplx::Tuple(r1, r2, r3, r4));
-
+  
     testIndexOrder1D(chplx::Tuple(r1, r2, r3, r4));
     testIndexOrder2D(chplx::Tuple(r1, r2, r3, r4));
     testIndexOrder3D(chplx::Tuple(r1, r2, r3, r4));

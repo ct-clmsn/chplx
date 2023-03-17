@@ -9,6 +9,7 @@
 #include <chplx/adapt_domain.hpp>
 #include <chplx/adapt_range.hpp>
 #include <chplx/adapt_tuple.hpp>
+#include <chplx/assoc_domain.hpp>
 #include <chplx/coforall_loop.hpp>
 #include <chplx/detail/iterator_generator.hpp>
 #include <chplx/domain.hpp>
