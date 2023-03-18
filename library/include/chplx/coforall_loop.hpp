@@ -23,25 +23,32 @@ namespace chplx {
 
 //-----------------------------------------------------------------------------
 // coforall loop for tuples
-template <typename... Ts, typename F>
-void coforallLoop(Tuple<Ts...> &t, F &&f) {
+template <typename... Ts, typename F, typename... Args>
+void coforall(Tuple<Ts...> &t, F &&f, Args &&...args) {
 
   if constexpr (sizeof...(Ts) != 0) {
     if constexpr (Tuple<Ts...>::isHomogenous()) {
 
       hpx::parallel::execution::bulk_async_execute(
-          hpx::execution::par.executor(), [&](auto val) { f(val); },
-          HomogenousTupleRange(t.base()))
+          hpx::execution::par.executor(),
+          [&](auto val, Args &&...fargs) {
+            f(val, std::forward<Args>(fargs)...);
+          },
+          HomogenousTupleRange(t.base()), std::forward<Args>(args)...)
           .get();
     } else {
 
       using table =
           detail::forLoopTable<Tuple<Ts...>, std::decay_t<F>,
-                               std::make_index_sequence<sizeof...(Ts)>>;
+                               std::make_index_sequence<sizeof...(Ts)>,
+                               Args...>;
 
       hpx::parallel::execution::bulk_async_execute(
           hpx::execution::par.executor(),
-          [&](std::size_t i) { table::lookupTable[i](t, f); }, t.size())
+          [&](std::size_t i, Args &&...fargs) {
+            table::lookupTable[i](t, f, std::forward<Args>(fargs)...);
+          },
+          t.size(), std::forward<Args>(args)...)
           .get();
     }
   }
@@ -49,45 +56,59 @@ void coforallLoop(Tuple<Ts...> &t, F &&f) {
 
 //-----------------------------------------------------------------------------
 // coforall loop for ranges
-template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F>
-void coforallLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
+template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F,
+          typename... Args>
+void coforall(Range<T, BoundedType, Stridable> const &r, F &&f,
+              Args &&...args) {
 
   hpx::parallel::execution::bulk_async_execute(
       hpx::execution::par.executor(),
-      [&](std::size_t idx) { return f(r.orderToIndex(idx)); }, r.size())
+      [&](std::size_t idx, Args &&...fargs) {
+        return f(r.orderToIndex(idx), std::forward<Args>(fargs)...);
+      },
+      r.size(), std::forward<Args>(args)...)
       .get();
 }
 
 //-----------------------------------------------------------------------------
 // coforall loop for domain
-template <int N, typename T, bool Stridable, typename F>
-void coforallLoop(Domain<N, T, Stridable> const &d, F &&f) {
+template <int N, typename T, bool Stridable, typename F, typename... Args>
+void coforall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
 
   hpx::parallel::execution::bulk_async_execute(
       hpx::execution::par.executor(),
-      [&](std::size_t idx) { return f(d.orderToIndex(idx)); }, d.size())
+      [&](std::size_t idx, Args &&...fargs) {
+        return f(d.orderToIndex(idx), std::forward<Args>(fargs)...);
+      },
+      d.size(), std::forward<Args>(args)...)
       .get();
 }
 
 //-----------------------------------------------------------------------------
 // coforall loop for associative domain
-template <typename T, typename F>
-void coforallLoop(AssocDomain<T> const &d, F &&f) {
+template <typename T, typename F, typename... Args>
+void coforall(AssocDomain<T> const &d, F &&f, Args &&...args) {
 
   hpx::parallel::execution::bulk_async_execute(
       hpx::execution::par.executor(),
-      [&](std::size_t idx) { return f(d.orderToIndex(idx)); }, d.size())
+      [&](std::size_t idx, Args &&...fargs) {
+        return f(d.orderToIndex(idx), std::forward<Args>(fargs)...);
+      },
+      d.size(), std::forward<Args>(args)...)
       .get();
 }
 
 //-----------------------------------------------------------------------------
 // forall loop for zippered iteration
-template <typename... Rs, typename F>
-void coforallLoop(detail::ZipRange<Rs...> const &zr, F &&f) {
+template <typename... Rs, typename F, typename... Args>
+void coforall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
 
   hpx::parallel::execution::bulk_async_execute(
       hpx::execution::par.executor(),
-      [&](std::size_t idx) { return f(zr.orderToIndex(idx)); }, zr.size())
+      [&](std::size_t idx, Args &&...fargs) {
+        return f(zr.orderToIndex(idx), std::forward<Args>(fargs)...);
+      },
+      zr.size(), std::forward<Args>(args)...)
       .get();
 }
 

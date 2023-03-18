@@ -21,23 +21,25 @@
 #include <memory>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <variant>
 
 namespace chplx {
 namespace detail {
 
 //-----------------------------------------------------------------------------
-template <typename Tuple, typename F, typename Pack> struct forLoopTable;
+template <typename Tuple, typename F, typename Pack, typename... Args>
+struct forLoopTable;
 
-template <typename Tuple, typename F, std::size_t... Is>
-struct forLoopTable<Tuple, F, std::index_sequence<Is...>> {
+template <typename Tuple, typename F, std::size_t... Is, typename... Args>
+struct forLoopTable<Tuple, F, std::index_sequence<Is...>, Args...> {
 
   template <std::size_t N>
-  static constexpr void accessFunc(Tuple &t, F &f) noexcept {
-    f(std::get<N>(t));
+  static constexpr void accessFunc(Tuple &t, F &f, Args &...args) noexcept {
+    f(std::get<N>(t), args...);
   }
 
-  using accessFuncType = void (*)(Tuple &t, F &f) noexcept;
+  using accessFuncType = void (*)(Tuple &t, F &f, Args &...args) noexcept;
 
   static constexpr std::array<accessFuncType, sizeof...(Is)> lookupTable = {
       &accessFunc<Is>...};

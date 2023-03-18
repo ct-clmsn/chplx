@@ -23,7 +23,7 @@ void testCoforallLoopDomain(chplx::Domain<N, T, Stridable> d) {
 
   std::size_t count = 0;
 
-  chplx::coforallLoop(d, [&](auto value) {
+  chplx::coforall(d, [&](auto value) {
     std::lock_guard l(mtx);
     ++count;
     auto p = values.insert(value);

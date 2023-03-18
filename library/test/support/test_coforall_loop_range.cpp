@@ -22,7 +22,7 @@ void testCoforallLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
   std::set<T> values;
   hpx::mutex mtx;
 
-  chplx::coforallLoop(r, [&](auto value) {
+  chplx::coforall(r, [&](auto value) {
     std::lock_guard l(mtx);
     ++count;
     auto p = values.insert(value);

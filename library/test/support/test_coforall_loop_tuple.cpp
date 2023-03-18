@@ -23,7 +23,7 @@ template <typename T> void testCoforallLoopHomogenousTuple(T val) {
     chplx::Tuple<> t;
 
     called = 0;
-    chplx::coforallLoop(t, [&](auto value) {
+    chplx::coforall(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
@@ -35,7 +35,7 @@ template <typename T> void testCoforallLoopHomogenousTuple(T val) {
     chplx::Tuple<T> t{val};
 
     called = 0;
-    chplx::coforallLoop(t, [&](auto value) {
+    chplx::coforall(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
@@ -47,7 +47,7 @@ template <typename T> void testCoforallLoopHomogenousTuple(T val) {
     chplx::Tuple<T, T> t{val, val};
 
     called = 0;
-    chplx::coforallLoop(t, [&](auto value) {
+    chplx::coforall(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
@@ -60,7 +60,7 @@ template <typename T> void testCoforallLoopHomogenousTuple(T val) {
                                                  val, val, val, val, val};
 
     called = 0;
-    chplx::coforallLoop(t, [&](auto value) {
+    chplx::coforall(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
@@ -95,7 +95,7 @@ template <typename... Ts> void testCoforallLoopTuple(Ts... ts) {
   hpx::mutex mtx;
 
   called = 0;
-  chplx::coforallLoop(t, [&](auto value) {
+  chplx::coforall(t, [&](auto value) {
     std::lock_guard l(mtx);
     ++called;
     auto p = values.insert(value);

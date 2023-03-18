@@ -93,7 +93,7 @@ template <typename... Ts> void testForallLoopTuple(Ts... ts) {
   hpx::mutex mtx;
 
   called = 0;
-  chplx::coforallLoop(t, [&](auto value) {
+  chplx::coforall(t, [&](auto value) {
     std::lock_guard l(mtx);
     ++called;
     auto p = values.insert(value);
