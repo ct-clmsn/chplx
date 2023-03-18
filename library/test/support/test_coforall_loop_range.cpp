@@ -68,9 +68,9 @@ void testCoforallLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
 }
 
 template <typename T, chplx::BoundedRangeType BoundedType, bool Stridable,
-          typename Args>
+          typename Arg>
 void testCoforallLoopRange(chplx::Range<T, BoundedType, Stridable> r,
-                           Args &&arg) {
+                           Arg &&arg) {
 
   std::size_t count = 0;
 
