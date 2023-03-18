@@ -28,6 +28,8 @@ set(tests
     test_print_range
     test_domain
     test_range
+    test_single_variable
+    test_sync_variable
     test_tuple
     test_zip
 )

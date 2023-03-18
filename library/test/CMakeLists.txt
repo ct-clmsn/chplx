@@ -16,6 +16,7 @@ function(chplx_unit_test target)
   set_target_properties(${target} PROPERTIES FOLDER "Tests")
 
   add_test(NAME ${target} COMMAND ${target})
+  set_tests_properties(${target} PROPERTIES TIMEOUT 60)
   add_chplx_pseudo_dependencies(chplx_tests ${target})
 endfunction()
 

@@ -63,6 +63,8 @@ set(chplx_library_headers
     include/chplx/for_loop.hpp
     include/chplx/forall_loop.hpp
     include/chplx/nothing.hpp
+    include/chplx/single_variable.hpp
+    include/chplx/sync_variable.hpp
     include/chplx/range.hpp
     include/chplx/tuple.hpp
     include/chplx/types.hpp
