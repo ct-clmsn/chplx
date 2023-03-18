@@ -14,14 +14,15 @@
 #include <mutex>
 #include <set>
 
-template <typename T> void testForallLoopDomain(chplx::AssocDomain<T> const &d) {
+template <typename T>
+void testForallLoopDomain(chplx::AssocDomain<T> const &d) {
 
   std::set<typename chplx::AssocDomain<T>::idxType> values;
   hpx::mutex mtx;
 
   std::size_t count = 0;
 
-  chplx::forallLoop(d, [&](auto value) {
+  chplx::forall(d, [&](auto value) {
     std::lock_guard l(mtx);
     ++count;
     auto p = values.insert(value);

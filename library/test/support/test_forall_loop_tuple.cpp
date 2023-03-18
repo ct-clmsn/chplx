@@ -33,7 +33,7 @@ template <typename T> void testForallLoopHomogenousTuple(T val) {
     chplx::Tuple<T> t{val};
 
     called = 0;
-    chplx::forallLoop(t, [&](auto value) {
+    chplx::forall(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
@@ -45,7 +45,7 @@ template <typename T> void testForallLoopHomogenousTuple(T val) {
     chplx::Tuple<T, T> t{val, val};
 
     called = 0;
-    chplx::forallLoop(t, [&](auto value) {
+    chplx::forall(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
@@ -58,7 +58,7 @@ template <typename T> void testForallLoopHomogenousTuple(T val) {
                                                  val, val, val, val, val};
 
     called = 0;
-    chplx::forallLoop(t, [&](auto value) {
+    chplx::forall(t, [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });

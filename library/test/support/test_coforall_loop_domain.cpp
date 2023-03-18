@@ -23,12 +23,16 @@ void testCoforallLoopDomain(chplx::Domain<N, T, Stridable> d) {
 
   std::size_t count = 0;
 
-  chplx::coforall(d, [&](auto value) {
-    std::lock_guard l(mtx);
-    ++count;
-    auto p = values.insert(value);
-    HPX_TEST(p.second);
-  });
+  chplx::coforall(
+      d,
+      [&](auto value, int fortytwo) {
+        HPX_TEST_EQ(fortytwo, 42);
+        std::lock_guard l(mtx);
+        ++count;
+        auto p = values.insert(value);
+        HPX_TEST(p.second);
+      },
+      42);
 
   HPX_TEST_EQ(count, static_cast<std::size_t>(d.size()));
   count = 0;

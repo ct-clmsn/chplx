@@ -283,7 +283,7 @@ void BinaryOpExpression::emit(std::ostream & os) const {
 
 void ForallLoopExpression::emit(std::ostream & os) const {
    range_kind const& rk = std::get<range_kind>(*index_set.kind);
-   os << "chplx::forallLoop(chplx::Range(" << rk.points[0] << ", " << rk.points[1] << "), [&](auto " << (*iterator.identifier) << ")" << std::endl;
+   os << "chplx::forall(chplx::Range(" << rk.points[0] << ", " << rk.points[1] << "), [&](auto " << (*iterator.identifier) << ")" << std::endl;
 }
 
 } /* namespace hpx */ } /* namespace ast */ } /* namespace chpl */

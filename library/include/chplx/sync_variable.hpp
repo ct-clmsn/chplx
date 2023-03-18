@@ -6,8 +6,11 @@
 
 #pragma once
 
+#include <chplx/types.hpp>
+
 #include <hpx/modules/synchronization.hpp>
 
+#include <functional>
 #include <mutex>
 #include <utility>
 
@@ -48,7 +51,7 @@ public:
 
   // Blocks until the sync variable is full. Read the value of the sync variable
   // and set the variable to empty.
-  T readFE() {
+  T readFE() const {
     std::unique_lock<hpx::spinlock> l(mtx);
     while (!full) {
       // wait for variable to become full
@@ -63,7 +66,7 @@ public:
 
   // Blocks until the sync variable is full. Read the value of the sync variable
   // and and leave the variable full.
-  T readFF() {
+  T readFF() const {
     std::unique_lock<hpx::spinlock> l(mtx);
     while (!full) {
       // wait for variable to become full
@@ -113,9 +116,22 @@ public:
 
 private:
   T value{};
-  bool full = false;
+
+  // all members below are mutable to be able to make the read functions const
+  mutable bool full = false;
   mutable hpx::spinlock mtx{};
-  hpx::condition_variable_any cv_read{};
-  hpx::condition_variable_any cv_write{};
+  mutable hpx::condition_variable_any cv_read{};
+  mutable hpx::condition_variable_any cv_write{};
+};
+
+//-----------------------------------------------------------------------------
+// Make sure sync variables are always passed by reference to tasks
+template <typename T> struct detail::task_intent<sync<T>> {
+
+  using type = std::reference_wrapper<T>;
+
+  static constexpr decltype(auto) call(sync<T> &arg) noexcept {
+    return std::ref(arg);
+  }
 };
 } // namespace chplx

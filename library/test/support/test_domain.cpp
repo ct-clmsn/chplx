@@ -242,7 +242,7 @@ int main() {
 
     testDomain1D(chplx::Tuple(r1, r2, r3, r4));
     testDomain2D(chplx::Tuple(r1, r2, r3, r4));
-    
+
     testIndexOrder1D(chplx::Tuple(r1, r2, r3, r4));
     testIndexOrder2D(chplx::Tuple(r1, r2, r3, r4));
     testIndexOrder3D(chplx::Tuple(r1, r2, r3, r4));
@@ -253,10 +253,10 @@ int main() {
     auto constexpr r2 = chplx::BoundedRange<int, true>(1, 9, -1);
     auto constexpr r3 = chplx::BoundedRange<int, true>(1, 9, 2);
     auto constexpr r4 = chplx::BoundedRange<int, true>(1, 9, -2);
-  
+
     testDomain1D(chplx::Tuple(r1, r2, r3, r4));
     testDomain2D(chplx::Tuple(r1, r2, r3, r4));
-  
+
     testIndexOrder1D(chplx::Tuple(r1, r2, r3, r4));
     testIndexOrder2D(chplx::Tuple(r1, r2, r3, r4));
     testIndexOrder3D(chplx::Tuple(r1, r2, r3, r4));

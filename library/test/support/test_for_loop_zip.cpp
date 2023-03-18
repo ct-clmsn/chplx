@@ -12,8 +12,7 @@
 #include <cstddef>
 #include <set>
 
-template <typename ...Rs>
-void testForLoopZip(Rs&&... rs) {
+template <typename... Rs> void testForLoopZip(Rs &&...rs) {
 
   auto zip = chplx::zip(std::forward<Rs>(rs)...);
 
@@ -46,15 +45,18 @@ int main() {
   testForLoopZip(chplx::Range(0, 10), chplx::Range(0, 10), chplx::Range(0, 10));
 
   testForLoopZip(chplx::BoundedRange<int, true>(0, 10, 2), chplx::Range(0, 10));
-  testForLoopZip(chplx::Range(0, 10, chplx::BoundsCategoryType::Open), chplx::Range(0, 10));
-  testForLoopZip(chplx::BoundedRange<int, true>(
-      0, 10, 2, chplx::BoundsCategoryType::Open), chplx::Range(0, 10));
+  testForLoopZip(chplx::Range(0, 10, chplx::BoundsCategoryType::Open),
+                 chplx::Range(0, 10));
+  testForLoopZip(
+      chplx::BoundedRange<int, true>(0, 10, 2, chplx::BoundsCategoryType::Open),
+      chplx::Range(0, 10));
 
   testForLoopZip(chplx::Range(1, 0), chplx::Range(0, 10));
 
   testForLoopZip(chplx::BoundedRange<int, true>(1, 9, 2), chplx::Range(0, 10));
   testForLoopZip(
-      chplx::BoundedRange<int, true>(1, 9, 2, chplx::BoundsCategoryType::Open), chplx::Range(0, 10));
+      chplx::BoundedRange<int, true>(1, 9, 2, chplx::BoundsCategoryType::Open),
+      chplx::Range(0, 10));
 
   testForLoopZip(by(chplx::BoundedRange<int, true>(1, 10), -1),
                  chplx::Range(0, 10));

@@ -6,8 +6,13 @@
 
 #pragma once
 
+#include <chplx/types.hpp>
+
 #include <hpx/config.hpp>
 #include <hpx/execution.hpp>
+
+#include <type_traits>
+#include <utility>
 
 namespace chplx {
 
@@ -15,6 +20,7 @@ template <typename F, typename... Args> void begin(F &&f, Args &&...args) {
 
   hpx::parallel::execution::post(hpx::execution::par.executor(),
                                  std::forward<F>(f),
-                                 std::forward<Args>(args)...);
+                                 detail::task_intent<std::decay_t<Args>>::call(
+                                     std::forward<Args>(args))...);
 }
 } // namespace chplx

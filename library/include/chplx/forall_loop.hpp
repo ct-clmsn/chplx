@@ -23,7 +23,7 @@ namespace chplx {
 
 //-----------------------------------------------------------------------------
 // forall loop for tuples
-template <typename... Ts, typename F> void forallLoop(Tuple<Ts...> &t, F &&f) {
+template <typename... Ts, typename F> void forall(Tuple<Ts...> const &t, F &&f) {
 
   if constexpr (sizeof...(Ts) != 0) {
 
@@ -47,7 +47,7 @@ template <typename... Ts, typename F> void forallLoop(Tuple<Ts...> &t, F &&f) {
 //-----------------------------------------------------------------------------
 // forall loop for ranges
 template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F>
-void forallLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
+void forall(Range<T, BoundedType, Stridable> const &r, F &&f) {
 
   hpx::ranges::experimental::for_loop(
       hpx::execution::par, detail::IteratorGenerator(r), std::forward<F>(f));
@@ -56,7 +56,7 @@ void forallLoop(Range<T, BoundedType, Stridable> const &r, F &&f) {
 //-----------------------------------------------------------------------------
 // forall loop for domain
 template <int N, typename T, bool Stridable, typename F>
-void forallLoop(Domain<N, T, Stridable> const &d, F &&f) {
+void forall(Domain<N, T, Stridable> const &d, F &&f) {
 
   hpx::ranges::experimental::for_loop(
       hpx::execution::par, detail::IteratorGenerator(d), std::forward<F>(f));
@@ -64,8 +64,7 @@ void forallLoop(Domain<N, T, Stridable> const &d, F &&f) {
 
 //-----------------------------------------------------------------------------
 // forall loop for associative domains
-template <typename T, typename F>
-void forallLoop(AssocDomain<T> const &d, F &&f) {
+template <typename T, typename F> void forall(AssocDomain<T> const &d, F &&f) {
 
   hpx::ranges::experimental::for_loop(hpx::execution::par,
                                       detail::IteratorGenerator(d, 0, d.size()),
@@ -75,7 +74,7 @@ void forallLoop(AssocDomain<T> const &d, F &&f) {
 //-----------------------------------------------------------------------------
 // forall loop for zippered iteration
 template <typename... Rs, typename F>
-void forallLoop(detail::ZipRange<Rs...> const &zr, F &&f) {
+void forall(detail::ZipRange<Rs...> const &zr, F &&f) {
 
   hpx::ranges::experimental::for_loop(
       hpx::execution::par, detail::IteratorGenerator(zr), std::forward<F>(f));

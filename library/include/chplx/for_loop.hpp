@@ -22,7 +22,7 @@ namespace detail {
 
 // 'iterate'  over non-homogenous tuple
 template <typename... Ts, typename F, std::size_t... Is>
-void forLoop(Tuple<Ts...> &t, F &&f, std::index_sequence<Is...>) {
+void forLoop(Tuple<Ts...> const &t, F &&f, std::index_sequence<Is...>) {
 
   (f(std::get<Is>(t)), ...);
 }
@@ -69,8 +69,7 @@ void forLoop(Domain<N, T, Stridable> const &d, F &&f) {
 
 //-----------------------------------------------------------------------------
 // for loop for associative domains
-template <typename T, typename F>
-void forLoop(AssocDomain<T> const &d, F &&f) {
+template <typename T, typename F> void forLoop(AssocDomain<T> const &d, F &&f) {
 
   for (auto const &e : d.these()) {
     f(e);
