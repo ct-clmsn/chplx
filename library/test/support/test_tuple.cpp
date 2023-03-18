@@ -11,56 +11,55 @@
 #include <cstddef>
 #include <string>
 
-template <typename Tuple>
-void testPlus(Tuple const& t, Tuple const& expected) {
+template <typename Tuple> void testPlus(Tuple const &t, Tuple const &expected) {
 
   HPX_TEST(t + t == expected);
 }
 
 template <typename Tuple>
-void testMinus(Tuple const& t, Tuple const& expected) {
+void testMinus(Tuple const &t, Tuple const &expected) {
 
   HPX_TEST(t - t == expected);
 }
 
 template <typename Tuple>
-void testMultiplies(Tuple const& t, Tuple const& expected) {
+void testMultiplies(Tuple const &t, Tuple const &expected) {
 
   HPX_TEST(t * t == expected);
 }
 
 template <typename Tuple>
-void testDivides(Tuple const& t, Tuple const& expected) {
+void testDivides(Tuple const &t, Tuple const &expected) {
 
   HPX_TEST(t / t == expected);
 }
 
 template <typename Tuple>
-void testUnaryMinus(Tuple const& t, Tuple const& expected) {
+void testUnaryMinus(Tuple const &t, Tuple const &expected) {
 
   HPX_TEST(-t == expected);
 }
 
 template <typename Tuple>
-void testUnaryNot(Tuple const& t, Tuple const& expected) {
+void testUnaryNot(Tuple const &t, Tuple const &expected) {
 
   HPX_TEST(~t == expected);
 }
 
 template <typename Tuple1, typename Tuple2>
-void testUnaryLogicalNot(Tuple1 const& t, Tuple2 const& expected) {
+void testUnaryLogicalNot(Tuple1 const &t, Tuple2 const &expected) {
 
   HPX_TEST(!t == expected);
 }
 
 template <typename Tuple>
-void testShiftLeft(Tuple const& t, Tuple const& expected) {
+void testShiftLeft(Tuple const &t, Tuple const &expected) {
 
   HPX_TEST(t << t == expected);
 }
 
 template <typename Tuple>
-void testShiftRight(Tuple const& t, Tuple const& expected) {
+void testShiftRight(Tuple const &t, Tuple const &expected) {
 
   HPX_TEST(t >> t == expected);
 }

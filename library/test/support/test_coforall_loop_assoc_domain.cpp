@@ -14,19 +14,24 @@
 #include <mutex>
 #include <set>
 
-template <typename T> void testCoforallLoopDomain(chplx::AssocDomain<T> const &d) {
+template <typename T>
+void testCoforallLoopDomain(chplx::AssocDomain<T> const &d) {
 
   std::set<typename chplx::AssocDomain<T>::idxType> values;
   hpx::mutex mtx;
 
   std::size_t count = 0;
 
-  chplx::coforall(d, [&](auto value) {
-    std::lock_guard l(mtx);
-    ++count;
-    auto p = values.insert(value);
-    HPX_TEST(p.second);
-  });
+  chplx::coforall(
+      d,
+      [&](auto value, int fortytwo) {
+        HPX_TEST_EQ(fortytwo, 42);
+        std::lock_guard l(mtx);
+        ++count;
+        auto p = values.insert(value);
+        HPX_TEST(p.second);
+      },
+      42);
 
   HPX_TEST_EQ(count, static_cast<std::size_t>(d.size()));
 
@@ -40,7 +45,8 @@ template <typename T> void testCoforallLoopDomain(chplx::AssocDomain<T> const &d
   HPX_TEST_EQ(count, values.size());
 }
 
-template <typename T> void testCoforallLoopDomain(std::vector<T> const &values) {
+template <typename T>
+void testCoforallLoopDomain(std::vector<T> const &values) {
 
   chplx::AssocDomain<T> d;
   for (auto const &elem : values) {

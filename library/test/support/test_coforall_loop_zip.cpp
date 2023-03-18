@@ -23,12 +23,16 @@ template <typename... Rs> void testCoforallLoopZip(Rs &&...rs) {
 
   hpx::mutex mtx;
 
-  chplx::coforall(zip, [&](auto value) {
-    std::lock_guard l(mtx);
-    ++count;
-    auto p = values.insert(value);
-    HPX_TEST(p.second);
-  });
+  chplx::coforall(
+      zip,
+      [&](auto value, int fortytwo) {
+        HPX_TEST_EQ(fortytwo, 42);
+        std::lock_guard l(mtx);
+        ++count;
+        auto p = values.insert(value);
+        HPX_TEST(p.second);
+      },
+      42);
 
   HPX_TEST_EQ(count, static_cast<std::size_t>(zip.size()));
   count = 0;

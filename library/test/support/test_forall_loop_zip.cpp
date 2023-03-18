@@ -22,7 +22,7 @@ template <typename... Rs> void testForallLoopZip(Rs &&...rs) {
   std::set<typename decltype(zip)::indexType> values;
   hpx::mutex mtx;
 
-  chplx::forallLoop(zip, [&](auto value) {
+  chplx::forall(zip, [&](auto value) {
     std::lock_guard l(mtx);
     ++count;
     auto p = values.insert(value);

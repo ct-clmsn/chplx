@@ -12,4 +12,4 @@ namespace chplx {
 
 using nothing = hpx::util::unused_type;
 inline constexpr nothing none = hpx::util::unused;
-}
+} // namespace chplx

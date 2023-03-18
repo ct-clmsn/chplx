@@ -57,8 +57,7 @@ void testWriteRange(char const *expr, Range const &r, char const *expected) {
 
   } else if (r.stride() == 1 || r.stride() == -1) {
     // If we are here, the range is fully unbounded.
-    write(strm, "all integers, ",
-          r.stride() > 0 ? "increasing" : "decreasing");
+    write(strm, "all integers, ", r.stride() > 0 ? "increasing" : "decreasing");
 
   } else {
     // We got a more complex range, do not elaborate.

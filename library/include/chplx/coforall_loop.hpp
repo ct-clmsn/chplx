@@ -14,17 +14,22 @@
 #include <chplx/domain.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
+#include <chplx/types.hpp>
 #include <chplx/zip.hpp>
 
 #include <hpx/algorithm.hpp>
 #include <hpx/execution.hpp>
+#include <hpx/future.hpp>
+
+#include <type_traits>
+#include <utility>
 
 namespace chplx {
 
 //-----------------------------------------------------------------------------
 // coforall loop for tuples
 template <typename... Ts, typename F, typename... Args>
-void coforall(Tuple<Ts...> &t, F &&f, Args &&...args) {
+void coforall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
 
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
@@ -33,27 +38,29 @@ void coforall(Tuple<Ts...> &t, F &&f, Args &&...args) {
   if constexpr (sizeof...(Ts) != 0) {
     if constexpr (Tuple<Ts...>::isHomogenous()) {
 
-      hpx::parallel::execution::bulk_async_execute(
+      hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
           policy.executor(),
-          [&](auto val, Args &&...fargs) {
-            f(val, std::forward<Args>(fargs)...);
+          [&](auto val, auto &&...fargs) {
+            f(val, std::forward<decltype(args)>(fargs)...);
           },
-          HomogenousTupleRange(t.base()), std::forward<Args>(args)...)
-          .get();
+          HomogenousTupleRange(t.base()),
+          detail::task_intent<std::decay_t<Args>>::call(
+              std::forward<Args>(args))...));
     } else {
 
       using table =
-          detail::forLoopTable<Tuple<Ts...>, std::decay_t<F>,
+          detail::forLoopTable<Tuple<Ts...> const, std::decay_t<F>,
                                std::make_index_sequence<sizeof...(Ts)>,
                                Args...>;
 
-      hpx::parallel::execution::bulk_async_execute(
+      hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
           policy.executor(),
-          [&](std::size_t i, Args &&...fargs) {
-            table::lookupTable[i](t, f, std::forward<Args>(fargs)...);
+          [&](std::size_t i, auto &&...fargs) {
+            table::lookupTable[i](t, f, std::forward<decltype(args)>(fargs)...);
           },
-          t.size(), std::forward<Args>(args)...)
-          .get();
+          t.size(),
+          detail::task_intent<std::decay_t<Args>>::call(
+              std::forward<Args>(args))...));
     }
   }
 }
@@ -69,13 +76,14 @@ void coforall(Range<T, BoundedType, Stridable> const &r, F &&f,
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
 
-  hpx::parallel::execution::bulk_async_execute(
+  hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
-      [&](std::size_t idx, Args &&...fargs) {
-        return f(r.orderToIndex(idx), std::forward<Args>(fargs)...);
+      [&](std::size_t idx, auto &&...fargs) {
+        return f(r.orderToIndex(idx), std::forward<decltype(args)>(fargs)...);
       },
-      r.size(), std::forward<Args>(args)...)
-      .get();
+      r.size(),
+      detail::task_intent<std::decay_t<Args>>::call(
+          std::forward<Args>(args))...));
 }
 
 //-----------------------------------------------------------------------------
@@ -87,13 +95,14 @@ void coforall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
 
-  hpx::parallel::execution::bulk_async_execute(
+  hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
-      [&](std::size_t idx, Args &&...fargs) {
-        return f(d.orderToIndex(idx), std::forward<Args>(fargs)...);
+      [&](std::size_t idx, auto &&...fargs) {
+        return f(d.orderToIndex(idx), std::forward<decltype(args)>(fargs)...);
       },
-      d.size(), std::forward<Args>(args)...)
-      .get();
+      d.size(),
+      detail::task_intent<std::decay_t<Args>>::call(
+          std::forward<Args>(args))...));
 }
 
 //-----------------------------------------------------------------------------
@@ -105,13 +114,14 @@ void coforall(AssocDomain<T> const &d, F &&f, Args &&...args) {
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
 
-  hpx::parallel::execution::bulk_async_execute(
+  hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
-      [&](std::size_t idx, Args &&...fargs) {
-        return f(d.orderToIndex(idx), std::forward<Args>(fargs)...);
+      [&](std::size_t idx, auto &&...fargs) {
+        return f(d.orderToIndex(idx), std::forward<decltype(args)>(fargs)...);
       },
-      d.size(), std::forward<Args>(args)...)
-      .get();
+      d.size(),
+      detail::task_intent<std::decay_t<Args>>::call(
+          std::forward<Args>(args))...));
 }
 
 //-----------------------------------------------------------------------------
@@ -123,13 +133,14 @@ void coforall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
 
-  hpx::parallel::execution::bulk_async_execute(
+  hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
-      [&](std::size_t idx, Args &&...fargs) {
-        return f(zr.orderToIndex(idx), std::forward<Args>(fargs)...);
+      [&](std::size_t idx, auto &&...fargs) {
+        return f(zr.orderToIndex(idx), std::forward<decltype(args)>(fargs)...);
       },
-      zr.size(), std::forward<Args>(args)...)
-      .get();
+      zr.size(),
+      detail::task_intent<std::decay_t<Args>>::call(
+          std::forward<Args>(args))...));
 }
 
 } // namespace chplx

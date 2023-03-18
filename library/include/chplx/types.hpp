@@ -8,11 +8,14 @@
 
 #include <chplx/nothing.hpp>
 
+#include <hpx/modules/type_support.hpp>
+
 #include <complex>
 #include <cstdint>
 #include <limits>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 namespace chplx {
 
@@ -64,8 +67,7 @@ class Domain;
 
 // An associative domain type is parameterized by idxType, the type of the
 // indices that it stores.
-template <typename IndexType>
-class AssocDomain;
+template <typename IndexType> class AssocDomain;
 
 //-----------------------------------------------------------------------------
 // Returns true if the type T is one the following types, of any width: int,
@@ -222,6 +224,17 @@ template <> struct MaxValue<bool> {
 };
 
 template <typename T> inline constexpr auto MaxValue_v = MaxValue<T>::value;
+
+//-----------------------------------------------------------------------------
+// Certain types need to be passed by reference to any spawned task. This
+// template is specialized for certain types to wrap them into
+// reference_wrappers.
+template <typename T> struct task_intent : hpx::type_identity<T> {
+
+  template <typename T_> static constexpr decltype(auto) call(T_ &&arg) noexcept {
+    return std::forward<T_>(arg);
+  }
+};
 
 } // namespace detail
 } // namespace chplx

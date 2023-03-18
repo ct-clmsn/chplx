@@ -15,9 +15,7 @@ int main() {
 
   std::atomic<int> count(0);
 
-  auto f = [&]() {
-    ++count;
-  };
+  auto f = [&]() { ++count; };
 
   chplx::cobegin(f, f, f, f);
 

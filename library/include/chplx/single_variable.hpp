@@ -6,9 +6,12 @@
 
 #pragma once
 
+#include <chplx/types.hpp>
+
 #include <hpx/assert.hpp>
 #include <hpx/modules/synchronization.hpp>
 
+#include <functional>
 #include <mutex>
 #include <utility>
 
@@ -39,7 +42,7 @@ public:
 
   // Blocks until the single variable is full. Read the value of the single
   // variable and and leave the variable full.
-  T readFF() {
+  T readFF() const {
     std::unique_lock<hpx::spinlock> l(mtx);
     if (!full) {
       // wait for variable to become full
@@ -70,6 +73,17 @@ private:
   T value{};
   bool full = false;
   mutable hpx::spinlock mtx{};
-  hpx::condition_variable_any cv_write{};
+  mutable hpx::condition_variable_any cv_write{};
+};
+
+//-----------------------------------------------------------------------------
+// Make sure single variables are always passed by reference to tasks
+template <typename T> struct detail::task_intent<single<T>> {
+
+  using type = std::reference_wrapper<T>;
+
+  static constexpr decltype(auto) call(single<T> &arg) noexcept {
+    return std::ref(arg);
+  }
 };
 } // namespace chplx
