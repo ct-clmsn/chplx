@@ -11,9 +11,10 @@
 
 namespace chplx {
 
-template <typename F> void begin(F &&f) {
+template <typename F, typename... Args> void begin(F &&f, Args &&...args) {
 
   hpx::parallel::execution::post(hpx::execution::par.executor(),
-                                 std::forward<F>(f));
+                                 std::forward<F>(f),
+                                 std::forward<Args>(args)...);
 }
 } // namespace chplx

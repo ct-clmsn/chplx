@@ -23,7 +23,7 @@ template <typename... Rs> void testCoforallLoopZip(Rs &&...rs) {
 
   hpx::mutex mtx;
 
-  chplx::coforallLoop(zip, [&](auto value) {
+  chplx::coforall(zip, [&](auto value) {
     std::lock_guard l(mtx);
     ++count;
     auto p = values.insert(value);

@@ -21,7 +21,7 @@ template <typename T> void testCoforallLoopDomain(chplx::AssocDomain<T> const &d
 
   std::size_t count = 0;
 
-  chplx::coforallLoop(d, [&](auto value) {
+  chplx::coforall(d, [&](auto value) {
     std::lock_guard l(mtx);
     ++count;
     auto p = values.insert(value);
