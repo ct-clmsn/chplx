@@ -17,22 +17,22 @@
 
 namespace chplx {
 
-template <typename T> class single {
+template <typename T> class Single {
 
 public:
   // construct empty
-  constexpr single() = default;
+  constexpr Single() = default;
 
   // construct full from given value
-  explicit single(T val) : value(std::move(val)), full(true) {}
+  explicit Single(T val) : value(std::move(val)), full(true) {}
 
   // inhibit moving/copying
-  single(single const &) = delete;
-  single(single &&) = delete;
-  single &operator=(single const &) = delete;
-  single &operator=(single &&) = delete;
+  Single(Single const &) = delete;
+  Single(Single &&) = delete;
+  Single &operator=(Single const &) = delete;
+  Single &operator=(Single &&) = delete;
 
-  ~single() = default;
+  ~Single() = default;
 
   // Returns true if the single variable is in the full state, false otherwise.
   bool isFull() const {
@@ -78,11 +78,11 @@ private:
 
 //-----------------------------------------------------------------------------
 // Make sure single variables are always passed by reference to tasks
-template <typename T> struct detail::task_intent<single<T>> {
+template <typename T> struct detail::task_intent<Single<T>> {
 
   using type = std::reference_wrapper<T>;
 
-  static constexpr decltype(auto) call(single<T> &arg) noexcept {
+  static constexpr decltype(auto) call(Single<T> &arg) noexcept {
     return std::ref(arg);
   }
 };

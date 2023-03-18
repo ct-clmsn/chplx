@@ -58,11 +58,11 @@ void testSyncVariable() {
 
   std::atomic<int> count(0);
 
-  chplx::sync<int> s(42);
+  chplx::Sync<int> s(42);
 
   hpx::latch l(5);
 
-  auto f = [&](chplx::sync<int>& arg) {
+  auto f = [&](chplx::Sync<int>& arg) {
     ++count;
     HPX_TEST_EQ(arg.readFF(), 42);
     l.count_down(1);
@@ -82,11 +82,11 @@ void testSingleVariable() {
 
   std::atomic<int> count(0);
 
-  chplx::single<int> s(42);
+  chplx::Single<int> s(42);
 
   hpx::latch l(5);
 
-  auto f = [&](chplx::single<int>& arg) {
+  auto f = [&](chplx::Single<int>& arg) {
     ++count;
     HPX_TEST_EQ(arg.readFF(), 42);
     l.count_down(1);

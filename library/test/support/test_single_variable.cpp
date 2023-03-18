@@ -34,11 +34,11 @@ constexpr int n = 7;
 
 void testSingleVariable() {
 
-  chplx::sync<int> count(n);
+  chplx::Sync<int> count(n);
   HPX_TEST(count.isFull());
   HPX_TEST_EQ(count.readXX(), n);
 
-  chplx::single<bool> release;
+  chplx::Single<bool> release;
   HPX_TEST(!release.isFull());
 
   chplx::coforall(chplx::Range(1, n), [&count, &release](int) {
