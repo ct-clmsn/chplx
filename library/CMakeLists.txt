@@ -56,6 +56,8 @@ set(chplx_library_headers
     include/chplx/adapt_range.hpp
     include/chplx/adapt_tuple.hpp
     include/chplx/assoc_domain.hpp
+    include/chplx/begin.hpp
+    include/chplx/cobegin.hpp
     include/chplx/coforall_loop.hpp
     include/chplx/domain.hpp
     include/chplx/for_loop.hpp
