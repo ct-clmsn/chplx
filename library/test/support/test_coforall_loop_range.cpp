@@ -19,22 +19,22 @@
 // helper for testing below
 namespace chplx {
 
-template <typename T> bool operator==(sync<T> const &lhs, sync<T> const &rhs) {
+template <typename T> bool operator==(Sync<T> const &lhs, Sync<T> const &rhs) {
   return lhs.readFF() == rhs.readFF();
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, sync<T> const& s) {
+std::ostream& operator<<(std::ostream& os, Sync<T> const& s) {
   return os << s.readFF();
 }
 
 template <typename T>
-bool operator==(single<T> const &lhs, single<T> const &rhs) {
+bool operator==(Single<T> const &lhs, Single<T> const &rhs) {
   return lhs.readFF() == rhs.readFF();
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, single<T> const& s) {
+std::ostream& operator<<(std::ostream& os, Single<T> const& s) {
   return os << s.readFF();
 }
 
@@ -126,10 +126,10 @@ int main() {
   testCoforallLoop();
   testCoforallLoop(42);
 
-  chplx::sync<int> sy(42);
+  chplx::Sync<int> sy(42);
   testCoforallLoop(sy);
 
-  chplx::single<int> si(42);
+  chplx::Single<int> si(42);
   testCoforallLoop(si);
 
   return hpx::util::report_errors();

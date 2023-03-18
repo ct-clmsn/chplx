@@ -16,22 +16,22 @@
 
 namespace chplx {
 
-template <typename T> class sync {
+template <typename T> class Sync {
 
 public:
   // construct empty
-  constexpr sync() = default;
+  constexpr Sync() = default;
 
   // construct full from given value
-  explicit sync(T val) : value(std::move(val)), full(true) {}
+  explicit Sync(T val) : value(std::move(val)), full(true) {}
 
   // inhibit moving/copying
-  sync(sync const &) = delete;
-  sync(sync &&) = delete;
-  sync &operator=(sync const &) = delete;
-  sync &operator=(sync &&) = delete;
+  Sync(Sync const &) = delete;
+  Sync(Sync &&) = delete;
+  Sync &operator=(Sync const &) = delete;
+  Sync &operator=(Sync &&) = delete;
 
-  ~sync() = default;
+  ~Sync() = default;
 
   // Returns true if the sync or single variable is in the full state, false
   // otherwise.
@@ -126,11 +126,11 @@ private:
 
 //-----------------------------------------------------------------------------
 // Make sure sync variables are always passed by reference to tasks
-template <typename T> struct detail::task_intent<sync<T>> {
+template <typename T> struct detail::task_intent<Sync<T>> {
 
   using type = std::reference_wrapper<T>;
 
-  static constexpr decltype(auto) call(sync<T> &arg) noexcept {
+  static constexpr decltype(auto) call(Sync<T> &arg) noexcept {
     return std::ref(arg);
   }
 };

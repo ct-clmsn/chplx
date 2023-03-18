@@ -20,11 +20,11 @@
 
 void testSyncVariable() {
 
-  chplx::sync<int> sync_sy;
+  chplx::Sync<int> sync_sy;
   HPX_TEST(!sync_sy.isFull());
   HPX_TEST_EQ(sync_sy.readXX(), int());
 
-  chplx::sync<bool> sync_done;
+  chplx::Sync<bool> sync_done;
   HPX_TEST(!sync_done.isFull());
   HPX_TEST_EQ(sync_sy.readXX(), bool());
 
