@@ -62,10 +62,12 @@ public:
 
   // Write the value of the single variable and leave the variable full
   void writeEF(T val) {
-    std::unique_lock<hpx::spinlock> l(mtx);
-    HPX_ASSERT(!full);
-    value = std::move(val);
-    full = true;
+    {
+      std::scoped_lock l(mtx);
+      HPX_ASSERT(!full);
+      value = std::move(val);
+      full = true;
+    }
     cv_write.notify_all();
   }
 
