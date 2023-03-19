@@ -44,14 +44,17 @@ public:
   // This method is non-blocking and the state of the sync variable is set to
   // empty when this method completes.
   void reset() {
-    std::scoped_lock l(mtx);
-    full = false;
+    {
+      std::scoped_lock l(mtx);
+      full = false;
+    }
     cv_read.notify_one();
   }
 
   // Blocks until the sync variable is full. Read the value of the sync variable
   // and set the variable to empty.
   T readFE() const {
+
     std::unique_lock<hpx::spinlock> l(mtx);
     while (!full) {
       // wait for variable to become full
@@ -60,6 +63,8 @@ public:
 
     T result = std::move(value);
     full = false;
+
+    l.unlock();
     cv_read.notify_one();
     return result;
   }
@@ -87,13 +92,15 @@ public:
   // Block until the sync variable is empty. Write the value of the sync
   // variable and leave the variable full
   void writeEF(T val) {
-    std::unique_lock<hpx::spinlock> l(mtx);
-    while (full) {
-      // wait for variable to become empty
-      cv_read.wait(l);
+    {
+      std::unique_lock<hpx::spinlock> l(mtx);
+      while (full) {
+        // wait for variable to become empty
+        cv_read.wait(l);
+      }
+      value = std::move(val);
+      full = true;
     }
-    value = std::move(val);
-    full = true;
     cv_write.notify_one();
   }
 
@@ -110,7 +117,7 @@ public:
 
   // Write the value of the sync variable and leave the variable full.
   void writeXF(T val) {
-    std::unique_lock<hpx::spinlock> l(mtx);
+    std::scoped_lock l(mtx);
     value = std::move(val);
   }
 
