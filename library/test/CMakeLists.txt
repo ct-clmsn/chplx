@@ -4,20 +4,19 @@
 # Distributed under the Boost Software License, Version 1.0. *(See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-add_chplx_pseudo_target(chplx_tests)
+add_chplx_pseudo_target(tests.unit.chplx_tests)
+add_chplx_pseudo_dependencies(tests tests.unit.chplx_tests)
 
 set(CHPLX_TEST_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # define a function to simplify adding tests
 function(chplx_unit_test target)
-  add_executable(${target} EXCLUDE_FROM_ALL "${target}.cpp")
-  target_link_libraries(${target} chplx_library HPX::wrap_main)
-  add_chplx_pseudo_dependencies(${target} chplx_library)
-  set_target_properties(${target} PROPERTIES FOLDER "Tests")
+  add_executable(${target}_test EXCLUDE_FROM_ALL "${target}.cpp")
+  target_link_libraries(${target}_test chplx_library HPX::wrap_main)
+  add_chplx_pseudo_dependencies(${target}_test chplx_library)
+  set_target_properties(${target}_test PROPERTIES FOLDER "Tests")
 
-  add_test(NAME ${target} COMMAND ${target})
-  set_tests_properties(${target} PROPERTIES TIMEOUT 60)
-  add_chplx_pseudo_dependencies(chplx_tests ${target})
+  add_chplx_unit_test("chplx_tests" ${target} ${ARGV} TIMEOUT 60)
 endfunction()
 
-add_subdirectory(support)
+add_subdirectory(unit)

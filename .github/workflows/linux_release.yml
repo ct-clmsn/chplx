@@ -45,7 +45,11 @@ jobs:
               https://github.com/fmtlib/fmt.git
           mkdir -p build
           cd build
-          cmake ../fmt  -GNinja
+          cmake ../fmt -GNinja \
+              -DCMAKE_CXX_FLAGS=-stdlib=libc++ \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_CXX_STANDARD=20 \
+              -DFMT_TEST=OFF
           ninja install
     - name: Configure
       shell: bash
@@ -60,7 +64,7 @@ jobs:
       shell: bash
       run: |
           cmake --build build --target all
-          cmake --build build --target chplx_tests
+          cmake --build build --target tests.unit.chplx_tests
     - name: Test
       shell: bash
       run: |

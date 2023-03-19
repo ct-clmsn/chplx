@@ -381,6 +381,7 @@ constexpr T round_up(T value, T base, S stride) noexcept {
 
 //-----------------------------------------------------------------------------
 template <typename T, BoundedRangeType BoundedType, bool Stridable>
+  requires(std::is_integral_v<T> || std::is_enum_v<T>)
 struct Range {
 
   using idxType = T;
@@ -533,7 +534,7 @@ struct Range {
   [[nodiscard]] constexpr auto size() const noexcept {
 
     HPX_ASSERT(isBounded());
-    if (highBound() <= lowBound()) {
+    if (highBound() < lowBound()) {
       return static_cast<decltype(stride_.getStride())>(0);
     }
     auto stride = std::abs(stride_.getStride());
@@ -681,25 +682,40 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-template <typename T> Range(T, T) -> Range<T, BoundedRangeType::bounded, false>;
+template <typename T1, typename T2>
+  requires(std::is_integral_v<T1> && std::is_integral_v<T2>)
+Range(T1, T2, BoundsCategoryType = BoundsCategoryType::Closed)
+    -> Range<std::common_type_t<T1, T2>, BoundedRangeType::bounded, false>;
+
+template <typename T1, typename T2, typename T3>
+  requires(std::is_integral_v<T1> && std::is_integral_v<T2> &&
+           std::is_integral_v<T3>)
+Range(T1, T2, T3, BoundsCategoryType = BoundsCategoryType::Closed)
+    -> Range<std::common_type_t<T1, T2, T3>, BoundedRangeType::bounded, true>;
 
 template <typename T>
-Range(T, T, T) -> Range<T, BoundedRangeType::bounded, true>;
-
-template <typename T>
-Range(T, RangeInit = RangeInit::noValue)
+  requires(std::is_integral_v<T>)
+Range(T, RangeInit = RangeInit::noValue,
+      BoundsCategoryType = BoundsCategoryType::Closed)
     -> Range<T, BoundedRangeType::boundedLow, false>;
 
 template <typename T>
-Range(RangeInit, T) -> Range<T, BoundedRangeType::boundedHigh, false>;
+  requires(std::is_integral_v<T>)
+Range(RangeInit, T, BoundsCategoryType = BoundsCategoryType::Closed)
+    -> Range<T, BoundedRangeType::boundedHigh, false>;
 
-template <typename T>
-Range(T, RangeInit, T) -> Range<T, BoundedRangeType::boundedLow, true>;
+template <typename T1, typename T2>
+  requires(std::is_integral_v<T1> && std::is_integral_v<T2>)
+Range(T1, RangeInit, T2, BoundsCategoryType = BoundsCategoryType::Closed)
+    -> Range<std::common_type_t<T1, T2>, BoundedRangeType::boundedLow, true>;
 
-template <typename T>
-Range(RangeInit, T, T) -> Range<T, BoundedRangeType::boundedHigh, true>;
+template <typename T1, typename T2>
+  requires(std::is_integral_v<T1> && std::is_integral_v<T2>)
+Range(RangeInit, T1, T2, BoundsCategoryType = BoundsCategoryType::Closed)
+    -> Range<std::common_type_t<T1, T2>, BoundedRangeType::boundedHigh, true>;
 
-template <typename T>
+template <typename T, BoundsCategoryType = BoundsCategoryType::Closed>
+  requires(std::is_integral_v<T>)
 Range(RangeInit, RangeInit, T) -> Range<T, BoundedRangeType::boundedNone, true>;
 
 //-----------------------------------------------------------------------------

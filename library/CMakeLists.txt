@@ -14,7 +14,9 @@ set(CHPLX_BUILD_VERSION 0)
 set(CHPLX_DEVELOPER ON)
 set(CHPLX_OFFICIAL_RELEASE 0)
 
-set(CHPLX_VERSION ${CHPLX_MAJOR_VERSION}.${CHPLX_MINOR_VERSION}.${CHPLX_PATCH_VERSION}.${CHPLX_BUILD_VERSION})
+set(CHPLX_VERSION
+    ${CHPLX_MAJOR_VERSION}.${CHPLX_MINOR_VERSION}.${CHPLX_PATCH_VERSION}.${CHPLX_BUILD_VERSION}
+)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -33,6 +35,7 @@ add_compile_definitions(
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 include(CHPLX_Utils)
 
+# ##############################################################################
 # build options
 if(WIN32)
   set(CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT OFF)
@@ -41,20 +44,40 @@ else()
 endif()
 
 chplx_option(
-  CHPLX_WITH_PSEUDO_DEPENDENCIES BOOL
+  CHPLX_WITH_EXAMPLES BOOL "Enable building examples (default: ON)" ON ADVANCED
+)
+
+chplx_option(
+  CHPLX_WITH_TESTS BOOL "Enable building tests (default: ON)" ON ADVANCED
+)
+
+chplx_option(
+  CHPLX_WITH_PSEUDO_DEPENDENCIES
+  BOOL
   "Enable build pseudo target (default: ${CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT})"
-  ${CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT} ADVANCED
+  ${CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT}
+  ADVANCED
+)
+
+chplx_option(
+  CHPLX_WITH_PARALLEL_TESTS_BIND_NONE
+  BOOL
+  "Pass --hpx:bind=none to tests that may run in parallel (cmake -j flag) (default: OFF)"
+  OFF
+  CATEGORY "Debugging"
+  ADVANCED
 )
 
 # create library target
 set(chplx_library_detail_headers include/chplx/detail/iterator_generator.hpp)
-source_group("Header Files/chplx/detail" FILES
-    ${chplx_library_detail_headers})
+source_group("Header Files/chplx/detail" FILES ${chplx_library_detail_headers})
 
 set(chplx_library_headers
+    include/chplx/adapt_array.hpp
     include/chplx/adapt_domain.hpp
     include/chplx/adapt_range.hpp
     include/chplx/adapt_tuple.hpp
+    include/chplx/array.hpp
     include/chplx/assoc_domain.hpp
     include/chplx/atomic.hpp
     include/chplx/begin.hpp
@@ -63,31 +86,35 @@ set(chplx_library_headers
     include/chplx/domain.hpp
     include/chplx/for_loop.hpp
     include/chplx/forall_loop.hpp
+    include/chplx/locale.hpp
     include/chplx/nothing.hpp
-    include/chplx/single_variable.hpp
-    include/chplx/sync_variable.hpp
     include/chplx/range.hpp
+    include/chplx/single_variable.hpp
+    include/chplx/string.hpp
+    include/chplx/sync_variable.hpp
     include/chplx/tuple.hpp
     include/chplx/types.hpp
     include/chplx/version.hpp
-    include/chplx/zip.hpp)
-source_group("Header Files/chplx" FILES
-    ${chplx_library_headers})
+    include/chplx/zip.hpp
+)
+source_group("Header Files/chplx" FILES ${chplx_library_headers})
 
-set(chplx_library_sources src/version.cpp)
-set(chplx_library_headers
-    ${chplx_library_detail_headers}
-    ${chplx_library_headers}
-    include/chplx.hpp)
+set(chplx_library_sources src/locale.cpp src/version.cpp)
 
-add_library(chplx_library STATIC
-    ${chplx_library_sources}
-    ${chplx_library_headers})
+set(chplx_library_headers ${chplx_library_detail_headers}
+                          ${chplx_library_headers} include/chplx.hpp
+)
+
+add_library(
+  chplx_library STATIC ${chplx_library_sources} ${chplx_library_headers}
+)
 
 target_link_libraries(chplx_library PUBLIC fmt::fmt-header-only HPX::hpx)
 
 target_include_directories(chplx_library PUBLIC include)
-target_include_directories(chplx_library PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+target_include_directories(
+  chplx_library PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
+)
 
 # generate version file
 configure_file(
@@ -95,8 +122,28 @@ configure_file(
   "${CMAKE_CURRENT_BINARY_DIR}/include/chplx/config/version.hpp" @ONLY
 )
 
-enable_testing()
-include(CTest)
+find_package(PythonInterp)
 
-add_subdirectory(examples)
-add_subdirectory(test)
+if(NOT PYTHONINTERP_FOUND)
+  chplx_warn(
+    "A python interpreter could not be found. The test suite can not be run automatically."
+  )
+endif()
+
+# Configure chplxrun.py
+configure_file(
+  "${PROJECT_SOURCE_DIR}/cmake/templates/chplxrun.py.in"
+  "${PROJECT_BINARY_DIR}/bin/chplxrun.py" @ONLY
+)
+
+if(CHPLX_WITH_TESTS)
+  add_chplx_pseudo_target(tests)
+  enable_testing()
+  include(CTest)
+  add_subdirectory(test)
+endif()
+
+if(CHPLX_WITH_EXAMPLES)
+  add_chplx_pseudo_target(examples)
+  add_subdirectory(examples)
+endif()
