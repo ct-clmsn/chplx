@@ -13,58 +13,71 @@
 #include <string>
 #include <tuple>
 
-std::atomic<int> called(0);
+//-----------------------------------------------------------------------------
+// helper for testing below
+namespace chplx {
 
-template <typename T> void testForallLoopHomogenousTuple(T val) {
+template <typename T> bool operator==(Sync<T> const &lhs, Sync<T> const &rhs) {
+  return lhs.readFF() == rhs.readFF();
+}
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, Sync<T> const &s) {
+  return os << s.readFF();
+}
+
+template <typename T>
+bool operator==(Single<T> const &lhs, Single<T> const &rhs) {
+  return lhs.readFF() == rhs.readFF();
+}
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, Single<T> const &s) {
+  return os << s.readFF();
+}
+
+} // namespace chplx
+
+template <typename Tuple, typename T, typename T1>
+void testForallLoopHomogenousTuple(Tuple t, T value, T1 &pass) {
+
+  std::atomic<int> called(0);
 
   {
-    chplx::Tuple<> t;
-
     called = 0;
-    chplx::forLoop(t, [&](auto value) {
+    chplx::forall(t, [&](auto elem) {
       ++called;
-      HPX_TEST_EQ(value, val);
+      HPX_TEST_EQ(elem, value);
     });
 
     HPX_TEST_EQ(called.load(), t.size());
   }
 
   {
-    chplx::Tuple<T> t{val};
-
     called = 0;
-    chplx::forall(t, [&](auto value) {
-      ++called;
-      HPX_TEST_EQ(value, val);
-    });
+    chplx::forall(
+        t,
+        [&](auto elem, auto &&val) {
+          ++called;
+          HPX_TEST_EQ(elem, value);
+          HPX_TEST_EQ(pass, val);
+        },
+        pass);
 
     HPX_TEST_EQ(called.load(), t.size());
   }
+}
 
-  {
-    chplx::Tuple<T, T> t{val, val};
+template <typename T, typename T1>
+void testForallLoopHomogenousTuples(T val, T1 &&pass) {
 
-    called = 0;
-    chplx::forall(t, [&](auto value) {
-      ++called;
-      HPX_TEST_EQ(value, val);
-    });
-
-    HPX_TEST_EQ(called.load(), t.size());
-  }
-
-  {
-    chplx::Tuple<T, T, T, T, T, T, T, T, T, T> t{val, val, val, val, val,
-                                                 val, val, val, val, val};
-
-    called = 0;
-    chplx::forall(t, [&](auto value) {
-      ++called;
-      HPX_TEST_EQ(value, val);
-    });
-
-    HPX_TEST_EQ(called.load(), t.size());
-  }
+  testForallLoopHomogenousTuple(chplx::Tuple<>(), val, pass);
+  testForallLoopHomogenousTuple(chplx::Tuple<T>(val), val, pass);
+  testForallLoopHomogenousTuple(chplx::Tuple<T, T>(val, val), val, pass);
+  testForallLoopHomogenousTuple(
+      chplx::Tuple<T, T, T, T, T, T, T, T, T, T>(val, val, val, val, val, val,
+                                                 val, val, val, val),
+      val, pass);
 }
 
 template <std::size_t N, typename... Ts, std::size_t... Is>
@@ -83,37 +96,79 @@ int testValues(std::set<std::variant<Ts...>> const &values,
   return count;
 }
 
-template <typename... Ts> void testForallLoopTuple(Ts... ts) {
+template <typename T, typename... Ts>
+void testForallLoopTuple(T &&value, Ts... ts) {
 
   chplx::Tuple<Ts...> t(ts...);
 
-  int called = 0;
+  {
+    int called = 0;
 
-  std::set<std::variant<Ts...>> values;
-  hpx::mutex mtx;
+    std::set<std::variant<Ts...>> values;
+    hpx::mutex mtx;
 
-  called = 0;
-  chplx::coforall(t, [&](auto value) {
-    std::lock_guard l(mtx);
-    ++called;
-    auto p = values.insert(value);
-    HPX_TEST(p.second);
-  });
+    called = 0;
+    chplx::forall(t, [&](auto value) {
+      std::lock_guard l(mtx);
+      ++called;
+      auto p = values.insert(value);
+      HPX_TEST(p.second);
+    });
 
-  HPX_TEST_EQ(testValues(values, t, std::make_index_sequence<sizeof...(Ts)>()),
-              t.size());
-  HPX_TEST_EQ(called, t.size());
+    HPX_TEST_EQ(
+        testValues(values, t, std::make_index_sequence<sizeof...(Ts)>()),
+        t.size());
+    HPX_TEST_EQ(called, t.size());
+  }
+
+  {
+    int called = 0;
+
+    std::set<std::variant<Ts...>> values;
+    hpx::mutex mtx;
+
+    called = 0;
+    chplx::forall(
+        t,
+        [&](auto elem, auto &&val) {
+          HPX_TEST_EQ(value, val);
+          std::lock_guard l(mtx);
+          ++called;
+          auto p = values.insert(elem);
+          HPX_TEST(p.second);
+        },
+        value);
+
+    HPX_TEST_EQ(
+        testValues(values, t, std::make_index_sequence<sizeof...(Ts)>()),
+        t.size());
+    HPX_TEST_EQ(called, t.size());
+  }
 }
 
 int main() {
 
-  testForallLoopHomogenousTuple<int>(42);
-  testForallLoopHomogenousTuple<double>(42.0);
-  testForallLoopHomogenousTuple<std::string>("42.0");
+  {
+    testForallLoopHomogenousTuples(42, 42);
+    testForallLoopHomogenousTuples(42.0, 42.0);
+    testForallLoopHomogenousTuples(std::string("42"), std::string("42"));
 
-  testForallLoopTuple(42);
-  testForallLoopTuple(42, 43L);
-  testForallLoopTuple(42, 43L, std::string("42"));
+    chplx::Sync<int> sy(42);
+    testForallLoopHomogenousTuples(42, sy);
+    testForallLoopHomogenousTuples(42.0, sy);
+    testForallLoopHomogenousTuples(std::string("42"), sy);
+  }
+
+  {
+    testForallLoopTuple(10, 42);
+    testForallLoopTuple(10.0, 42, 43L);
+    testForallLoopTuple(std::string("10"), 42, 43L, std::string("42"));
+
+    chplx::Sync<int> sy(42);
+    testForallLoopTuple(sy, 42);
+    testForallLoopTuple(sy, 42, 43L);
+    testForallLoopTuple(sy, 42, 43L, std::string("42"));
+  }
 
   return hpx::util::report_errors();
 }

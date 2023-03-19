@@ -14,6 +14,32 @@
 #include <mutex>
 #include <set>
 
+//-----------------------------------------------------------------------------
+// helper for testing below
+namespace chplx {
+
+template <typename T> bool operator==(Sync<T> const &lhs, Sync<T> const &rhs) {
+  return lhs.readFF() == rhs.readFF();
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, Sync<T> const& s) {
+  return os << s.readFF();
+}
+
+template <typename T>
+bool operator==(Single<T> const &lhs, Single<T> const &rhs) {
+  return lhs.readFF() == rhs.readFF();
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, Single<T> const& s) {
+  return os << s.readFF();
+}
+
+} // namespace chplx
+
+//-----------------------------------------------------------------------------
 template <typename T, chplx::BoundedRangeType BoundedType, bool Stridable>
 void testForallLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
 
@@ -40,22 +66,69 @@ void testForallLoopRange(chplx::Range<T, BoundedType, Stridable> r) {
   HPX_TEST_EQ(count, values.size());
 }
 
+template <typename T, chplx::BoundedRangeType BoundedType, bool Stridable,
+          typename Arg>
+void testForallLoopRange(chplx::Range<T, BoundedType, Stridable> r, Arg &&arg) {
+
+  std::size_t count = 0;
+
+  std::set<T> values;
+  hpx::mutex mtx;
+
+  chplx::forall(
+      r,
+      [&](auto value, auto &&farg) {
+        HPX_TEST_EQ(arg, farg);
+        std::lock_guard l(mtx);
+        ++count;
+        auto p = values.insert(value);
+        HPX_TEST(p.second);
+      },
+      arg);
+
+  HPX_TEST_EQ(count, static_cast<std::size_t>(r.size()));
+  count = 0;
+
+  for (auto val : r.these()) {
+    ++count;
+    HPX_TEST(values.contains(val));
+  }
+
+  HPX_TEST_EQ(count, values.size());
+}
+
+template <typename... Args> void testForallLoopRanges(Args &&...args) {
+
+  testForallLoopRange(chplx::Range(0, 10), args...);
+  testForallLoopRange(chplx::BoundedRange<int, true>(0, 10, 2), args...);
+  testForallLoopRange(chplx::Range(0, 10, chplx::BoundsCategoryType::Open),
+                      args...);
+  testForallLoopRange(
+      chplx::BoundedRange<int, true>(0, 10, 2, chplx::BoundsCategoryType::Open),
+      args...);
+
+  testForallLoopRange(chplx::Range(1, 0), args...);
+
+  testForallLoopRange(chplx::BoundedRange<int, true>(1, 9, 2), args...);
+  testForallLoopRange(
+      chplx::BoundedRange<int, true>(1, 9, 2, chplx::BoundsCategoryType::Open),
+      args...);
+
+  testForallLoopRange(by(chplx::BoundedRange<int, true>(1, 10), -1), args...);
+  testForallLoopRange(by(chplx::BoundedRange<int, true>(1, 10), -2),
+                      std::forward<Args>(args)...);
+}
+
 int main() {
 
-  testForallLoopRange(chplx::Range(0, 10));
-  testForallLoopRange(chplx::BoundedRange<int, true>(0, 10, 2));
-  testForallLoopRange(chplx::Range(0, 10, chplx::BoundsCategoryType::Open));
-  testForallLoopRange(chplx::BoundedRange<int, true>(
-      0, 10, 2, chplx::BoundsCategoryType::Open));
+  testForallLoopRanges();
+  testForallLoopRanges(42);
 
-  testForallLoopRange(chplx::Range(1, 0));
+  chplx::Sync<int> sy(42);
+  testForallLoopRanges(sy);
 
-  testForallLoopRange(chplx::BoundedRange<int, true>(1, 9, 2));
-  testForallLoopRange(
-      chplx::BoundedRange<int, true>(1, 9, 2, chplx::BoundsCategoryType::Open));
-
-  testForallLoopRange(by(chplx::BoundedRange<int, true>(1, 10), -1));
-  testForallLoopRange(by(chplx::BoundedRange<int, true>(1, 10), -2));
+  chplx::Single<int> si(42);
+  testForallLoopRanges(si);
 
   return hpx::util::report_errors();
 }
