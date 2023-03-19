@@ -8,13 +8,16 @@
 #include <chplx/domain.hpp>
 #include <chplx/locale.hpp>
 #include <chplx/range.hpp>
+#include <chplx/setenv.h>
 
+#include <hpx/hpx_init.hpp>
 #include <hpx/modules/actions.hpp>
 #include <hpx/modules/naming_base.hpp>
 #include <hpx/modules/runtime_distributed.hpp>
 #include <hpx/modules/threadmanager.hpp>
 #include <hpx/modules/topology.hpp>
 
+#include <cstdlib>
 #include <thread>
 #include <vector>
 
@@ -108,7 +111,7 @@ std::int64_t numLocales = -1;
 Domain<1> LocaleSpace;
 
 // The array of locales on which the program is executing.
-Array<Domain<1>, locale> Locales;
+Array<locale, Domain<1>> Locales;
 
 // For any given task, this variable resolves to the locale value on which the
 // task is running.
@@ -129,22 +132,91 @@ void startup() {
   Locales = Array(LocaleSpace, std::move(locales));
 
   here = locale(hpx::get_locality_id());
+
+  // set Chapel environment variables for compatibility
+  setenv("CHPL_RT_NUM_THREADS_PER_LOCALE",
+         std::to_string(hpx::get_num_worker_threads()).c_str(), 1);
 }
 
 // De-initialize data structures related to locale's at runtime shutdown
 void shutdown() {
 
-  Locales = Array<Domain<1>, locale>();
+  Locales = Array<locale, Domain<1>>();
   LocaleSpace = Domain<1>();
   numLocales = -1;
 }
 
+// Allow applications to add configuration settings if HPX_MAIN is set
+std::vector<std::string> (*prev_user_main_config_function)(
+    std::vector<std::string> const &) = nullptr;
+
+std::vector<std::string>
+user_main_config(std::vector<std::string> const &config) {
+  std::vector<std::string> cfg(config);
+
+  if (char const *env = getenv("CHPL_RT_NUM_THREADS_PER_LOCALE");
+      env != nullptr) {
+    // set number of threads if Chapel environment variable requests it
+    std::string envstr(env);
+    if (envstr.compare("MAX_PHYSICAL") == 0) {
+      cfg.emplace_back(hpx::util::format("--hpx:threads=cores", env));
+    } else if (envstr.compare("MAX_LOGICAL") == 0) {
+      cfg.emplace_back(hpx::util::format("--hpx:threads=all", env));
+    } else {
+      cfg.emplace_back(hpx::util::format("--hpx:threads={}", env));
+    }
+  }
+
+  if (char const *env = getenv("CHPL_RT_CALL_STACK_SIZE"); env != nullptr) {
+    char *strend = nullptr;
+    auto value = std::strtoll(env, &strend, 0);
+    switch (*strend) {
+    default:
+    case '\0': // no suffix
+      break;
+    case 'g': // giga suffix
+    case 'G':
+      value *= 1024;
+      [[fallthrough]];
+    case 'm': // mega suffix
+    case 'M':
+      value *= 1024;
+      [[fallthrough]];
+    case 'k': // kilo suffix
+    case 'K':
+      value *= 1024;
+      break;
+    }
+    cfg.emplace_back(hpx::util::format("hpx.stacks.small_size={}", value));
+  }
+
+  // If there was another config function registered, call it
+  if (prev_user_main_config_function)
+    return prev_user_main_config_function(cfg);
+
+  return cfg;
+}
+
 struct register_startup {
   register_startup() {
+    // Make sure our configuration information is injected into the startup
+    // procedure
+    prev_user_main_config_function = hpx_startup::user_main_config_function;
+    hpx_startup::user_main_config_function = &user_main_config;
+
+    // register functionality to be executed before hpx_main runs
     hpx::register_pre_startup_function(&startup);
     hpx::register_shutdown_function(&shutdown);
   }
 };
 
 register_startup init;
+
+// Returns a reference to a singleton array storing this locale.
+Array<chplx::locale, Domain<1>> const &
+singleLocaleSingleton(chplx::locale here) {
+
+  static Array locale_singleton{Domain<1>{}, {here}};
+  return locale_singleton;
+}
 } // namespace chplx

@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <chplx/array.hpp>
-#include <chplx/domain.hpp>
 #include <chplx/string.hpp>
 #include <chplx/types.hpp>
 
@@ -109,11 +107,15 @@ extern Domain<1> LocaleSpace;
 // values (except during development). Over-subscription should instead be
 // handled by creating an aggregate of locale values and referring to it in
 // place of the Locales array.
-extern Array<Domain<1>, locale> Locales;
+extern Array<chplx::locale, Domain<1>> Locales;
 
 // For any given task, this variable resolves to the locale value on which the
 // task is running.
 extern locale here;
+
+// Returns a reference to a singleton array storing this locale.
+Array<chplx::locale, Domain<1>> const &
+singleLocaleSingleton(chplx::locale here);
 
 //-----------------------------------------------------------------------------
 namespace detail {

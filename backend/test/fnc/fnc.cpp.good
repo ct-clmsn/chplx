@@ -5,36 +5,33 @@
 
 #include "fnc.hpp"
 
-int hpx_main(int argc, char* argv[])
-{
-#line 1 "../../backend/test/fnc.chpl"
-    auto alpha = [&]() -> void {
-#line 2 "../../backend/test/fnc.chpl"
-        std::int64_t a;
-    };
-#line 5 "../../backend/test/fnc.chpl"
-    alpha();
-#line 7 "../../backend/test/fnc.chpl"
-    auto delta = [&](std::int64_t c) -> std::int64_t {
-#line 8 "../../backend/test/fnc.chpl"
-        return c;
-    };
-#line 11 "../../backend/test/fnc.chpl"
-    auto beta = [&](std::int64_t b) -> std::int64_t {
-#line 12 "../../backend/test/fnc.chpl"
-        return b + delta(b);
-    };
-#line 15 "../../backend/test/fnc.chpl"
-    std::int64_t c = 1;
-#line 16 "../../backend/test/fnc.chpl"
-    beta(c);
-#line 17 "../../backend/test/fnc.chpl"
-    c = beta(c);
+int hpx_main(int argc, char *argv[]) {
 
-    return hpx::finalize();
+#line 1 "fnc.chpl"
+  auto alpha = [&]() {
+#line 2 "fnc.chpl"
+    std::int64_t a;
+  };
+#line 5 "fnc.chpl"
+  alpha();
+#line 7 "fnc.chpl"
+  auto delta = [&](std::int64_t c) -> std::int64_t {
+#line 8 "fnc.chpl"
+    return c;
+  };
+#line 11 "fnc.chpl"
+  auto beta = [&](std::int64_t b) -> std::int64_t {
+#line 12 "fnc.chpl"
+    return b + delta(b);
+  };
+#line 15 "fnc.chpl"
+  std::int64_t c = 1;
+#line 16 "fnc.chpl"
+  beta(c);
+#line 17 "fnc.chpl"
+  c = beta(c);
+
+  return hpx::finalize();
 }
 
-int main(int argc, char* argv[])
-{
-    return hpx::init(argc, argv);
-}
+int main(int argc, char *argv[]) { return hpx::init(argc, argv); }

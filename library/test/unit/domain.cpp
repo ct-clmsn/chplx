@@ -32,6 +32,9 @@ void testDomain(chplx::Domain<1, T, Stridable> const &d) {
   HPX_TEST_EQ(d.stride(), chplx::Tuple(d.dim(0).stride()));
   HPX_TEST_EQ(d.alignment(), chplx::Tuple(d.dim(0).alignment()));
 
+  HPX_TEST(d.contains(d.lowBound()));
+  HPX_TEST(d.contains(d));
+
   HPX_TEST(d.isBounded());
   HPX_TEST(d.isRectangular());
   HPX_TEST(!d.isIrregular());
@@ -63,6 +66,10 @@ void testDomain(chplx::Domain<2, T, Stridable> const &d) {
   HPX_TEST_EQ(d.stride(), chplx::Tuple(d.dim(0).stride(), d.dim(1).stride()));
   HPX_TEST_EQ(d.alignment(),
               chplx::Tuple(d.dim(0).alignment(), d.dim(1).alignment()));
+
+  HPX_TEST(d.contains(d.lowBound()));
+  HPX_TEST(d.contains(d));
+
   HPX_TEST(d.isRectangular());
   HPX_TEST(!d.isIrregular());
   HPX_TEST(!d.isAssociative());

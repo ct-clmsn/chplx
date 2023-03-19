@@ -594,7 +594,7 @@ struct Range {
   // Returns true if the range's represented sequence contains ind, false
   // otherwise. It is an error to invoke contains if the represented sequence is
   // not defined.
-  [[nodiscard]] constexpr bool contains(idxType ind) {
+  [[nodiscard]] constexpr bool contains(idxType ind) const noexcept {
     HPX_ASSERT(hasLowBound() && hasHighBound());
     return low() <= ind && ind <= high();
   }
@@ -603,7 +603,7 @@ struct Range {
   // otherwise.
   template <typename T1, BoundedRangeType Bounded1, bool Stridable1>
   [[nodiscard]] constexpr bool
-  contains(Range<T1, Bounded1, Stridable1> const &other) {
+  contains(Range<T1, Bounded1, Stridable1> const &other) const noexcept {
     HPX_ASSERT(hasLowBound() && hasHighBound());
     return low() <= other.low() && other.high() <= high();
   }
@@ -676,9 +676,10 @@ private:
   operator!=(Range<T1, BoundedType1, Stridable1> const &lhs,
              Range<T2, BoundedType2, Stridable2> const &rhs) noexcept;
 
-  [[no_unique_address]] detail::Bounds<T, BoundedType> bounds_;
-  [[no_unique_address]] detail::Stridable<T, BoundedType, Stridable> stride_;
-  [[no_unique_address]] detail::Alignment<T, BoundedType, Stridable> alignment_;
+  [[no_unique_address]] detail::Bounds<T, BoundedType> bounds_{};
+  [[no_unique_address]] detail::Stridable<T, BoundedType, Stridable> stride_{};
+  [[no_unique_address]] detail::Alignment<T, BoundedType, Stridable>
+      alignment_{};
 };
 
 //-----------------------------------------------------------------------------

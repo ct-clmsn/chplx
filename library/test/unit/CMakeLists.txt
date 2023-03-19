@@ -35,6 +35,7 @@ set(tests
     single_variable
     sync_variable
     tuple
+    write_array
     zip
 )
 

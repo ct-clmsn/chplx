@@ -180,12 +180,12 @@ int main(int argc, char ** argv) {
       }
       ast->traverse(pbv);
       if(chplx::util::compilerDebug) {
-         std::cout << "[ProgramTreelBuildingVisitor] Exit" << std::endl;
+         std::cout << "[ProgramTreeBuildingVisitor] Exit" << std::endl;
       }
 
       std::ofstream ofs(ofilePath);
 
-      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, sbv.configVars, program, br, ofilePath, chplFilePth.filename(), ofs};
+      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, sbv.configVars, program, br, ofilePath, chplFilePth.filename().string(), ofs};
       cgv.indent += 1;
       cgv.visit();
 

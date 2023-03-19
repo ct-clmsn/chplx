@@ -15,7 +15,7 @@ add_chplx_pseudo_target_folder(
 
 add_chplx_pseudo_dependencies(tests.unit tests.unit.backend_dir)
 
-set(tests arr expr fn fnc forall)
+set(tests arr cond expr fn fnc forall)
 
 foreach(test ${tests})
   chplx_compile(${test} SOURCE ${test}.chpl)

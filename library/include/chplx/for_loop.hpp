@@ -96,8 +96,8 @@ void forLoop(detail::ZipRange<Rs...> const &zr, F &&f) {
 
 //-----------------------------------------------------------------------------
 // for loop for array iteration
-template <typename Domain, typename T, typename F>
-void forLoop(Array<Domain, T> const &a, F &&f) {
+template <typename T, typename Domain, typename F>
+void forLoop(Array<T, Domain> const &a, F &&f) {
 
   for (auto const &e : a.these()) {
     f(e);

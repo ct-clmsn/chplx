@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <chplx/detail/iterator_generator.hpp>
+
 #include <chplx/adapt_array.hpp>
 #include <chplx/adapt_domain.hpp>
 #include <chplx/adapt_range.hpp>
@@ -16,7 +18,7 @@
 #include <chplx/begin.hpp>
 #include <chplx/cobegin.hpp>
 #include <chplx/coforall_loop.hpp>
-#include <chplx/detail/iterator_generator.hpp>
+#include <chplx/dmap.hpp>
 #include <chplx/domain.hpp>
 #include <chplx/for_loop.hpp>
 #include <chplx/forall_loop.hpp>
@@ -28,5 +30,12 @@
 #include <chplx/sync_variable.hpp>
 #include <chplx/tuple.hpp>
 #include <chplx/types.hpp>
+#include <chplx/util.hpp>
 #include <chplx/version.hpp>
+#include <chplx/write.hpp>
 #include <chplx/zip.hpp>
+
+#include <chplx/domains/base_rectangular.hpp>
+#include <chplx/domains/default_rectangular.hpp>
+
+#include <chplx/setenv.h>

@@ -19,9 +19,9 @@ namespace chplx {
 
 //-----------------------------------------------------------------------------
 // 1D iteration support
-template <typename Domain, typename T>
+template <typename T, typename Domain>
 hpx::generator<T> iterate(
-    detail::IteratorGenerator<Array<Domain, T>> a) noexcept {
+    detail::IteratorGenerator<Array<T, Domain>> a) noexcept {
 
   auto size = a.size;
   for (auto ilo = a.first; size-- != 0; ++ilo) {
@@ -30,8 +30,8 @@ hpx::generator<T> iterate(
 }
 
 //-----------------------------------------------------------------------------
-template <typename Domain, typename T>
-decltype(auto) iterate(Array<Domain, T> const &a) noexcept {
+template <typename T, typename Domain>
+decltype(auto) iterate(Array<T, Domain> const &a) noexcept {
 
   return iterate(detail::IteratorGenerator(a));
 }

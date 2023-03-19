@@ -8,6 +8,8 @@
 
 #include <chplx/adapt_domain.hpp>
 #include <chplx/detail/iterator_generator.hpp>
+#include <chplx/dmap.hpp>
+#include <chplx/domains/default_rectangular.hpp>
 #include <chplx/range.hpp>
 #include <chplx/tuple.hpp>
 #include <chplx/types.hpp>
@@ -15,6 +17,7 @@
 #include <hpx/assert.hpp>
 #include <hpx/config.hpp>
 #include <hpx/generator.hpp>
+#include <hpx/modules/memory.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -23,121 +26,17 @@
 namespace chplx {
 
 //-----------------------------------------------------------------------------
-namespace detail {
-
-template <std::size_t N, typename T> struct generate_tuple_type;
-
-template <typename T> struct generate_tuple_type<1, T> {
-  using type = Tuple<T>;
-};
-
-template <typename T> struct generate_tuple_type<2, T> {
-  using type = Tuple<T, T>;
-};
-
-template <typename T> struct generate_tuple_type<3, T> {
-  using type = Tuple<T, T, T>;
-};
-
-template <typename T> struct generate_tuple_type<4, T> {
-  using type = Tuple<T, T, T, T>;
-};
-
-template <typename T> struct generate_tuple_type<5, T> {
-  using type = Tuple<T, T, T, T, T>;
-};
-
-template <typename T> struct generate_tuple_type<6, T> {
-  using type = Tuple<T, T, T, T, T, T>;
-};
-
-template <int N, typename T>
-using generate_tuple_type_t = typename generate_tuple_type<N, T>::type;
-
-//-----------------------------------------------------------------------------
-template <int Ord> struct IndexOrder {
-
-  template <typename Domain, typename IndexType>
-  static constexpr std::int64_t call(Domain const &d, IndexType idx) noexcept {
-
-    auto const &r = std::get<Ord>(d.dims());
-    std::int64_t order = IndexOrder<Ord - 1>::call(d, idx);
-    return order * r.size() + r.indexOrder(std::get<Ord>(idx));
-  }
-};
-
-template <> struct IndexOrder<0> {
-
-  template <typename Domain, typename IndexType>
-  static constexpr std::int64_t call(Domain const &d, IndexType idx) noexcept {
-
-    return std::get<0>(d.dims()).indexOrder(std::get<0>(idx));
-  }
-};
-
-//-----------------------------------------------------------------------------
-template <int Ord> struct OrderToIndex {
-
-  template <typename... Ts, typename T0, std::size_t... Is>
-  static constexpr auto flatten(T0 idxN, Tuple<Ts...> const &idx,
-                                std::index_sequence<Is...>) noexcept {
-
-    return Tuple<T0, std::decay_t<Ts>...>(idxN, std::get<Is>(idx)...);
-  };
-
-  template <int Rank, typename Domain>
-  static constexpr std::size_t size(Domain const &d) noexcept {
-
-    return std::get<Rank>(d.dims()).size() *
-           OrderToIndex<Ord - 1>::template size<Rank - 1>(d);
-  }
-
-  template <int Rank, typename Domain>
-  static constexpr auto call(Domain const &d, std::int64_t order) noexcept {
-
-    constexpr int N = Domain::Rank - Ord - 1;
-
-    auto size = OrderToIndex::size<Rank>(d);
-    auto this_order = order / size;
-    auto idx0 = std::get<N>(d.dims()).orderToIndex(this_order);
-    auto idx = OrderToIndex<Ord - 1>::template call<Rank>(
-        d, order - this_order * size);
-
-    return flatten(idx0, idx, std::make_index_sequence<Ord>());
-  }
-};
-
-template <> struct OrderToIndex<0> {
-
-  template <int, typename Domain>
-  static constexpr std::size_t size(Domain const &d) noexcept {
-
-    return 1;
-  }
-
-  template <int, typename Domain>
-  static constexpr auto call(Domain const &d, std::int64_t order) noexcept {
-
-    constexpr int N = Domain::Rank - 1;
-
-    auto const &r = std::get<N>(d.dims());
-    return Tuple<typename Domain::idxType>(r.orderToIndex(order % r.size()));
-  }
-};
-} // namespace detail
-
-//-----------------------------------------------------------------------------
 template <int N, typename IndexType, bool Stridable> class Domain {
 
   static_assert(N > 0, "the domains rank should be positive");
 
   using rangeType = BoundedRange<IndexType, Stridable>;
-  using indicesType = detail::generate_tuple_type_t<N, rangeType>;
 
 public:
   static constexpr int Rank = N;
 
   using indexType = detail::generate_tuple_type_t<N, IndexType>;
+  using indicesType = detail::generate_tuple_type_t<N, rangeType>;
 
   // Return the type of the indices of this domain
   using idxType = IndexType;
@@ -152,7 +51,7 @@ public:
 
   // Return the number of indices in this domain as an int.
   [[nodiscard]] constexpr std::int64_t size() const noexcept {
-    return reduce(shape(), std::multiplies<>(), 1);
+    return dom->size();
   }
 
   // Return the number of indices in this domain as the specified type
@@ -164,7 +63,7 @@ public:
 
   // Returns true if this is a fully bounded domain, false otherwise.
   [[nodiscard]] constexpr bool isBounded() const noexcept {
-    return reduce(detail::lift(indices, [](auto &&r) { return r.isBounded(); }),
+    return reduce(detail::lift(dims(), [](auto &&r) { return r.isBounded(); }),
                   std::logical_and<>(), true);
   }
 
@@ -173,71 +72,69 @@ public:
 
   // Return a tuple of ranges describing the bounds of a rectangular domain. For
   // a sparse domain, return the bounds of the parent domain.
-  constexpr indicesType &dims() noexcept { return indices; }
-  constexpr indicesType const &dims() const noexcept { return indices; }
+  constexpr indicesType dims() noexcept { return dom->dims(); }
+  constexpr indicesType const &dims() const noexcept { return dom->dims(); }
 
   // Return a range representing the boundary of this domain in a particular
   // dimension.
-  [[nodiscard]] constexpr auto dim(int i) const noexcept { return indices[i]; }
+  [[nodiscard]] constexpr auto dim(int i) const noexcept { return dom->dim(i); }
 
   // Return a tuple of int values representing the size of each dimension.
   [[nodiscard]] constexpr decltype(auto) shape() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.size(); });
+    return detail::lift(dims(), [](auto &&r) { return r.size(); });
   }
 
   // Returns the domain's 'pure' low bound.
   [[nodiscard]] constexpr decltype(auto) lowBound() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.lowBound(); });
+    return dom->low();
   }
 
   // Return the lowest index represented by a rectangular domain.
   [[nodiscard]] constexpr decltype(auto) low() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.low(); });
+    return dom->alignedLow();
   }
 
   // Return the first index in this domain.
   [[nodiscard]] constexpr decltype(auto) first() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.first(); });
+    return dom->first();
   }
 
   // Returns the domain's 'pure' high bound.
   [[nodiscard]] constexpr decltype(auto) highBound() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.highBound(); });
+    return dom->high();
   }
 
   // Return the highest index represented by a rectangular domain.
   [[nodiscard]] constexpr decltype(auto) high() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.high(); });
+    return dom->alignedHigh();
   }
 
   // Return the last index in this domain.
   [[nodiscard]] constexpr decltype(auto) last() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.last(); });
+    return dom->last();
   }
 
   // Return the stride of the indices in this domain.
   [[nodiscard]] constexpr decltype(auto) stride() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.stride(); });
+    return dom->stride();
   }
 
   // Return the alignment of the indices in this domain
   [[nodiscard]] constexpr decltype(auto) alignment() const noexcept {
-    return detail::lift(indices, [](auto &&r) { return r.alignment(); });
+    return dom->alignment();
   }
 
-  // Return the alignment of the indices in this domain
+  // Return whether the given index is contained in this domain
   [[nodiscard]] constexpr decltype(auto)
   contains(indexType const &idx) const noexcept {
-    return detail::lift(indices, idx,
-                        [](auto &&r, idxType i) { return r.contains(i); });
+    return dom->member(idx);
   }
 
-  // Return the alignment of the indices in this domain
+  // Return whether the index of the given domain is contained in this domain
   template <typename IndexType1, bool Stridable1>
   [[nodiscard]] constexpr decltype(auto)
   contains(Domain<N, IndexType1, Stridable1> const &other) const noexcept {
-    return detail::lift(indices, other.dims(),
-                        [](auto &&r1, auto &&r2) { return r1.contains(r2); });
+    return dom->member(other.lowBound()) && dom->member(other.highBound());
   }
 
   // Return true if the domain has no indices.
@@ -266,30 +163,39 @@ public:
   // orderToIndex.
   [[nodiscard]] constexpr std::int64_t
   indexOrder(indexType idx) const noexcept {
-
-    return detail::IndexOrder<N - 1>::call(*this, idx);
+    return dom->indexOrder(idx);
   }
 
   // Returns the zero-based ord-th element of this domain's represented
   // sequence. The orderToIndex procedure is the reverse of indexOrder.
   [[nodiscard]] constexpr indexType
   orderToIndex(std::int64_t order) const noexcept {
-
-    return detail::OrderToIndex<N - 1>::template call<N - 1>(*this, order);
+    return dom->orderToIndex(order);
   }
 
-  explicit constexpr Domain(indicesType const &idx) noexcept : indices(idx) {}
+  using baseDomain = domains::BaseRectangularDomain<N, IndexType, Stridable>;
 
-  constexpr Domain() noexcept = default;
+  constexpr Domain() noexcept
+      : dom(static_cast<baseDomain *>(
+            chplx::defaultDist<Domain>().newRectangularDom(indicesType()))) {}
+
+  explicit constexpr Domain(indicesType const &idx,
+                            dmapBase<N, IndexType, Stridable> const &dm =
+                                chplx::defaultDist<Domain>())
+      : dom(static_cast<baseDomain *>(dm.newRectangularDom(idx))) {}
 
   template <typename R, typename... Rs>
     requires(isRangeType<R> && (isRangeType<Rs> && ...) &&
              (N == sizeof...(Rs) + 1))
-  constexpr Domain(R const &r, Rs const &...rs) noexcept
-      : indices(rangeType(r), rangeType(rs)...) {}
+  explicit constexpr Domain(R const &r, Rs const &...rs) noexcept
+      : Domain(indicesType(rangeType(r), rangeType(rs)...)) {}
+
+  template <typename T, typename... Ts> auto *buildArray(Ts &&...ts) {
+    return dom->template dsiBuildArray<T>(std::forward<Ts>(ts)...);
+  }
 
 private:
-  indicesType indices{};
+  hpx::intrusive_ptr<baseDomain> dom;
 };
 
 //-----------------------------------------------------------------------------
@@ -308,6 +214,18 @@ inline constexpr bool common_stridable_v =
     (std::decay_t<Rs>::stridable() || ...);
 
 } // namespace detail
+
+template <typename R, typename... Rs>
+  requires(isRangeType<R> && (isRangeType<Rs> && ...))
+Domain(Tuple<R, Rs...>) -> Domain<static_cast<int>(sizeof...(Rs) + 1),
+                                  detail::common_range_index_t<R, Rs...>,
+                                  detail::common_stridable_v<R, Rs...>>;
+
+template <typename R, typename... Rs, int N, typename IndexType, bool Stridable>
+  requires(isRangeType<R> && (isRangeType<Rs> && ...) && sizeof...(Rs) + 1 == N)
+Domain(Tuple<R, Rs...>, dmapBase<N, IndexType, Stridable>) -> Domain<
+    N, std::common_type_t<IndexType, detail::common_range_index_t<R, Rs...>>,
+    Stridable || detail::common_stridable_v<R, Rs...>>;
 
 template <typename R, typename... Rs>
   requires(isRangeType<R> && (isRangeType<Rs> && ...))

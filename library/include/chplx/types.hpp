@@ -11,6 +11,7 @@
 #include <hpx/modules/type_support.hpp>
 
 #include <complex>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -51,7 +52,7 @@ enum class BoundsCategoryType {
 // in Chapel.
 template <typename T /*= std::int64_t*/,
           BoundedRangeType BoundedType /*= BoundedRangeType::bounded*/,
-          bool Stridable/* = false*/>
+          bool Stridable /* = false*/>
   requires(std::is_integral_v<T> || std::is_enum_v<T>)
 struct Range;
 
@@ -70,9 +71,9 @@ class Domain;
 // indices that it stores.
 template <typename IndexType> class AssocDomain;
 
-// An array is a map from a domain’s indices to a collection of variables of
+// An array is a map from a domain's indices to a collection of variables of
 // homogeneous type.
-template <typename Domain, typename T> class Array;
+template <typename T, typename Domain> class Array;
 
 // A locale is a Chapel abstraction for a piece of a target architecture that
 // has processing and storage capabilities.
@@ -241,10 +242,46 @@ template <typename T> inline constexpr auto MaxValue_v = MaxValue<T>::value;
 template <typename T> struct task_intent : hpx::type_identity<T> {
 
   template <typename T_>
-  static constexpr decltype(auto) call(T_ &&arg) noexcept {
+  static constexpr T_&& call(T_ &&arg) noexcept {
     return std::forward<T_>(arg);
   }
 };
 
+} // namespace detail
+
+// Supporting types for domain maps
+template <typename Derived> struct GlobalDistribution;
+template <typename Derived> struct GlobalDomain;
+
+namespace detail {
+
+template <std::size_t N, typename T> struct generate_tuple_type;
+
+template <typename T> struct generate_tuple_type<1, T> {
+  using type = Tuple<T>;
+};
+
+template <typename T> struct generate_tuple_type<2, T> {
+  using type = Tuple<T, T>;
+};
+
+template <typename T> struct generate_tuple_type<3, T> {
+  using type = Tuple<T, T, T>;
+};
+
+template <typename T> struct generate_tuple_type<4, T> {
+  using type = Tuple<T, T, T, T>;
+};
+
+template <typename T> struct generate_tuple_type<5, T> {
+  using type = Tuple<T, T, T, T, T>;
+};
+
+template <typename T> struct generate_tuple_type<6, T> {
+  using type = Tuple<T, T, T, T, T, T>;
+};
+
+template <int N, typename T>
+using generate_tuple_type_t = typename generate_tuple_type<N, T>::type;
 } // namespace detail
 } // namespace chplx
