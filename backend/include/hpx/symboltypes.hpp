@@ -101,6 +101,7 @@ struct record_kind;
 struct class_kind;
 struct array_kind;
 struct associative_kind;
+struct tuple_kind;
 struct kind_node_type;
 struct kind_node_term_type {};
 
@@ -126,6 +127,7 @@ using kind_types = std::variant<
    std::shared_ptr<class_kind>,
    std::shared_ptr<array_kind>,
    std::shared_ptr<associative_kind>,
+   std::shared_ptr<tuple_kind>,
    std::shared_ptr<kind_node_type>,
    kind_node_term_type
 >;
@@ -162,6 +164,10 @@ struct associative_kind {
    kind_types key_kind;
    kind_types value_kind;
 }; 
+
+struct tuple_kind {
+   std::vector<kind_types> kinds;
+};
 
 struct SymbolBase {
     std::optional<kind_types> kind;
@@ -218,11 +224,13 @@ struct SymbolTable {
    SymbolTable();
    std::size_t pushScope();
    void popScope();
+   void addEntry(const std::size_t lutid, std::string const& ident, Symbol s);
    void addEntry(std::string const& ident, Symbol s);
-   std::optional<Symbol> findImpl(SymbolTableNode& stref, std::string const& ident);
+   bool findImpl(SymbolTableNode& stref, std::string const& ident, std::unordered_map<std::string, Symbol>::iterator & ret);
    std::optional<Symbol> find(std::string const& ident);
-   std::optional<Symbol> findImpl(SymbolTableNode& stref, const std::size_t idx, std::string const& ident);
    std::optional<Symbol> find(const std::size_t idx, std::string const& ident);
+   void find(std::string const& ident, std::optional<Symbol> & s);
+   void find(const std::size_t idx, std::string const& ident, std::optional<Symbol> & s);
    void dumpImpl(SymbolTableNode const& node);
    void dump();
 
@@ -258,7 +266,7 @@ struct SymbolTable {
 };
 
 struct funcbase_kind {
-   SymbolTable symbolTable;
+   std::uint64_t lutId;
    std::optional<std::string> symbolTableSignature;
    std::vector<Symbol> args; 
    std::optional<kind_types> retKind;

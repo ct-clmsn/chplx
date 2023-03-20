@@ -68,6 +68,15 @@ struct ArrayDeclarationLiteralExpression : public VariableDeclarationExpression 
    void emit(std::ostream & os) const;
 };
 
+struct TupleDeclarationExpression : public VariableDeclarationExpression {
+   void emit(std::ostream & os) const;
+};
+
+struct TupleDeclarationLiteralExpression : public VariableDeclarationExpression {
+   std::vector<uast::AstNode const*> literalValues;
+   void emit(std::ostream & os) const;
+};
+
 struct ArithmeticOpExpression : public ExpressionBase {
    std::string op;
    uast::AstNode const *ast;
@@ -101,6 +110,8 @@ using Statement = std::variant<
    ScalarDeclarationLiteralExpression,
    ArrayDeclarationExpression,
    ArrayDeclarationLiteralExpression,
+   TupleDeclarationExpression,
+   TupleDeclarationLiteralExpression,
    LiteralExpression,
    VariableExpression,
    std::shared_ptr<UnaryOpExpression>,
@@ -154,6 +165,7 @@ struct FunctionCallExpression : public ExpressionBase {
    Symbol symbol;
    std::vector<Statement> arguments;
    std::string chplLine;
+   SymbolTable & symbolTable;
 
    void emit(std::ostream & os) const;
 };

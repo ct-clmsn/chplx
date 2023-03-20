@@ -9,6 +9,8 @@
 
 #include "hpx/symboltypes.hpp"
 
+#include <cassert>
+
 using namespace chplx::util;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
@@ -16,7 +18,7 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
 SymbolTable::SymbolTable() : symbolTableCount(0), symbolTableRef(), lut(), parentSymbolTableId(0) {
    symbolTableRoot =
       std::make_shared<SymbolTableNode>(
-         std::move(SymbolTableNode{0, {}, {}, {}})
+         SymbolTableNode{0, {}, {}, {}}
       );
    symbolTableRef = symbolTableRoot;
    lut.push_back(symbolTableRef);
@@ -27,10 +29,10 @@ std::size_t SymbolTable::pushScope() {
    // new scopes are appended to
    // the end of the symboltable
    //
-   symbolTableRef->children.emplace_back(
-      std::make_shared<SymbolTableNode>(std::move(SymbolTableNode{symbolTableCount, {}, {}, symbolTableRef}))
+   symbolTableRef->children.push_back(
+      std::make_shared<SymbolTableNode>(SymbolTableNode{symbolTableCount, {}, {}, symbolTableRef})
    );
-   symbolTableCount+=1;
+   ++symbolTableCount;
 
    symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(symbolTableRef->children.back());
    lut.push_back(symbolTableRef);
@@ -44,56 +46,77 @@ void SymbolTable::popScope() {
    }
 }
 
-void SymbolTable::addEntry(std::string const& ident, Symbol s) {
-   symbolTableRef->entries.insert(std::make_pair(ident, std::move(s)));
+void SymbolTable::addEntry(const std::size_t lutid, std::string const& ident, Symbol s) {
+   assert( 0 <= lutid && lutid < lut.size());
+   lut[lutid]->entries.insert(std::make_pair(ident, s));
 }
 
-std::optional<Symbol> SymbolTable::findImpl(SymbolTableNode& stref, std::string const& ident) {
-   auto entry = stref.entries.find(ident);
-   if(entry != std::end(stref.entries)) {
-      return entry->second;
+void SymbolTable::addEntry(std::string const& ident, Symbol s) {
+   symbolTableRef->entries.insert(std::make_pair(ident, s));
+}
+
+bool SymbolTable::findImpl(SymbolTableNode& stref, std::string const& ident, std::unordered_map<std::string, Symbol>::iterator & ret) {
+   ret = stref.entries.find(ident);
+   if(ret != std::end(stref.entries)) {
+      return true;
    }
 
-   if(!stref.parent) {
-      return {};
+   if(!stref.parent && 0 == stref.parent->index()) {
+      return false;
    }
 
-   return findImpl(*std::get<std::shared_ptr<SymbolTableNode>>(*stref.parent), ident);
+   return findImpl(*std::get<std::shared_ptr<SymbolTableNode>>(*(stref.parent)), ident, ret);
 }
 
 std::optional<Symbol> SymbolTable::find(std::string const& ident) {
    SymbolTableNode& stref = *symbolTableRef; 
-   return findImpl(stref, ident);
-}
+   std::unordered_map<std::string, Symbol>::iterator entry = stref.entries.find(ident);
+   if(entry != std::end(stref.entries)) {
+      return entry->second;
+   } 
 
-std::optional<Symbol> SymbolTable::findImpl(SymbolTableNode& stref, const std::size_t idx, std::string const& ident) {
-   if(stref.entries.size() < 1) {
-      return {};
-   }
-
-   if(idx == stref.id) {
-      auto entry = stref.entries.find(ident);
-      if(entry != std::end(stref.entries)) {
-         return {entry->second};
-      }
-
-      return {};
-   }
-
-   for(auto & child : stref.children) {
-      auto chld =
-         findImpl(*std::get<std::shared_ptr<SymbolTableNode>>(child), idx, ident);
-      if(chld) {
-         return chld;
-      }
-   }
-
+   const bool found = findImpl(stref, ident, entry);
+   if(found) { return entry->second; }
    return {};
 }
 
+void SymbolTable::find(std::string const& ident, std::optional<Symbol> &s) {
+   SymbolTableNode& stref = *symbolTableRef; 
+   std::unordered_map<std::string, Symbol>::iterator entry = stref.entries.find(ident);
+   if(entry != std::end(stref.entries)) {
+      s = entry->second;
+   } 
+
+   const bool found = findImpl(stref, ident, entry);
+   if(found) { s = entry->second; }
+}
+
 std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const& ident) {
+   assert(idx >= 0 && idx < lut.size());
    SymbolTableNode & stref = *lut[idx];
-   return findImpl(stref, idx, ident);
+
+   if(stref.entries.size() < 1) { return {}; }
+   std::unordered_map<std::string, Symbol>::iterator entry = stref.entries.find(ident);
+
+   if(entry != std::end(stref.entries)) {
+      return entry->second;
+   } 
+
+   const bool found = findImpl(stref, ident, entry);
+   if(found) { return entry->second; }
+   return {};
+}
+
+void SymbolTable::find(const std::size_t idx, std::string const& ident, std::optional<Symbol> & s) {
+   assert(idx < lut.size());
+   SymbolTableNode & stref = *lut[idx];
+   std::unordered_map<std::string, Symbol>::iterator entry = stref.entries.find(ident);
+   if(entry != std::end(stref.entries)) {
+      s = entry->second;
+   } 
+
+   const bool found = findImpl(stref, ident, entry);
+   if(found) { s = entry->second; }
 }
 
 void SymbolTable::dumpImpl(SymbolTableNode const& node) {

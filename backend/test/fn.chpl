@@ -13,9 +13,12 @@ inlinecxx("std::cout << \"h\" << std::endl;");
 inlinecxx("std::cout << \"{}\" << std::endl;", "h");
 */
 
-proc print(i : real) {
-   //inlinecxx("std::cout << {} << std::endl;", i);
-   //inlinecxx("std::cout << \"a\" << std::endl;");
+//var i = 1;
+//inlinecxx("std::cout << {} << std::endl;", i);
+
+proc print() {
+   var i : int;
+//   inlinecxx("std::cout << \"a\" << std::endl;");
 }
 
 /*

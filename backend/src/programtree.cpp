@@ -81,7 +81,6 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
 
 
    os << "std::vector<";
-
    std::visit(ScalarDeclarationExpressionVisitor{os}, akref->kind);
 
    int range_size = 1;
@@ -237,7 +236,6 @@ struct ArgumentVisitor {
        std::visit(*this, e.kind);
     }
     void operator()(VariableExpression const& e) {
-       assert(e.sym.identifier);
        os << (*(e.sym.identifier));
     }
 
@@ -248,17 +246,19 @@ struct ArgumentVisitor {
 void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
       const std::size_t args_sz = arguments.size();
+
       if(0 < args_sz) {
          ArgumentVisitor av{nullptr, std::stringstream{}};
          std::visit(av, arguments[0]);
          std::string cxx_fmt_str{av.os.str()};
 
          fmt::dynamic_format_arg_store<fmt::format_context> store;
-
          for(std::size_t i = 1; i < args_sz; ++i) {
             Statement const& stmt = arguments[i];
             ArgumentVisitor v{nullptr, std::stringstream{}};
-            v.os << ',';
+            if(i != 1) {
+               v.os << ',';
+            }
             std::visit(v, stmt);
             store.push_back(v.os.str());
          }
@@ -268,7 +268,8 @@ void FunctionCallExpression::emit(std::ostream & os) const {
    }
 }
 
-void FunctionDeclarationExpression::emit(std::ostream & os) const {}
+void FunctionDeclarationExpression::emit(std::ostream & os) const {
+}
 
 void BinaryOpExpression::emit(std::ostream & os) const {
 /*

@@ -17,6 +17,7 @@
 
 #include "symboltypes.hpp"
 
+#include <functional>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -57,7 +58,8 @@ struct SymbolBuildingVisitor {
 
    std::string chplFilePathStr;
 
-   std::optional<Symbol> sym;
+   std::vector<Symbol> symstack;
+   std::optional< std::reference_wrapper<Symbol> > sym;
    std::optional<uast::AstNode const*> symnode;
 
    SymbolTable symbolTable;

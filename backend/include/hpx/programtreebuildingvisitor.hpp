@@ -47,7 +47,7 @@ struct ProgramTreeBuildingVisitor {
    SymbolTable & symbolTable;
    ProgramTree const& program;
 
-   std::vector<Statement> & curStmts;
+   std::vector< std::vector<Statement> * > curStmts;
    std::optional<uast::AstTag> prevTag;
 };
 
