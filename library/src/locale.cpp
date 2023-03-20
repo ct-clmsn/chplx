@@ -32,7 +32,7 @@ std::int64_t get_locale_numpus(bool logical, bool accessible) {
   }
 
   // number of cores/pus available on node this locality is running on
-  auto &topo = hpx::threads::create_topology();
+  auto const &topo = hpx::threads::create_topology();
   if (logical) {
     return topo.get_number_of_pus();
   }

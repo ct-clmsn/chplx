@@ -12,6 +12,7 @@
 #include <chplx/locale.hpp>
 #include <chplx/types.hpp>
 
+#include <cstddef>
 #include <utility>
 #include <vector>
 

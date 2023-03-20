@@ -21,6 +21,7 @@
 #include <hpx/execution.hpp>
 #include <hpx/future.hpp>
 
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 
@@ -28,15 +29,17 @@ namespace chplx {
 
 //-----------------------------------------------------------------------------
 // coforall loop for tuples
-template <typename... Ts, typename F, typename... Args>
-void coforall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
+namespace detail {
+template <typename Tuple, typename F, typename... Args>
+void coforall(Tuple &t, F &&f, Args &&...args) {
 
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
 
-  if constexpr (sizeof...(Ts) != 0) {
-    if constexpr (Tuple<Ts...>::isHomogenous()) {
+  using base_tuple = typename Tuple::base_type;
+  if constexpr (std::tuple_size_v<base_tuple> != 0) {
+    if constexpr (Tuple::isHomogenous()) {
 
       hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
           policy.executor(),
@@ -48,10 +51,9 @@ void coforall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
               std::forward<Args>(args))...));
     } else {
 
-      using table =
-          detail::forLoopTable<Tuple<Ts...> const, std::decay_t<F>,
-                               std::make_index_sequence<sizeof...(Ts)>,
-                               Args...>;
+      using table = detail::forLoopTable<
+          Tuple, std::decay_t<F>,
+          std::make_index_sequence<std::tuple_size_v<base_tuple>>, Args...>;
 
       hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
           policy.executor(),
@@ -63,6 +65,19 @@ void coforall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
               std::forward<Args>(args))...));
     }
   }
+}
+} // namespace detail
+
+template <typename... Ts, typename F, typename... Args>
+void coforall(Tuple<Ts...> &t, F &&f, Args &&...args) {
+
+  detail::coforall(t, std::forward<F>(f), std::forward<Args>(args)...);
+}
+
+template <typename... Ts, typename F, typename... Args>
+void coforall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
+
+  detail::coforall(t, std::forward<F>(f), std::forward<Args>(args)...);
 }
 
 //-----------------------------------------------------------------------------
@@ -139,6 +154,25 @@ void coforall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
         return f(zr.orderToIndex(idx), std::forward<decltype(args)>(fargs)...);
       },
       zr.size(),
+      detail::task_intent<std::decay_t<Args>>::call(
+          std::forward<Args>(args))...));
+}
+
+//-----------------------------------------------------------------------------
+// forall loop for aray iteration
+template <typename Domain, typename T, typename F, typename... Args>
+void coforall(Array<Domain, T> const &a, F &&f, Args &&...args) {
+
+  auto policy = hpx::parallel::util::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
+  hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
+      policy.executor(),
+      [&](std::size_t idx, auto &&...fargs) {
+        return f(a.orderToIndex(idx), std::forward<decltype(args)>(fargs)...);
+      },
+      a.size(),
       detail::task_intent<std::decay_t<Args>>::call(
           std::forward<Args>(args))...));
 }

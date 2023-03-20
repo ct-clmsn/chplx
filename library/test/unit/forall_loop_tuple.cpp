@@ -12,6 +12,7 @@
 #include <atomic>
 #include <string>
 #include <tuple>
+#include <variant>
 
 //-----------------------------------------------------------------------------
 // helper for testing below
@@ -41,11 +42,10 @@ std::ostream &operator<<(std::ostream &os, Single<T> const &s) {
 template <typename Tuple, typename T, typename T1>
 void testForallLoopHomogenousTuple(Tuple t, T value, T1 &pass) {
 
-  std::atomic<int> called(0);
+  std::atomic<int> called = 0;
 
   {
-    called = 0;
-    chplx::forall(t, [&](auto elem) {
+    chplx::forall(const_cast<Tuple const &>(t), [&](auto elem) {
       ++called;
       HPX_TEST_EQ(elem, value);
     });
@@ -61,6 +61,24 @@ void testForallLoopHomogenousTuple(Tuple t, T value, T1 &pass) {
           ++called;
           HPX_TEST_EQ(elem, value);
           HPX_TEST_EQ(pass, val);
+        },
+        pass);
+
+    HPX_TEST_EQ(called.load(), t.size());
+  }
+
+  // modify tuple elements
+  {
+    called = 0;
+    chplx::forall(
+        t,
+        [&](auto &elem, auto &&val) {
+          ++called;
+          HPX_TEST_EQ(elem, value);
+          HPX_TEST_EQ(pass, val);
+
+          elem = T();
+          HPX_TEST_EQ(elem, T());
         },
         pass);
 
@@ -108,10 +126,10 @@ void testForallLoopTuple(T &&value, Ts... ts) {
     hpx::mutex mtx;
 
     called = 0;
-    chplx::forall(t, [&](auto value) {
+    chplx::forall(const_cast<chplx::Tuple<Ts...> const &>(t), [&](auto val) {
       std::lock_guard l(mtx);
       ++called;
-      auto p = values.insert(value);
+      auto p = values.insert(val);
       HPX_TEST(p.second);
     });
 
@@ -143,6 +161,35 @@ void testForallLoopTuple(T &&value, Ts... ts) {
         testValues(values, t, std::make_index_sequence<sizeof...(Ts)>()),
         t.size());
     HPX_TEST_EQ(called, t.size());
+  }
+
+  // modify tuple elements
+  {
+    int called = 0;
+
+    std::set<std::variant<Ts...>> values;
+    hpx::mutex mtx;
+
+    called = 0;
+    chplx::forall(
+        t,
+        [&]<typename Elem>(Elem &elem, auto &&val) {
+          HPX_TEST_EQ(value, val);
+          std::lock_guard l(mtx);
+          ++called;
+          auto p = values.insert(elem);
+          HPX_TEST(p.second);
+
+          using elem_type = std::remove_reference_t<Elem>;
+          elem = elem_type();
+        },
+        value);
+
+    chplx::Tuple<Ts...> expected(ts...);
+    HPX_TEST_EQ(
+        testValues(values, expected, std::make_index_sequence<sizeof...(Ts)>()),
+        t.size());
+    HPX_TEST_EQ(called, expected.size());
   }
 }
 

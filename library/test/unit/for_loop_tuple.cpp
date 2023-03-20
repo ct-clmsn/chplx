@@ -10,18 +10,17 @@
 #include <hpx/modules/testing.hpp>
 
 #include <atomic>
+#include <cstddef>
 #include <string>
 #include <tuple>
 
-std::atomic<int> called(0);
+template <typename Tuple, typename T>
+void testForLoopHomogenousTuple(Tuple t, T val) {
 
-template <typename T> void testForLoopHomogenousTuple(T val) {
+  std::atomic<int> called = 0;
 
   {
-    chplx::Tuple<> t;
-
-    called = 0;
-    chplx::forLoop(t, [&](auto value) {
+    chplx::forLoop(const_cast<Tuple const &>(t), [&](auto value) {
       ++called;
       HPX_TEST_EQ(value, val);
     });
@@ -29,42 +28,31 @@ template <typename T> void testForLoopHomogenousTuple(T val) {
     HPX_TEST_EQ(called.load(), t.size());
   }
 
+  // modify tuple elements
   {
-    chplx::Tuple<T> t{val};
-
     called = 0;
-    chplx::forLoop(t, [&](auto value) {
+
+    chplx::forLoop(t, [&]<typename Elem>(Elem &value) {
       ++called;
       HPX_TEST_EQ(value, val);
+
+      value = Elem();
+      HPX_TEST_EQ(value, Elem());
     });
 
     HPX_TEST_EQ(called.load(), t.size());
   }
+}
 
-  {
-    chplx::Tuple<T, T> t{val, val};
+template <typename T> void testForLoopHomogenousTuples(T val) {
 
-    called = 0;
-    chplx::forLoop(t, [&](auto value) {
-      ++called;
-      HPX_TEST_EQ(value, val);
-    });
-
-    HPX_TEST_EQ(called.load(), t.size());
-  }
-
-  {
-    chplx::Tuple<T, T, T, T, T, T, T, T, T, T> t{val, val, val, val, val,
-                                                 val, val, val, val, val};
-
-    called = 0;
-    chplx::forLoop(t, [&](auto value) {
-      ++called;
-      HPX_TEST_EQ(value, val);
-    });
-
-    HPX_TEST_EQ(called.load(), t.size());
-  }
+  testForLoopHomogenousTuple(chplx::Tuple<>(), val);
+  testForLoopHomogenousTuple(chplx::Tuple<T>(val), val);
+  testForLoopHomogenousTuple(chplx::Tuple<T, T>(val, val), val);
+  testForLoopHomogenousTuple(
+      chplx::Tuple<T, T, T, T, T, T, T, T, T, T>(val, val, val, val, val, val,
+                                                 val, val, val, val),
+      val);
 }
 
 template <std::size_t N, typename... Ts, std::size_t... Is>
@@ -87,29 +75,58 @@ template <typename... Ts> void testForLoopTuple(Ts... ts) {
 
   chplx::Tuple<Ts...> t(ts...);
 
-  int called = 0;
+  {
+    int called = 0;
 
-  std::set<std::variant<Ts...>> values;
-  hpx::mutex mtx;
+    std::set<std::variant<Ts...>> values;
+    hpx::mutex mtx;
 
-  called = 0;
-  chplx::coforall(t, [&](auto value) {
-    std::lock_guard l(mtx);
-    ++called;
-    auto p = values.insert(value);
-    HPX_TEST(p.second);
-  });
+    called = 0;
+    chplx::coforall(const_cast<chplx::Tuple<Ts...> const &>(t),
+                    [&](auto value) {
+                      std::lock_guard l(mtx);
+                      ++called;
+                      auto p = values.insert(value);
+                      HPX_TEST(p.second);
+                    });
 
-  HPX_TEST_EQ(testValues(values, t, std::make_index_sequence<sizeof...(Ts)>()),
-              t.size());
-  HPX_TEST_EQ(called, t.size());
+    HPX_TEST_EQ(
+        testValues(values, t, std::make_index_sequence<sizeof...(Ts)>()),
+        t.size());
+    HPX_TEST_EQ(called, t.size());
+  }
+
+  // modify tuple elements
+  {
+    int called = 0;
+
+    std::set<std::variant<Ts...>> values;
+    hpx::mutex mtx;
+
+    called = 0;
+    chplx::coforall(t, [&]<typename Elem>(Elem &value) {
+      std::lock_guard l(mtx);
+      ++called;
+      auto p = values.insert(value);
+      HPX_TEST(p.second);
+
+      value = Elem();
+      HPX_TEST_EQ(value, Elem());
+    });
+
+    chplx::Tuple<Ts...> expected(ts...);
+    HPX_TEST_EQ(
+        testValues(values, expected, std::make_index_sequence<sizeof...(Ts)>()),
+        t.size());
+    HPX_TEST_EQ(called, expected.size());
+  }
 }
 
 int main() {
 
-  testForLoopHomogenousTuple<int>(42);
-  testForLoopHomogenousTuple<double>(42.0);
-  testForLoopHomogenousTuple<std::string>("42.0");
+  testForLoopHomogenousTuples<int>(42);
+  testForLoopHomogenousTuples<double>(42.0);
+  testForLoopHomogenousTuples<std::string>("42.0");
 
   testForLoopTuple(42);
   testForLoopTuple(42, 43L);
