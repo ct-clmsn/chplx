@@ -15,7 +15,7 @@ void testBounded() {
   // default stride
   {
     // 1..10
-    chplx::Range<int, chplx::BoundedRangeType::bounded> r1(1, 10);
+    chplx::Range<int, chplx::BoundedRangeType::bounded, false> r1(1, 10);
 
     HPX_TEST_EQ(r1.getFirstIndex(), 1);
     HPX_TEST_EQ(r1.getLastIndex(), 11);
@@ -36,7 +36,7 @@ void testBounded() {
     HPX_TEST(r1.isNaturallyAligned());
 
     // 1..<10
-    chplx::Range<int, chplx::BoundedRangeType::bounded> r2(
+    chplx::Range<int, chplx::BoundedRangeType::bounded, false> r2(
         1, 10, chplx::BoundsCategoryType::Open);
 
     HPX_TEST_EQ(r2.getFirstIndex(), 1);
@@ -290,7 +290,7 @@ void testBoundedLow() {
   // default stride
   {
     // 1..
-    chplx::Range<int, chplx::BoundedRangeType::boundedLow> r1(1);
+    chplx::Range<int, chplx::BoundedRangeType::boundedLow, false> r1(1);
 
     HPX_TEST_EQ(r1.getFirstIndex(), 1);
     HPX_TEST_EQ(r1.getLastIndex(), chplx::detail::MaxValue<int>::value);
@@ -356,7 +356,7 @@ void testBoundedHigh() {
   // default stride
   {
     // ..10
-    chplx::Range<int, chplx::BoundedRangeType::boundedHigh> r1(
+    chplx::Range<int, chplx::BoundedRangeType::boundedHigh, false> r1(
         chplx::RangeInit::noValue, 10);
 
     HPX_TEST_EQ(r1.getFirstIndex(), chplx::detail::MinValue<int>::value);
@@ -375,7 +375,7 @@ void testBoundedHigh() {
     HPX_TEST(r1.isNaturallyAligned());
 
     // ..<10
-    chplx::Range<int, chplx::BoundedRangeType::boundedHigh> r2(
+    chplx::Range<int, chplx::BoundedRangeType::boundedHigh, false> r2(
         chplx::RangeInit::noValue, 10, chplx::BoundsCategoryType::Open);
 
     HPX_TEST_EQ(r2.getFirstIndex(), chplx::detail::MinValue<int>::value);
@@ -479,7 +479,7 @@ void testUnbounded() {
   // default stride
   {
     // ..
-    chplx::Range<int, chplx::BoundedRangeType::boundedNone> r1;
+    chplx::Range<int, chplx::BoundedRangeType::boundedNone, false> r1;
 
     HPX_TEST_EQ(r1.getFirstIndex(), chplx::detail::MinValue<int>::value);
     HPX_TEST_EQ(r1.getLastIndex(), chplx::detail::MaxValue<int>::value);

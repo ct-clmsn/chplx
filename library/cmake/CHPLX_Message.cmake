@@ -60,7 +60,7 @@ function(chplx_message level)
     chplx_debug(${ARGN})
   elseif("${level}" MATCHES "INFO|info|Info")
     chplx_info(${ARGN})
-  else()
+  else(NOT("${level}" MATCHES "NONE|none|None"))
     chplx_error("message"
               "\"${level}\" is not an CHPLX configuration logging level."
     )

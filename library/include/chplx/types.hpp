@@ -49,9 +49,10 @@ enum class BoundsCategoryType {
 // such as counting, striding, intersection, shifting, and comparisons. Ranges
 // form the basis for defining rectangular domains (Domains) and arrays (Arrays)
 // in Chapel.
-template <typename T = std::int64_t,
-          BoundedRangeType BoundedType = BoundedRangeType::bounded,
-          bool Stridable = false>
+template <typename T /*= std::int64_t*/,
+          BoundedRangeType BoundedType /*= BoundedRangeType::bounded*/,
+          bool Stridable/* = false*/>
+  requires(std::is_integral_v<T> || std::is_enum_v<T>)
 struct Range;
 
 // A domain is a first-class representation of an index set. Domains are used to
@@ -68,6 +69,14 @@ class Domain;
 // An associative domain type is parameterized by idxType, the type of the
 // indices that it stores.
 template <typename IndexType> class AssocDomain;
+
+// An array is a map from a domain’s indices to a collection of variables of
+// homogeneous type.
+template <typename Domain, typename T> class Array;
+
+// A locale is a Chapel abstraction for a piece of a target architecture that
+// has processing and storage capabilities.
+struct locale;
 
 //-----------------------------------------------------------------------------
 // Returns true if the type T is one the following types, of any width: int,
@@ -231,7 +240,8 @@ template <typename T> inline constexpr auto MaxValue_v = MaxValue<T>::value;
 // reference_wrappers.
 template <typename T> struct task_intent : hpx::type_identity<T> {
 
-  template <typename T_> static constexpr decltype(auto) call(T_ &&arg) noexcept {
+  template <typename T_>
+  static constexpr decltype(auto) call(T_ &&arg) noexcept {
     return std::forward<T_>(arg);
   }
 };
