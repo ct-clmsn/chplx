@@ -215,10 +215,11 @@ struct StatementVisitor {
          }
 
          os << ") {" << std::endl;
-         emitIndent();
+         ++indent;
          for(const auto& stmt : node->statements) {
             visit(*this, stmt);
          }
+         --indent;
          emitIndent();
          os << '}' << std::endl;
       }
