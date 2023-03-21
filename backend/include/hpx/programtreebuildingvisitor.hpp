@@ -11,12 +11,12 @@
 #ifndef __CHPLX_PROGRAMTREEBUILDINGVISITOR_HPP__
 #define __CHPLX_PROGRAMTREEBUILDINGVISITOR_HPP__
 
-#include "chpl/uast/Builder.h"
 #include "chpl/uast/AstNode.h"
+#include "chpl/uast/Builder.h"
 #include "chpl/uast/Module.h"
 
-#include "symboltypes.hpp"
 #include "programtree.hpp"
+#include "symboltypes.hpp"
 
 #include <optional>
 #include <ostream>
@@ -29,28 +29,35 @@ using namespace chplx::ast::hpx;
 using namespace chpl;
 using namespace chpl::ast::visitors::hpx;
 
-namespace chplx { namespace ast { namespace visitors { namespace hpx {
+namespace chplx {
+namespace ast {
+namespace visitors {
+namespace hpx {
 
 struct ProgramTreeBuildingVisitor {
 
-   //ProgramTreeBuildingVisitor(chpl::uast::BuilderResult const& bRes, SymbolTable & st, ProgramTree & p);
+  // ProgramTreeBuildingVisitor(chpl::uast::BuilderResult const& bRes,
+  // SymbolTable & st, ProgramTree & p);
 
-   std::string emitChapelLine(uast::AstNode const* ast);
-   bool enter(const uast::AstNode * node);
-   void exit(const uast::AstNode * node);
+  std::string emitChapelLine(uast::AstNode const *ast);
+  bool enter(const uast::AstNode *node);
+  void exit(const uast::AstNode *node);
 
-   std::optional<Statement> stmt;
-   std::optional<uast::AstNode const*> node;
+  std::optional<Statement> stmt;
+  std::optional<uast::AstNode const *> node;
 
-   std::size_t scopePtr;
-   chpl::uast::BuilderResult const& br;
-   SymbolTable & symbolTable;
-   ProgramTree const& program;
+  std::size_t scopePtr;
+  chpl::uast::BuilderResult const &br;
+  SymbolTable &symbolTable;
+  ProgramTree const &program;
 
-   std::vector< std::vector<Statement> * > curStmts;
-   std::optional<uast::AstTag> prevTag;
+  std::vector<std::vector<Statement> *> curStmts;
+  std::optional<uast::AstTag> prevTag;
 };
 
-} /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chplx */
+} /* namespace hpx */
+} /* namespace visitors */
+} /* namespace ast */
+} /* namespace chplx */
 
 #endif

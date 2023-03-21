@@ -11,8 +11,8 @@
 #ifndef __CHPLX_SYMBOLBUILDINGVISITOR_HPP__
 #define __CHPLX_SYMBOLBUILDINGVISITOR_HPP__
 
-#include "chpl/uast/Builder.h"
 #include "chpl/uast/AstNode.h"
+#include "chpl/uast/Builder.h"
 #include "chpl/uast/Module.h"
 
 #include "symboltypes.hpp"
@@ -25,46 +25,52 @@
 #include <variant>
 #include <vector>
 
-namespace chpl { namespace ast { namespace visitors { namespace hpx {
+namespace chpl {
+namespace ast {
+namespace visitors {
+namespace hpx {
 
 struct SymbolBuildingVisitor {
 
-   SymbolBuildingVisitor() = delete;
+  SymbolBuildingVisitor() = delete;
 
-   SymbolBuildingVisitor(SymbolBuildingVisitor const& v) = delete;
-   SymbolBuildingVisitor(SymbolBuildingVisitor && v) = delete;
+  SymbolBuildingVisitor(SymbolBuildingVisitor const &v) = delete;
+  SymbolBuildingVisitor(SymbolBuildingVisitor &&v) = delete;
 
-   SymbolBuildingVisitor& operator=(SymbolBuildingVisitor const&) = delete;
-   SymbolBuildingVisitor& operator=(SymbolBuildingVisitor &&) = delete;
+  SymbolBuildingVisitor &operator=(SymbolBuildingVisitor const &) = delete;
+  SymbolBuildingVisitor &operator=(SymbolBuildingVisitor &&) = delete;
 
-   SymbolBuildingVisitor(SymbolBuildingVisitor * v) = delete;
-   SymbolBuildingVisitor(SymbolBuildingVisitor const* v) = delete;
+  SymbolBuildingVisitor(SymbolBuildingVisitor *v) = delete;
+  SymbolBuildingVisitor(SymbolBuildingVisitor const *v) = delete;
 
-   SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapel_br, std::string const& chapel_file_path_str);
-   ~SymbolBuildingVisitor() = default;
+  SymbolBuildingVisitor(chpl::uast::BuilderResult const &chapel_br,
+                        std::string const &chapel_file_path_str);
+  ~SymbolBuildingVisitor() = default;
 
-   template <typename Kind>
-   void addSymbolEntry(char const* type);
+  template <typename Kind> void addSymbolEntry(char const *type);
 
-   void addSymbolEntry(char const* type, Symbol && symbol);
+  void addSymbolEntry(char const *type, Symbol &&symbol);
 
-   std::string emitChapelLine(uast::AstNode const* ast);
+  std::string emitChapelLine(uast::AstNode const *ast);
 
-   bool enter(const uast::AstNode * node);
-   void exit(const uast::AstNode * node);
+  bool enter(const uast::AstNode *node);
+  void exit(const uast::AstNode *node);
 
-   chpl::uast::BuilderResult const& br;
-   std::size_t indent; 
+  chpl::uast::BuilderResult const &br;
+  std::size_t indent;
 
-   std::string chplFilePathStr;
+  std::string chplFilePathStr;
 
-   std::vector<Symbol> symstack;
-   std::optional< std::reference_wrapper<Symbol> > sym;
-   std::optional<uast::AstNode const*> symnode;
+  std::vector<Symbol> symstack;
+  std::optional<std::reference_wrapper<Symbol>> sym;
+  std::optional<uast::AstNode const *> symnode;
 
-   SymbolTable symbolTable;
+  SymbolTable symbolTable;
 };
 
-} /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chpl */
+} /* namespace hpx */
+} /* namespace visitors */
+} /* namespace ast */
+} /* namespace chpl */
 
 #endif

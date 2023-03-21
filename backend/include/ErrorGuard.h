@@ -27,17 +27,16 @@
 using BaseHandler = chpl::Context::ErrorHandler;
 
 class AggregatingErrorHandler : BaseHandler {
-  std::vector<const chpl::ErrorBase*> errors_;
- public:
+  std::vector<const chpl::ErrorBase *> errors_;
+
+public:
   AggregatingErrorHandler() = default;
   ~AggregatingErrorHandler() = default;
 
-  const std::vector<const chpl::ErrorBase*>& errors() const {
-    return errors_;
-  }
+  const std::vector<const chpl::ErrorBase *> &errors() const { return errors_; }
 
-  virtual void
-  report(chpl::Context* context, const chpl::ErrorBase* err) override {
+  virtual void report(chpl::Context *context,
+                      const chpl::ErrorBase *err) override {
     errors_.push_back(err);
   }
 
@@ -45,28 +44,28 @@ class AggregatingErrorHandler : BaseHandler {
 };
 
 class ErrorGuard {
- private:
+private:
   chpl::owned<BaseHandler> oldErrorHandler_;
-  chpl::Context* ctx_;
-  AggregatingErrorHandler* handler_ = nullptr;
+  chpl::Context *ctx_;
+  AggregatingErrorHandler *handler_ = nullptr;
 
   chpl::owned<BaseHandler> prepareAndStoreHandler() {
     handler_ = new AggregatingErrorHandler();
-    auto ret = chpl::toOwned((BaseHandler*) handler_);
+    auto ret = chpl::toOwned((BaseHandler *)handler_);
     assert(handler_);
     return ret;
   }
 
- public:
-  ErrorGuard(chpl::Context* ctx) : ctx_(ctx) {
+public:
+  ErrorGuard(chpl::Context *ctx) : ctx_(ctx) {
     auto handler = prepareAndStoreHandler();
     oldErrorHandler_ = ctx_->installErrorHandler(std::move(handler));
   }
 
-  inline chpl::Context* context() const { return ctx_; }
+  inline chpl::Context *context() const { return ctx_; }
 
   /** A way to iterate over the errors contained in the guard. */
-  const std::vector<const chpl::ErrorBase*>& errors() const {
+  const std::vector<const chpl::ErrorBase *> &errors() const {
     assert(handler_);
     return handler_->errors();
   }
@@ -74,7 +73,7 @@ class ErrorGuard {
   /** Get the number of errors contained in the guard. */
   inline size_t numErrors() const { return this->errors().size(); }
 
-  const chpl::ErrorBase* error(size_t idx) const {
+  const chpl::ErrorBase *error(size_t idx) const {
     assert(idx < numErrors());
     return this->errors()[idx];
   }
@@ -83,9 +82,10 @@ class ErrorGuard {
       of errors. Returns the number of errors. */
   int realizeErrors() {
     assert(handler_);
-    if (!handler_->errors().size()) return false;
+    if (!handler_->errors().size())
+      return false;
     this->printErrors();
-    int ret = (int) handler_->errors().size();
+    int ret = (int)handler_->errors().size();
     handler_->clear();
     return ret;
   }
@@ -93,9 +93,9 @@ class ErrorGuard {
   /** Print the errors contained in this guard in a detailed manner. */
   void printErrors() const {
     chpl::ErrorWriter ew(this->context(), std::cout,
-                         chpl::ErrorWriter::DETAILED,
-                         false);
-    for (auto err: this->errors()) err->write(ew);
+                         chpl::ErrorWriter::DETAILED, false);
+    for (auto err : this->errors())
+      err->write(ew);
   }
 
   /** The guard destructor will assert that no errors have occurred. */

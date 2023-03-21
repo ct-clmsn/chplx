@@ -6,10 +6,10 @@
 extern "C" {
 #endif
 
-int getopt(int nargc, char * const nargv[], const char *ostr);
+int getopt(int nargc, char *const nargv[], const char *ostr);
 
-extern int     opterr, optind, optopt, optreset;
-extern char    *optarg;
+extern int opterr, optind, optopt, optreset;
+extern char *optarg;
 
 #ifdef __cplusplus
 }
