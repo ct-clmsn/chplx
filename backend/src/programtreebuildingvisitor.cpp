@@ -98,22 +98,22 @@ struct VariableLiteralVisitor {
    }
 
    void operator()(byte_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{scopePtr, identifier, *sym.kind, emitChapelLine(ast), *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast)}, *sym.literal});
    }
    void operator()(bool_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{scopePtr, identifier, *sym.kind, emitChapelLine(ast), *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast)}, *sym.literal});
    }
    void operator()(int_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{scopePtr, identifier, *sym.kind, emitChapelLine(ast), *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast)}, *sym.literal});
    }
    void operator()(real_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{scopePtr, identifier, *sym.kind, emitChapelLine(ast), *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast)}, *sym.literal});
    }
    void operator()(complex_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{scopePtr, identifier, *sym.kind, emitChapelLine(ast), *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast)}, *sym.literal});
    }
    void operator()(string_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{scopePtr, identifier, *sym.kind, emitChapelLine(ast), *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast)}, *sym.literal});
    }
    void operator()(template_kind const&) {
    }
@@ -128,7 +128,7 @@ struct VariableLiteralVisitor {
    void operator()(std::shared_ptr<class_kind> const&) {
    }
    void operator()(std::shared_ptr<array_kind> const&) {
-      curStmts.push_back(ArrayDeclarationLiteralExpression{scopePtr, identifier, *sym.kind, emitChapelLine(ast), *sym.literal});
+      curStmts.push_back(ArrayDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast)}, *sym.literal});
    }
    void operator()(std::shared_ptr<associative_kind> const&) {
    }
@@ -277,8 +277,8 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::FnCall:
     {
        std::vector<Statement> * cStmts = curStmts.back();
-       FnCall const* astptr = 
-          dynamic_cast<FnCall const*>(ast);
+//       FnCall const* astptr = 
+//          dynamic_cast<FnCall const*>(ast);
        if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(cStmts->back())) {
           auto & fndecl = std::get<std::shared_ptr<FunctionDeclarationExpression>>(cStmts->back());
           fndecl->statements.emplace_back(

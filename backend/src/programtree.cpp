@@ -139,8 +139,8 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
       std::get<std::shared_ptr<array_kind>>(kind);
 
    std::stringstream typelist{}, literallist{};
-   std::shared_ptr<kind_node_type> & symref =
-      std::get<std::shared_ptr<kind_node_type>>(akref->kind);
+//   std::shared_ptr<kind_node_type> & symref =
+//      std::get<std::shared_ptr<kind_node_type>>(akref->kind);
 
    std::vector<kind_types> & children =
       std::get<std::shared_ptr<kind_node_type>>(akref->kind)->children;

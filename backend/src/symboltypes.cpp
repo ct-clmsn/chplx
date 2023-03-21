@@ -11,7 +11,7 @@
 
 #include <cassert>
 
-using namespace chplx::util;
+//using namespace chplx::util;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
