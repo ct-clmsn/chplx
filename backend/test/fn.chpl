@@ -17,8 +17,15 @@ inlinecxx("std::cout << \"{}\" << std::endl;", "h");
 //inlinecxx("std::cout << {} << std::endl;", i);
 
 proc print() {
-   var i : int;
-//   inlinecxx("std::cout << \"a\" << std::endl;");
+   var j : int;
+   var i = 1;
+   var k = true;
+   var l = 1.0;
+   var m : bool;
+   var n : real;
+   inlinecxx("std::cout << \"a\" << std::endl;");
+   inlinecxx("std::cout << i << std::endl;");
+   inlinecxx("std::cout << {} << std::endl;", i);
 }
 
 /*

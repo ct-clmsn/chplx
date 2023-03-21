@@ -222,15 +222,21 @@ struct SymbolTable {
    SymbolTable(SymbolTable const* v) = delete;
 
    SymbolTable();
+
    std::size_t pushScope();
    void popScope();
+
    void addEntry(const std::size_t lutid, std::string const& ident, Symbol s);
    void addEntry(std::string const& ident, Symbol s);
-   bool findImpl(SymbolTableNode& stref, std::string const& ident, std::unordered_map<std::string, Symbol>::iterator & ret);
+
+   bool findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string const& ident, std::unordered_map<std::string, Symbol>::iterator & ret);
+
    std::optional<Symbol> find(std::string const& ident);
    std::optional<Symbol> find(const std::size_t idx, std::string const& ident);
+
    void find(std::string const& ident, std::optional<Symbol> & s);
    void find(const std::size_t idx, std::string const& ident, std::optional<Symbol> & s);
+
    void dumpImpl(SymbolTableNode const& node);
    void dump();
 

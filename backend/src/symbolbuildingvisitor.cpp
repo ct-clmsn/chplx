@@ -296,7 +296,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            }
         }
         else {
-           auto fsym = symbolTable.find("int");
+           auto fsym = symbolTable.find(0, "int");
            if(fsym.has_value()) {
               sym->get().kind = (*(fsym->kind));
               if(sym->get().literal) {
@@ -642,6 +642,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 {}, 0
              }});
 
+          std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableCount-1;
           symbolTable.pushScope();
           sym = symstack.back();
@@ -652,7 +653,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           fk->symbolTableSignature = v.lookup;
           symbolTable.parentSymbolTableId = parScope;
           symbolTable.symbolTableRef->id = parScope;
-          symbolTable.symbolTableRef->parent = symbolTable.symbolTableRef;
+          symbolTable.symbolTableRef->parent = prevSymbolTableRef;
 
           symnode = ast;
        }
