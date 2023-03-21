@@ -190,15 +190,15 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    std::size_t lit = 0;
 
    literallist << "{";
-   for(std::size_t i = 0; i < children_sz; ++i) {
+   for(std::size_t i = 0; i < children_sz - 1; ++i) {
       const bool knt =
          std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i]);
       const bool kntend =
          std::holds_alternative<kind_node_term_type>(children[i]);
       const bool kntbeg =
-         (i <= children_sz) ? std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i+1]) : false;
+         (i < children_sz - 1) ? std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i+1]) : false;
       const bool kntendnxt =
-         (i <= children_sz) ? std::holds_alternative<kind_node_term_type>(children[i+1]) : false;
+         (i < children_sz - 1) ? std::holds_alternative<kind_node_term_type>(children[i+1]) : false;
 
      if(knt) { literallist << "{"; }
      else {

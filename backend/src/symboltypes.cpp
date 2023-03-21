@@ -61,7 +61,7 @@ bool SymbolTable::findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string
       return true;
    }
 
-   if(!stref->parent && 0 == stref->parent->index()) {
+   if(!stref->parent || 0 == stref->parent->index()) {
       return false;
    }
 

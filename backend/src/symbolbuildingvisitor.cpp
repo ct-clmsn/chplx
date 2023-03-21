@@ -842,7 +842,8 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
                 symnode.reset();
                 assert(0 < symstack.size());
                 symstack.pop_back();
-                sym = symstack.back();
+                if (!symstack.empty())
+                  sym = symstack.back();
             }
             else {
                 std::cerr << "chplx : " << (*(sym->get().identifier)) << " identifier already defined in current scope" << std::endl;
