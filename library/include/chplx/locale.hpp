@@ -18,7 +18,6 @@
 #include <hpx/modules/serialization.hpp>
 
 #include <cstdint>
-#include <cstring>
 #include <type_traits>
 
 namespace chplx {
@@ -173,8 +172,8 @@ struct invokeOnWrapperAction
 //-----------------------------------------------------------------------------
 namespace chplx {
 
-// The on statement controls on which locale a block of code should be
-// executed or data should be placed.
+// The on statement controls on which locale a block of code should be executed
+// or data should be placed.
 template <typename F, typename... Ts> void on(locale loc, F &&f, Ts &&...ts) {
 
   hpx::wait_all(hpx::async(

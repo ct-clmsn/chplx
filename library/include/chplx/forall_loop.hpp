@@ -19,16 +19,22 @@
 #include <hpx/algorithm.hpp>
 #include <hpx/execution.hpp>
 
+#include <cstddef>
+#include <tuple>
+
 namespace chplx {
 
 //-----------------------------------------------------------------------------
 // forall loop for tuples
-template <typename... Ts, typename F, typename... Args>
-void forall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
+namespace detail {
 
-  if constexpr (sizeof...(Ts) != 0) {
+template <typename Tuple, typename F, typename... Args>
+void forall(Tuple &t, F &&f, Args &&...args) {
 
-    if constexpr (Tuple<Ts...>::isHomogenous()) {
+  using base_tuple = typename Tuple::base_type;
+  if constexpr (std::tuple_size_v<base_tuple> != 0) {
+
+    if constexpr (Tuple::isHomogenous()) {
 
       hpx::ranges::for_each(
           hpx::execution::par, HomogenousTupleRange(t.base()),
@@ -39,10 +45,9 @@ void forall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
           });
     } else {
 
-      using table =
-          detail::forLoopTable<Tuple<Ts...> const, F,
-                               std::make_index_sequence<sizeof...(Ts)>,
-                               Args...>;
+      using table = detail::forLoopTable<
+          Tuple, F, std::make_index_sequence<std::tuple_size_v<base_tuple>>,
+          Args...>;
 
       hpx::experimental::for_loop(
           hpx::execution::par, 0, t.size(),
@@ -53,6 +58,19 @@ void forall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
           });
     }
   }
+}
+} // namespace detail
+
+template <typename... Ts, typename F, typename... Args>
+void forall(Tuple<Ts...> &t, F &&f, Args &&...args) {
+
+  detail::forall(t, std::forward<F>(f), std::forward<Args>(args)...);
+}
+
+template <typename... Ts, typename F, typename... Args>
+void forall(Tuple<Ts...> const &t, F &&f, Args &&...args) {
+
+  detail::forall(t, std::forward<F>(f), std::forward<Args>(args)...);
 }
 
 //-----------------------------------------------------------------------------
@@ -105,6 +123,20 @@ void forall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
 
   hpx::ranges::experimental::for_loop(
       hpx::execution::par, detail::IteratorGenerator(zr),
+      [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+              std::forward<Args>(args))]<typename Arg>(Arg &&value) {
+        f(std::forward<Arg>(value),
+          hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+      });
+}
+
+//-----------------------------------------------------------------------------
+// forall loop for array iteration
+template <typename Domain, typename T, typename F, typename... Args>
+void forall(Array<Domain, T> const &a, F &&f, Args &&...args) {
+
+  hpx::ranges::experimental::for_loop(
+      hpx::execution::par, detail::IteratorGenerator(a),
       [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
               std::forward<Args>(args))]<typename Arg>(Arg &&value) {
         f(std::forward<Arg>(value),
