@@ -12,6 +12,7 @@
 #include <variant>
 #include <fstream>
 #include <cctype>
+#include <filesystem>
 #include <numeric>
 
 using namespace chpl::uast;
@@ -75,7 +76,8 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
 std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
    auto fp = br.filePath();
    std::stringstream os{};
-   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << fp.c_str() << "\"";
+   std::filesystem::path p(fp.c_str());
+   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename() << "\"";
    return os.str();
 }
 

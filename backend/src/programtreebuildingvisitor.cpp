@@ -5,6 +5,7 @@
  * Distributed under the Boost Software License, Version 1.0. *(See accompanying
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
+#include "hpx/programtree.hpp"
 #include "hpx/programtreebuildingvisitor.hpp"
 #include "chpl/uast/all-uast.h"
 
@@ -13,6 +14,8 @@
 #include <cctype>
 #include <numeric>
 #include <sstream>
+#include <string>
+#include <filesystem>
 
 using namespace chplx::ast::hpx;
 using namespace chpl::uast;
@@ -41,7 +44,8 @@ struct VariableVisitor {
    std::string emitChapelLine(uast::AstNode const* ast) const {
       auto fp = br.filePath();
       std::stringstream os{};
-      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << fp.c_str() << "\"";
+      std::filesystem::path p(fp.c_str());
+      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"";
       return os.str();
    }
 
@@ -98,7 +102,8 @@ struct VariableLiteralVisitor {
    std::string emitChapelLine(uast::AstNode const* ast) const {
       auto fp = br.filePath();
       std::stringstream os{};
-      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << fp.c_str() << "\"";
+      std::filesystem::path p(fp.c_str());
+      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"";
       return os.str();
    }
 
@@ -146,7 +151,8 @@ struct VariableLiteralVisitor {
 std::string ProgramTreeBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
    auto fp = br.filePath();
    std::stringstream os{};
-   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << fp.c_str() << "\"";
+   std::filesystem::path p(fp.c_str());
+   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"";
    return os.str();
 }
 

@@ -68,9 +68,12 @@ add_chplx_pseudo_target(tests)
 add_chplx_pseudo_target(tests.unit)
 add_chplx_pseudo_dependencies(tests tests.unit)
 
-enable_testing()
-include(CTest)
+if(CHPLX_WITH_TESTS)
+  enable_testing()
+  include(CTest)
+endif()
 
+add_subdirectory(frontend)
 add_subdirectory(backend)
 add_subdirectory(library)
 

@@ -13,6 +13,7 @@
 #include <variant>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <cctype>
 #include <numeric>
 #include <type_traits>

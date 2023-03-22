@@ -8,19 +8,26 @@ include(CHPLX_Compile)
 
 find_package(ClangFormat)
 
-add_chplx_pseudo_target(tests.unit.backend)
-add_chplx_pseudo_dependencies(tests.unit tests.unit.backend)
+add_chplx_pseudo_target(tests.unit.backend_dir)
+add_chplx_pseudo_target_folder(
+  backend TARGET tests.unit.backend_dir FOLDER "Backend/Tests/Targets"
+)
+
+add_chplx_pseudo_dependencies(tests.unit tests.unit.backend_dir)
 
 set(tests arr fn)
 
 foreach(test ${tests})
   chplx_compile(${test} SOURCE ${test}.chpl)
-  add_chplx_pseudo_dependencies(tests.unit.backend ${test}_test)
 
   if(CLANGFORMAT_FOUND)
-    chplx_format_file(${test} SOURCES ${test}.cpp)
+    chplx_format_file(${test} SOURCES ${test}.cpp ${test}.hpp)
   endif()
 
-  chplx_compare_result(${test} SOURCE ${test}.cpp GOOD ${test}.good)
+  chplx_compare_result(
+    ${test} SOURCES ${test}.cpp ${test}.hpp TEST_NAME
+    "tests.unit.backend_dir.${test}"
+  )
 
+  add_chplx_pseudo_dependencies(tests.unit.backend_dir "${test}_compile_chpl")
 endforeach()

@@ -5,7 +5,7 @@
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 find_program(
-  CLANGFORMAT_EXECUTABLE clang-format
+  CLANGFORMAT_EXECUTABLE clang-format clang-format-15
   PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ENV CLANGFORMAT_ROOT
   PATH_SUFFIXES bin dist/bin
 )

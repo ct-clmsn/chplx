@@ -7,16 +7,16 @@
 #
 cmake_minimum_required(VERSION 3.19)
 
-set(CHPLX_MAJOR_VERSION 1)
-set(CHPLX_MINOR_VERSION 30)
-set(CHPLX_PATCH_VERSION 0)
-set(CHPLX_BUILD_VERSION 0)
+set(CHPLX_BACKEND_MAJOR_VERSION 1)
+set(CHPLX_BACKEND_MINOR_VERSION 30)
+set(CHPLX_BACKEND_PATCH_VERSION 0)
+set(CHPLX_BACKEND_BUILD_VERSION 0)
 
-set(CHPLX_DEVELOPER ON)
-set(CHPLX_OFFICIAL_RELEASE 0)
+set(CHPLX_BACKEND_DEVELOPER ON)
+set(CHPLX_BACKEND_OFFICIAL_RELEASE 0)
 
-set(CHPL_VERSION
-    ${CHPLX_MAJOR_VERSION}.${CHPLX_MINOR_VERSION}.${CHPLX_PATCH_VERSION}.${CHPLX_BUILD_VERSION}
+set(CHPLX_BACKEND_VERSION
+    ${CHPLX_BACKEND_MAJOR_VERSION}.${CHPLX_BACKEND_MINOR_VERSION}.${CHPLX_BACKEND_PATCH_VERSION}.${CHPLX_BACKEND_BUILD_VERSION}
 )
 
 if(APPLE)
@@ -25,7 +25,10 @@ else()
   set(CMAKE_CXX_STANDARD 20)
 endif()
 
-project(chplx VERSION ${CHPL_VERSION})
+project(chplx_backend VERSION ${CHPLX_BACKEND_VERSION})
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 find_package(LLVM REQUIRED CONFIG)
 find_package(Clang REQUIRED CONFIG)
@@ -61,7 +64,7 @@ target_include_directories(
 )
 
 target_link_directories(
-  chplx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../frontend/build/lib
+  chplx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/frontend/lib
 )
 target_link_libraries(chplx PUBLIC ChplFrontend ${llvm_libs})
 target_link_libraries(chplx PRIVATE fmt::fmt-header-only)
@@ -72,7 +75,9 @@ set_target_properties(acc_gen PROPERTIES FOLDER "Backend/Support")
 set_target_properties(clang-tablegen-targets PROPERTIES FOLDER "Backend/Support")
 set_target_properties(intrinsics_gen PROPERTIES FOLDER "Backend/Support")
 set_target_properties(omp_gen PROPERTIES FOLDER "Backend/Support")
-set_target_properties(RISCVTargetParserTableGen PROPERTIES FOLDER "Backend/Support")
+if(TARGET RISCVTargetParserTableGen)
+  set_target_properties(RISCVTargetParserTableGen PROPERTIES FOLDER "Backend/Support")
+endif()
 
 if(CHPLX_WITH_TESTS)
   enable_testing()

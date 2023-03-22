@@ -40,6 +40,8 @@ elseif(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
 endif()
 
 add_library(git-sha-obj OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
+set_target_properties(git-sha-obj PROPERTIES FOLDER "Frontend/Support")
+
 # turn on position-independent code so we can use the same
 # git-sha-obj for both a static and dynamic library
 set_property(TARGET git-sha-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -49,6 +51,7 @@ add_library(ChplFrontend-obj OBJECT
     ${CMAKE_CURRENT_SOURCE_DIR}/immediates/hash_multipliers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/immediates/num.cpp
 )
+set_target_properties(ChplFrontend-obj PROPERTIES FOLDER "Frontend")
 
 # turn on position-independent code so we can use the same
 # dyno-obj for both a static and dynamic library
@@ -86,6 +89,7 @@ endif()
 add_library(ChplFrontend ${ChplFrontend_MODE}
             $<TARGET_OBJECTS:ChplFrontend-obj>
             $<TARGET_OBJECTS:git-sha-obj>)
+set_target_properties(ChplFrontend PROPERTIES FOLDER "Frontend")
 
 target_include_directories(ChplFrontend PUBLIC
                            ${LLVM_INCLUDE_DIRS}

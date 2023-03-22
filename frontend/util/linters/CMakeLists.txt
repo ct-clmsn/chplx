@@ -16,6 +16,7 @@
 # limitations under the License.
 
 add_executable(fieldsUsed "fieldsUsed.cpp")
+set_target_properties(fieldsUsed PROPERTIES FOLDER "Frontend/Support")
 
 # store it in the build directory
 set_target_properties(fieldsUsed  PROPERTIES RUNTIME_OUTPUT_DIRECTORY . )
