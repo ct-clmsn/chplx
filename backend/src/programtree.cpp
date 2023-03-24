@@ -190,7 +190,7 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    std::size_t lit = 0;
 
    literallist << "{";
-   for(std::size_t i = 0; i < children_sz - 1; ++i) {
+   for(std::size_t i = 0; i < children_sz; ++i) {
       const bool knt =
          std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i]);
       const bool kntend =
