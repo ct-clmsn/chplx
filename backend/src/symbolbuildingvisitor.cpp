@@ -22,7 +22,6 @@ void SymbolBuildingVisitor::addSymbolEntry(char const* type, Symbol && symbol) {
    symbolTable.addEntry(*symbol.identifier, symbol);
 }
 
-
 SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapelBr, std::string const& cfps)
    : br(chapelBr), indent(0),
      chplFilePathStr(cfps),
@@ -44,8 +43,21 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("domain", Symbol{{domain_kind{}, std::string{"domain"}, {}, symbolTable.symbolTableCount}, {}});
    addSymbolEntry("?", Symbol{{template_kind{}, std::string{"?"}, {}, symbolTable.symbolTableCount}, {}});
 
+   addSymbolEntry("+",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "+", {}}}), std::string{"+"}, {}, symbolTable.symbolTableCount}, {}}
+   );
+   addSymbolEntry("-",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "-", {}}}), std::string{"-"}, {}, symbolTable.symbolTableCount}, {}}
+   );
+   addSymbolEntry("*",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "*", {}}}), std::string{"*"}, {}, symbolTable.symbolTableCount}, {}}
+   );
+   addSymbolEntry("/",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "/", {}}}), std::string{"/"}, {}, symbolTable.symbolTableCount}, {}}
+   );
+
    addSymbolEntry("inlinecxx",
-      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}}}), std::string{"inlinecxx"}, {}, symbolTable.symbolTableCount}, {}}
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}, nil_kind{}}}), std::string{"inlinecxx"}, {}, symbolTable.symbolTableCount}, {}}
    );
 }
 
@@ -113,8 +125,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Identifier:
     {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
-       if(sym && sym->get().kind.has_value()) {
 
+       if(sym && sym->get().kind.has_value()) {
           const std::size_t lutId =
              std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind)) ?
                 std::get<std::shared_ptr<func_kind>>(*sym->get().kind)->lutId :
@@ -126,14 +138,19 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 std::get<std::shared_ptr<array_kind>>( *(sym->get().kind))->kind = *(fsym->kind);
              }
           }
-          else if(std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind))) {
+          else if(std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind)) && 
+                  !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*(sym->get().kind))) {
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
 
-             auto fsym = symbolTable.find(identifier_str);
+             auto fsym = symbolTable.find(lutId, identifier_str);
 
              if(fsym.has_value()) {
-                if(0 < fk->args.size()) {
+
+                if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*fsym->kind)) {
+                      return true;
+                }
+                else if(0 < fk->args.size()) {
                    if(std::holds_alternative<nil_kind>(*(fk->args.back().kind))) {
                       return true;
                    }
@@ -268,8 +285,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                  return true;
               }
            }
-
-           if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->get().kind))) {
+           else if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->get().kind))) {
               std::shared_ptr<array_kind> & symref =
                  std::get<std::shared_ptr<array_kind>>(*(sym->get().kind));
 
@@ -829,7 +845,6 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     {
         if(sym) {
             assert( sym->get().identifier.has_value() );
-
             const std::size_t lutId = sym->get().scopeId;
 
             auto lusym = symbolTable.find(lutId, (*(sym->get().identifier)));

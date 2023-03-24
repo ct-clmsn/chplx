@@ -236,7 +236,7 @@ struct ArgumentVisitor {
        std::visit(*this, e.kind);
     }
     void operator()(VariableExpression const& e) {
-       os << (*(e.sym.identifier));
+       os << (*(e.sym->identifier));
     }
 
     uast::AstNode const* node;
@@ -256,9 +256,6 @@ void FunctionCallExpression::emit(std::ostream & os) const {
          for(std::size_t i = 1; i < args_sz; ++i) {
             Statement const& stmt = arguments[i];
             ArgumentVisitor v{nullptr, std::stringstream{}};
-            if(i != 1) {
-               v.os << ',';
-            }
             std::visit(v, stmt);
             store.push_back(v.os.str());
          }

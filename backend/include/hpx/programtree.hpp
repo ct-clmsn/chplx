@@ -88,7 +88,7 @@ struct LiteralExpression {
 };
 
 struct VariableExpression {
-   Symbol & sym;
+   std::shared_ptr<Symbol> sym;
 };
 
 struct UnaryOpExpression;
