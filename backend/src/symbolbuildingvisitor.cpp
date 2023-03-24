@@ -645,8 +645,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
        if(!(sym && sym->get().kind.has_value() && 0 < sym->get().kind->index())) {
           ProgramTreeFunctionVisitor v{false, {}};
           ast->traverse(v);
-          Function const* fn =
-             dynamic_cast<Function const*>(ast);
+//          Function const* fn =
+//             dynamic_cast<Function const*>(ast);
 
           symstack.emplace_back(
              Symbol{{
@@ -857,7 +857,8 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
                 symnode.reset();
                 assert(0 < symstack.size());
                 symstack.pop_back();
-                sym = symstack.back();
+                if (!symstack.empty())
+                  sym = symstack.back();
             }
             else {
                 std::cerr << "chplx : " << (*(sym->get().identifier)) << " identifier already defined in current scope" << std::endl;

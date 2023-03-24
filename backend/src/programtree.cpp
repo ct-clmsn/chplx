@@ -139,8 +139,8 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
       std::get<std::shared_ptr<array_kind>>(kind);
 
    std::stringstream typelist{}, literallist{};
-   std::shared_ptr<kind_node_type> & symref =
-      std::get<std::shared_ptr<kind_node_type>>(akref->kind);
+//   std::shared_ptr<kind_node_type> & symref =
+//      std::get<std::shared_ptr<kind_node_type>>(akref->kind);
 
    std::vector<kind_types> & children =
       std::get<std::shared_ptr<kind_node_type>>(akref->kind)->children;
@@ -196,9 +196,9 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
       const bool kntend =
          std::holds_alternative<kind_node_term_type>(children[i]);
       const bool kntbeg =
-         (i <= children_sz) ? std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i+1]) : false;
+         (i < children_sz - 1) ? std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i+1]) : false;
       const bool kntendnxt =
-         (i <= children_sz) ? std::holds_alternative<kind_node_term_type>(children[i+1]) : false;
+         (i < children_sz - 1) ? std::holds_alternative<kind_node_term_type>(children[i+1]) : false;
 
      if(knt) { literallist << "{"; }
      else {

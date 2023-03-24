@@ -12,7 +12,7 @@
 #define __CHPLX_SYMBOLTYPES_HPP__
 
 #include "chpl/uast/all-uast.h"
-#include "hpx/variant.hpp"
+//#include "hpx/variant.hpp"
 #include "fmt/core.h"
 
 #include <optional>
@@ -25,7 +25,7 @@
 #include <functional>
 #include <memory>
 
-using namespace chplx::util;
+//using namespace chplx::util;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 

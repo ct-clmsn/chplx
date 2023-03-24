@@ -11,7 +11,7 @@
 
 #include <cassert>
 
-using namespace chplx::util;
+//using namespace chplx::util;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
@@ -61,7 +61,7 @@ bool SymbolTable::findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string
       return true;
    }
 
-   if(!stref->parent && 0 == stref->parent->index()) {
+   if(!stref->parent || 0 == stref->parent->index()) {
       return false;
    }
 

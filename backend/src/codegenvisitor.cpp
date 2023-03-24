@@ -29,9 +29,9 @@ CodegenVisitor::CodegenVisitor(
    chpl::uast::BuilderResult const& chapelBr,
    std::string const& chapelFilePath,
    std::ostream & fstrm)
-   : br(chapelBr), programTree(prgmTree), indent(0), scope(0), fstrm_(fstrm),
+   : symbolTable(st), programTree(prgmTree), br(chapelBr), indent(0), scope(0),
+     fstrm_(fstrm),
      chplFilePathStr(chapelFilePath),
-     symbolTable(st),
      headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false)
 {
 }

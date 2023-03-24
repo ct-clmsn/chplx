@@ -102,13 +102,13 @@ class ClassTypeDecorator final {
     return (ClassTypeDecoratorEnum) tmp;
   }
   static bool isDecoratorUnknownNilability(ClassTypeDecoratorEnum d) {
-    return (d & NILABILITY_MASK) == 0;
+    return (d & (ClassTypeDecoratorEnum)NILABILITY_MASK) == 0;
   }
   static bool isDecoratorNonNilable(ClassTypeDecoratorEnum d) {
-    return (d & NILABILITY_MASK) == 1;
+    return (d & (ClassTypeDecoratorEnum)NILABILITY_MASK) == 1;
   }
   static bool isDecoratorNilable(ClassTypeDecoratorEnum d) {
-    return (d & NILABILITY_MASK) == 2;
+    return (d & (ClassTypeDecoratorEnum)NILABILITY_MASK) == 2;
   }
   static bool isDecoratorBorrowed(ClassTypeDecoratorEnum d) {
     return removeNilableFromDecorator(d) == BORROWED;
