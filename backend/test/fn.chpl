@@ -8,14 +8,6 @@
 // `inlinecxx` is defined in the compiler
 //
 
-/*
-inlinecxx("std::cout << \"h\" << std::endl;");
-inlinecxx("std::cout << \"{}\" << std::endl;", "h");
-*/
-
-//var i = 1;
-//inlinecxx("std::cout << {} << std::endl;", i);
-
 proc print() {
    var j : int;
    var i = 1;
@@ -26,6 +18,7 @@ proc print() {
    inlinecxx("std::cout << \"a\" << std::endl;");
    inlinecxx("std::cout << i << std::endl;");
    inlinecxx("std::cout << {} << std::endl;", i);
+   inlinecxx("std::cout << {} << {} << std::endl;", i, l);
 }
 
 /*

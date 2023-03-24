@@ -33,8 +33,6 @@ namespace chplx { namespace ast { namespace visitors { namespace hpx {
 
 struct ProgramTreeBuildingVisitor {
 
-   //ProgramTreeBuildingVisitor(chpl::uast::BuilderResult const& bRes, SymbolTable & st, ProgramTree & p);
-
    std::string emitChapelLine(uast::AstNode const* ast);
    bool enter(const uast::AstNode * node);
    void exit(const uast::AstNode * node);
