@@ -350,6 +350,19 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        std::vector<Statement> * cStmts = curStmts.back();
 
+       const FnCall* fc = dynamic_cast<const FnCall*>(ast);
+
+       // function called
+       //
+       if(fc->calledExpression()->tag() == asttags::Identifier && !fc->callUsedSquareBrackets()) {
+           std::cout << dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str() << std::endl;
+       }
+       // array index invoked
+       //
+       else if(fc->calledExpression()->tag() == asttags::Identifier && fc->callUsedSquareBrackets()) {
+           std::cout << dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str() << std::endl;
+       }
+
        if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(cStmts->back())) {
           auto & fndecl = std::get<std::shared_ptr<FunctionDeclarationExpression>>(cStmts->back());
 
