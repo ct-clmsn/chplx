@@ -5,58 +5,57 @@
 
 #include "arr.hpp"
 
-int hpx_main(int argc, char ** argv) {
+int hpx_main(int argc, char **argv) {
 
-    #line 8 "arr.chpl"
-    std::vector<std::int64_t> k = {1,2,3,4,5;
-    #line 9 "arr.chpl"
-    std::vector<std::vector<std::int64_t>> l = {{1,2},{3,4};
-    #line 10 "arr.chpl"
-    std::vector<std::vector<std::int64_t>> m = {{1},{2},{3,4,5};
-    #line 11 "arr.chpl"
-    std::vector<std::vector<std::int64_t>> n = {{1,2},{1,2};
-    #line 12 "arr.chpl"
-    std::vector<std::vector<std::vector<std::int64_t>>> o = {{{1,2},{1,2},{3,4}},{{5,6},{7,8}};
-    #line 13 "arr.chpl"
-    std::vector<std::vector<std::int64_t>> p = {{1,2,3,4,5};
-    #line 14 "arr.chpl"
-    std::vector<std::vector<std::vector<std::int64_t>>> q = {{{1,2,3,4,5}};
-    #line 16 "arr.chpl"
-    bool u;
-    #line 17 "arr.chpl"
-    double v;
-    #line 18 "arr.chpl"
-    std::uint8_t w;
-    #line 19 "arr.chpl"
-    std::int64_t x;
-    #line 20 "arr.chpl"
-    std::complex<double> y;
-    #line 21 "arr.chpl"
-    std::string z;
-    #line 23 "arr.chpl"
-    std::vector<std::int64_t> a(10);
-    #line 24 "arr.chpl"
-    std::vector<double> b(10);
-    #line 25 "arr.chpl"
-    std::vector<std::complex<double>> c(10);
-    #line 26 "arr.chpl"
-    std::vector<std::string> d(10);
-    #line 27 "arr.chpl"
-    std::vector<std::uint8_t> e(10);
-    #line 28 "arr.chpl"
-    std::vector<bool> f(10);
-    #line 30 "arr.chpl"
-    std::int64_t g = 1;
-    #line 31 "arr.chpl"
-    bool h = true;
-    #line 32 "arr.chpl"
-    std::string i = {"value"};
-    #line 33 "arr.chpl"
-    double j = 1.000000;
+#line 8 "arr.chpl"
+  std::vector<std::int64_t> k = {1, 2, 3, 4, 5};
+#line 9 "arr.chpl"
+  std::vector<std::vector<std::int64_t>> l = {{1, 2}, {3, 4}};
+#line 10 "arr.chpl"
+  std::vector<std::vector<std::int64_t>> m = {{1}, {2}, {3, 4, 5}};
+#line 11 "arr.chpl"
+  std::vector<std::vector<std::int64_t>> n = {{1, 2}, {1, 2}};
+#line 12 "arr.chpl"
+  std::vector<std::vector<std::vector<std::int64_t>>> o = {
+      {{1, 2}, {1, 2}, {3, 4}}, {{5, 6}, {7, 8}}};
+#line 13 "arr.chpl"
+  std::vector<std::vector<std::int64_t>> p = {{1, 2, 3, 4, 5}};
+#line 14 "arr.chpl"
+  std::vector<std::vector<std::vector<std::int64_t>>> q = {{{1, 2, 3, 4, 5}}};
+#line 16 "arr.chpl"
+  bool u;
+#line 17 "arr.chpl"
+  double v;
+#line 18 "arr.chpl"
+  std::uint8_t w;
+#line 19 "arr.chpl"
+  std::int64_t x;
+#line 20 "arr.chpl"
+  std::complex<double> y;
+#line 21 "arr.chpl"
+  std::string z;
+#line 23 "arr.chpl"
+  std::vector<std::int64_t> a(10);
+#line 24 "arr.chpl"
+  std::vector<double> b(10);
+#line 25 "arr.chpl"
+  std::vector<std::complex<double>> c(10);
+#line 26 "arr.chpl"
+  std::vector<std::string> d(10);
+#line 27 "arr.chpl"
+  std::vector<std::uint8_t> e(10);
+#line 28 "arr.chpl"
+  std::vector<bool> f(10);
+#line 30 "arr.chpl"
+  std::int64_t g = 1;
+#line 31 "arr.chpl"
+  bool h = true;
+#line 32 "arr.chpl"
+  std::string i = {"value"};
+#line 33 "arr.chpl"
+  double j = 1.000000;
 
-    return hpx::finalize();
+  return hpx::finalize();
 }
 
-int main(int argc, char ** argv) {
-    return hpx::init(argc, argv);
-}
+int main(int argc, char **argv) { return hpx::init(argc, argv); }

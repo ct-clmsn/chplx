@@ -77,7 +77,7 @@ std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
    auto fp = br.filePath();
    std::stringstream os{};
    std::filesystem::path p(fp.c_str());
-   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename() << "\"";
+   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"";
    return os.str();
 }
 
@@ -184,7 +184,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              }
           }
        }
-       else {
+       else if (sym) {
           std::optional<Symbol> fsym{};
           symbolTable.find(identifier_str, fsym);
 
@@ -324,7 +324,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
               symref.points.push_back( int_kind::value(ast) );
            }
         }
-        else {
+        else if (sym) {
            auto fsym = symbolTable.find(0, "int");
            if(fsym.has_value()) {
               sym->get().kind = (*(fsym->kind));

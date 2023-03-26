@@ -388,7 +388,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        }
 
        std::vector<Statement> * cStmts = curStmts.back();
-       const bool cStmtsnz = 0 < cStmts->size();
+       //const bool cStmtsnz = 0 < cStmts->size();
 
        switch(ary->second) {
            case 0: // =
@@ -400,7 +400,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            {
                cStmts->emplace_back(
                    std::make_shared<BinaryOpExpression>(BinaryOpExpression{
-                       {scopePtr, identifier, ast}, {}
+                       {{scopePtr}, identifier, ast}, {}
                    })
                );
 
