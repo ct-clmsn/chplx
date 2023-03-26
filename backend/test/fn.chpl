@@ -31,75 +31,9 @@ proc writeln(args...?k) {
 */
 
 /*
-proc get(Arr : [D] real, i : int) : real {
-   return inlinecxx("{}[{}]", Arr, i);
-}
-
-proc +(dst : ref real, src, real) : real {
-   return inlinecxx("{} + {}", dst, src);
-}
-
-proc -(dst : ref real, src, real) : real {
-   return inlinecxx("{} -= {}", dst, src);
-}
-
-proc *(dst : ref real, src, real) : real {
-   return inlinecxx("{} *= {}", dst, src);
-}
-
-proc /(dst : ref real, src, real) : real {
-   return inlinecxx("{} /= {}", dst, src);
-}
-
-proc %(dst : ref real, src, real) : real {
-   return inlinecxx("{} %= {}", dst, src);
-}
-
-proc =(dst : ref real, src, real) {
-   inlinecxx("{} = {}", dst, src);
-}
-
-proc +=(dst : ref real, src, real) {
-   inlinecxx("{} += {}", dst, src);
-}
-
-proc -=(dst : ref real, src, real) {
-   inlinecxx("{} -= {}", dst, src);
-}
-
-proc *=(dst : ref real, src, real) {
-   inlinecxx("{} *= {}", dst, src);
-}
-
-proc /=(dst : ref real, src, real) {
-   inlinecxx("{} /= {}", dst, src);
-}
-
-proc %=(dst : ref real, src, real) {
-   inlinecxx("{} %= {}", dst, src);
-}
-
-proc ==(dst : ref real, src, real) : bool {
-   return inlinecxx("{} == {}", dst, src);
-}
-
-// cast function
-//
-proc int(value : real) : int {
-   return inlinecxx("static_cast<int>({})", value);
-}
-
-// backend should use std::format (#include <format>)...
-// example...
-//
-// (value is a Symbol)
-//
-// std::cout << std::format("hpx::cout << {} << hpx::endl", *value->identifier) << std::endl;
-//
 proc writeln(value : real) {
    inlinecxx("hpx::cout << {} << hpx::endl", value);
 }
 
 writeln(1.0);
-
 */
