@@ -263,7 +263,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::BoolLiteral:
     {
        std::vector<Statement> * cStmts = curStmts.back();
-       cStmts->emplace_back(LiteralExpression{bool_kind{}, ast});
+       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+           cStmts->emplace_back(LiteralExpression{bool_kind{}, ast});
+       }
+       else {
+           cStmts->emplace_back(LiteralExpression{bool_kind{}, ast});
+       }
     }
     break;
     case asttags::ImagLiteral:
@@ -282,7 +287,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::RealLiteral:
     {
        std::vector<Statement> * cStmts = curStmts.back();
-       cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
+       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+           cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
+       }
+       else {
+           cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
+       }
     }
     break;
     case asttags::UintLiteral:
@@ -296,14 +306,8 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::StringLiteral:
     {
        std::vector<Statement> * cStmts = curStmts.back();
-       const bool cStmtsnz = 0 < cStmts->size();
-
-       if(cStmtsnz && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
-          //std::string strliteral{dynamic_cast<StringLiteral const*>(ast)->value().c_str()};
-
-          std::shared_ptr<FunctionCallExpression> & fce =
-             std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
-          fce->arguments.push_back(LiteralExpression{string_kind{}, ast});
+       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+          cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
        }
        else {
           cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
