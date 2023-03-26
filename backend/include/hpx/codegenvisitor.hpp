@@ -84,7 +84,6 @@ struct CodegenVisitor {
    //void exit(const uast::AstNode * node);
 
    void emitIndent() const;
-   void emitChapelLine(uast::AstNode const* ast) const;
    void emitArrayKind(Symbol const& s, uast::AstNode const* ast, std::shared_ptr<array_kind> & k);
    void emitArrayKindLit(Symbol const& s, uast::AstNode const* ast, std::shared_ptr<array_kind> & k);
 

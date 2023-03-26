@@ -47,6 +47,8 @@ struct ProgramTreeBuildingVisitor {
 
    std::vector< std::vector<Statement> * > curStmts;
    std::optional<uast::AstTag> prevTag;
+
+   static std::unordered_map<std::string, int> operatorAry;
 };
 
 } /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chplx */

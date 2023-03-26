@@ -109,6 +109,28 @@ struct FuncDeclArgVisitor {
    std::ostream & os;
 };
 
+struct ExprVisitor {
+    template<typename T>
+    void operator()(T const&) {}
+
+    void operator()(LiteralExpression const& node) {
+       node.emit(os);
+    }
+    void operator()(VariableExpression const& node) {
+       node.emit(os);
+    }
+    void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
+       std::visit(ExprVisitor{os}, node->statements[0]);
+
+       os << ' ' << node->op << ' ';
+
+       std::visit(ExprVisitor{os}, node->statements[1]);
+    }
+    void operator()(std::shared_ptr<UnaryOpExpression> const& node) {
+    }
+    std::ostream & os;
+};
+
 struct StatementVisitor {
    
    void emitIndent() const {
@@ -224,10 +246,23 @@ struct StatementVisitor {
          os << '}' << std::endl;
       }
    }
-   void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
+   void operator()(std::shared_ptr<UnaryOpExpression> const& node) {
       emitIndent();
       node->emit(os);
       emitIndent();
+   }
+   void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
+      emitIndent();
+      emitChapelLine(os, node->ast);
+      emitIndent();
+
+      std::visit(ExprVisitor{os}, node->statements[0]);
+
+      os << ' ' << node->op << ' ';
+
+      std::visit(ExprVisitor{os}, node->statements[1]);
+
+      os << ';' << std::endl;
    }
    void operator()(std::shared_ptr<ForallLoopExpression> const& expr) {
       emitIndent();
@@ -237,6 +272,11 @@ struct StatementVisitor {
          std::visit(*this, stmt);
       }
       os << "}";
+   }
+
+   void emitChapelLine(std::ostream & os, uast::AstNode const* ast) const {
+      auto fp = br.filePath();
+      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << fp.c_str() << "\"" << std::endl;
    }
 
    SymbolTable & symbolTable;

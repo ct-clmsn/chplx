@@ -85,9 +85,15 @@ struct ArithmeticOpExpression : public ExpressionBase {
 struct LiteralExpression {
    kind_types kind;
    uast::AstNode const * value;
+   void emit(std::ostream & os) const;
 };
 
 struct VariableExpression {
+   std::shared_ptr<Symbol> sym;
+   void emit(std::ostream & os) const;
+};
+
+struct OpExpression {
    std::shared_ptr<Symbol> sym;
 };
 
@@ -114,6 +120,7 @@ using Statement = std::variant<
    TupleDeclarationLiteralExpression,
    LiteralExpression,
    VariableExpression,
+   OpExpression,
    std::shared_ptr<UnaryOpExpression>,
    std::shared_ptr<BinaryOpExpression>,
    std::shared_ptr<TernaryOpExpression>,
@@ -128,20 +135,19 @@ struct StatementList {
 };
 
 struct UnaryOpExpression : public ArithmeticOpExpression {
-   std::string op;
-   Symbol & symbol;
+   std::vector<Statement> statements; // (OpExpression, {Literal/Variable}Expression
 
    void emit(std::ostream & os) const;
 };
 
 struct BinaryOpExpression : public ArithmeticOpExpression {
-   std::pair<Statement, Statement> statements;
+   std::vector<Statement> statements;
 
    void emit(std::ostream & os) const;
 };
 
 struct TernaryOpExpression : public ArithmeticOpExpression {
-   std::tuple<Statement, Statement, Statement> statements;
+   std::vector<Statement> statements;
 
    void emit(std::ostream & os) const;
 };

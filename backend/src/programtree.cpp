@@ -226,11 +226,18 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
 struct ArgumentVisitor {
     template<typename T>
     void operator()(T const&) {}
-
-    void operator()(string_kind const&) {
-       os << string_kind::value(node);
+    void operator()(bool_kind const&) {
+       os << std::boolalpha << bool_kind::value(node);
     }
-
+    void operator()(int_kind const&) {
+       os << int_kind::value(node);
+    }
+    void operator()(real_kind const&) {
+       os << std::fixed << real_kind::value(node);
+    }
+    void operator()(string_kind const&) {
+       os << '\"' << string_kind::value(node) << '\"';
+    }
     void operator()(LiteralExpression const& e) {
        node = e.value;
        std::visit(*this, e.kind);
@@ -238,7 +245,6 @@ struct ArgumentVisitor {
     void operator()(VariableExpression const& e) {
        os << (*(e.sym->identifier));
     }
-
     uast::AstNode const* node;
     std::stringstream os; 
 };
@@ -268,15 +274,32 @@ void FunctionCallExpression::emit(std::ostream & os) const {
 void FunctionDeclarationExpression::emit(std::ostream & os) const {
 }
 
+void VariableExpression::emit(std::ostream & os) const {
+    os << (*sym->identifier);
+};
+
+void LiteralExpression::emit(std::ostream & os) const {
+    ArgumentVisitor v{value, std::stringstream{}};
+    std::visit(v, kind);
+    os << v.os.str();
+};
+
+void UnaryOpExpression::emit(std::ostream & os) const {
+    // idx[0] is an operation
+    //
+
+    // idx[1] is either a literal or variable
+    //
+    ArgumentVisitor v{nullptr, std::stringstream{}};
+    std::visit(v, statements[1]);
+
+    os << op << v.os.str();
+}
+
 void BinaryOpExpression::emit(std::ostream & os) const {
-/*
-   if(std::string{op.c_str()} == "[]") {
-      os << (*symbols[0].identifier) << "[" << (*symbols[1].identifier) << "]";
-   }
-   else {
-      os << (*symbols[0].identifier) << op.c_str() << (*symbols[1].identifier);
-   }
-*/
+}
+
+void TernaryOpExpression::emit(std::ostream & os) const {
 }
 
 void ForallLoopExpression::emit(std::ostream & os) const {

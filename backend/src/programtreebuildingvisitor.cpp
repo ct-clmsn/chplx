@@ -20,6 +20,15 @@ using namespace chpl::ast::visitors::hpx;
 
 namespace chplx { namespace ast { namespace visitors { namespace hpx {
 
+std::unordered_map<std::string, int> ProgramTreeBuildingVisitor::operatorAry = {
+    {"=", 0},
+    {"+", 1},
+    {"-", 2},
+    {"*", 3},
+    {"/", 4},
+    {"%", 5},
+};
+
 struct VariableVisitor {
 
    const std::size_t scopePtr;
@@ -175,7 +184,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Identifier:
     {
        std::vector<Statement> * cStmts = curStmts.back();
-       if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
+       const bool cStmtsnz = 0 < cStmts->size();
+
+       if(cStmtsnz && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
 
           std::shared_ptr<FunctionCallExpression> & fce =
              std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
@@ -199,6 +210,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              return false;
           }
        }
+       else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+           std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
+           std::optional<Symbol> varsym =
+               symbolTable.find(scopePtr, identifier);
+           if(!varsym) { return false; }
+           cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+       }
     }
     break;
     case asttags::Import:
@@ -212,7 +230,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Range:
     {
        std::vector<Statement> * cStmts = curStmts.back();
-       if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(cStmts->back())) {
+       const bool cStmtsnz = 0 < cStmts->size();
+
+       if(cStmtsnz && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(cStmts->back())) {
           std::optional<Symbol> varsym =
              symbolTable.find(scopePtr, std::string{"range_" + emitChapelLine(ast)});
           if(varsym) {
@@ -241,12 +261,29 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::START_Literal:
     break;
     case asttags::BoolLiteral:
+    {
+       std::vector<Statement> * cStmts = curStmts.back();
+       cStmts->emplace_back(LiteralExpression{bool_kind{}, ast});
+    }
     break;
     case asttags::ImagLiteral:
     break;
     case asttags::IntLiteral:
+    {
+       std::vector<Statement> * cStmts = curStmts.back();
+       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+           cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
+       }
+       else {
+           cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
+       }
+    }
     break;
     case asttags::RealLiteral:
+    {
+       std::vector<Statement> * cStmts = curStmts.back();
+       cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
+    }
     break;
     case asttags::UintLiteral:
     break;
@@ -259,12 +296,17 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::StringLiteral:
     {
        std::vector<Statement> * cStmts = curStmts.back();
-       if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
+       const bool cStmtsnz = 0 < cStmts->size();
+
+       if(cStmtsnz && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
           //std::string strliteral{dynamic_cast<StringLiteral const*>(ast)->value().c_str()};
 
           std::shared_ptr<FunctionCallExpression> & fce =
              std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
           fce->arguments.push_back(LiteralExpression{string_kind{}, ast});
+       }
+       else {
+          cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
        }
     }
     break;
@@ -298,16 +340,45 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        OpCall const* ptr =
           dynamic_cast<OpCall const*>(ast);
-       std::cout << ptr->op().c_str() << std::endl;
 
-/*
-       if(0 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(curStmts.back())) {
-          ForallLoopExpression & expr = *std::get<std::shared_ptr<ForallLoopExpression>>(curStmts.back());
-          OpCall const* ptr =
-             dynamic_cast<OpCall const*>(ast);
-          expr.statements.push_back(std::make_shared<BinaryOpExpression>(BinaryOpExpression{{{symbolTable.symbolTableCount},std::string{ptr->op().c_str()}, ast}, {}}));
+       std::string identifier{ptr->op().c_str()};
+
+       std::optional<Symbol> varsym =
+           symbolTable.find(scopePtr, identifier);
+
+       if(!varsym) {
+           std::cerr << "programtreebuildingvisitor.cpp, enter, OpCall, identifier not found" << std::endl << std::flush;
+           return false;
        }
-*/
+
+       auto ary = operatorAry.find(identifier);
+       if(std::end(operatorAry) == ary) {
+           std::cerr << "programtreebuildingvisitor.cpp, enter, OpCall, identifier not found" << std::endl << std::flush;
+           return false;
+       }
+
+       std::vector<Statement> * cStmts = curStmts.back();
+       const bool cStmtsnz = 0 < cStmts->size();
+
+       switch(ary->second) {
+           case 0: // =
+           case 1: // +
+           case 2: // -
+           case 3: // *
+           case 4: // /
+           case 5: // %
+           {
+               cStmts->emplace_back(
+                   std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                       {scopePtr, identifier, ast}, {}
+                   })
+               );
+
+               auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+               curStmts.emplace_back(&(bo->statements));
+           }
+           break;
+       }
     }
     break;
     case asttags::PrimCall:
@@ -609,6 +680,9 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::FnCall:
     break;
     case asttags::OpCall:
+    {
+       curStmts.pop_back();
+    }
     break;
     case asttags::PrimCall:
     break;

@@ -29,7 +29,7 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
 {
    // populate the symbol table with a base set of entries:
    //
-   // bool, string, int, real, byte, complex, range, domain, template
+   // bool, string, int, real, byte, complex, range, domain, template(?)
    //
 
    addSymbolEntry("nil", Symbol{{nil_kind{}, std::string{"nil"}, {}, symbolTable.symbolTableCount}, {}});
@@ -43,6 +43,14 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("domain", Symbol{{domain_kind{}, std::string{"domain"}, {}, symbolTable.symbolTableCount}, {}});
    addSymbolEntry("?", Symbol{{template_kind{}, std::string{"?"}, {}, symbolTable.symbolTableCount}, {}});
 
+   // inlinecxx - allows users to inline c++ code into their chapel programs
+   //
+   addSymbolEntry("inlinecxx",
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}, nil_kind{}}}), std::string{"inlinecxx"}, {}, symbolTable.symbolTableCount}, {}}
+   );
+
+   // +,-,*,/,%,=
+   //
    addSymbolEntry("+",
       Symbol{{std::make_shared<func_kind>(func_kind{{{}, "+", {}}}), std::string{"+"}, {}, symbolTable.symbolTableCount}, {}}
    );
@@ -55,10 +63,13 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("/",
       Symbol{{std::make_shared<func_kind>(func_kind{{{}, "/", {}}}), std::string{"/"}, {}, symbolTable.symbolTableCount}, {}}
    );
-
-   addSymbolEntry("inlinecxx",
-      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}, nil_kind{}}}), std::string{"inlinecxx"}, {}, symbolTable.symbolTableCount}, {}}
+   addSymbolEntry("%",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "%", {}}}), std::string{"%"}, {}, symbolTable.symbolTableCount}, {}}
    );
+   addSymbolEntry("=",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "=", {}}}), std::string{"="}, {}, symbolTable.symbolTableCount}, {}}
+   );
+
 }
 
 std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
