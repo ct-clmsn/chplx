@@ -4,21 +4,16 @@
 # Distributed under the Boost Software License, Version 1.0. *(See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-add_chplx_pseudo_target(chplx_examples)
+include(CHPLX_LibraryAddExample)
 
-set(CHPLX_TEST_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR})
-
-# define a function to simplify adding tests
-function(chplx_example target)
-  add_executable(${target} EXCLUDE_FROM_ALL "${target}.cpp")
-  target_link_libraries(${target} chplx_library)
-  set_target_properties(${target} PROPERTIES FOLDER "Examples")
-  add_chplx_pseudo_dependencies(${target} chplx_library)
-  add_chplx_pseudo_dependencies(chplx_examples ${target})
-endfunction()
+add_chplx_pseudo_target(examples.librarydir)
+add_chplx_pseudo_target_folder(
+  examples TARGET examples.librarydir FOLDER "Library/Examples/Targets"
+)
+add_chplx_pseudo_dependencies(examples examples.librarydir)
 
 set(examples print_range)
 
 foreach(example ${examples})
-  chplx_example(${example})
+  chplx_library_add_example(${example})
 endforeach()

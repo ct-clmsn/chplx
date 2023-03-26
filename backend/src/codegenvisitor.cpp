@@ -16,6 +16,7 @@
 #include <cctype>
 #include <numeric>
 #include <type_traits>
+#include <filesystem>
 
 #define INDENT "    "
 
@@ -295,7 +296,8 @@ struct StatementVisitor {
 
    void emitChapelLine(std::ostream & os, uast::AstNode const* ast) const {
       auto fp = br.filePath();
-      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << fp.c_str() << "\"" << std::endl;
+      std::filesystem::path p(fp.c_str());
+      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"" << std::endl;
    }
 
    SymbolTable & symbolTable;

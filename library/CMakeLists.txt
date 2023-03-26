@@ -6,67 +6,32 @@
 
 cmake_minimum_required(VERSION 3.19)
 
-set(CHPLX_MAJOR_VERSION 0)
-set(CHPLX_MINOR_VERSION 1)
-set(CHPLX_PATCH_VERSION 0)
-set(CHPLX_BUILD_VERSION 0)
+set(CHPLX_LIBRARY_MAJOR_VERSION 0)
+set(CHPLX_LIBRARY_MINOR_VERSION 1)
+set(CHPLX_LIBRARY_PATCH_VERSION 0)
+set(CHPLX_LIBRARY_BUILD_VERSION 0)
 
-set(CHPLX_DEVELOPER ON)
-set(CHPLX_OFFICIAL_RELEASE 0)
+set(CHPLX_LIBRARY_DEVELOPER ON)
+set(CHPLX_LIBRARY_OFFICIAL_RELEASE 0)
 
-set(CHPLX_VERSION
-    ${CHPLX_MAJOR_VERSION}.${CHPLX_MINOR_VERSION}.${CHPLX_PATCH_VERSION}.${CHPLX_BUILD_VERSION}
+set(CHPLX_LIBRARY_VERSION
+    ${CHPLX_LIBRARY_MAJOR_VERSION}.${CHPLX_LIBRARY_MINOR_VERSION}.${CHPLX_LIBRARY_PATCH_VERSION}.${CHPLX_LIBRARY_BUILD_VERSION}
 )
 
 set(CMAKE_CXX_STANDARD 20)
 
-project(chplx_library VERSION ${CHPLX_VERSION})
+if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -stdlib=libc++)
+endif()
+
+project(chplx_library VERSION ${CHPLX_LIBRARY_VERSION})
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # global dependencies
 find_package(fmt REQUIRED CONFIG)
 find_package(HPX REQUIRED CONFIG)
-
-add_compile_definitions(
-  $<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>
-)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
-include(CHPLX_Utils)
-
-# ##############################################################################
-# build options
-if(WIN32)
-  set(CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT OFF)
-else()
-  set(CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT ON)
-endif()
-
-chplx_option(
-  CHPLX_WITH_EXAMPLES BOOL "Enable building examples (default: ON)" ON ADVANCED
-)
-
-chplx_option(
-  CHPLX_WITH_TESTS BOOL "Enable building tests (default: ON)" ON ADVANCED
-)
-
-chplx_option(
-  CHPLX_WITH_PSEUDO_DEPENDENCIES
-  BOOL
-  "Enable build pseudo target (default: ${CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT})"
-  ${CHPLX_WITH_PSEUDO_DEPENDENCIES_DEFAULT}
-  ADVANCED
-)
-
-chplx_option(
-  CHPLX_WITH_PARALLEL_TESTS_BIND_NONE
-  BOOL
-  "Pass --hpx:bind=none to tests that may run in parallel (cmake -j flag) (default: OFF)"
-  OFF
-  CATEGORY "Debugging"
-  ADVANCED
-)
 
 # create library target
 set(chplx_library_detail_headers include/chplx/detail/iterator_generator.hpp)
@@ -116,6 +81,8 @@ target_include_directories(
   chplx_library PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
+set_target_properties(chplx_library PROPERTIES FOLDER "Library")
+
 # generate version file
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/version.hpp.in"
@@ -137,7 +104,6 @@ configure_file(
 )
 
 if(CHPLX_WITH_TESTS)
-  add_chplx_pseudo_target(tests)
   enable_testing()
   include(CTest)
   add_subdirectory(test)

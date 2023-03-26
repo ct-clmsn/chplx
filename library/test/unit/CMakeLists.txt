@@ -4,6 +4,8 @@
 # Distributed under the Boost Software License, Version 1.0. *(See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+include(CHPLX_LibraryAddTest)
+
 set(tests
     assoc_domain
     atomic
@@ -39,5 +41,5 @@ set(tests
 set(locales_PARAMETERS LOCALITIES 2)
 
 foreach(test ${tests})
-  chplx_unit_test(${test} ${${test}_PARAMETERS})
+  chplx_library_add_unit_test(${test} ${${test}_PARAMETERS})
 endforeach()

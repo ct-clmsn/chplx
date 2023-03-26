@@ -2,19 +2,25 @@ chplx
 
 Quickstart
 
-This project is split into 3 directories and 3 projects, frontend, library, & backend.
+This project is split into 3 directories and 3 projects, frontend, library, & backend. 
+All parts can be built using a unified build system.
 
+Compilation directions...
+```
+  > mkdir build
+  > cd build
+  > cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang \
+          -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm \
+          -DCHPL_HOME=$(PATH_TO_CHAPEL) \
+          -DHPX_DIR=$(PATH_TO_HPX)/lib/cmake/HPX \
+          -Dfmt_DIR=$(PATH_TO_FMT)/lib/cmake/fmt \
+          ..
+  > cmake --target all
+```
 - frontend
 
   directory contains library code from the Chapel project, it is suggested that the chapel
   project be checked out from it's git repository `https://github.com/chapel-lang/chapel.git`
-
-  compilation directions...
-
-  - cd frontend
-  - mkdir build
-  - cd build
-  - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -DCHPL_HOME=$(PATH_TO_CHAPEL) ..`
 
   - license
 
@@ -36,12 +42,6 @@ This project is split into 3 directories and 3 projects, frontend, library, & ba
 
   directory contains a compiler driver that uses the front end; compilation directions...
 
-  - compile the frontend as per the instructions above
-  - `cd backend`
-  - `mkdir build`
-  - `cd build`
-  - `cmake -DClang_DIR=$(PATH_TO_LLVM)/lib/cmake/clang -DLLVM_DIR=$(PATH_TO_LLVM)/lib/cmake/llvm -Dfmt_DIR=$(PATH_TO_FMT)/lib/cmake/fmt ..`
-
   Backend usage example
 
   `./chplx -f ../../test/release/examples/primers/arrays.chpl`
@@ -55,8 +55,8 @@ This project is split into 3 directories and 3 projects, frontend, library, & ba
   from the chapel github repository; the standard library does
   include architecture/os specific chapel code
 
-  - license 
-  
+  - license
+
   The backend is under the Boost Software License Version 1.0
 
   https://www.boost.org/LICENSE_1_0.txt

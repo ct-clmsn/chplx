@@ -19,8 +19,11 @@
 add_library(tests-common OBJECT EXCLUDE_FROM_ALL
             test-common.cpp test-parsing.cpp test-resolution.cpp)
 target_link_libraries(tests-common ChplFrontend)
+set_target_properties(tests-common PROPERTIES FOLDER "Frontend/Tests")
 
-add_custom_target(tests)
+if(NOT TARGET tests)
+  add_custom_target(tests)
+endif()
 set(CHPL_TEST_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # define a function to simplify adding tests
@@ -40,6 +43,8 @@ function(comp_unit_test target)
   set_tests_properties(${target} PROPERTIES
                        ENVIRONMENT "CHPL_HOME=${CHPL_HOME}")
   add_dependencies(tests ${target})
+
+  set_target_properties(${target} PROPERTIES FOLDER "Frontend/Tests")
 endfunction(comp_unit_test)
 
 add_subdirectory(framework)

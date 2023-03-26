@@ -57,3 +57,5 @@ else(DOXYGEN_FOUND)
                     COMMAND echo "doxygen missing" && exit 1
                     COMMENT "could not find doxygen -- is it installed?")
 endif(DOXYGEN_FOUND)
+
+set_target_properties(api-docs PROPERTIES FOLDER "Frontend/Support")

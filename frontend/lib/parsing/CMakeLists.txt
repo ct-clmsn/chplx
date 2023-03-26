@@ -54,3 +54,4 @@ add_custom_target(parser
                   COMMAND flex chpl.lex
                   COMMAND rm -f bison-chpl-lib.output
                   COMMENT "generating flex/bison parser")
+set_target_properties(parser PROPERTIES FOLDER "Frontend/Support")
