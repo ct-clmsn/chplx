@@ -16,8 +16,11 @@ proc value() {
    b = b + 1;
 }
 
-/*
-a = (1 + 1);
+a = 1 + (1 + 1);
+a = (1 + 1) + 1;
+a = a + ( ( a + a ) + a );
+a = ( ( a + a ) + a ) + a;
+a = 1 + 1 * 1;
 a = (1 + a);
 a = (a + a);
 a = a + (a + a);
@@ -25,6 +28,7 @@ a = (a + a) + a;
 a = a + ( ( a + a ) + a );
 a = ( ( a + a ) + a ) + a;
 
+/*
 proc value() : int {
    return 1;
 }

@@ -266,6 +266,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            cStmts->emplace_back(LiteralExpression{bool_kind{}, ast});
        }
+       else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
+          std::shared_ptr<FunctionCallExpression> & fce =
+             std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
+          fce->arguments.push_back(LiteralExpression{bool_kind{}, ast});
+       }
        else {
            cStmts->emplace_back(LiteralExpression{bool_kind{}, ast});
        }
@@ -279,6 +284,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
        }
+       else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
+          std::shared_ptr<FunctionCallExpression> & fce =
+             std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
+          fce->arguments.push_back(LiteralExpression{int_kind{}, ast});
+       }
        else {
            cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
        }
@@ -289,6 +299,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::vector<Statement> * cStmts = curStmts.back();
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
+       }
+       else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
+          std::shared_ptr<FunctionCallExpression> & fce =
+             std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
+          fce->arguments.push_back(LiteralExpression{real_kind{}, ast});
        }
        else {
            cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
@@ -309,8 +324,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
           cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
        }
+       else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
+          std::shared_ptr<FunctionCallExpression> & fce =
+             std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
+          fce->arguments.push_back(LiteralExpression{string_kind{}, ast});
+       }
        else {
-          cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
+           cStmts->emplace_back(LiteralExpression{string_kind{}, ast});
        }
     }
     break;

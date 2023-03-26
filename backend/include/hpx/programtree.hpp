@@ -135,7 +135,7 @@ struct StatementList {
 };
 
 struct UnaryOpExpression : public ArithmeticOpExpression {
-   std::vector<Statement> statements; // (OpExpression, {Literal/Variable}Expression
+   std::vector<Statement> statements;
 
    void emit(std::ostream & os) const;
 };

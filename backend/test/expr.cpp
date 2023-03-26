@@ -18,17 +18,17 @@ int hpx_main(int argc, char ** argv) {
     #line 6 "../test/expr.chpl"
     a = a + a;
     #line 7 "../test/expr.chpl"
-    a = a + a + a;
+    a = ( a + a ) + a;
     #line 8 "../test/expr.chpl"
-    a = a + a + 1;
+    a = ( a + a ) + 1;
     #line 9 "../test/expr.chpl"
-    a = 1 + a + a + a;
+    a = ( ( 1 + a ) + a ) + a;
     #line 10 "../test/expr.chpl"
-    a = a + 1 + a + a;
+    a = ( ( a + 1 ) + a ) + a;
     #line 11 "../test/expr.chpl"
-    a = a + a + 1 + a;
+    a = ( ( a + a ) + 1 ) + a;
     #line 12 "../test/expr.chpl"
-    a = a + a + a + 1;
+    a = ( ( a + a ) + a ) + 1;
     #line 14 "../test/expr.chpl"
     void value() {
         #line 15 "../test/expr.chpl"
@@ -36,6 +36,28 @@ int hpx_main(int argc, char ** argv) {
         #line 16 "../test/expr.chpl"
         b = b + 1;
     }
+    #line 19 "../test/expr.chpl"
+    a = 1 + ( 1 + 1 );
+    #line 20 "../test/expr.chpl"
+    a = ( 1 + 1 ) + 1;
+    #line 21 "../test/expr.chpl"
+    a = a + ( ( a + a ) + a );
+    #line 22 "../test/expr.chpl"
+    a = ( ( a + a ) + a ) + a;
+    #line 23 "../test/expr.chpl"
+    a = 1 + ( 1 * 1 );
+    #line 24 "../test/expr.chpl"
+    a = 1 + a;
+    #line 25 "../test/expr.chpl"
+    a = a + a;
+    #line 26 "../test/expr.chpl"
+    a = a + ( a + a );
+    #line 27 "../test/expr.chpl"
+    a = ( a + a ) + a;
+    #line 28 "../test/expr.chpl"
+    a = a + ( ( a + a ) + a );
+    #line 29 "../test/expr.chpl"
+    a = ( ( a + a ) + a ) + a;
 
     return hpx::finalize();
 }

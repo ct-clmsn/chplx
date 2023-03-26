@@ -252,11 +252,10 @@ struct ArgumentVisitor {
 void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
       const std::size_t args_sz = arguments.size();
-
       if(0 < args_sz) {
-         ArgumentVisitor av{nullptr, std::stringstream{}};
-         std::visit(av, arguments[0]);
-         std::string cxx_fmt_str{av.os.str()};
+         //ArgumentVisitor av{nullptr, std::stringstream{}};
+         //std::visit(av, arguments[0]);
+         std::string cxx_fmt_str{string_kind::value(std::get<LiteralExpression>(arguments[0]).value)};
 
          fmt::dynamic_format_arg_store<fmt::format_context> store;
          for(std::size_t i = 1; i < args_sz; ++i) {

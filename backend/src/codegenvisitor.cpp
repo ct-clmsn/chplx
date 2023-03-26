@@ -120,11 +120,30 @@ struct ExprVisitor {
        node.emit(os);
     }
     void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
+       const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
+       const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
+
+       if(lop) {
+           os << "( ";
+       }
+
        std::visit(ExprVisitor{os}, node->statements[0]);
+
+       if(lop) {
+           os << " )";
+       }
 
        os << ' ' << node->op << ' ';
 
+       if(rop) {
+           os << "( ";
+       }
+
        std::visit(ExprVisitor{os}, node->statements[1]);
+
+       if(rop) {
+           os << " )";
+       }
     }
     void operator()(std::shared_ptr<UnaryOpExpression> const& node) {
     }
