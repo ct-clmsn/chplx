@@ -18,13 +18,16 @@ set(CHPLX_LIBRARY_VERSION
     ${CHPLX_LIBRARY_MAJOR_VERSION}.${CHPLX_LIBRARY_MINOR_VERSION}.${CHPLX_LIBRARY_PATCH_VERSION}.${CHPLX_LIBRARY_BUILD_VERSION}
 )
 
+if(NOT APPLE)
 set(CMAKE_CXX_STANDARD 20)
+endif()
 
-if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND NOT APPLE)
   set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -stdlib=libc++)
 endif()
 
 project(chplx_library VERSION ${CHPLX_LIBRARY_VERSION})
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -74,7 +77,25 @@ add_library(
   chplx_library STATIC ${chplx_library_sources} ${chplx_library_headers}
 )
 
+if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND APPLE)
+  find_library(CORE_LIBPATH NAMES CoreFoundation REQUIRED)
+
+  target_compile_options(chplx_library
+    PUBLIC
+      -nostdlib
+      -std=c++20
+      -stdlib=libc++
+  )
+
+  target_link_libraries(chplx_library PRIVATE ${CORE_LIBPATH})
+  target_link_libraries(chplx_library
+    PUBLIC
+      c++
+  )
+endif()
+
 target_link_libraries(chplx_library PUBLIC fmt::fmt-header-only HPX::hpx)
+
 
 target_include_directories(chplx_library PUBLIC include)
 target_include_directories(

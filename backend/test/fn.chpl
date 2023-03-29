@@ -21,6 +21,8 @@ proc print() {
    inlinecxx("std::cout << {} << {} << std::endl;", i, l);
 }
 
+var j = 1;
+
 /*
 proc writeln(args...?k) {
    inlinecxx("std::cout << ");

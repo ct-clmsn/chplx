@@ -15,14 +15,13 @@
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-SymbolTable::SymbolTable() : symbolTableCount(0), symbolTableRef(), lut(), parentSymbolTableId(0) {
+SymbolTable::SymbolTable() : symbolTableRef(), lut(), parentSymbolTableId(0) {
    symbolTableRoot =
       std::make_shared<SymbolTableNode>(
          SymbolTableNode{0, {}, {}, {}}
       );
    symbolTableRef = symbolTableRoot;
    lut.push_back(symbolTableRef);
-   ++symbolTableCount;
 }
 
 std::size_t SymbolTable::pushScope() {
@@ -30,14 +29,12 @@ std::size_t SymbolTable::pushScope() {
    // the end of the symboltable
    //
    symbolTableRef->children.push_back(
-      std::make_shared<SymbolTableNode>(SymbolTableNode{symbolTableCount, {}, {}, symbolTableRef})
+      std::make_shared<SymbolTableNode>(SymbolTableNode{lut.size(), {}, {}, symbolTableRef})
    );
-   ++symbolTableCount;
 
    symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(symbolTableRef->children.back());
    lut.push_back(symbolTableRef);
-   
-   return symbolTableCount;
+   return lut.size();   
 }
 
 void SymbolTable::popScope() {

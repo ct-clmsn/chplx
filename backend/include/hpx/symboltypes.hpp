@@ -240,9 +240,9 @@ struct SymbolTable {
    void dumpImpl(SymbolTableNode const& node);
    void dump();
 
-   // used to assign each SymbolTableNode a unique identifier
-   //
-   std::size_t symbolTableCount;
+   std::size_t scopePtr;
+
+   std::size_t symbolTableCount() { return lut.size(); }
 
    // root of the SymbolTable
    //

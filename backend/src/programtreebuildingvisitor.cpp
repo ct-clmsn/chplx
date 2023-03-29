@@ -23,7 +23,7 @@ using namespace chpl::ast::visitors::hpx;
 
 namespace chplx { namespace ast { namespace visitors { namespace hpx {
 
-std::unordered_map<std::string, int> ProgramTreeBuildingVisitor::operatorAry = {
+std::unordered_map<std::string, int> ProgramTreeBuildingVisitor::operatorEncoder = {
     {"=", 0},
     {"+", 1},
     {"-", 2},
@@ -355,12 +355,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        // function called
        //
        if(fc->calledExpression()->tag() == asttags::Identifier && !fc->callUsedSquareBrackets()) {
-           std::cout << dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str() << std::endl;
+           // TODO std::cout << dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str() << std::endl;
        }
        // array index invoked
        //
        else if(fc->calledExpression()->tag() == asttags::Identifier && fc->callUsedSquareBrackets()) {
-           std::cout << dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str() << std::endl;
+           // TODO std::cout << dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str() << std::endl;
        }
 
        if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(cStmts->back())) {
@@ -394,8 +394,8 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            return false;
        }
 
-       auto ary = operatorAry.find(identifier);
-       if(std::end(operatorAry) == ary) {
+       auto encop = operatorEncoder.find(identifier);
+       if(std::end(operatorEncoder) == encop) {
            std::cerr << "programtreebuildingvisitor.cpp, enter, OpCall, identifier not found" << std::endl << std::flush;
            return false;
        }
@@ -403,7 +403,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::vector<Statement> * cStmts = curStmts.back();
        //const bool cStmtsnz = 0 < cStmts->size();
 
-       switch(ary->second) {
+       switch(encop->second) {
            case 0: // =
            case 1: // +
            case 2: // -
@@ -541,7 +541,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        auto stn = symbolTable.lut[scopePtr];
        SymbolTable st{};
        st.symbolTableRoot = stn;
-       curStmts.push_back(std::make_shared<ForallLoopExpression>(ForallLoopExpression{{{symbolTable.symbolTableCount}, ast, {}, std::move(st)}, {},{}}));
+       curStmts.push_back(std::make_shared<ForallLoopExpression>(ForallLoopExpression{{{symbolTable.symbolTableRef.id}, ast, {}, std::move(st)}, {},{}}));
 */
     }
     break;
