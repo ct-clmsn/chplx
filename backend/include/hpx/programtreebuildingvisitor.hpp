@@ -40,7 +40,9 @@ struct ProgramTreeBuildingVisitor {
    std::optional<Statement> stmt;
    std::optional<uast::AstNode const*> node;
 
-   std::size_t scopePtr;
+   std::shared_ptr<SymbolTable::SymbolTableNode> symbolTableRef;
+   // symbolTableRef->id
+
    chpl::uast::BuilderResult const& br;
    SymbolTable & symbolTable;
    ProgramTree const& program;

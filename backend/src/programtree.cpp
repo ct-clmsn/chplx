@@ -250,15 +250,22 @@ struct ArgumentVisitor {
     std::stringstream os; 
 };
 
+void ReturnExpression::emit(std::ostream & os) const {
+    ArgumentVisitor v{nullptr, std::stringstream{}};
+    std::string retfmt{"return {};"};
+    fmt::dynamic_format_arg_store<fmt::format_context> store;
+    std::visit(v, value);
+    store.push_back(v.os.str());
+    os << fmt::vformat(retfmt, store) << std::endl;
+}
+
 void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
       const std::size_t args_sz = arguments.size();
       if(0 < args_sz) {
-         //ArgumentVisitor av{nullptr, std::stringstream{}};
-         //std::visit(av, arguments[0]);
          std::string cxx_fmt_str{string_kind::value(std::get<LiteralExpression>(arguments[0]).value)};
-
          fmt::dynamic_format_arg_store<fmt::format_context> store;
+
          for(std::size_t i = 1; i < args_sz; ++i) {
             Statement const& stmt = arguments[i];
             ArgumentVisitor v{nullptr, std::stringstream{}};
@@ -268,6 +275,23 @@ void FunctionCallExpression::emit(std::ostream & os) const {
 
          os << fmt::vformat(cxx_fmt_str, store) << std::endl;
       }
+   }
+   else if(std::holds_alternative<std::shared_ptr<func_kind>>(*symbol.kind)) {
+      const std::size_t args_sz = arguments.size();
+      std::string fn_fmt_str{};
+      fmt::dynamic_format_arg_store<fmt::format_context> store;
+
+      for(std::size_t i = 0; i < args_sz; ++i) {
+         fn_fmt_str += (i == 0) ? "{}" : ",{}";
+         Statement const& stmt = arguments[i];
+         ArgumentVisitor v{nullptr, std::stringstream{}};
+         std::visit(v, stmt);
+         store.push_back(v.os.str());
+      }
+
+      auto pos = symbol.identifier->find('_');
+
+      os << ( (pos == std::string::npos) ? (*symbol.identifier) : symbol.identifier->substr(0, pos) ) << '(' << fmt::vformat(fn_fmt_str, store) << ");" << std::endl;
    }
 }
 

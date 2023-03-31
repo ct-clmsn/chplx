@@ -101,6 +101,7 @@ struct UnaryOpExpression;
 struct BinaryOpExpression;
 struct TernaryOpExpression;
 
+struct ReturnExpression;
 struct ScopeExpression;
 struct FunctionDeclarationExpression;
 struct FunctionCallExpression;
@@ -124,6 +125,7 @@ using Statement = std::variant<
    std::shared_ptr<UnaryOpExpression>,
    std::shared_ptr<BinaryOpExpression>,
    std::shared_ptr<TernaryOpExpression>,
+   std::shared_ptr<ReturnExpression>,
    std::shared_ptr<ScopeExpression>,
    std::shared_ptr<FunctionDeclarationExpression>,
    std::shared_ptr<FunctionCallExpression>,
@@ -149,6 +151,12 @@ struct BinaryOpExpression : public ArithmeticOpExpression {
 struct TernaryOpExpression : public ArithmeticOpExpression {
    std::vector<Statement> statements;
 
+   void emit(std::ostream & os) const;
+};
+
+struct ReturnExpression {
+   Statement value;
+   std::string chplLine;
    void emit(std::ostream & os) const;
 };
 

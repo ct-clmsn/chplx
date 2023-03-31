@@ -213,6 +213,12 @@ struct StatementVisitor {
       emitIndent();
       node.emit(os);
    }
+   void operator()(std::shared_ptr<ReturnExpression> const& node) {
+      emitIndent();
+      os << node->chplLine << std::endl;
+      emitIndent();
+      node->emit(os);
+   }
    void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
       if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*node->symbol.kind)) {
          headers[static_cast<std::size_t>(HeaderEnum::std_iostream)] = true;

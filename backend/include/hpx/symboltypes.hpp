@@ -210,7 +210,7 @@ struct SymbolTable {
 
    struct SymbolTableNode {
       std::size_t id;
-      std::unordered_map<std::string, Symbol> entries;
+      std::map<std::string, Symbol> entries;
       std::vector<SymbolTableNodeImpl> children;
       std::optional<SymbolTableNodeImpl> parent;
    };
@@ -229,10 +229,13 @@ struct SymbolTable {
    void addEntry(const std::size_t lutid, std::string const& ident, Symbol s);
    void addEntry(std::string const& ident, Symbol s);
 
-   bool findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string const& ident, std::unordered_map<std::string, Symbol>::iterator & ret);
+   bool findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string const& ident, std::map<std::string, Symbol>::iterator & ret);
 
    std::optional<Symbol> find(std::string const& ident);
    std::optional<Symbol> find(const std::size_t idx, std::string const& ident);
+
+   std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > findPrefixImpl(std::shared_ptr<SymbolTableNode> & stref, std::string const& ident);
+   std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > findPrefix(const std::size_t idx, std::string const& ident);
 
    void find(std::string const& ident, std::optional<Symbol> & s);
    void find(const std::size_t idx, std::string const& ident, std::optional<Symbol> & s);

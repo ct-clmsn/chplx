@@ -19,9 +19,17 @@
 # If one exists, the write-git-sha script will only update it if the
 # values are different.
 # If CHPL_DONT_BUILD_SHA is set in the ENV, the git-sha will always be xxxxxxxxxx
+if(NOT EXISTS ${CHPL_CMAKE_PYTHON})
+    find_package(Python COMPONENTS Interpreter)
+    if(${Python_FOUND})
+        set(CHPL_CMAKE_PYTHON ${Python_EXECUTABLE})
+    else()
+        message(FATAL_ERROR "failed to find Python")
+    endif()
+endif()
 if (EXISTS ${CMAKE_SOURCE_DIR}/.git)
         execute_process(COMMAND ${CHPL_CMAKE_PYTHON}
-                                ${CMAKE_SOURCE_DIR}/util/config/write-git-sha
+                                ${CMAKE_SOURCE_DIR}/frontend/util/config/write-git-sha
                                 ${CMAKE_CURRENT_SOURCE_DIR}/util
                                 --build-version
                                 --chpl-home=${CHPL_HOME})
@@ -29,10 +37,11 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/.git)
 elseif(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
 # if we are not in a git repo, but we don't already have a git-version.cpp file,
 # write one as if CHPL_DONT_BUILD_SHA was set so we dont execute the git command
+
         execute_process(COMMAND ${CMAKE_COMMAND} -E env
                         CHPL_DONT_BUILD_SHA=1
                         ${CHPL_CMAKE_PYTHON}
-                        ${CMAKE_SOURCE_DIR}/util/config/write-git-sha
+                        ${CMAKE_SOURCE_DIR}/frontend/util/config/write-git-sha
                         ${CMAKE_CURRENT_SOURCE_DIR}/util
         --build-version
         --chpl-home=${CHPL_HOME})

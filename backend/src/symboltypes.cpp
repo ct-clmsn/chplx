@@ -52,7 +52,7 @@ void SymbolTable::addEntry(std::string const& ident, Symbol s) {
    symbolTableRef->entries.insert(std::make_pair(ident, s));
 }
 
-bool SymbolTable::findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string const& ident, std::unordered_map<std::string, Symbol>::iterator & ret) {
+bool SymbolTable::findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string const& ident, std::map<std::string, Symbol>::iterator & ret) {
    ret = stref->entries.find(ident);
    if(ret != std::end(stref->entries)) {
       return true;
@@ -67,7 +67,7 @@ bool SymbolTable::findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string
 
 std::optional<Symbol> SymbolTable::find(std::string const& ident) {
    std::shared_ptr<SymbolTableNode> & stref = symbolTableRef; 
-   std::unordered_map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
+   std::map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
    if(entry != std::end(stref->entries)) {
       return entry->second;
    } 
@@ -82,7 +82,7 @@ std::optional<Symbol> SymbolTable::find(std::string const& ident) {
 
 void SymbolTable::find(std::string const& ident, std::optional<Symbol> &s) {
    std::shared_ptr<SymbolTableNode> & stref = symbolTableRef; 
-   std::unordered_map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
+   std::map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
    if(entry != std::end(stref->entries)) {
       s = entry->second;
    } 
@@ -98,7 +98,7 @@ std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const
    std::shared_ptr<SymbolTableNode> & stref = lut[idx];
 
    if(stref->entries.size() < 1) { return {}; }
-   std::unordered_map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
+   std::map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
 
    if(entry != std::end(stref->entries)) {
       return entry->second;
@@ -112,10 +112,41 @@ std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const
    return {};
 }
 
+std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > SymbolTable::findPrefixImpl(std::shared_ptr<SymbolTableNode> & stref, std::string const& ident) {
+   auto ret = stref->entries.lower_bound(ident);
+   if(ret != std::end(stref->entries)) {
+      return std::make_pair(ret, std::end(stref->entries));
+   }
+
+   if(!stref->parent || 0 == stref->parent->index()) {
+      return {};
+   }
+
+   return findPrefixImpl(std::get<std::shared_ptr<SymbolTableNode>>(*(stref->parent)), ident);
+}
+
+std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > SymbolTable::findPrefix(const std::size_t idx, std::string const& ident) {
+   assert(idx >= 0 && idx < lut.size());
+   std::shared_ptr<SymbolTableNode> & stref = lut[idx];
+
+   if(stref->entries.size() < 1) { return {}; }
+   std::map<std::string, Symbol>::iterator entry = stref->entries.lower_bound(ident);
+
+   if(entry != std::end(stref->entries)) {
+      return std::make_pair(entry, std::end(stref->entries));
+   } 
+
+   if(stref->parent) {
+      return findPrefixImpl(std::get<std::shared_ptr<SymbolTableNode>>(*stref->parent), ident);
+   }
+
+   return {};
+}
+
 void SymbolTable::find(const std::size_t idx, std::string const& ident, std::optional<Symbol> & s) {
    assert(idx < lut.size());
    std::shared_ptr<SymbolTableNode> & stref = lut[idx];
-   std::unordered_map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
+   std::map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
    if(entry != std::end(stref->entries)) {
       s = entry->second;
    } 
