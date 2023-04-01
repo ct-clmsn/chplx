@@ -144,11 +144,11 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind)) ?
                 std::get<std::shared_ptr<func_kind>>(*sym->get().kind)->lutId :
                 0;
-
           if(std::holds_alternative<std::shared_ptr<array_kind>>(*(sym->get().kind))) {
              auto fsym = symbolTable.find(lutId, identifier_str);
              if(fsym) {
                 std::get<std::shared_ptr<array_kind>>( *(sym->get().kind))->kind = *(fsym->kind);
+                sym->get().scopeId = symbolTable.symbolTableRef->id;
              }
           }
           else if(std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind)) && 
@@ -181,16 +181,17 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              auto fsym = symbolTable.find(lutId, identifier_str);
              if(fsym.has_value()) {
                 sym->get().kind = (*(fsym->kind));
+                sym->get().scopeId = symbolTable.symbolTableRef->id;
              }
           }
        }
        else if (sym) {
           std::optional<Symbol> fsym{};
           symbolTable.find(identifier_str, fsym);
-
           //auto fsym = symbolTable.find(identifier_str);
           if(fsym.has_value()) {
              sym->get().kind = (*(fsym->kind));
+             sym->get().scopeId = symbolTable.symbolTableRef->id;
           }
        }
     }
@@ -515,7 +516,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              Symbol{{
                 std::make_optional<kind_types>(),
                 ident,
-                {}, 0
+                {}, symbolTable.symbolTableRef->id
              }}
           );
 
@@ -660,6 +661,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           ProgramTreeFunctionVisitor v{false, {}};
           ast->traverse(v);
 
+          // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
+          //
           symstack.emplace_back(
              Symbol{{
                 std::optional<kind_types>{
@@ -667,7 +670,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                       symbolTable.symbolTableRef->id, {}, {}, {}}})
                 },
                 v.lookup,
-                {}, 0
+                {}, symbolTable.symbolTableRef->id
              }});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
@@ -679,6 +682,10 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              std::get<std::shared_ptr<func_kind>>(*sym->get().kind);
 
           fk->symbolTableSignature = v.lookup;
+          // func_kind.lutId = the scope where the function's symboltable references
+          //
+          fk->lutId = symbolTable.symbolTableRef->id;
+
           symbolTable.parentSymbolTableId = parScope;
           symbolTable.symbolTableRef->parent = prevSymbolTableRef;
 
@@ -962,7 +969,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
                 fk->retKind = nil_kind{};
              }
 
-             symbolTable.addEntry(fk->lutId, (*(fk->symbolTableSignature)), *sym);
+             symbolTable.addEntry(sym->get().scopeId, (*(fk->symbolTableSignature)), *sym);
              sym.reset();
              symnode.reset();
 
