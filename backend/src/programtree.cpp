@@ -289,9 +289,8 @@ void FunctionCallExpression::emit(std::ostream & os) const {
          store.push_back(v.os.str());
       }
 
-      auto pos = symbol.identifier->find('_');
-
-      os << ( (pos == std::string::npos) ? (*symbol.identifier) : symbol.identifier->substr(0, pos) ) << '(' << fmt::vformat(fn_fmt_str, store) << ");" << std::endl;
+      auto pos = symbol.identifier->find('|');
+      os << symbol.identifier->substr( 0, (pos == std::string::npos) ? symbol.identifier->size() : pos ) << '(' << fmt::vformat(fn_fmt_str, store) << ")";
    }
 }
 

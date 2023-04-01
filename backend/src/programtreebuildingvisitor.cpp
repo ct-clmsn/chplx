@@ -193,6 +193,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        const bool cStmtsnz = 0 < cStmts->size();
 
        if(cStmtsnz && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
+
           std::shared_ptr<FunctionCallExpression> & fce =
              std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back()); 
 
@@ -202,6 +203,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              symbolTable.find(symbolTableRef->id, identifier);
 
           if(varsym) {
+// TODO: update for functions w/arguments
              if(!std::holds_alternative<std::shared_ptr<func_kind>>((*(varsym->kind))) &&
                 !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>((*(varsym->kind))) ) {
                 fce->arguments.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
@@ -213,16 +215,34 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           else {
              std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > fnsym =
                 symbolTable.findPrefix(symbolTableRef->id, identifier);
+
              if(!fnsym) {
                  std::cerr << "chplx error: Undefined symbol \"" << identifier << "\" detected; check\t" << emitChapelLine(ast) << std::endl << std::flush;
                  return false;
              }
              else if(!std::holds_alternative<std::shared_ptr<func_kind>>((*(fnsym->first->second.kind))) &&
                 !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>((*(fnsym->first->second.kind))) ) {
-                fce->arguments.emplace_back(VariableExpression{std::make_shared<Symbol>(fnsym->first->second)});
+
+                auto itr = fnsym->first;
+                for(; itr != fnsym->second; ++itr) {
+                    if(identifier == itr->first) {
+                        fce->arguments.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                        break;
+                    }
+                }
              }
              else {
-                fce->symbol = fnsym->first->second;
+                //fce->symbol = fnsym->first->second;
+                auto itr = fnsym->first;
+                for(; itr != fnsym->second; ++itr) {
+                    auto pos = itr->first.find('|');
+                    auto fnidstr = itr->first.substr( 0, (pos == std::string::npos) ? itr->first.size() : pos );
+
+                    if(identifier == fnidstr) {
+                        fce->symbol = itr->second;
+                        break;
+                    }
+                }
              }
           }
        }
@@ -399,9 +419,16 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
        const FnCall* fc = dynamic_cast<const FnCall*>(ast);
 
+       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) &&
+           fc->calledExpression()->tag() == asttags::Identifier && !fc->callUsedSquareBrackets() ) {
+           cStmts->emplace_back(
+              std::make_shared<FunctionCallExpression>(
+                 FunctionCallExpression{{symbolTableRef->id}, {}, {}, emitChapelLine(ast), symbolTable}
+           ));
+       }
        // function called
        //
-       if(fc->calledExpression()->tag() == asttags::Identifier && !fc->callUsedSquareBrackets()) {
+       else if(fc->calledExpression()->tag() == asttags::Identifier && !fc->callUsedSquareBrackets()) {
            //FunctionCallVisitor v{false, {}, symbolTable, symbolTableRef->id};
            //ast->traverse(v);
 
@@ -626,7 +653,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                 lookup += std::string{dynamic_cast<Function const*>(ast)->name().c_str()};
              }
              else if(tag == asttags::Identifier && !complete) {
-                lookup += "_" + std::string{dynamic_cast<Identifier const*>(ast)->name().c_str()};
+                lookup += "|" + std::string{dynamic_cast<Identifier const*>(ast)->name().c_str()};
              }
              else if(tag == asttags::Block && !complete) {
                 complete = true;

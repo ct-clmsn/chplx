@@ -153,13 +153,14 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           }
           else if(std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind)) && 
                   !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*(sym->get().kind))) {
+
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
 
-             auto fsym = symbolTable.find(lutId, identifier_str);
+//             auto fsym = symbolTable.find(lutId, identifier_str);
+             auto fsym = symbolTable.find(sym->get().scopeId, identifier_str);
 
              if(fsym.has_value()) {
-
                 if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*fsym->kind)) {
                       return true;
                 }
@@ -174,6 +175,9 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                             !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*(fsym->kind)) ) {
                       fk->retKind = (*(fsym->kind));
                    }
+                }
+                else if(0 == fk->args.size()) {
+                   fk->retKind = (*(fsym->kind));
                 }
              }
           }
@@ -642,7 +646,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 lookup += std::string{dynamic_cast<Function const*>(ast)->name().c_str()};
              }
              else if(tag == asttags::Identifier && !complete) {
-                lookup += "_" + std::string{dynamic_cast<Identifier const*>(ast)->name().c_str()};
+                lookup += "|" + std::string{dynamic_cast<Identifier const*>(ast)->name().c_str()};
              }
              else if(tag == asttags::Block && !complete) {
                 complete = true;

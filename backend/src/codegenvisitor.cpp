@@ -120,6 +120,9 @@ struct ExprVisitor {
     void operator()(VariableExpression const& node) {
        node.emit(os);
     }
+    void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
+       node->emit(os);
+    }
     void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
        const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
        const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
@@ -220,13 +223,17 @@ struct StatementVisitor {
       node->emit(os);
    }
    void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
-      if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*node->symbol.kind)) {
+      const bool is_cxx = std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*node->symbol.kind);
+      if(is_cxx) {
          headers[static_cast<std::size_t>(HeaderEnum::std_iostream)] = true;
       }
       emitIndent();
       os << node->chplLine << std::endl;
       emitIndent();
       node->emit(os);
+      if(!is_cxx) {
+         os << ';' << std::endl;
+      }
    }
    void operator()(std::shared_ptr<FunctionDeclarationExpression> const& node) {
       if(!node->symbol.identifier) { std::cerr << "codegenvisitor.cpp FunctionDeclarationExpression " << (*(node->symbol.identifier)) << " not found" << std::endl; }
@@ -245,7 +252,7 @@ struct StatementVisitor {
             (*(node->symbol.identifier));
 
          const std::size_t pos =
-            fn_sig_ref.find("_");
+            fn_sig_ref.find("|");
 
          os << ' ' << fn_sig_ref.substr(0, (pos != std::string::npos) ? pos : fn_sig_ref.size() ) << '(';
 
