@@ -246,6 +246,38 @@ struct ArgumentVisitor {
     void operator()(VariableExpression const& e) {
        os << (*(e.sym->identifier));
     }
+    void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
+       node->emit(os);
+    }
+    void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
+       const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
+       const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
+
+       if(lop) {
+           os << "( ";
+       }
+       std::visit(*this, node->statements[0]);
+
+       if(lop) {
+           os << " )";
+       }
+
+       os << ' ' << node->op << ' ';
+
+       if(rop) {
+           os << "( ";
+       }
+       std::visit(*this, node->statements[1]);
+
+       if(rop) {
+           os << " )";
+       }
+    }
+    void operator()(std::shared_ptr<UnaryOpExpression> const& node) {
+    }
+    void operator()(std::shared_ptr<TernaryOpExpression> const& node) {
+    }
+
     uast::AstNode const* node;
     std::stringstream os; 
 };
@@ -258,6 +290,13 @@ void ReturnExpression::emit(std::ostream & os) const {
     store.push_back(v.os.str());
     os << fmt::vformat(retfmt, store) << std::endl;
 }
+
+struct ExprVisitor {
+    template<typename T>
+    void operator()(T const&) {}
+
+    std::ostream & os;
+};
 
 void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
@@ -281,16 +320,27 @@ void FunctionCallExpression::emit(std::ostream & os) const {
       std::string fn_fmt_str{};
       fmt::dynamic_format_arg_store<fmt::format_context> store;
 
-      for(std::size_t i = 0; i < args_sz; ++i) {
-         fn_fmt_str += (i == 0) ? "{}" : ",{}";
-         Statement const& stmt = arguments[i];
-         ArgumentVisitor v{nullptr, std::stringstream{}};
-         std::visit(v, stmt);
-         store.push_back(v.os.str());
-      }
+      if(symbol.identifier == "[]") {
+          assert(arguments.size() == 2);
+          ArgumentVisitor v{nullptr, std::stringstream{}};
+          std::visit(v, arguments[0]);
+          ArgumentVisitor idx{nullptr, std::stringstream{}};
+          std::visit(idx, arguments[1]);
 
-      auto pos = symbol.identifier->find('|');
-      os << symbol.identifier->substr( 0, (pos == std::string::npos) ? symbol.identifier->size() : pos ) << '(' << fmt::vformat(fn_fmt_str, store) << ")";
+          os << v.os.str() << '[' << idx.os.str()  << ']';
+      }
+      else {
+         for(std::size_t i = 0; i < args_sz; ++i) {
+            fn_fmt_str += (i == 0) ? "{}" : ",{}";
+            Statement const& stmt = arguments[i];
+            ArgumentVisitor v{nullptr, std::stringstream{}};
+            std::visit(v, stmt);
+            store.push_back(v.os.str());
+         }
+
+         auto pos = symbol.identifier->find('|');
+         os << symbol.identifier->substr( 0, (pos == std::string::npos) ? symbol.identifier->size() : pos ) << '(' << fmt::vformat(fn_fmt_str, store) << ")";
+      }
    }
 }
 

@@ -97,7 +97,6 @@ std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const
    assert(idx >= 0 && idx < lut.size());
    std::shared_ptr<SymbolTableNode> & stref = lut[idx];
 
-   if(stref->entries.size() < 1) { return {}; }
    std::map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
 
    if(entry != std::end(stref->entries)) {
@@ -129,7 +128,6 @@ std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std:
    assert(idx >= 0 && idx < lut.size());
    std::shared_ptr<SymbolTableNode> & stref = lut[idx];
 
-   if(stref->entries.size() < 1) { return {}; }
    std::map<std::string, Symbol>::iterator entry = stref->entries.lower_bound(ident);
 
    if(entry != std::end(stref->entries)) {

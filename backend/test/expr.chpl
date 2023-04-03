@@ -2,7 +2,6 @@
 // when `var b` is accessed during ast traversal in
 // programtreebuilder
 //
-
 var a : int;
 
 a = 1 + 1;
@@ -28,7 +27,6 @@ a = (a + a) + a;
 a = a + ( ( a + a ) + a );
 a = ( ( a + a ) + a ) + a;
 
-
 proc value() : int {
    return 1;
 }
@@ -48,6 +46,9 @@ proc valuea(a : int) : int {
 }
 
 a = valuea(a);
+a = valuea(a+1);
+a = 1 + valuea(a+1);
+a = valuea(a+1) + 1;
 
 a = 1 + valuea(a);
 a = valuea(a) + 1;
@@ -58,12 +59,6 @@ a = ( ( valuea(a) + valuea(a) ) + valuea(a) ) + a;
 a = a + ( (valuea(a) + valuea(a)) + valuea(a) );
 
 /*
-proc value() {
-   var b = 1;
-   b = b + 1;
-}
-
 var b : [0..10] int;
-
-b[0] = 1 + value();
+b[0 + 0] = 1;
 */
