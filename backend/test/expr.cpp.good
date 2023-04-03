@@ -7,91 +7,97 @@
 
 int hpx_main(int argc, char ** argv) {
 
-    #line 6 "expr.chpl"
+    #line 5 "expr.chpl"
     std::int64_t a;
-    #line 8 "expr.chpl"
+    #line 7 "expr.chpl"
     a = 1 + 1;
-    #line 9 "expr.chpl"
+    #line 8 "expr.chpl"
     a = a + 1;
+    #line 9 "expr.chpl"
+    a = 1 + a;
     #line 10 "expr.chpl"
-    a = 1 + a;
+    a = a + a;
     #line 11 "expr.chpl"
-    a = a + a;
+    a = ( a + a ) + a;
     #line 12 "expr.chpl"
-    a = ( a + a ) + a;
-    #line 13 "expr.chpl"
     a = ( a + a ) + 1;
-    #line 14 "expr.chpl"
+    #line 13 "expr.chpl"
     a = ( ( 1 + a ) + a ) + a;
-    #line 15 "expr.chpl"
+    #line 14 "expr.chpl"
     a = ( ( a + 1 ) + a ) + a;
-    #line 16 "expr.chpl"
+    #line 15 "expr.chpl"
     a = ( ( a + a ) + 1 ) + a;
-    #line 17 "expr.chpl"
+    #line 16 "expr.chpl"
     a = ( ( a + a ) + a ) + 1;
-    #line 19 "expr.chpl"
+    #line 18 "expr.chpl"
     a = 1 + ( 1 + 1 );
-    #line 20 "expr.chpl"
+    #line 19 "expr.chpl"
     a = ( 1 + 1 ) + 1;
+    #line 20 "expr.chpl"
+    a = a + ( ( a + a ) + a );
     #line 21 "expr.chpl"
-    a = a + ( ( a + a ) + a );
+    a = ( ( a + a ) + a ) + a;
     #line 22 "expr.chpl"
-    a = ( ( a + a ) + a ) + a;
-    #line 23 "expr.chpl"
     a = 1 + ( 1 * 1 );
-    #line 24 "expr.chpl"
+    #line 23 "expr.chpl"
     a = 1 + a;
-    #line 25 "expr.chpl"
+    #line 24 "expr.chpl"
     a = a + a;
-    #line 26 "expr.chpl"
+    #line 25 "expr.chpl"
     a = a + ( a + a );
-    #line 27 "expr.chpl"
+    #line 26 "expr.chpl"
     a = ( a + a ) + a;
-    #line 28 "expr.chpl"
+    #line 27 "expr.chpl"
     a = a + ( ( a + a ) + a );
-    #line 29 "expr.chpl"
+    #line 28 "expr.chpl"
     a = ( ( a + a ) + a ) + a;
-    #line 32 "expr.chpl"
+    #line 30 "expr.chpl"
     std::int64_t value() {
-        #line 33 "expr.chpl"
+        #line 31 "expr.chpl"
         return 1;
     }
-    #line 36 "expr.chpl"
+    #line 34 "expr.chpl"
     a = value();
-    #line 38 "expr.chpl"
+    #line 36 "expr.chpl"
     a = 1 + value();
-    #line 39 "expr.chpl"
+    #line 37 "expr.chpl"
     a = value() + 1;
-    #line 40 "expr.chpl"
+    #line 38 "expr.chpl"
     a = value() + value();
-    #line 41 "expr.chpl"
+    #line 39 "expr.chpl"
     a = a + ( value() + value() );
-    #line 42 "expr.chpl"
+    #line 40 "expr.chpl"
     a = ( value() + value() ) + a;
-    #line 43 "expr.chpl"
+    #line 41 "expr.chpl"
     a = ( ( value() + value() ) + value() ) + a;
-    #line 44 "expr.chpl"
+    #line 42 "expr.chpl"
     a = a + ( ( value() + value() ) + value() );
-    #line 46 "expr.chpl"
+    #line 44 "expr.chpl"
     std::int64_t valuea(std::int64_t a) {
-        #line 47 "expr.chpl"
+        #line 45 "expr.chpl"
         return a;
     }
-    #line 50 "expr.chpl"
+    #line 48 "expr.chpl"
     a = valuea(a);
-    #line 52 "expr.chpl"
-    a = 1 + valuea(a);
+    #line 49 "expr.chpl"
+    a = valuea(a + 1);
+    #line 50 "expr.chpl"
+    a = 1 + valuea(a + 1);
+    #line 51 "expr.chpl"
+    a = valuea(a + 1) + 1;
     #line 53 "expr.chpl"
-    a = valuea(a) + 1;
+    a = 1 + valuea(a);
     #line 54 "expr.chpl"
-    a = valuea(a) + valuea(a);
+    a = valuea(a) + 1;
     #line 55 "expr.chpl"
-    a = a + ( valuea(a) + valuea(a) );
+    a = valuea(a) + valuea(a);
     #line 56 "expr.chpl"
-    a = ( valuea(a) + valuea(a) ) + a;
+    a = a + ( valuea(a) + valuea(a) );
     #line 57 "expr.chpl"
-    a = ( ( valuea(a) + valuea(a) ) + valuea(a) ) + a;
+    a = ( valuea(a) + valuea(a) ) + a;
     #line 58 "expr.chpl"
+    a = ( ( valuea(a) + valuea(a) ) + valuea(a) ) + a;
+    #line 59 "expr.chpl"
     a = a + ( ( valuea(a) + valuea(a) ) + valuea(a) );
 
     return hpx::finalize();
