@@ -171,6 +171,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Break:
     break;
     case asttags::Comment:
+    {
+       Comment const* ptr =
+          dynamic_cast<Comment const*>(ast);
+       std::vector<Statement> * cStmts = curStmts.back();
+       cStmts->emplace_back(CommentExpression{std::string{ptr->str()}, emitChapelLine(ast)});
+    }
     break;
     case asttags::Continue:
     break;

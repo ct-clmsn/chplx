@@ -298,6 +298,10 @@ struct ExprVisitor {
     std::ostream & os;
 };
 
+void CommentExpression::emit(std::ostream & os) const {
+   os << value;
+}
+
 void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
       const std::size_t args_sz = arguments.size();

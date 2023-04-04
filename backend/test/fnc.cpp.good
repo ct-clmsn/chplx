@@ -23,6 +23,10 @@ int hpx_main(int argc, char ** argv) {
     std::int64_t c = 1;
     #line 12 "fnc.chpl"
     beta(c);
+    #line -1 "fnc.chpl"
+    //c = beta(c);
+    #line -1 "fnc.chpl"
+    //inlinecxx("std::cout << c << std::endl;");
 
     return hpx::finalize();
 }

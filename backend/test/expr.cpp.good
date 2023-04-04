@@ -7,6 +7,14 @@
 
 int hpx_main(int argc, char ** argv) {
 
+    #line -1 "expr.chpl"
+    // function call scope isn't getting cleared from stack
+    #line -1 "expr.chpl"
+    // when `var b` is accessed during ast traversal in
+    #line -1 "expr.chpl"
+    // programtreebuilder
+    #line -1 "expr.chpl"
+    //
     #line 5 "expr.chpl"
     std::int64_t a;
     #line 7 "expr.chpl"

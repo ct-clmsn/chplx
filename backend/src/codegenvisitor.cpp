@@ -222,6 +222,13 @@ struct StatementVisitor {
       emitIndent();
       node->emit(os);
    }
+   void operator()(CommentExpression const& node) {
+      emitIndent();
+      os << node.chplLine << std::endl;
+      emitIndent();
+      node.emit(os);
+      os << std::endl;
+   }
    void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
       const bool is_cxx = std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*node->symbol.kind);
       if(is_cxx) {
