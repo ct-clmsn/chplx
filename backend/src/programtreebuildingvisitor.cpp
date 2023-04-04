@@ -205,7 +205,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           if(varsym) {
              if(!std::holds_alternative<std::shared_ptr<func_kind>>((*(varsym->kind))) &&
                 !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>((*(varsym->kind))) ) {
-                cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+                //cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+                fce->arguments.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+                curStmts.emplace_back(&(fce->arguments));
              }
              else {
                 fce->symbol = *varsym;
@@ -274,7 +276,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
           }
           else {
-std::cout << "HERE\t" << symbolTableRef->id << ' ' << varsym.has_value() << std::endl;
               std::cerr << "chplx error: Undefined symbol \"" << identifier << "\" detected; check\t" << emitChapelLine(ast) << std::endl << std::flush;
               return false;
           }
@@ -471,7 +472,6 @@ std::cout << "HERE\t" << symbolTableRef->id << ' ' << varsym.has_value() << std:
 
            std::vector<Statement> * cStmts = curStmts.back();
            if(encop->second == 6 /* [] */ ) {
-
               cStmts->emplace_back(
                  std::make_shared<FunctionCallExpression>(
                      FunctionCallExpression{{symbolTableRef->id}, {*varsym}, {}, emitChapelLine(ast), symbolTable}
@@ -572,9 +572,7 @@ std::cout << "HERE\t" << symbolTableRef->id << ' ' << varsym.has_value() << std:
        std::string identifier =
           std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()};
 
-// TODO: going to have to modify to handle scope (function calls, forloops, etc)
-//
-       std::optional<Symbol> varsym{};
+      std::optional<Symbol> varsym{};
        symbolTable.find(symbolTableRef->id, identifier, varsym);
 
        if(varsym && !varsym->literal) {

@@ -320,8 +320,7 @@ void FunctionCallExpression::emit(std::ostream & os) const {
       std::string fn_fmt_str{};
       fmt::dynamic_format_arg_store<fmt::format_context> store;
 
-      if(symbol.identifier == "[]") {
-          assert(arguments.size() == 2);
+      if((*symbol.identifier) == "[]" && 0 < args_sz) {
           ArgumentVisitor v{nullptr, std::stringstream{}};
           std::visit(v, arguments[0]);
           ArgumentVisitor idx{nullptr, std::stringstream{}};

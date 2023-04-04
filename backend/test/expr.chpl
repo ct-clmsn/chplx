@@ -58,7 +58,5 @@ a = ( valuea(a) + valuea(a) ) + a;
 a = ( ( valuea(a) + valuea(a) ) + valuea(a) ) + a;
 a = a + ( (valuea(a) + valuea(a)) + valuea(a) );
 
-/*
 var b : [0..10] int;
 b[0 + 0] = 1;
-*/

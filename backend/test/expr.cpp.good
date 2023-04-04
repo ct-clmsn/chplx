@@ -99,6 +99,10 @@ int hpx_main(int argc, char ** argv) {
     a = ( ( valuea(a) + valuea(a) ) + valuea(a) ) + a;
     #line 59 "expr.chpl"
     a = a + ( ( valuea(a) + valuea(a) ) + valuea(a) );
+    #line 61 "expr.chpl"
+    std::vector<std::int64_t> b(10);
+    #line 62 "expr.chpl"
+    b[0 + 0] = 1;
 
     return hpx::finalize();
 }
