@@ -7,24 +7,8 @@
 
 int hpx_main(int argc, char ** argv) {
 
-    #line -1 "fn.chpl"
-    // Copyright (c) 2023 Christopher Taylor
-    #line -1 "fn.chpl"
-    //
-    #line -1 "fn.chpl"
-    // SPDX-License-Identifier: BSL-1.0
-    #line -1 "fn.chpl"
-    // Distributed under the Boost Software License, Version 1.0. *(See accompanying
-    #line -1 "fn.chpl"
-    // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-    #line -1 "fn.chpl"
-    //
-    #line -1 "fn.chpl"
-    // `inlinecxx` is defined in the compiler
-    #line -1 "fn.chpl"
-    //
     #line 11 "fn.chpl"
-    void print() {
+    std::function<void()> print = []() -> void {
         #line 12 "fn.chpl"
         std::int64_t j;
         #line 13 "fn.chpl"
@@ -45,26 +29,9 @@ int hpx_main(int argc, char ** argv) {
         std::cout << i << std::endl;
         #line 21 "fn.chpl"
         std::cout << i << l << std::endl;
-    }
+    };
     #line 24 "fn.chpl"
     std::int64_t j = 1;
-    #line -1 "fn.chpl"
-    /*
-proc writeln(args...?k) {
-   inlinecxx("std::cout << ");
-   for arg in args do
-      inlinecxx("{}", a);
-   inlinecx("std::endl;");
-}
-*/
-    #line -1 "fn.chpl"
-    /*
-proc writeln(value : real) {
-   inlinecxx("hpx::cout << {} << hpx::endl", value);
-}
-
-writeln(1.0);
-*/
 
     return hpx::finalize();
 }

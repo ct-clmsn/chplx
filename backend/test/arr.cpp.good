@@ -7,18 +7,6 @@
 
 int hpx_main(int argc, char ** argv) {
 
-    #line -1 "arr.chpl"
-    // Copyright (c) 2023 Christopher Taylor
-    #line -1 "arr.chpl"
-    //
-    #line -1 "arr.chpl"
-    // SPDX-License-Identifier: BSL-1.0
-    #line -1 "arr.chpl"
-    // Distributed under the Boost Software License, Version 1.0. *(See accompanying
-    #line -1 "arr.chpl"
-    // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-    #line -1 "arr.chpl"
-    //
     #line 8 "arr.chpl"
     std::vector<std::int64_t> k = {1,2,3,4,5};
     #line 9 "arr.chpl"
@@ -65,10 +53,6 @@ int hpx_main(int argc, char ** argv) {
     std::string i = {"value"};
     #line 33 "arr.chpl"
     double j = 1.000000;
-    #line -1 "arr.chpl"
-    //var a = {1..10};
-    #line -1 "arr.chpl"
-    //var a : domain(1) = {1..10};
 
     return hpx::finalize();
 }

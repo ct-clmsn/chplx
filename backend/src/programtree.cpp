@@ -298,10 +298,6 @@ struct ExprVisitor {
     std::ostream & os;
 };
 
-void CommentExpression::emit(std::ostream & os) const {
-   os << value;
-}
-
 void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
       const std::size_t args_sz = arguments.size();
@@ -327,10 +323,16 @@ void FunctionCallExpression::emit(std::ostream & os) const {
       if((*symbol.identifier) == "[]" && 0 < args_sz) {
           ArgumentVisitor v{nullptr, std::stringstream{}};
           std::visit(v, arguments[0]);
-          ArgumentVisitor idx{nullptr, std::stringstream{}};
-          std::visit(idx, arguments[1]);
 
-          os << v.os.str() << '[' << idx.os.str()  << ']';
+          for(std::size_t i = 1; i < args_sz; ++i) {
+             fn_fmt_str += "[{}]";
+             Statement const& stmt = arguments[i];
+             ArgumentVisitor v{nullptr, std::stringstream{}};
+             std::visit(v, stmt);
+             store.push_back(v.os.str());
+          }
+
+          os << v.os.str() << fmt::vformat(fn_fmt_str, store);
       }
       else {
          for(std::size_t i = 0; i < args_sz; ++i) {

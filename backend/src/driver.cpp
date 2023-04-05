@@ -18,6 +18,7 @@
 #include "hpx/programtreebuildingvisitor.hpp"
 #include "hpx/symbolbuildingvisitor.hpp"
 #include "hpx/codegenvisitor.hpp"
+#include "hpx/cmakegen.hpp"
 #include "ErrorGuard.h"
 
 #include <optional>
@@ -187,10 +188,13 @@ int main(int argc, char ** argv) {
       generateHpxMainEnd(ofs);
       generateSourceFooter(ofs);
 
-      cgv.generateApplicationHeader();
+      cgv.generateApplicationHeader(chplFilePth);
 
       ofs.flush();
       ofs.close();
+
+      CMakeGenerator gen{};
+      gen.generate(chplFilePth);
    }
 
    return 0;

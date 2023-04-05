@@ -24,6 +24,7 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <filesystem>
 
 using namespace chplx::ast::hpx;
 
@@ -40,6 +41,7 @@ enum class HeaderEnum {
     std_numeric,
     std_fstream,
     std_iostream,
+    std_functional,
     hpx_lco_channel,
     hpx_lco_future,
     hpx_algorithm,
@@ -75,7 +77,7 @@ struct CodegenVisitor {
 
    ~CodegenVisitor() = default;
 
-   void generateApplicationHeader();
+   void generateApplicationHeader(std::filesystem::path const& chplpth);
 
    //template <typename Kind>
    //void addSymbolEntry(char const* type);

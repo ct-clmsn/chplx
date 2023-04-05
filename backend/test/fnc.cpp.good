@@ -8,25 +8,21 @@
 int hpx_main(int argc, char ** argv) {
 
     #line 1 "fnc.chpl"
-    void alpha() {
+    std::function<void()> alpha = []() -> void {
         #line 2 "fnc.chpl"
         std::int64_t a;
-    }
+    };
     #line 5 "fnc.chpl"
     alpha();
     #line 7 "fnc.chpl"
-    std::int64_t beta(std::int64_t b) {
+    std::function<std::int64_t(std::int64_t)> beta = [](std::int64_t b) -> std::int64_t {
         #line 8 "fnc.chpl"
         return b;
-    }
+    };
     #line 11 "fnc.chpl"
     std::int64_t c = 1;
     #line 12 "fnc.chpl"
     beta(c);
-    #line -1 "fnc.chpl"
-    //c = beta(c);
-    #line -1 "fnc.chpl"
-    //inlinecxx("std::cout << c << std::endl;");
 
     return hpx::finalize();
 }

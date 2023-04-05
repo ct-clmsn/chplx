@@ -7,14 +7,6 @@
 
 int hpx_main(int argc, char ** argv) {
 
-    #line -1 "expr.chpl"
-    // function call scope isn't getting cleared from stack
-    #line -1 "expr.chpl"
-    // when `var b` is accessed during ast traversal in
-    #line -1 "expr.chpl"
-    // programtreebuilder
-    #line -1 "expr.chpl"
-    //
     #line 5 "expr.chpl"
     std::int64_t a;
     #line 7 "expr.chpl"
@@ -60,10 +52,10 @@ int hpx_main(int argc, char ** argv) {
     #line 28 "expr.chpl"
     a = ( ( a + a ) + a ) + a;
     #line 30 "expr.chpl"
-    std::int64_t value() {
+    std::function<std::int64_t()> value = []() -> std::int64_t {
         #line 31 "expr.chpl"
         return 1;
-    }
+    };
     #line 34 "expr.chpl"
     a = value();
     #line 36 "expr.chpl"
@@ -81,10 +73,10 @@ int hpx_main(int argc, char ** argv) {
     #line 42 "expr.chpl"
     a = a + ( ( value() + value() ) + value() );
     #line 44 "expr.chpl"
-    std::int64_t valuea(std::int64_t a) {
+    std::function<std::int64_t(std::int64_t)> valuea = [](std::int64_t a) -> std::int64_t {
         #line 45 "expr.chpl"
         return a;
-    }
+    };
     #line 48 "expr.chpl"
     a = valuea(a);
     #line 49 "expr.chpl"
@@ -111,6 +103,14 @@ int hpx_main(int argc, char ** argv) {
     std::vector<std::int64_t> b(10);
     #line 62 "expr.chpl"
     b[0 + 0] = 1;
+    #line 63 "expr.chpl"
+    b[0 + 0] = 1;
+    #line 65 "expr.chpl"
+    std::vector<std::vector<std::int64_t>> c = {{1,2},{3,4}};
+    #line 66 "expr.chpl"
+    c[0 + 0][0] = 1;
+    #line 67 "expr.chpl"
+    c[0 + 0][0] = 1;
 
     return hpx::finalize();
 }

@@ -171,12 +171,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Break:
     break;
     case asttags::Comment:
-    {
-       Comment const* ptr =
-          dynamic_cast<Comment const*>(ast);
-       std::vector<Statement> * cStmts = curStmts.back();
-       cStmts->emplace_back(CommentExpression{std::string{ptr->str()}, emitChapelLine(ast)});
-    }
     break;
     case asttags::Continue:
     break;
@@ -207,11 +201,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
           std::optional<Symbol> varsym =
              symbolTable.find(symbolTableRef->id, identifier);
-
           if(varsym) {
              if(!std::holds_alternative<std::shared_ptr<func_kind>>((*(varsym->kind))) &&
                 !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>((*(varsym->kind))) ) {
-                //cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
                 fce->arguments.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
                 curStmts.emplace_back(&(fce->arguments));
              }
@@ -445,10 +437,35 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) &&
            fc->calledExpression()->tag() == asttags::Identifier && !fc->callUsedSquareBrackets() ) {
-           cStmts->emplace_back(
-              std::make_shared<FunctionCallExpression>(
-                 FunctionCallExpression{{symbolTableRef->id}, {}, {}, emitChapelLine(ast), symbolTable}
-           ));
+           std::string identifier{dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str()};
+
+           std::optional<Symbol> varsym =
+              symbolTable.find(symbolTableRef->id, identifier);
+
+           if(varsym.has_value() && std::holds_alternative<std::shared_ptr<array_kind>>(*varsym->kind)) {
+              auto paren = symbolTable.find(symbolTableRef->id, "[]");
+
+              auto encop = operatorEncoder.find("[]");
+              if(std::end(operatorEncoder) == encop) {
+                 std::cerr << "programtreebuildingvisitor.cpp, enter, OpCall, identifier not found" << std::endl << std::flush;
+                 return false;
+              }
+
+              std::vector<Statement> * cStmts = curStmts.back();
+              if(encop->second == 6 /* [] */ ) {
+                 cStmts->emplace_back(
+                    std::make_shared<FunctionCallExpression>(
+                        FunctionCallExpression{{symbolTableRef->id}, {*paren}, {}, emitChapelLine(ast), symbolTable}
+                 ));
+              }
+           }
+           else { 
+
+              cStmts->emplace_back(
+                 std::make_shared<FunctionCallExpression>(
+                    FunctionCallExpression{{symbolTableRef->id}, {}, {}, emitChapelLine(ast), symbolTable}
+              ));
+           }
        }
        // function called
        //

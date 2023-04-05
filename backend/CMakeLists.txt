@@ -41,13 +41,13 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 set(chplx_sources
     src/symboltypes.cpp src/symbolbuildingvisitor.cpp src/programtree.cpp
-    src/programtreebuildingvisitor.cpp src/codegenvisitor.cpp src/driver.cpp
+    src/programtreebuildingvisitor.cpp src/codegenvisitor.cpp src/cmakegen.cpp src/driver.cpp
 )
 
 set(chplx_headers
     include/hpx/symboltypes.hpp include/hpx/symbolbuildingvisitor.hpp
     include/hpx/programtree.hpp include/hpx/programtreebuildingvisitor.hpp
-    include/hpx/codegenvisitor.hpp include/ErrorGuard.h
+    include/hpx/codegenvisitor.hpp include/hpx/cmakegen.hpp include/ErrorGuard.h
 )
 
 if(MSVC)

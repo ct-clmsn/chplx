@@ -93,12 +93,6 @@ struct VariableExpression {
    void emit(std::ostream & os) const;
 };
 
-struct CommentExpression {
-   std::string value;
-   std::string chplLine;
-   void emit(std::ostream & os) const;
-};
-
 struct OpExpression {
    std::shared_ptr<Symbol> sym;
 };
@@ -127,7 +121,6 @@ using Statement = std::variant<
    TupleDeclarationLiteralExpression,
    LiteralExpression,
    VariableExpression,
-   CommentExpression,
    OpExpression,
    std::shared_ptr<UnaryOpExpression>,
    std::shared_ptr<BinaryOpExpression>,
