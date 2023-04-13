@@ -6,7 +6,8 @@
 #ifndef __FN_HPP__
 #define __FN_HPP__
 
-#include <iostream>
+#include <chplx.hpp>
 #include <functional>
+#include <iostream>
 
 #endif

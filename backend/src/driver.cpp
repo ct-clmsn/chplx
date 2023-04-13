@@ -55,14 +55,14 @@ static void generateSourceHeader(std::ostream & fos, std::string const& fps, std
 
 static void generateSourceFooter(std::ostream & fos) {
    fos << std::endl
-          << "int main(int argc, char ** argv) {" << std::endl
+          << "int main(int argc, char * argv[]) {" << std::endl
           << "    return hpx::init(argc, argv);" << std::endl
           << "}";
 }
 
 static void generateHpxMainBeg(std::ostream & fos)  {
       fos << std::endl
-             << "int hpx_main(int argc, char ** argv) {" << std::endl
+             << "int hpx_main(int argc, char * argv[]) {" << std::endl
              << std::endl;
 }
 

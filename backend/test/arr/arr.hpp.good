@@ -6,8 +6,9 @@
 #ifndef __ARR_HPP__
 #define __ARR_HPP__
 
-#include <vector>
-#include <string>
+#include <chplx.hpp>
 #include <complex>
+#include <string>
+#include <vector>
 
 #endif

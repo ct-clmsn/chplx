@@ -280,25 +280,26 @@ struct StatementVisitor {
          std::shared_ptr<func_kind> const& fk =
             std::get<std::shared_ptr<func_kind>>(*(node->symbol.kind));
 
-         os << "std::function<";
-
+//         os << "std::function<";
+//
          FuncDeclArgVisitor fdav{os};
-         std::visit(fdav, *(fk->retKind));
+//         std::visit(fdav, *(fk->retKind));
 
-         os << "(";
+//         os << "(";
 
          const std::size_t args_sz = fk->args.size()-1;
-         if(0 < args_sz) {
-            std::visit(fdav, (*(fk->args[0].kind)));
+//         if(0 < args_sz) {
+//            std::visit(fdav, (*(fk->args[0].kind)));
+//
+//            for(std::size_t i = 1; i < args_sz; ++i) {
+//               os << ',';
+//               std::visit(fdav, (*(fk->args[i].kind)) );
+//            }
+//         }
+//
+//         os << ")> "; 
 
-            for(std::size_t i = 1; i < args_sz; ++i) {
-               os << ',';
-               std::visit(fdav, (*(fk->args[i].kind)) );
-            }
-         }
-
-         os << ")> "; 
-
+         os << "auto ";
          std::string const& fn_sig_ref =
             (*(node->symbol.identifier));
 

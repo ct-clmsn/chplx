@@ -15,7 +15,7 @@ add_chplx_pseudo_target_folder(
 
 add_chplx_pseudo_dependencies(tests.unit tests.unit.backend_dir)
 
-set(tests arr expr fn)
+set(tests arr expr fn fnc forall)
 
 foreach(test ${tests})
   chplx_compile(${test} SOURCE ${test}.chpl)
@@ -24,10 +24,17 @@ foreach(test ${tests})
     chplx_format_file(${test} SOURCES ${test}.cpp ${test}.hpp)
   endif()
 
-  chplx_compare_result(
-    ${test} SOURCES ${test}.cpp ${test}.hpp TEST_NAME
-    "tests.unit.backend_dir.${test}"
+  chplx_compare_result(${test}
+    SOURCES ${test}.cpp ${test}.hpp "CMakeLists.txt"
+    TEST_NAME "tests.unit.backend_dir.${test}"
   )
 
-  add_chplx_pseudo_dependencies(tests.unit.backend_dir "${test}_compile_chpl")
+  # now build the created files
+  chplx_compile_project(${test}
+    TARGET ${test}
+    TEST_NAME "tests.unit.backend_dir.${test}_cpp"
+  )
+
+  add_chplx_pseudo_dependencies(tests.unit.backend_dir "${test}_compile_cpp")
+
 endforeach()
