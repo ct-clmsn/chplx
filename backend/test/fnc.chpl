@@ -1,10 +1,8 @@
-/*
 proc alpha() {
    var a : int;
 }
 
 alpha();
-*/
 
 proc delta(c : int) : int {
    return c;
