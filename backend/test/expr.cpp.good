@@ -57,21 +57,21 @@ int hpx_main(int argc, char ** argv) {
         return 1;
     };
     #line 34 "expr.chpl"
-    a = valuea();
+    a = value();
     #line 35 "expr.chpl"
-    a = 1 + valuea();
+    a = 1 + value();
     #line 36 "expr.chpl"
-    a = valuea() + 1;
+    a = value() + 1;
     #line 37 "expr.chpl"
-    a = valuea() + valuea();
+    a = value() + value();
     #line 38 "expr.chpl"
-    a = a + ( valuea() + valuea() );
+    a = a + ( value() + value() );
     #line 39 "expr.chpl"
-    a = ( valuea() + valuea() ) + a;
+    a = ( value() + value() ) + a;
     #line 40 "expr.chpl"
-    a = ( ( valuea() + valuea() ) + valuea() ) + a;
+    a = ( ( value() + value() ) + value() ) + a;
     #line 41 "expr.chpl"
-    a = a + ( ( valuea() + valuea() ) + valuea() );
+    a = a + ( ( value() + value() ) + value() );
     #line 43 "expr.chpl"
     std::function<std::int64_t(std::int64_t)> valuea = [&](std::int64_t a) -> std::int64_t {
         #line 44 "expr.chpl"

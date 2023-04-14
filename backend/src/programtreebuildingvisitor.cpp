@@ -455,10 +455,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            else { 
               auto rsym =
                 symbolTable.findPrefix(symbolTableRef->id, identifier);
-
               auto itr = rsym->first;
               for(; itr != rsym->second; ++itr) {
-                  if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+
+                  auto pipeloc = itr->first.find('|');
+                  std::string itrstr {(pipeloc == itr->first.npos) ? itr->first : itr->first.substr(0,pipeloc)};
+
+                  if(itrstr.size() >= identifier.size() && itrstr == identifier) {
                       cStmts->emplace_back(
                          std::make_shared<FunctionCallExpression>(
                             FunctionCallExpression{{symbolTableRef->id}, {itr->second}, {}, emitChapelLine(ast), symbolTable}
