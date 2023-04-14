@@ -112,7 +112,15 @@ std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const
 }
 
 std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > SymbolTable::findPrefixImpl(std::shared_ptr<SymbolTableNode> & stref, std::string const& ident) {
+/*
    auto ret = stref->entries.lower_bound(ident);
+*/
+   auto ret = std::find_if(std::begin(stref->entries), std::end(stref->entries), [&]( std::pair<std::string, Symbol> const& p) {
+     if(p.first.size() < ident.size()) { return false; } 
+     else if(p.first.substr(0, ident.size()) == ident) { return true; }
+     return false;
+   });
+
    if(ret != std::end(stref->entries)) {
       return std::make_pair(ret, std::end(stref->entries));
    }
@@ -128,7 +136,12 @@ std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std:
    assert(idx >= 0 && idx < lut.size());
    std::shared_ptr<SymbolTableNode> & stref = lut[idx];
 
-   std::map<std::string, Symbol>::iterator entry = stref->entries.lower_bound(ident);
+   //std::map<std::string, Symbol>::iterator entry = stref->entries.lower_bound(ident);
+   auto entry = std::find_if(std::begin(stref->entries), std::end(stref->entries), [&]( std::pair<std::string, Symbol> const& p) {
+     if(p.first.size() < ident.size()) { return false; } 
+     else if(p.first.substr(0, ident.size()) == ident) { return true; }
+     return false;
+   });
 
    if(entry != std::end(stref->entries)) {
       return std::make_pair(entry, std::end(stref->entries));

@@ -8,7 +8,7 @@
 int hpx_main(int argc, char ** argv) {
 
     #line 11 "fn.chpl"
-    std::function<void()> print = []() -> void {
+    std::function<void()> print = [&]() -> void {
         #line 12 "fn.chpl"
         std::int64_t j;
         #line 13 "fn.chpl"
@@ -30,8 +30,6 @@ int hpx_main(int argc, char ** argv) {
         #line 21 "fn.chpl"
         std::cout << i << l << std::endl;
     };
-    #line 24 "fn.chpl"
-    std::int64_t j = 1;
 
     return hpx::finalize();
 }

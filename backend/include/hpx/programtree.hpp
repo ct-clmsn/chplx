@@ -105,8 +105,11 @@ struct ReturnExpression;
 struct ScopeExpression;
 struct FunctionDeclarationExpression;
 struct FunctionCallExpression;
+struct ConditionalExpression;
 
+struct ForLoopExpression;
 struct ForallLoopExpression;
+struct CoforallLoopExpression;
 
 struct StatementList;
 
@@ -129,7 +132,10 @@ using Statement = std::variant<
    std::shared_ptr<ScopeExpression>,
    std::shared_ptr<FunctionDeclarationExpression>,
    std::shared_ptr<FunctionCallExpression>,
-   std::shared_ptr<ForallLoopExpression>
+   std::shared_ptr<ConditionalExpression>,
+   std::shared_ptr<ForLoopExpression>,
+   std::shared_ptr<ForallLoopExpression>,
+   std::shared_ptr<CoforallLoopExpression>
 >;
 
 struct StatementList {
@@ -155,7 +161,7 @@ struct TernaryOpExpression : public ArithmeticOpExpression {
 };
 
 struct ReturnExpression {
-   Statement value;
+   std::vector<Statement> statement;
    std::string chplLine;
    void emit(std::ostream & os) const;
 };
@@ -184,11 +190,35 @@ struct FunctionCallExpression : public ExpressionBase {
    void emit(std::ostream & os) const;
 };
 
-struct ForallLoopExpression : public ScopeExpression {
-   std::vector<Statement> statements;
-   Symbol iterator;
-   Symbol index_set;
+struct ConditionalExpression : public ScopeExpression {
+   std::optional<Statement> condition;
+   std::vector<Statement> statements; 
+   std::vector<ConditionalExpression> children;
 
+   void emit(std::ostream & os) const;
+};
+
+struct ForLoopExpression : public ScopeExpression {
+   Symbol symbol;
+   std::optional<Symbol> iterator;
+   std::optional<Symbol> indexSet;
+   std::vector<Statement> statements;
+   std::string chplLine;
+
+   void emit(std::ostream & os) const;
+};
+
+struct ForallLoopExpression : public ScopeExpression {
+   Symbol symbol;
+   std::optional<Symbol> iterator;
+   std::optional<Symbol> indexSet;
+   std::vector<Statement> statements;
+   std::string chplLine;
+
+   void emit(std::ostream & os) const;
+};
+
+struct CoforallLoopExpression : public ForallLoopExpression {
    void emit(std::ostream & os) const;
 };
 
@@ -200,30 +230,9 @@ struct ProgramTree {
 };
 
 /*
-   std::shared_ptr<MethodCallExpression>,
-   std::shared_ptr<ForallExpression>,
-   std::shared_ptr<IfExpression>,
-   std::shared_ptr<ElseExpression>,
    std::shared_ptr<BeginExpression>,
    std::shared_ptr<CobeginExpression>,
-   std::shared_ptr<CoforallExpression>
-
-struct ForExpression : public ExpressionBase {
-    std::vector<Statement> statements;
-};
-
-struct MethodCallExpression : public ExpressionBase {
-   std::string identifier;
-   std::string methodIdentifier;
-   std::vector<std::string> arguments;
-};
-
-struct FunctionDeclarationExpression;
-struct IfExpression;
-struct ElseExpression;
-struct BeginExpression;
-struct CobeginExpression;
-struct CoforallExpression;
+   std::shared_ptr<MethodCallExpression>,
 */
 
 } /* namespace hpx */ } /* namespace ast */ } /* namespace chplx */

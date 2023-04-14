@@ -7,22 +7,22 @@
 
 int hpx_main(int argc, char ** argv) {
 
-    #line 1 "fnc.chpl"
-    std::function<void()> alpha = []() -> void {
-        #line 2 "fnc.chpl"
-        std::int64_t a;
+    #line 9 "fnc.chpl"
+    std::function<std::int64_t(std::int64_t)> delta = [&](std::int64_t c) -> std::int64_t {
+        #line 10 "fnc.chpl"
+        return c;
     };
-    #line 5 "fnc.chpl"
-    alpha();
-    #line 7 "fnc.chpl"
-    std::function<std::int64_t(std::int64_t)> beta = [](std::int64_t b) -> std::int64_t {
-        #line 8 "fnc.chpl"
-        return b;
+    #line 13 "fnc.chpl"
+    std::function<std::int64_t(std::int64_t)> beta = [&](std::int64_t b) -> std::int64_t {
+        #line 14 "fnc.chpl"
+        return b + delta(b);
     };
-    #line 11 "fnc.chpl"
+    #line 17 "fnc.chpl"
     std::int64_t c = 1;
-    #line 12 "fnc.chpl"
+    #line 18 "fnc.chpl"
     beta(c);
+    #line 19 "fnc.chpl"
+    c = beta(c);
 
     return hpx::finalize();
 }

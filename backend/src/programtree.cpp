@@ -250,19 +250,8 @@ struct ArgumentVisitor {
        node->emit(os);
     }
     void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
-       const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
        const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
-
-       if(lop) {
-           os << "( ";
-       }
-       std::visit(*this, node->statements[0]);
-
-       if(lop) {
-           os << " )";
-       }
-
-       os << ' ' << node->op << ' ';
+       const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
 
        if(rop) {
            os << "( ";
@@ -270,6 +259,17 @@ struct ArgumentVisitor {
        std::visit(*this, node->statements[1]);
 
        if(rop) {
+           os << " )";
+       }
+
+       os << ' ' << node->op << ' ';
+
+       if(lop) {
+           os << "( ";
+       }
+       std::visit(*this, node->statements[0]);
+
+       if(lop) {
            os << " )";
        }
     }
@@ -286,7 +286,7 @@ void ReturnExpression::emit(std::ostream & os) const {
     ArgumentVisitor v{nullptr, std::stringstream{}};
     std::string retfmt{"return {};"};
     fmt::dynamic_format_arg_store<fmt::format_context> store;
-    std::visit(v, value);
+    std::visit(v, statement[0]);
     store.push_back(v.os.str());
     os << fmt::vformat(retfmt, store) << std::endl;
 }
@@ -302,10 +302,10 @@ void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
       const std::size_t args_sz = arguments.size();
       if(0 < args_sz) {
-         std::string cxx_fmt_str{string_kind::value(std::get<LiteralExpression>(arguments[0]).value)};
+         std::string cxx_fmt_str{string_kind::value(std::get<LiteralExpression>(arguments[1]).value)};
          fmt::dynamic_format_arg_store<fmt::format_context> store;
 
-         for(std::size_t i = 1; i < args_sz; ++i) {
+         for(std::size_t i = 2; i < args_sz; ++i) {
             Statement const& stmt = arguments[i];
             ArgumentVisitor v{nullptr, std::stringstream{}};
             std::visit(v, stmt);
@@ -335,8 +335,8 @@ void FunctionCallExpression::emit(std::ostream & os) const {
           os << v.os.str() << fmt::vformat(fn_fmt_str, store);
       }
       else {
-         for(std::size_t i = 0; i < args_sz; ++i) {
-            fn_fmt_str += (i == 0) ? "{}" : ",{}";
+         for(std::size_t i = 1; i < args_sz; ++i) {
+            fn_fmt_str += (i == 1) ? "{}" : ",{}";
             Statement const& stmt = arguments[i];
             ArgumentVisitor v{nullptr, std::stringstream{}};
             std::visit(v, stmt);
@@ -380,9 +380,7 @@ void BinaryOpExpression::emit(std::ostream & os) const {
 void TernaryOpExpression::emit(std::ostream & os) const {
 }
 
-void ForallLoopExpression::emit(std::ostream & os) const {
-   range_kind const& rk = std::get<range_kind>(*index_set.kind);
-   os << "chplx::forall(chplx::Range(" << rk.points[0] << ", " << rk.points[1] << "), [&](auto " << (*iterator.identifier) << ")" << std::endl;
+void ForLoopExpression::emit(std::ostream & os) const {
 }
 
 } /* namespace hpx */ } /* namespace ast */ } /* namespace chpl */
