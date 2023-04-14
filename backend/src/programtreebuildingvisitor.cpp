@@ -228,7 +228,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        }
        else {
           std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
-
           std::optional<Symbol> varsym =
              symbolTable.find(symbolTableRef->id, identifier);
           if(varsym) {
@@ -624,7 +623,16 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                stmt = false;
            }
        }
-       
+       else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+           std::shared_ptr<ForallLoopExpression> & fl =
+               std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+           if(!(fl->iterator)) {
+               fl->iterator = *varsym;
+               stmt = false;
+           }
+       }
+      
        if(stmt) {
           if(varsym && !varsym->literal) {
              std::vector<Statement> * cStmts = curStmts.back();

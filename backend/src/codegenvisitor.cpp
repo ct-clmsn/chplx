@@ -241,7 +241,7 @@ struct StatementVisitor {
       emitIndent();
 
       range_kind const& rk = std::get<range_kind>(*node->indexSet->kind);
-      os << "chplx::forallLoop(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << (*node->iterator->identifier) << ") {" << std::endl;
+      os << "chplx::forall(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << (*node->iterator->identifier) << ") {" << std::endl;
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);

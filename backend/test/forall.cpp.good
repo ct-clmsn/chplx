@@ -15,7 +15,7 @@ int hpx_main(int argc, char ** argv) {
         A[i] = i;
     });
     #line 14 "forall.chpl"
-    chplx::forallLoop(chplx::Range{0, 9}, [&](auto ) {
+    chplx::forall(chplx::Range{0, 9}, [&](auto i) {
         #line 15 "forall.chpl"
         A[i] = 1.000000;
     });

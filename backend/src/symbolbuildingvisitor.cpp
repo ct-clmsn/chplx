@@ -215,7 +215,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              std::get<std::shared_ptr<array_kind>>(*(sym->get().kind))->dom->ranges.push_back(range_kind{});
           }
           else if(std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind)) && (sym->get().identifier->find("for") != std::string::npos)) {
-
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
 
@@ -1028,7 +1027,6 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     {
        if(sym) {
           assert( sym->get().identifier.has_value() );
-
           auto lusym = symbolTable.find(sym->get().scopeId, (*(sym->get().identifier)));
           if(!lusym) {
              std::shared_ptr<func_kind> & fk =
