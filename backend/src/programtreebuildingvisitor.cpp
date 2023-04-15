@@ -264,7 +264,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Range:
     {
-       std::vector<Statement> * cStmts = curStmts.back();
+       //std::vector<Statement> * cStmts = curStmts.back();
 
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
           std::optional<Symbol> varsym =
@@ -274,7 +274,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                 std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
              std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(*fl->symbol.kind);
-             range_kind & rk = std::get<range_kind>(*(fc->args[0].kind));
+             //range_kind & rk = std::get<range_kind>(*(fc->args[0].kind));
 
              if(!(fl->indexSet)) {
                 fl->indexSet = fc->args[0];
@@ -289,7 +289,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                 std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
              std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(*fl->symbol.kind);
-             range_kind & rk = std::get<range_kind>(*(fc->args[0].kind));
+             //range_kind & rk = std::get<range_kind>(*(fc->args[0].kind));
 
              if(!(fl->indexSet)) {
                 fl->indexSet = fc->args[0];
@@ -824,7 +824,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
              if(val == fnsym->second) { return false; }
 
-             Symbol & fsym = val->second;
+             //Symbol & fsym = val->second;
 
              std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*sym->kind);
              symbolTableRef = symbolTable.lut[fk->lutId];
@@ -952,7 +952,7 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::FnCall:
     case asttags::OpCall:
     {
-       curStmts.back();
+       //curStmts.back();
        curStmts.pop_back();
     }
     break;

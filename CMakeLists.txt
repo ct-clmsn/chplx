@@ -20,6 +20,16 @@ set(CHPLX_VERSION
 
 set(CMAKE_CXX_STANDARD 20)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE
+      "Debug"
+      CACHE
+        STRING
+        "Configuration type (one of Debug, RelWithDebInfo, Release, MinSizeRel)"
+        FORCE
+  )
+endif()
+
 project(chplx VERSION ${CHPLX_VERSION})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

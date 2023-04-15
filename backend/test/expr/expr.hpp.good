@@ -6,7 +6,8 @@
 #ifndef __EXPR_HPP__
 #define __EXPR_HPP__
 
-#include <vector>
+#include <chplx.hpp>
 #include <functional>
+#include <vector>
 
 #endif

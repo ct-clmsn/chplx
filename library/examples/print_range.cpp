@@ -52,9 +52,9 @@ template <typename Range> void testWriteRange(char const *expr, Range const &r) 
     for (auto i : iterate(count(r, -3)))
       write(", ", i);
 
-  } else if (r.getStride() == 1 || r.getStride() == -1) {
+  } else if (r.stride() == 1 || r.stride() == -1) {
     // If we are here, the range is fully unbounded.
-    write("all integers, ", r.getStride() > 0 ? "increasing" : "decreasing");
+    write("all integers, ", r.stride() > 0 ? "increasing" : "decreasing");
 
   } else {
     // We got a more complex range, do not elaborate.

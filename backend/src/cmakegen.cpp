@@ -9,10 +9,11 @@
 #include <fstream>
 #include <cassert>
 #include <iostream>
+#include <filesystem>
 #include <fmt/args.h>
 
 void CMakeGenerator::generate(std::filesystem::path const& p) {
-    std::string cppfilename{p.filename()};
+    std::string cppfilename{p.filename().string()};
     auto pos = cppfilename.find(".chpl");
     assert(pos != std::string::npos);
 
@@ -24,6 +25,9 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
     << "# The original Chapel program file can be found here: " << p.filename() << std::endl
     << "#" << std::endl
     << "cmake_minimum_required(VERSION 3.19)" << std::endl
+    << "if(NOT CMAKE_BUILD_TYPE)" << std::endl
+    << "  set(CMAKE_BUILD_TYPE Debug CACHE STRING \"Configuration type\" FORCE)" << std::endl
+    << "endif()" << std::endl
     << "project(" << cppprefix << ")" << std::endl
     << "add_executable( " << cppprefix << " " << cppprefix << ".cpp )" << std::endl
     << "if(NOT APPLE)" << std::endl
@@ -32,16 +36,16 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
     << "if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL \"Clang\" AND NOT APPLE)" << std::endl
     << "  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -stdlib=libc++)" << std::endl
     << "endif()" << std::endl
-    << "if(NOT CHPLX_DIR)" << std::endl
-    << "  message(FATAL_ERROR \"CHPLX_DIR variable undefined\")" << std::endl
+    << "if(NOT (CHPLX_LIBRARY AND CHPLX_INCLUDE_DIR))" << std::endl
+    << "  message(FATAL_ERROR \"CHPLX_LIBRARY or CHPLX_INCLUDE_DIR variables undefined\")" << std::endl
     << "endif()" << std::endl
     << "set_property(GLOBAL PROPERTY USE_FOLDERS ON)" << std::endl
     << "find_package(fmt REQUIRED CONFIG)" << std::endl
     << "find_package(HPX REQUIRED CONFIG)" << std::endl
     << "add_library(chplx_library STATIC IMPORTED)" << std::endl
     << "set_target_properties(chplx_library PROPERTIES" << std::endl
-    << "  IMPORTED_LOCATION \"${CHPLX_DIR}/build/libchplx_library.a\"" << std::endl
-    << "  INTERFACE_INCLUDE_DIRECTORIES \"${CHPLX_DIR}/include\"" << std::endl
+    << "  IMPORTED_LOCATION \"${CHPLX_LIBRARY}\"" << std::endl
+    << "  INTERFACE_INCLUDE_DIRECTORIES \"${CHPLX_INCLUDE_DIR}\"" << std::endl
     << ")" << std::endl
     << "set(" << cppprefix << "_sources " << cppprefix << ".cpp)" << std::endl
     << "set(" << cppprefix << "_headers " << cppprefix << ".hpp)" << std::endl
@@ -60,5 +64,12 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
     << "    c++" << std::endl
     << "  )" << std::endl
     << "endif()" << std::endl
-    << "target_link_libraries(" << cppprefix << " PUBLIC fmt::fmt-header-only HPX::hpx chplx_library)" << std::endl;
+    << "target_link_libraries(" << cppprefix << " PUBLIC fmt::fmt-header-only HPX::hpx chplx_library)" << std::endl
+    << "enable_testing()" << std::endl
+    << "include(CTest)" << std::endl
+    << "add_test(" << std::endl
+    << "  NAME " << cppprefix <<"_test" << std::endl
+    << "  COMMAND " << cppprefix << std::endl
+    << "  WORKING_DIRECTORY $<TARGET_FILE_DIR:" << cppprefix << ">" << std::endl
+    << ")" << std::endl;
 }

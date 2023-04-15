@@ -96,13 +96,23 @@ endif()
 
 target_link_libraries(chplx_library PUBLIC fmt::fmt-header-only HPX::hpx)
 
-
 target_include_directories(chplx_library PUBLIC include)
 target_include_directories(
   chplx_library PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
-set_target_properties(chplx_library PROPERTIES FOLDER "Library")
+# define additional properties
+define_property(TARGET
+  PROPERTY TARGET_INCLUDE_DIR
+  FULL_DOCS "Base include directory"
+  BRIEF_DOCS "Base include directory"
+)
+
+set_target_properties(chplx_library
+  PROPERTIES
+    FOLDER "Library"
+    TARGET_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
 
 # generate version file
 configure_file(
