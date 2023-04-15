@@ -70,6 +70,10 @@ target_link_libraries(chplx PUBLIC ChplFrontend ${llvm_libs})
 target_link_libraries(chplx PRIVATE fmt::fmt-header-only)
 
 set_target_properties(chplx PROPERTIES FOLDER "Backend")
+if(MSVC)
+  # disable consteval in {fmt} on MSVC
+  target_compile_definitions(chplx PUBLIC FMT_CONSTEVAL=)
+endif()
 
 set_target_properties(acc_gen PROPERTIES FOLDER "Backend/Support")
 set_target_properties(clang-tablegen-targets PROPERTIES FOLDER "Backend/Support")
