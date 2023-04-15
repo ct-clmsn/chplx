@@ -7,8 +7,8 @@
 # define a function to simplify adding tests
 function(chplx_library_add_unit_test target)
   add_executable(${target}_test EXCLUDE_FROM_ALL "${target}.cpp")
-  target_link_libraries(${target}_test chplx_library HPX::wrap_main)
-  add_chplx_pseudo_dependencies(${target}_test chplx_library)
+  target_link_libraries(${target}_test library HPX::wrap_main)
+  add_chplx_pseudo_dependencies(${target}_test library)
   set_target_properties(${target}_test PROPERTIES FOLDER "Library/Tests")
 
   add_chplx_unit_test("library_dir" ${target} ${ARGV} TIMEOUT 60)

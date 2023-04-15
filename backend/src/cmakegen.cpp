@@ -36,17 +36,13 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
     << "if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL \"Clang\" AND NOT APPLE)" << std::endl
     << "  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -stdlib=libc++)" << std::endl
     << "endif()" << std::endl
-    << "if(NOT (CHPLX_LIBRARY AND CHPLX_INCLUDE_DIR))" << std::endl
-    << "  message(FATAL_ERROR \"CHPLX_LIBRARY or CHPLX_INCLUDE_DIR variables undefined\")" << std::endl
+    << "if(NOT Chplx_DIR)" << std::endl
+    << "  message(FATAL_ERROR \"Chplx_DIR variable undefined\")" << std::endl
     << "endif()" << std::endl
     << "set_property(GLOBAL PROPERTY USE_FOLDERS ON)" << std::endl
     << "find_package(fmt REQUIRED CONFIG)" << std::endl
     << "find_package(HPX REQUIRED CONFIG)" << std::endl
-    << "add_library(chplx_library STATIC IMPORTED)" << std::endl
-    << "set_target_properties(chplx_library PROPERTIES" << std::endl
-    << "  IMPORTED_LOCATION \"${CHPLX_LIBRARY}\"" << std::endl
-    << "  INTERFACE_INCLUDE_DIRECTORIES \"${CHPLX_INCLUDE_DIR}\"" << std::endl
-    << ")" << std::endl
+    << "find_package(Chplx REQUIRED CONFIG)" << std::endl
     << "set(" << cppprefix << "_sources " << cppprefix << ".cpp)" << std::endl
     << "set(" << cppprefix << "_headers " << cppprefix << ".hpp)" << std::endl
     << "if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL \"Clang\" AND APPLE)" << std::endl
@@ -64,7 +60,7 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
     << "    c++" << std::endl
     << "  )" << std::endl
     << "endif()" << std::endl
-    << "target_link_libraries(" << cppprefix << " PUBLIC fmt::fmt-header-only HPX::hpx chplx_library)" << std::endl
+    << "target_link_libraries(" << cppprefix << " PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)" << std::endl
     << "enable_testing()" << std::endl
     << "include(CTest)" << std::endl
     << "add_test(" << std::endl
