@@ -118,6 +118,9 @@ struct ExprVisitor {
     template<typename T>
     void operator()(T const&) {}
 
+    void operator()(ScalarDeclarationLiteralExpression const& node) {
+       node.emit(os);
+    }
     void operator()(LiteralExpression const& node) {
        node.emit(os);
     }
@@ -209,8 +212,10 @@ struct StatementVisitor {
       emitIndent();
       node.emit(os);
       os << " = ";
-      std::visit(ScalarDeclarationLiteralExpressionVisitor{(*s->literal)[0], os}, node.kind);
-      os << ";" << std::endl;
+      if( 0 < node.literalValue.size() ) {
+         std::visit(ScalarDeclarationLiteralExpressionVisitor{(*s->literal)[0], os}, node.kind);
+         os << ";" << std::endl;
+      }
    }
    void operator()(ArrayDeclarationLiteralExpression const& node) {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
@@ -219,6 +224,24 @@ struct StatementVisitor {
       os << node.chplLine << std::endl;
       emitIndent();
       node.emit(os);
+   }
+   void operator()(std::shared_ptr<ConditionalExpression> const& node) {
+      for(std::size_t i = 0; i < node->exprs.size(); ++i) {
+         emitIndent();
+         emitChapelLine(os, *(node->exprs[i].node));
+         emitIndent();
+
+         os << ( (i == 0) ? "if" : ( (0 < node->exprs[i].statements.size()) ?  "else if" : "else" ) ) << '(';
+         visit(*this, node->exprs[i].conditions[0]);
+         os << ") {" << std::endl; 
+         ++indent;
+         for(const auto& stmt : node->exprs[i].statements) {
+            visit(*this, stmt);
+         }
+         --indent;
+         emitIndent();
+         os << "}" << std::endl;
+      }
    }
    void operator()(std::shared_ptr<ForLoopExpression> const& node) {
       emitIndent();
@@ -330,39 +353,6 @@ struct StatementVisitor {
          --indent;
          emitIndent();
          os << "};" << std::endl;
-/*
- * generates classic function signature
- *
-         std::string const& fn_sig_ref =
-            (*(node->symbol.identifier));
-
-         const std::size_t pos =
-            fn_sig_ref.find("|");
-
-         os << ' ' << fn_sig_ref.substr(0, (pos != std::string::npos) ? pos : fn_sig_ref.size() ) << '(';
-
-         const std::size_t args_sz = fk->args.size()-1;
-
-         if(0 < args_sz) {
-            std::visit(fdav, (*(fk->args[0].kind)));
-            os << ' ' << (*(fk->args[0].identifier));
-
-            for(std::size_t i = 1; i < args_sz; ++i) {
-               os << ',';
-               std::visit(fdav, (*(fk->args[i].kind)) );
-               os << ' ' << (*(fk->args[i].identifier));
-            }
-         }
-
-         os << ") {" << std::endl;
-         ++indent;
-         for(const auto& stmt : node->statements) {
-            visit(*this, stmt);
-         }
-         --indent;
-         emitIndent();
-         os << '}' << std::endl;
-*/
       }
    }
    void operator()(std::shared_ptr<UnaryOpExpression> const& node) {
