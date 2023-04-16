@@ -210,7 +210,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               auto itr = rsym->first;
               for(; itr != rsym->second; ++itr) {
                  if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
-                    cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+                    cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
                     break;
                  }
               }

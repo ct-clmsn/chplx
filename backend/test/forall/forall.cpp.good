@@ -5,25 +5,22 @@
 
 #include "forall.hpp"
 
-int hpx_main(int argc, char* argv[])
-{
+int hpx_main(int argc, char *argv[]) {
+
 #line 8 "forall.chpl"
-    std::vector<double> A(9);
+  std::vector<double> A(9);
 #line 10 "forall.chpl"
-    chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
+  chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
 #line 11 "forall.chpl"
-        A[i] = i;
-    });
+    A[i] = i;
+  });
 #line 14 "forall.chpl"
-    chplx::forall(chplx::Range{0, 9}, [&](auto i) {
+  chplx::forall(chplx::Range{0, 9}, [&](auto i) {
 #line 15 "forall.chpl"
-        A[i] = 1.000000;
-    });
+    A[i] = 1.000000;
+  });
 
-    return hpx::finalize();
+  return hpx::finalize();
 }
 
-int main(int argc, char* argv[])
-{
-    return hpx::init(argc, argv);
-}
+int main(int argc, char *argv[]) { return hpx::init(argc, argv); }
