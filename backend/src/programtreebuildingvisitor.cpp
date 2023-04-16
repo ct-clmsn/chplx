@@ -160,10 +160,14 @@ std::string ProgramTreeBuildingVisitor::emitChapelLine(uast::AstNode const* ast)
 
 bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 //std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << '\t' << emitChapelLine(ast) << std::endl;
 =======
 std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << '\t' << emitChapelLine(ast) << std::endl;
 >>>>>>> 7bfac8c6 (variable assignment on function call, fixes to line numbers)
+=======
+//std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << '\t' << emitChapelLine(ast) << std::endl;
+>>>>>>> a02c85bd (adding corrections for type inferred variable decls w/fncall assignment, and typed variable decls w/fncall assignment)
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
