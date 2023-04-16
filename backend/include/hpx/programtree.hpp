@@ -190,11 +190,14 @@ struct FunctionCallExpression : public ExpressionBase {
    void emit(std::ostream & os) const;
 };
 
-struct ConditionalExpression : public ScopeExpression {
-   std::optional<Statement> condition;
+struct ConditionedExpression : public ScopeExpression {
+   std::vector<Statement> conditions; 
    std::vector<Statement> statements; 
-   std::vector<ConditionalExpression> children;
+   void emit(std::ostream & os) const;
+};
 
+struct ConditionalExpression {
+   std::vector<ConditionedExpression> exprs;
    void emit(std::ostream & os) const;
 };
 
