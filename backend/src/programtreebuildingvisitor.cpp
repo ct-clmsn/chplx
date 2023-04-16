@@ -7,6 +7,7 @@
  */
 #include "hpx/programtree.hpp"
 #include "hpx/programtreebuildingvisitor.hpp"
+#include "hpx/util.hpp"
 #include "chpl/uast/all-uast.h"
 
 #include <variant>
@@ -20,6 +21,10 @@
 using namespace chplx::ast::hpx;
 using namespace chpl::uast;
 using namespace chpl::ast::visitors::hpx;
+
+// global options
+extern bool suppressLineDirectives;
+extern bool fullFilePath;
 
 namespace chplx { namespace ast { namespace visitors { namespace hpx {
 
@@ -44,11 +49,8 @@ struct VariableVisitor {
    uast::AstNode const* ast;
 
    std::string emitChapelLine(uast::AstNode const* ast) const {
-      auto fp = br.filePath();
-      std::stringstream os{};
-      std::filesystem::path p(fp.c_str());
-      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"";
-      return os.str();
+      auto const fp = br.filePath();
+      return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
    }
 
    template<typename T>
@@ -102,14 +104,11 @@ struct VariableLiteralVisitor {
    uast::AstNode const* ast;
 
    std::string emitChapelLine(uast::AstNode const* ast) const {
-      auto fp = br.filePath();
-      std::stringstream os{};
-      std::filesystem::path p(fp.c_str());
-      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"";
-      return os.str();
+      auto const fp = br.filePath();
+      return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
    }
 
-   template<typename T>
+  template<typename T>
    void operator()(T const& t) {
    }
 
@@ -151,11 +150,8 @@ struct VariableLiteralVisitor {
 };
 
 std::string ProgramTreeBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
-   auto fp = br.filePath();
-   std::stringstream os{};
-   std::filesystem::path p(fp.c_str());
-   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"";
-   return os.str();
+   auto const fp = br.filePath();
+   return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
 }
 
 bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {

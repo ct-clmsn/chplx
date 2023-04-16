@@ -7,6 +7,7 @@
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include "hpx/symbolbuildingvisitor.hpp"
+#include "hpx/util.hpp"
 #include "chpl/uast/all-uast.h"
 
 #include <variant>
@@ -16,7 +17,11 @@
 #include <numeric>
 
 using namespace chpl::uast;
- 
+
+// global options
+extern bool suppressLineDirectives;
+extern bool fullFilePath;
+
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
 void SymbolBuildingVisitor::addSymbolEntry(char const* type, Symbol && symbol) {
@@ -79,11 +84,8 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
 }
 
 std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
-   auto fp = br.filePath();
-   std::stringstream os{};
-   std::filesystem::path p(fp.c_str());
-   os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"";
-   return os.str();
+   auto const fp = br.filePath();
+   return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
 }
 
 bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {

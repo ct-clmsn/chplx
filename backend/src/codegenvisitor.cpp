@@ -8,6 +8,7 @@
  */
 #include "hpx/codegenvisitor.hpp"
 #include "hpx/symboltypes.hpp"
+#include "hpx/util.hpp"
 
 #include "chpl/uast/all-uast.h"
 
@@ -21,7 +22,10 @@
 #define INDENT "    "
 
 using namespace chpl::uast;
- 
+
+// emit line directive
+void emitLineDirective(std::filesystem::path const& p, int line);
+
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
 CodegenVisitor::CodegenVisitor(
@@ -180,7 +184,7 @@ struct StatementVisitor {
    }
    void operator()(ScalarDeclarationExpression const& node) {
       emitIndent();
-      os << node.chplLine << std::endl;
+      os << node.chplLine;
       emitIndent();
       node.emit(os);
    }
@@ -200,7 +204,7 @@ struct StatementVisitor {
       }
 
       emitIndent();
-      os << node.chplLine << std::endl;
+      os << node.chplLine;
       emitIndent();
       node.emit(os);
    }
@@ -208,7 +212,7 @@ struct StatementVisitor {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
       if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
       emitIndent();
-      os << node.chplLine << std::endl;
+      os << node.chplLine;
       emitIndent();
       node.emit(os);
       os << " = ";
@@ -221,7 +225,7 @@ struct StatementVisitor {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
       if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
       emitIndent();
-      os << node.chplLine << std::endl;
+      os << node.chplLine;
       emitIndent();
       node.emit(os);
    }
@@ -245,7 +249,7 @@ struct StatementVisitor {
    }
    void operator()(std::shared_ptr<ForLoopExpression> const& node) {
       emitIndent();
-      os << node->chplLine << std::endl;
+      os << node->chplLine;
       emitIndent();
 
       range_kind const& rk = std::get<range_kind>(*node->indexSet->kind);
@@ -260,7 +264,7 @@ struct StatementVisitor {
    }
    void operator()(std::shared_ptr<ForallLoopExpression> const& node) {
       emitIndent();
-      os << node->chplLine << std::endl;
+      os << node->chplLine;
       emitIndent();
 
       range_kind const& rk = std::get<range_kind>(*node->indexSet->kind);
@@ -275,7 +279,7 @@ struct StatementVisitor {
    }
    void operator()(std::shared_ptr<ReturnExpression> const& node) {
       emitIndent();
-      os << node->chplLine << std::endl;
+      os << node->chplLine;
       emitIndent();
       node->emit(os);
    }
@@ -285,7 +289,7 @@ struct StatementVisitor {
          headers[static_cast<std::size_t>(HeaderEnum::std_iostream)] = true;
       }
       emitIndent();
-      os << node->chplLine << std::endl;
+      os << node->chplLine;
       emitIndent();
       node->emit(os);
       if(!is_cxx) {
@@ -296,7 +300,7 @@ struct StatementVisitor {
       headers[static_cast<std::size_t>(HeaderEnum::std_functional)] = true;
       if(!node->symbol.identifier) { std::cerr << "codegenvisitor.cpp FunctionDeclarationExpression " << (*(node->symbol.identifier)) << " not found" << std::endl; }
       emitIndent();
-      os << node->chplLine << std::endl;
+      os << node->chplLine;
       emitIndent();
 
       if(std::holds_alternative<std::shared_ptr<func_kind>>(*(node->symbol.kind))) {
@@ -374,9 +378,8 @@ struct StatementVisitor {
       os << ';' << std::endl;
    }
    void emitChapelLine(std::ostream & os, uast::AstNode const* ast) const {
-      auto fp = br.filePath();
-      std::filesystem::path p(fp.c_str());
-      os << "#line " << br.idToLocation(ast->id(), fp).line()  << " \"" << p.filename().string() << "\"" << std::endl;
+      auto const fp = br.filePath();
+      os << chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
    }
 
    SymbolTable & symbolTable;

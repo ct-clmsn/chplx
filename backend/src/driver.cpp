@@ -19,6 +19,8 @@
 #include "hpx/symbolbuildingvisitor.hpp"
 #include "hpx/codegenvisitor.hpp"
 #include "hpx/cmakegen.hpp"
+#include "hpx/util.hpp"
+
 #include "ErrorGuard.h"
 
 #include <optional>
@@ -31,6 +33,7 @@
 #include <iostream>
 
 #include <getopt.h> /* getopt API */
+#include <fmt/core.h>
 
 using namespace chpl;
 using namespace uast;
@@ -72,6 +75,18 @@ static void generateHpxMainEnd(std::ostream & fos) {
        << "}" << std::endl;
 }
 
+// generate help string
+void usage() {
+   constexpr char const* helpstring =
+R"(chplx -help:
+  chplx [options] -f <full path to file name or file name>
+    options: -E: suppress generating #line directives (default: false)
+             -F: suppress generating full path for #line directives (default: true)
+)";
+
+   std::cout << helpstring << std::flush;
+}
+
 int main(int argc, char ** argv) {
 
    Context context;
@@ -85,15 +100,23 @@ int main(int argc, char ** argv) {
    int opt = 0;
 
    // Retrieve the options:
-   while ( (opt = getopt(argc, argv, "f:h")) != -1 ) {  // for each option...
+   while ( (opt = getopt(argc, argv, "f:hEF")) != -1 ) {  // for each option...
       switch ( opt ) {
          case 'f':
             filePath = std::string{optarg};
          break;
-         case 'h':
-            std::cout << "chplx -help: `chplx -f <full path to file name or file name>`" << std::endl << std::flush;
-            return 1;
+         case 'E':
+            chplx::util::suppressLineDirectives = true;
          break;
+         case 'F':
+            chplx::util::fullFilePath = false;
+         break;
+         default:
+            std::cout << "chplx: unknown command line option: -" << opt << std::endl << std::flush;
+            [[fallthrough]];
+         case 'h':
+            usage();
+            return 1;
       }
    }
 

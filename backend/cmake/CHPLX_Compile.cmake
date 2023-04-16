@@ -60,7 +60,7 @@ function(chplx_compile name)
   file(MAKE_DIRECTORY ${output_dir})
   add_custom_command(
     OUTPUT ${output_dir}/${name}.cpp ${output_dir}/${name}.hpp
-    COMMAND "$<TARGET_FILE:chplx>" "-f" "${input_path}"
+    COMMAND "$<TARGET_FILE:chplx>" "-f" "${input_path}" "-F"
     DEPENDS "${${name}_SOURCE}" ${${name}_DEPENDENCIES}
     WORKING_DIRECTORY "${output_dir}"
     COMMENT "Compiling Chapel file ${${name}_SOURCE}."
