@@ -74,44 +74,46 @@ set(chplx_library_headers ${chplx_library_detail_headers}
 )
 
 add_library(
-  chplx_library STATIC ${chplx_library_sources} ${chplx_library_headers}
+  library STATIC ${chplx_library_sources} ${chplx_library_headers}
 )
 
 if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND APPLE)
   find_library(CORE_LIBPATH NAMES CoreFoundation REQUIRED)
 
-  target_compile_options(chplx_library
+  target_compile_options(library
     PUBLIC
       -nostdlib
       -std=c++20
       -stdlib=libc++
   )
 
-  target_link_libraries(chplx_library PRIVATE ${CORE_LIBPATH})
-  target_link_libraries(chplx_library
+  target_link_libraries(library PRIVATE ${CORE_LIBPATH})
+  target_link_libraries(library
     PUBLIC
       c++
   )
 endif()
 
-target_link_libraries(chplx_library PUBLIC fmt::fmt-header-only HPX::hpx)
+target_link_libraries(library PUBLIC fmt::fmt-header-only HPX::hpx)
 
-target_include_directories(chplx_library PUBLIC include)
-target_include_directories(
-  chplx_library PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include
+target_include_directories(library 
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 # define additional properties
 define_property(TARGET
-  PROPERTY TARGET_INCLUDE_DIR
-  FULL_DOCS "Base include directory"
-  BRIEF_DOCS "Base include directory"
+  PROPERTY TARGET_BINARY_DIR
+  FULL_DOCS "Base binary directory"
+  BRIEF_DOCS "Base binary directory"
 )
 
-set_target_properties(chplx_library
+set_target_properties(library
   PROPERTIES
+    OUTPUT_NAME chplx_library
     FOLDER "Library"
-    TARGET_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 # generate version file
@@ -133,6 +135,9 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/cmake/templates/chplxrun.py.in"
   "${PROJECT_BINARY_DIR}/bin/chplxrun.py" @ONLY
 )
+
+# generate cmake packages
+include(CHPLX_GeneratePackage)
 
 if(CHPLX_WITH_TESTS)
   enable_testing()
