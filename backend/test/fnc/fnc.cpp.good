@@ -5,33 +5,36 @@
 
 #include "fnc.hpp"
 
-int hpx_main(int argc, char *argv[]) {
-
+int hpx_main(int argc, char* argv[])
+{
 #line 1 "fnc.chpl"
-  auto alpha = [&]() -> void {
+    auto alpha = [&]() -> void {
 #line 2 "fnc.chpl"
-    std::int64_t a;
-  };
+        std::int64_t a;
+    };
 #line 5 "fnc.chpl"
-  alpha();
+    alpha();
 #line 7 "fnc.chpl"
-  auto delta = [&](std::int64_t c) -> std::int64_t {
+    auto delta = [&](std::int64_t c) -> std::int64_t {
 #line 8 "fnc.chpl"
-    return c;
-  };
+        return c;
+    };
 #line 11 "fnc.chpl"
-  auto beta = [&](std::int64_t b) -> std::int64_t {
+    auto beta = [&](std::int64_t b) -> std::int64_t {
 #line 12 "fnc.chpl"
-    return b + delta(b);
-  };
+        return b + delta(b);
+    };
 #line 15 "fnc.chpl"
-  std::int64_t c = 1;
+    std::int64_t c = 1;
 #line 16 "fnc.chpl"
-  beta(c);
+    beta(c);
 #line 17 "fnc.chpl"
-  c = beta(c);
+    c = beta(c);
 
-  return hpx::finalize();
+    return hpx::finalize();
 }
 
-int main(int argc, char *argv[]) { return hpx::init(argc, argv); }
+int main(int argc, char* argv[])
+{
+    return hpx::init(argc, argv);
+}
