@@ -159,7 +159,7 @@ std::string ProgramTreeBuildingVisitor::emitChapelLine(uast::AstNode const* ast)
 }
 
 bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
-std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << '\t' << emitChapelLine(ast) << std::endl;
+//std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << '\t' << emitChapelLine(ast) << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
@@ -196,7 +196,6 @@ std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag())
 
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
-
            std::optional<Symbol> varsym =
                symbolTable.find(symbolTableRef->id, identifier);
            if(!varsym) {
@@ -512,7 +511,6 @@ std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag())
               return false;
            }
            else {
-
               if(std::holds_alternative<ScalarDeclarationExpression>(cStmts->back())) {
                  auto scalarDecl = std::get<ScalarDeclarationExpression>(cStmts->back());
                  cStmts->pop_back();
@@ -531,7 +529,33 @@ std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag())
                     if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
                        bo->statements.emplace_back(
                           std::make_shared<FunctionCallExpression>(
-                             FunctionCallExpression{{symbolTableRef->id}, {itr->second}, {}, emitChapelLine(ast), symbolTable}
+                             FunctionCallExpression{{symbolTableRef->id}, itr->second, {}, emitChapelLine(ast), symbolTable}
+                       ));
+                       curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(bo->statements.back())->arguments));
+                       break;
+                    }
+                 }
+              }
+              else if(std::holds_alternative<VariableExpression>(cStmts->back())) {
+                 cStmts->pop_back();
+                 auto scalarDecl = std::get<ScalarDeclarationExpression>(cStmts->back());
+                 cStmts->pop_back();
+                 cStmts->emplace_back(
+                     std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                         {{symbolTableRef->id}, "=", ast}, {}
+                     })
+                 );
+                 auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                 bo->statements.emplace_back(
+                    ScalarDeclarationLiteralExpression{{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine}, {}}
+                 );
+
+                 auto itr = fsym->first;
+                 for(; itr != fsym->second; ++itr) {
+                    if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                       bo->statements.emplace_back(
+                          std::make_shared<FunctionCallExpression>(
+                             FunctionCallExpression{{symbolTableRef->id}, itr->second, {}, emitChapelLine(ast), symbolTable}
                        ));
                        curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(bo->statements.back())->arguments));
                        break;
@@ -544,7 +568,7 @@ std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag())
                     if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
                        cStmts->emplace_back(
                           std::make_shared<FunctionCallExpression>(
-                             FunctionCallExpression{{symbolTableRef->id}, {itr->second}, {}, emitChapelLine(ast), symbolTable}
+                             FunctionCallExpression{{symbolTableRef->id}, itr->second, {}, emitChapelLine(ast), symbolTable}
                        ));
                        curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back())->arguments));
                        break;
