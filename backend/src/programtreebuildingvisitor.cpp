@@ -30,7 +30,8 @@ std::unordered_map<std::string, int> ProgramTreeBuildingVisitor::operatorEncoder
     {"*",  3},
     {"/",  4},
     {"%",  5},
-    {"[]",  6}
+    {"[]", 6},
+    {"==", 7}
 };
 
 struct VariableVisitor {
@@ -158,7 +159,7 @@ std::string ProgramTreeBuildingVisitor::emitChapelLine(uast::AstNode const* ast)
 }
 
 bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
-//std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << std::endl;
+std::cout << "enter node tag\t" << ast->tag() << '\t' << tagToString(ast->tag()) << '\t' << emitChapelLine(ast) << std::endl;
    switch(ast->tag()) {
     case asttags::AnonFormal:
     break;
@@ -198,12 +199,26 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
            std::optional<Symbol> varsym =
                symbolTable.find(symbolTableRef->id, identifier);
-
            if(!varsym) {
-              std::cerr << "chplx error: Undefined symbol \"" << identifier << "\" detected; check\t" << emitChapelLine(ast) << std::endl << std::flush;
-              return false;
+              auto rsym =
+                 symbolTable.findPrefix(symbolTableRef->id, identifier);
+
+              if(!rsym) {
+                 std::cerr << "chplx error: Undefined symbol \"" << identifier << "\" detected; check\t" << emitChapelLine(ast) << std::endl << std::flush;
+                 return false;
+              }
+
+              auto itr = rsym->first;
+              for(; itr != rsym->second; ++itr) {
+                 if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                    cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+                    break;
+                 }
+              }
            }
-           cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+           else {
+              cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+           }
        }
        else if(cStmtsnz && std::holds_alternative<std::shared_ptr<ReturnExpression>>(cStmts->back())) {
            std::shared_ptr<ReturnExpression> & ret = std::get<std::shared_ptr<ReturnExpression>>(cStmts->back());
@@ -497,15 +512,43 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               return false;
            }
            else {
-              auto itr = fsym->first;
-              for(; itr != fsym->second; ++itr) {
-                 if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
-                    cStmts->emplace_back(
-                       std::make_shared<FunctionCallExpression>(
-                          FunctionCallExpression{{symbolTableRef->id}, {itr->second}, {}, emitChapelLine(ast), symbolTable}
-                    ));
-                    curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back())->arguments));
-                    break;
+
+              if(std::holds_alternative<ScalarDeclarationExpression>(cStmts->back())) {
+                 auto scalarDecl = std::get<ScalarDeclarationExpression>(cStmts->back());
+                 cStmts->pop_back();
+                 cStmts->emplace_back(
+                     std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                         {{symbolTableRef->id}, "=", ast}, {}
+                     })
+                 );
+                 auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                 bo->statements.emplace_back(
+                    ScalarDeclarationLiteralExpression{{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine}, {}}
+                 );
+
+                 auto itr = fsym->first;
+                 for(; itr != fsym->second; ++itr) {
+                    if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                       bo->statements.emplace_back(
+                          std::make_shared<FunctionCallExpression>(
+                             FunctionCallExpression{{symbolTableRef->id}, {itr->second}, {}, emitChapelLine(ast), symbolTable}
+                       ));
+                       curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(bo->statements.back())->arguments));
+                       break;
+                    }
+                 }
+              }
+              else {
+                 auto itr = fsym->first;
+                 for(; itr != fsym->second; ++itr) {
+                    if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                       cStmts->emplace_back(
+                          std::make_shared<FunctionCallExpression>(
+                             FunctionCallExpression{{symbolTableRef->id}, {itr->second}, {}, emitChapelLine(ast), symbolTable}
+                       ));
+                       curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back())->arguments));
+                       break;
+                    }
                  }
               }
            }
@@ -663,6 +706,35 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Cobegin:
     break;
     case asttags::Conditional:
+    {
+       std::string identifier{"if" + emitChapelLine(ast)};
+
+       std::optional<Symbol> varsym =
+          symbolTable.find(symbolTableRef->id, identifier);
+
+       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(*varsym->kind)) {
+          std::vector<Statement> * cStmts = curStmts.back();
+
+          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*varsym->kind);
+          symbolTableRef = symbolTable.lut[fk->lutId];
+
+          if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>(cStmts->back())) {
+             auto ce = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
+             ce->exprs.emplace_back(
+                ConditionedExpression{{{fk->lutId}, ast, {}},{},{}}
+             );
+             curStmts.emplace_back(&(ce->exprs.back().conditions));
+          }
+          else {
+             cStmts->emplace_back(
+                std::make_shared<ConditionalExpression>(
+                   ConditionalExpression{{ConditionedExpression{{{fk->lutId}, ast, {}},{},{}}}}
+             ));
+             auto & fndecl = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
+             curStmts.emplace_back(&(fndecl->exprs.back().conditions));
+          }
+       }
+    }
     break;
     case asttags::Implements:
     break;
@@ -679,6 +751,14 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Begin:
     break;
     case asttags::Block:
+    {
+       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-2]->back() )) {
+          curStmts.pop_back();
+          std::vector<Statement> * cStmts = curStmts.back();
+          auto & fndecl = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
+          curStmts.emplace_back(&(fndecl->exprs.back().statements));
+       }
+    }
     break;
     case asttags::Defer:
     break;
@@ -1013,6 +1093,12 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Begin:
     break;
     case asttags::Block:
+    {
+       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-2]->back() )) {
+          //curStmts.back();
+          curStmts.pop_back();
+       }
+    }
     break;
     case asttags::Defer:
     break;
