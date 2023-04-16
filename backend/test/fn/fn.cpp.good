@@ -5,33 +5,36 @@
 
 #include "fn.hpp"
 
-int hpx_main(int argc, char *argv[]) {
-
+int hpx_main(int argc, char* argv[])
+{
 #line 11 "fn.chpl"
-  auto print = [&]() -> void {
+    auto print = [&]() -> void {
 #line 12 "fn.chpl"
-    std::int64_t j;
+        std::int64_t j;
 #line 13 "fn.chpl"
-    std::int64_t i = 1;
+        std::int64_t i = 1;
 #line 14 "fn.chpl"
-    bool k = true;
+        bool k = true;
 #line 15 "fn.chpl"
-    double l = 1.000000;
+        double l = 1.000000;
 #line 16 "fn.chpl"
-    bool m;
+        bool m;
 #line 17 "fn.chpl"
-    double n;
+        double n;
 #line 18 "fn.chpl"
-    std::cout << "a" << std::endl;
+        std::cout << "a" << std::endl;
 #line 19 "fn.chpl"
-    std::cout << i << std::endl;
+        std::cout << i << std::endl;
 #line 20 "fn.chpl"
-    std::cout << i << std::endl;
+        std::cout << i << std::endl;
 #line 21 "fn.chpl"
-    std::cout << i << l << std::endl;
-  };
+        std::cout << i << l << std::endl;
+    };
 
-  return hpx::finalize();
+    return hpx::finalize();
 }
 
-int main(int argc, char *argv[]) { return hpx::init(argc, argv); }
+int main(int argc, char* argv[])
+{
+    return hpx::init(argc, argv);
+}
