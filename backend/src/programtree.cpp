@@ -203,7 +203,6 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
 
      if(knt) { literallist << "{"; }
      else {
-
         if(!knt && !kntend) {
            std::visit(ScalarDeclarationLiteralExpressionVisitor{literalValues[lit], literallist}, children[i]);
            ++lit;

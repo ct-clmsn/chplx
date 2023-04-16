@@ -73,6 +73,9 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("[]",
       Symbol{{std::make_shared<func_kind>(func_kind{{{}, "[]", {}}}), std::string{"[]"}, {}, symbolTable.symbolTableRef->id}, {}}
    );
+   addSymbolEntry("==",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "==", {}}}), std::string{"=="}, {}, symbolTable.symbolTableRef->id}, {}}
+   );
 }
 
 std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
@@ -503,6 +506,31 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::START_Call:
     break;
     case asttags::FnCall:
+    {
+        if(sym.has_value() && sym->get().kind.has_value() && sym->get().kind->index() == 0) {
+           const FnCall* fc = dynamic_cast<const FnCall*>(ast);
+           std::string identifier{dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str()};
+
+           auto rsym =
+              symbolTable.findPrefix(symbolTable.symbolTableRef->id, identifier);
+           auto itr = rsym->first;
+           for(; itr != rsym->second; ++itr) {
+
+              auto pipeloc = itr->first.find('|');
+              std::string itrstr {(pipeloc == itr->first.npos) ? itr->first : itr->first.substr(0,pipeloc)};
+
+              // assign variable the return value of the function...
+              //
+              if(itrstr.size() >= identifier.size() &&
+                 itrstr == identifier &&
+                 itr->second.kind.has_value() && 
+                 std::holds_alternative<std::shared_ptr<func_kind>>(*itr->second.kind)
+              ) {
+                 sym->get().kind = *std::get<std::shared_ptr<func_kind>>(*itr->second.kind)->retKind;
+              }
+           }
+        }
+    }
     break;
     case asttags::OpCall:
     break;
@@ -577,6 +605,39 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Cobegin:
     break;
     case asttags::Conditional:
+    {
+        if(!(sym && sym->get().kind.has_value() && 0 < sym->get().kind->index())) {
+          // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
+          //
+          symstack.emplace_back(
+             Symbol{{
+                std::optional<kind_types>{
+                   std::make_shared<func_kind>(func_kind{{
+                      symbolTable.symbolTableRef->id, {}, {}, {}}})
+                },
+                std::string{"if" + emitChapelLine(ast)},
+                {}, symbolTable.symbolTableRef->id
+             }});
+
+          std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
+          const std::size_t parScope = symbolTable.symbolTableRef->id;
+          symbolTable.pushScope();
+          sym = symstack.back();
+
+          std::shared_ptr<func_kind> & fk = 
+             std::get<std::shared_ptr<func_kind>>(*sym->get().kind);
+
+          fk->symbolTableSignature = (*sym->get().identifier);
+          // func_kind.lutId = the scope where the function's symboltable references
+          //
+          fk->lutId = symbolTable.symbolTableRef->id;
+
+          symbolTable.parentSymbolTableId = parScope;
+          symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+
+          symnode = ast;
+       }
+    }
     break;
     case asttags::Implements:
     break;
@@ -598,6 +659,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
          if(std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind))) {
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
+             if(0 < fk->args.size() && (fk->args.back().identifier == "nil")) {
+                // this 'function' is really a stand-in scope for the following
+                // expressions: for, forall, conditional (if/else) clause
+                //
+                return true;
+             }
              fk->args.emplace_back(Symbol{{nil_kind{}, std::string{"nil"}, {}, symbolTable.symbolTableRef->id}, {}});
           }
        }
@@ -994,8 +1061,6 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Begin:
     break;
-    case asttags::Block:
-    break;
     case asttags::Defer:
     break;
     case asttags::Local:
@@ -1022,13 +1087,15 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Coforall:
     break;
+    case asttags::Block:
     case asttags::For:
     case asttags::Forall:
     {
        if(sym) {
           assert( sym->get().identifier.has_value() );
           auto lusym = symbolTable.find(sym->get().scopeId, (*(sym->get().identifier)));
-          if(!lusym) {
+          const bool is_func = std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind));
+          if(!lusym && is_func) {
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
 
@@ -1052,7 +1119,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
 
              symbolTable.popScope();
           }
-          else {
+          else if(is_func) {
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
 

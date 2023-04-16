@@ -6,8 +6,8 @@
 //
 
 var a : int;
-a = 1 + 1;
 
+a = 1 + 1;
 a = a + 1;
 a = 1 + a;
 a = a + a;
@@ -61,6 +61,7 @@ a = ( ( valuea(a) + valuea(a) ) + valuea(a) ) + a;
 a = a + ( (valuea(a) + valuea(a)) + valuea(a) );
 
 var b : [0..10] int;
+
 b[0] = 1;
 b[0] = a;
 b(0) = a;
@@ -68,8 +69,10 @@ b[0] = b[0];
 b[0] = b(0);
 b(0) = b[0];
 b(0) = b(0);
+
 b[0 + 0] = 1;
 b(0 + 0) = 1;
+
 b[0 + 0] = a;
 b(0 + 0) = a;
 b[0 + 0] = b[0];
@@ -89,7 +92,13 @@ c(0,0) = c(0,0);
 c[0 + 0, 0] = 1;
 c(0 + 0, 0) = 1;
 
+var y = valuea(1);
+var z = valuea(a);
+var w : int = valuea(a);
+var u : int = valuea(1);
+
 proc valueb(a : int) : int {
    var x = valuea(a);
+   x = valuea(a);
    return x + valuea(a);
 }
