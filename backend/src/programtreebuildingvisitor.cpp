@@ -780,13 +780,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Block:
     {
-       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-2]->back() )) {
+       if (1 < curStmts.size() && 0 < curStmts[curStmts.size()-2]->size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-2]->back() )) {
           curStmts.pop_back();
           std::vector<Statement> * cStmts = curStmts.back();
           auto & fndecl = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
           curStmts.emplace_back(&(fndecl->exprs.back().statements));
        }
-       else if(0 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-1]->back() )) {
+       else if(0 < curStmts.size() && 0 < curStmts[curStmts.size()-1]->size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-1]->back() )) {
           std::vector<Statement> * cStmts = curStmts.back();
           auto & ce = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
           ce->exprs.emplace_back(

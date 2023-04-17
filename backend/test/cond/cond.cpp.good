@@ -55,6 +55,13 @@ int hpx_main(int argc, char* argv[])
 #line 35 "../../backend/test/cond.chpl"
         std::cout << c << std::endl;
     }
+#line 38 "../../backend/test/cond.chpl"
+    auto alpha = [&]() -> void {
+#line 39 "../../backend/test/cond.chpl"
+        std::int64_t d = 1;
+#line 41 "../../backend/test/cond.chpl"
+        std::cout << d << std::endl;
+    };
 
     return hpx::finalize();
 }

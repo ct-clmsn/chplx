@@ -34,3 +34,11 @@ inlinecxx("std::cout << c << std::endl;");
 else if(c == 1) {
 inlinecxx("std::cout << c << std::endl;");
 }
+
+proc alpha() {
+   var d = 1;
+   if(d) {
+      inlinecxx("std::cout << d << std::endl;");
+   }
+}
+
