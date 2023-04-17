@@ -183,8 +183,10 @@ struct StatementVisitor {
       }
    }
    void operator()(ScalarDeclarationExpression const& node) {
-      emitIndent();
-      os << node.chplLine;
+      if(printChplLine) {
+         emitIndent();
+         os << node.chplLine;
+      }
       emitIndent();
       node.emit(os);
    }
@@ -203,16 +205,20 @@ struct StatementVisitor {
             std::holds_alternative<string_kind>(akref->kind);
       }
 
-      emitIndent();
-      os << node.chplLine;
+      if(printChplLine) {
+         emitIndent();
+         os << node.chplLine;
+      }
       emitIndent();
       node.emit(os);
    }
    void operator()(ScalarDeclarationLiteralExpression const& node) {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
       if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
-      emitIndent();
-      os << node.chplLine;
+      if(printChplLine) {
+         emitIndent();
+         os << node.chplLine;
+      }
       emitIndent();
       node.emit(os);
       os << " = ";
@@ -224,20 +230,36 @@ struct StatementVisitor {
    void operator()(ArrayDeclarationLiteralExpression const& node) {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
       if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
-      emitIndent();
-      os << node.chplLine;
+      if(printChplLine) {
+         emitIndent();
+         os << node.chplLine;
+      }
       emitIndent();
       node.emit(os);
    }
+   void operator()(VariableExpression const& node) {
+      if(arg) {
+         node.emit(os);
+      }
+   }
    void operator()(std::shared_ptr<ConditionalExpression> const& node) {
       for(std::size_t i = 0; i < node->exprs.size(); ++i) {
+         if(printChplLine) {
+            emitIndent();
+            emitChapelLine(os, *(node->exprs[i].node));
+         }
          emitIndent();
-         emitChapelLine(os, *(node->exprs[i].node));
-         emitIndent();
-
-         os << ( (i == 0) ? "if" : ( (0 < node->exprs[i].statements.size()) ?  "else if" : "else" ) ) << '(';
-         visit(*this, node->exprs[i].conditions[0]);
-         os << ") {" << std::endl; 
+         os << ( (i == 0) ? "if" : ( (0 < node->exprs[i].conditions.size()) ?  "else if" : "else" ) );
+         printChplLine = false;
+         arg = true;
+         if(0 < node->exprs[i].conditions.size()) {
+            os << '(';
+            visit(*this, node->exprs[i].conditions[0]);
+            os << ")";
+         }
+         printChplLine = true;
+         arg = false;
+         os << "{" << std::endl;
          ++indent;
          for(const auto& stmt : node->exprs[i].statements) {
             visit(*this, stmt);
@@ -248,8 +270,10 @@ struct StatementVisitor {
       }
    }
    void operator()(std::shared_ptr<ForLoopExpression> const& node) {
-      emitIndent();
-      os << node->chplLine;
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
       emitIndent();
 
       range_kind const& rk = std::get<range_kind>(*node->indexSet->kind);
@@ -263,8 +287,10 @@ struct StatementVisitor {
       os << "});" << std::endl;
    }
    void operator()(std::shared_ptr<ForallLoopExpression> const& node) {
-      emitIndent();
-      os << node->chplLine;
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
       emitIndent();
 
       range_kind const& rk = std::get<range_kind>(*node->indexSet->kind);
@@ -288,8 +314,10 @@ struct StatementVisitor {
       if(is_cxx) {
          headers[static_cast<std::size_t>(HeaderEnum::std_iostream)] = true;
       }
-      emitIndent();
-      os << node->chplLine;
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
       emitIndent();
       node->emit(os);
       if(!is_cxx) {
@@ -299,9 +327,11 @@ struct StatementVisitor {
    void operator()(std::shared_ptr<FunctionDeclarationExpression> const& node) {
       headers[static_cast<std::size_t>(HeaderEnum::std_functional)] = true;
       if(!node->symbol.identifier) { std::cerr << "codegenvisitor.cpp FunctionDeclarationExpression " << (*(node->symbol.identifier)) << " not found" << std::endl; }
-      emitIndent();
-      os << node->chplLine;
-      emitIndent();
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+         emitIndent();
+      }
 
       if(std::holds_alternative<std::shared_ptr<func_kind>>(*(node->symbol.kind))) {
          std::shared_ptr<func_kind> const& fk =
@@ -365,17 +395,23 @@ struct StatementVisitor {
       emitIndent();
    }
    void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
-      emitIndent();
-      emitChapelLine(os, node->ast);
-      emitIndent();
+      if(printChplLine) {
+         emitIndent();
+         emitChapelLine(os, node->ast);
+      }
 
+      if(!arg) {
+         emitIndent();
+      }
       std::visit(ExprVisitor{os}, node->statements[0]);
 
       os << ' ' << node->op << ' ';
 
       std::visit(ExprVisitor{os}, node->statements[1]);
 
-      os << ';' << std::endl;
+      if(!arg) {
+         os << ';' << std::endl;
+      }
    }
    void emitChapelLine(std::ostream & os, uast::AstNode const* ast) const {
       auto const fp = br.filePath();
@@ -387,6 +423,8 @@ struct StatementVisitor {
    std::ostream & os;
    std::size_t indent;
    std::vector<bool> & headers;
+   bool printChplLine;
+   bool arg;
 };
 
 template<>
@@ -397,7 +435,7 @@ void CodegenVisitor::visit(StatementVisitor && v) {
 }
 
 void CodegenVisitor::visit() {
-   visit(StatementVisitor{symbolTable, br, fstrm_, indent, headers});
+   visit(StatementVisitor{symbolTable, br, fstrm_, indent, headers, true, false});
 }
 
 } /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chpl */

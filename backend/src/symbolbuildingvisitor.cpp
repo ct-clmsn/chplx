@@ -81,6 +81,9 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("==",
       Symbol{{std::make_shared<func_kind>(func_kind{{{}, "==", {}}}), std::string{"=="}, {}, symbolTable.symbolTableRef->id}, {}}
    );
+   addSymbolEntry("<=>",
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "<=>", {}}}), std::string{"<=>"}, {}, symbolTable.symbolTableRef->id}, {}}
+   );
 }
 
 std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {

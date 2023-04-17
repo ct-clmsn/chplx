@@ -36,7 +36,8 @@ std::unordered_map<std::string, int> ProgramTreeBuildingVisitor::operatorEncoder
     {"/",  4},
     {"%",  5},
     {"[]", 6},
-    {"==", 7}
+    {"==", 7},
+    {"<=>",8}
 };
 
 struct VariableVisitor {
@@ -627,6 +628,8 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            case 3: // *
            case 4: // /
            case 5: // %
+           case 7: // ==
+           case 8: // <=>
            {
                cStmts->emplace_back(
                    std::make_shared<BinaryOpExpression>(BinaryOpExpression{
@@ -738,11 +741,16 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*varsym->kind);
           symbolTableRef = symbolTable.lut[fk->lutId];
 
-          if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>(cStmts->back())) {
+          //if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>(cStmts->back())) {
+          if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-2]->back() )) {
+             curStmts.pop_back();
+             cStmts = curStmts.back();
              auto ce = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
-             ce->exprs.emplace_back(
-                ConditionedExpression{{{fk->lutId}, ast, {}},{},{}}
-             );
+             //ce->exprs.emplace_back(
+             //   ConditionedExpression{{{fk->lutId}, ast, {}},{},{}}
+             //);
+             ce->exprs.back().scopeId = fk->lutId;
+             ce->exprs.back().node = ast;
              curStmts.emplace_back(&(ce->exprs.back().conditions));
           }
           else {
@@ -777,6 +785,14 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           std::vector<Statement> * cStmts = curStmts.back();
           auto & fndecl = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
           curStmts.emplace_back(&(fndecl->exprs.back().statements));
+       }
+       else if(0 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-1]->back() )) {
+          std::vector<Statement> * cStmts = curStmts.back();
+          auto & ce = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
+          ce->exprs.emplace_back(
+             ConditionedExpression{{{symbolTableRef->id}, ast, {}},{},{}}
+          );
+          curStmts.emplace_back(&(ce->exprs.back().statements));
        }
     }
     break;
@@ -1052,7 +1068,6 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::FnCall:
     case asttags::OpCall:
     {
-       //curStmts.back();
        curStmts.pop_back();
     }
     break;
@@ -1115,7 +1130,6 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Block:
     {
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-2]->back() )) {
-          //curStmts.back();
           curStmts.pop_back();
        }
     }
