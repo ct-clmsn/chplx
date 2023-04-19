@@ -8,7 +8,8 @@
 var A : [0..9] real;
 
 for i in 0..9 {
-    A[i] = i;
+   A[i] = i;
+   inlinecxx("std::cout << {} << std::endl;", i);
 }
 
 forall i in 0..9 {
@@ -30,3 +31,10 @@ for i in 0..9 do
 
 forall i in 0..9 do
     A[i] = i;
+
+coforall tid in 0..2 {
+  inlinecxx("hpx::cout << {} << hpx::endl", tid);
+}
+
+coforall tid in 0..2 do
+  inlinecxx("hpx::cout << {} << hpx::endl", tid);
