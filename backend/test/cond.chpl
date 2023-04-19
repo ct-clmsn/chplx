@@ -41,4 +41,3 @@ proc alpha() {
       inlinecxx("std::cout << d << std::endl;");
    }
 }
-

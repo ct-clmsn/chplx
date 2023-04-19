@@ -196,7 +196,8 @@ struct ConditionedExpression : public ScopeExpression {
    void emit(std::ostream & os) const;
 };
 
-struct ConditionalExpression {
+struct ConditionalExpression : public ScopeExpression {
+   Symbol symbol;
    std::vector<ConditionedExpression> exprs;
    void emit(std::ostream & os) const;
 };
