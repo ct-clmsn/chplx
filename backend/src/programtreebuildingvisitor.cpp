@@ -967,6 +967,8 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > fnsym
                 = symbolTable.findPrefix(symbolTableRef->id, v.lookup);
 
+             if (!fnsym) { return false; }
+
              auto val = fnsym->second;
              for(auto itr = fnsym->first; itr != fnsym->second; ++itr) {
                  if(v.lookup == itr->first) {
@@ -1267,16 +1269,19 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Function:
     {
        curStmts.pop_back();
-       std::vector<Statement> * cStmts = curStmts.back();
+       if (!curStmts.empty())
+       {
+          std::vector<Statement> * cStmts = curStmts.back();
 
-       std::shared_ptr<FunctionDeclarationExpression> & fde =
-           std::get<std::shared_ptr<FunctionDeclarationExpression>>(cStmts->back());
-       
-       if(symbolTable.lut[fde->scopeId]->parent && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent)) {
-           symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent);
-       }
-       else {
-           symbolTableRef = symbolTable.lut[0];
+          std::shared_ptr<FunctionDeclarationExpression> & fde =
+             std::get<std::shared_ptr<FunctionDeclarationExpression>>(cStmts->back());
+
+          if(symbolTable.lut[fde->scopeId]->parent && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent)) {
+             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent);
+          }
+          else {
+             symbolTableRef = symbolTable.lut[0];
+          }
        }
     }
     break;

@@ -34,7 +34,7 @@ proc writeln(args...?k) {
 
 /*
 proc writeln(value : real) {
-   inlinecxx("hpx::cout << {} << hpx::endl", value);
+   inlinecxx("hpx::cout << {} << std::endl;", value);
 }
 
 writeln(1.0);

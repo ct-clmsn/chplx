@@ -898,7 +898,9 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           // func_kind.lutId = the scope where the function's symboltable references
           //
           fk->lutId = symbolTable.symbolTableRef->id;
-          sym->get().parent->scopeId = parScope;
+          if (sym->get().parent) {
+             sym->get().parent->scopeId = parScope;
+          }
 
           symbolTable.parentSymbolTableId = parScope;
           symbolTable.symbolTableRef->parent = prevSymbolTableRef;
@@ -930,7 +932,9 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           // func_kind.lutId = the scope where the function's symboltable references
           //
           fk->lutId = symbolTable.symbolTableRef->id;
-          sym->get().parent->scopeId = parScope;
+          if (sym->get().parent) {
+             sym->get().parent->scopeId = parScope;
+          }
 
           symbolTable.parentSymbolTableId = parScope;
           symbolTable.symbolTableRef->parent = prevSymbolTableRef;
@@ -1343,10 +1347,16 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
              symbolTable.popScope();
           }
           else {
-             std::shared_ptr<func_kind> & fk =
-                std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
+             const bool is_func = std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind));
+             if (is_func) {
+                std::shared_ptr<func_kind> & fk =
+                   std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
 
-             std::cerr << "chplx : " << (*(fk->symbolTableSignature)) << " identifier already defined in current scope" << std::endl;
+                std::cerr << "chplx : " << (*(fk->symbolTableSignature)) << " identifier already defined in current scope" << std::endl;
+             }
+             else {
+                std::cerr << "chplx : " << *(sym->get().identifier) << " identifier already defined in current scope" << std::endl;
+             }
              return;
           }
        }

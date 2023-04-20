@@ -33,8 +33,8 @@ forall i in 0..9 do
     A[i] = i;
 
 coforall tid in 0..2 {
-  inlinecxx("hpx::cout << {} << hpx::endl", tid);
+  inlinecxx("hpx::cout << {} << std::endl;", tid);
 }
 
 coforall tid in 0..2 do
-  inlinecxx("hpx::cout << {} << hpx::endl", tid);
+  inlinecxx("hpx::cout << {} << std::endl;", tid);
