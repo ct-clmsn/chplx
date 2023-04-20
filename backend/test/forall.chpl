@@ -8,14 +8,33 @@
 var A : [0..9] real;
 
 for i in 0..9 {
-    A[i] = i;
+   A[i] = i;
+   inlinecxx("std::cout << {} << std::endl;", i);
 }
 
 forall i in 0..9 {
    A[i] = 1.0;
 }
 
-/*
+proc alpha() {
+   var B : [0..9] real;
+   for i in 0..9 {
+      B[i] = 1.0;
+   }
+   forall i in 0..9 {
+      B[i] = 1.0;
+   }
+}
+
 for i in 0..9 do
     A[i] = i;
-*/
+
+forall i in 0..9 do
+    A[i] = i;
+
+coforall tid in 0..2 {
+  inlinecxx("hpx::cout << {} << hpx::endl", tid);
+}
+
+coforall tid in 0..2 do
+  inlinecxx("hpx::cout << {} << hpx::endl", tid);

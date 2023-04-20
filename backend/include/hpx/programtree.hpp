@@ -196,7 +196,8 @@ struct ConditionedExpression : public ScopeExpression {
    void emit(std::ostream & os) const;
 };
 
-struct ConditionalExpression {
+struct ConditionalExpression : public ScopeExpression {
+   Symbol symbol;
    std::vector<ConditionedExpression> exprs;
    void emit(std::ostream & os) const;
 };
@@ -221,7 +222,13 @@ struct ForallLoopExpression : public ScopeExpression {
    void emit(std::ostream & os) const;
 };
 
-struct CoforallLoopExpression : public ForallLoopExpression {
+struct CoforallLoopExpression : public ScopeExpression {
+   Symbol symbol;
+   std::optional<Symbol> iterator;
+   std::optional<Symbol> indexSet;
+   std::vector<Statement> statements;
+   std::string chplLine;
+
    void emit(std::ostream & os) const;
 };
 

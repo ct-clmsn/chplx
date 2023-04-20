@@ -5,22 +5,62 @@
 
 #include "forall.hpp"
 
-int hpx_main(int argc, char *argv[]) {
+int hpx_main(int argc, char* argv[])
+{
+#line 8 "../../backend/test/forall.chpl"
+    std::vector<double> A(9);
+#line 10 "../../backend/test/forall.chpl"
+    chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
+#line 11 "../../backend/test/forall.chpl"
+        A[i] = i;
+#line 12 "../../backend/test/forall.chpl"
+        std::cout << i << std::endl;
+    });
+#line 15 "../../backend/test/forall.chpl"
+    chplx::forall(chplx::Range{0, 9}, [&](auto i) {
+#line 16 "../../backend/test/forall.chpl"
+        A[i] = 1.000000;
+    });
+#line 19 "../../backend/test/forall.chpl"
+    auto alpha = [&]() -> void {
+#line 20 "../../backend/test/forall.chpl"
+        std::vector<double> B(9);
+#line 21 "../../backend/test/forall.chpl"
+        chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
+#line 22 "../../backend/test/forall.chpl"
+            B[i] = 1.000000;
+        });
+#line 24 "../../backend/test/forall.chpl"
+        chplx::forall(chplx::Range{0, 9}, [&](auto i) {
+#line 25 "../../backend/test/forall.chpl"
+            B[i] = 1.000000;
+        });
+    };
+#line 29 "../../backend/test/forall.chpl"
+    chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
+#line 30 "../../backend/test/forall.chpl"
+        A[i] = i;
+    });
+#line 32 "../../backend/test/forall.chpl"
+    chplx::forall(chplx::Range{0, 9}, [&](auto i) {
+#line 33 "../../backend/test/forall.chpl"
+        A[i] = i;
+    });
+#line 35 "../../backend/test/forall.chpl"
+    chplx::coforall(chplx::Range{0, 2}, [&](auto tid) {
+#line 36 "../../backend/test/forall.chpl"
+        hpx::cout << tid << hpx::endl
+    });
+#line 39 "../../backend/test/forall.chpl"
+    chplx::coforall(chplx::Range{0, 2}, [&](auto tid) {
+#line 40 "../../backend/test/forall.chpl"
+        hpx::cout << tid << hpx::endl
+    });
 
-#line 8 "forall.chpl"
-  std::vector<double> A(9);
-#line 10 "forall.chpl"
-  chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
-#line 11 "forall.chpl"
-    A[i] = i;
-  });
-#line 14 "forall.chpl"
-  chplx::forall(chplx::Range{0, 9}, [&](auto i) {
-#line 15 "forall.chpl"
-    A[i] = 1.000000;
-  });
-
-  return hpx::finalize();
+    return hpx::finalize();
 }
 
-int main(int argc, char *argv[]) { return hpx::init(argc, argv); }
+int main(int argc, char* argv[])
+{
+    return hpx::init(argc, argv);
+}

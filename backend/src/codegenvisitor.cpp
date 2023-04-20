@@ -303,6 +303,23 @@ struct StatementVisitor {
       emitIndent();
       os << "});" << std::endl;
    }
+   void operator()(std::shared_ptr<CoforallLoopExpression> const& node) {
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
+      emitIndent();
+
+      range_kind const& rk = std::get<range_kind>(*node->indexSet->kind);
+      os << "chplx::coforall(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << (*node->iterator->identifier) << ") {" << std::endl;
+      ++indent;
+      for(const auto& stmt : node->statements) {
+         visit(*this, stmt);
+      }
+      --indent;
+      emitIndent();
+      os << "});" << std::endl;
+   }
    void operator()(std::shared_ptr<ReturnExpression> const& node) {
       emitIndent();
       os << node->chplLine;
