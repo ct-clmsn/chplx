@@ -15,6 +15,7 @@ namespace chplx::util {
 // global options
 extern bool suppressLineDirectives;
 extern bool fullFilePath;
+extern bool compilerDebug;
 
 // emit line directive
 std::string emitLineDirective(char const* name, int line);

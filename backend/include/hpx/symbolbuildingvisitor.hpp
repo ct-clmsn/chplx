@@ -62,6 +62,7 @@ struct SymbolBuildingVisitor {
    std::optional< std::reference_wrapper<Symbol> > sym;
    std::optional<uast::AstNode const*> symnode;
 
+   std::vector< Symbol * > configVars;
    SymbolTable symbolTable;
 };
 

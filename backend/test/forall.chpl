@@ -32,9 +32,17 @@ for i in 0..9 do
 forall i in 0..9 do
     A[i] = i;
 
+var B : [0..2] int;
 coforall tid in 0..2 {
-  inlinecxx("hpx::cout << {} << hpx::endl", tid);
+  B[tid] = tid;
 }
 
+for i in 0..2 do
+   inlinecxx("std::cout << {} << std::endl;", B[i]);
+
+var C : [0..2] int;
 coforall tid in 0..2 do
-  inlinecxx("hpx::cout << {} << hpx::endl", tid);
+  C[tid] = tid;
+
+for i in 0..2 do
+   inlinecxx("std::cout << {} << std::endl;", C[i]);

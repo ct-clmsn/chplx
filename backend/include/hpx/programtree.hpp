@@ -34,6 +34,8 @@ struct VariableDeclarationExpression : public ExpressionBase {
    std::string identifier;
    kind_types kind;
    std::string chplLine;
+   int qualifier;
+   bool config;
 };
 
 struct ScalarDeclarationExpression : public VariableDeclarationExpression {

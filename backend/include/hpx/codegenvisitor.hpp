@@ -69,8 +69,10 @@ struct CodegenVisitor {
 
    CodegenVisitor(
       SymbolTable & symTable,
+      std::vector< Symbol * > & configVars,
       ProgramTree & prgmTree,
       chpl::uast::BuilderResult const& chapelBr,
+      std::string const& cppFilePathStr,
       std::string const& chapelFilePathStr,
       std::ostream & fstrm
    );
@@ -103,12 +105,14 @@ struct CodegenVisitor {
    void visit(); 
 
    SymbolTable & symbolTable;
+   std::vector< Symbol * > & cfgVars;
    ProgramTree & programTree;
    chpl::uast::BuilderResult const& br;
    std::size_t indent; 
    std::size_t scope;
    std::optional<std::string> identifier;
    std::ostream & fstrm_;
+   std::string cppFilePathStr;
    std::string chplFilePathStr;
    std::vector<bool> headers;
 };

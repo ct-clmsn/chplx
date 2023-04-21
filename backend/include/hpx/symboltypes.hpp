@@ -173,6 +173,8 @@ struct SymbolBase {
     std::optional<kind_types> kind;
     std::optional<std::string> identifier;
     std::optional<std::vector<uast::AstNode const*>> literal;
+    int kindqualifier;
+    bool isConfig;
     std::size_t scopeId;
 };
 

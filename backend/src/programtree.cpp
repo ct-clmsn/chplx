@@ -46,8 +46,46 @@ struct ScalarDeclarationExpressionVisitor {
     std::ostream & os;
 };
 
+void VisitQualifierPrefix(std::ostream & os, const int qualifier) {
+   if(qualifier == 1) {
+      os << "const ";
+   }
+   else if(qualifier == 4) {
+      os << "const ";
+   }
+}
+
+void VisitQualifierSuffix(std::ostream & os, const int qualifier) {
+   if(qualifier == 2) {
+      os << " const&";
+   }
+   else if(qualifier == 3) {
+      os << "&";
+   }
+   else if(qualifier == 6) {
+      os << "&";
+   }
+   else if(qualifier == 7) {
+      os << " const&";
+   }
+   else if(qualifier == 8) {
+      os << "&";
+   }
+   else if(qualifier == 9) {
+      os << "&";
+   }
+}
+
 void ScalarDeclarationExpression::emit(std::ostream & os) const {
+   if(-1 < qualifier) {
+      VisitQualifierPrefix(os, qualifier);
+   }   
+
    std::visit(ScalarDeclarationExpressionVisitor{os}, kind);
+
+   if(-1 < qualifier) {
+      VisitQualifierSuffix(os, qualifier);
+   }
    os << " " << identifier << ";" << std::endl;
 }
 
@@ -72,6 +110,10 @@ void ScalarDeclarationLiteralExpressionVisitor::operator()(string_kind const&) {
 }
 
 void ScalarDeclarationLiteralExpression::emit(std::ostream & os) const {
+   if(-1 < qualifier) {
+      VisitQualifierPrefix(os, qualifier);
+   }   
+
    std::visit(ScalarDeclarationExpressionVisitor{os}, kind);
    os << " " << identifier;
 }
@@ -80,6 +122,9 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
    std::shared_ptr<array_kind> const& akref =
       std::get<std::shared_ptr<array_kind>>(kind);
 
+   if(-1 < qualifier) {
+      VisitQualifierPrefix(os, qualifier);
+   }   
 
    os << "std::vector<";
    std::visit(ScalarDeclarationExpressionVisitor{os}, akref->kind);
@@ -140,14 +185,16 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
       std::get<std::shared_ptr<array_kind>>(kind);
 
    std::stringstream typelist{}, literallist{};
-//   std::shared_ptr<kind_node_type> & symref =
-//      std::get<std::shared_ptr<kind_node_type>>(akref->kind);
 
    std::vector<kind_types> & children =
       std::get<std::shared_ptr<kind_node_type>>(akref->kind)->children;
 
    const std::size_t children_sz = children.size();
    std::size_t vec_count = 0;
+
+   if(-1 < qualifier) {
+      VisitQualifierPrefix(os, qualifier);
+   }   
 
    // the following 2 loops could be performed in
    // parallel
@@ -289,13 +336,6 @@ void ReturnExpression::emit(std::ostream & os) const {
     store.push_back(v.os.str());
     os << fmt::vformat(retfmt, store) << std::endl;
 }
-
-struct ExprVisitor {
-    template<typename T>
-    void operator()(T const&) {}
-
-    std::ostream & os;
-};
 
 void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
