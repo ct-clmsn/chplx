@@ -159,7 +159,8 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
    if(chplx::util::compilerDebug) {
       std::cout << "***Enter AST Node\t" << tagToString(ast->tag()) << std::endl
                 << "***\tCurrent Scope\t" << symbolTable.symbolTableRef->id << std::endl
-                << "***\tCurrent Statement List Size\t" << curStmts.size() << std::endl;
+                << "***\tCurrent Statement List Size\t" << curStmts.size() << std::endl
+                << "***\t" << emitChapelLine(ast);
    }
 
    switch(ast->tag()) {
@@ -1024,7 +1025,8 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
    if(chplx::util::compilerDebug) {
       std::cout << "---Exit AST Node\t" << tagToString(ast->tag()) << std::endl
                 << "---\tCurrent Scope\t" << symbolTable.symbolTableRef->id << std::endl
-                << "---\tCurrent Statement List Size\t" << curStmts.size() << std::endl;
+                << "---\tCurrent Statement List Size\t" << curStmts.size() << std::endl
+                << "---\t" << emitChapelLine(ast);
    }
 
    switch(ast->tag()) {
