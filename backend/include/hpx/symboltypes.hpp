@@ -179,7 +179,6 @@ struct SymbolBase {
 };
 
 struct Symbol : public SymbolBase {
-    //std::optional<std::reference_wrapper<SymbolBase>> parent;
 };
 
 struct SymbolTable {

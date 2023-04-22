@@ -103,7 +103,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Array:
     {
-        if(sym.has_value() && sym->get().kind->index() < 1) {
+        if(sym.has_value() && !sym->get().kind.has_value()) {
            sym->get().kind = std::make_shared<array_kind>();
            std::get<std::shared_ptr<array_kind>>(*sym->get().kind)->kind =
               std::make_shared<kind_node_type>(kind_node_type{});
@@ -247,7 +247,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
        }
        else {
           symstack.emplace_back(Symbol{{
-            std::make_optional<kind_types>(range_kind{{}}),
+            range_kind{},
             std::string{"range_" + emitChapelLine(ast)},
             {}, -1, false, symbolTable.symbolTableRef->id
           }});
@@ -661,7 +661,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
        const bool cfg = dynamic_cast<Variable const*>(ast)->isConfig();
 
        symstack.emplace_back(Symbol{{
-          std::make_optional<kind_types>(),
+          {},
           std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()},
           {}, kindqual, cfg, symbolTable.symbolTableRef->id
        }});
