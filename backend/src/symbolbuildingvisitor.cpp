@@ -234,7 +234,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              std::string ident{std::string{"range_" + emitChapelLine(ast)}};
              fk->args.emplace_back(
                 Symbol{{
-                   std::make_optional<kind_types>(range_kind{{}}),
+                   {range_kind{{}}},
                    ident,
                    {}, -1, false, symbolTable.symbolTableRef->id
                 }});
