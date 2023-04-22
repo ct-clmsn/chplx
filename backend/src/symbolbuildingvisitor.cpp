@@ -37,52 +37,51 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    //
    // bool, string, int, real, byte, complex, range, domain, template(?)
    //
-
-   addSymbolEntry("nil", Symbol{{nil_kind{}, std::string{"nil"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("bool", Symbol{{bool_kind{}, std::string{"bool"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("string", Symbol{{string_kind{}, std::string{"string"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("int", Symbol{{int_kind{}, std::string{"int"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("real", Symbol{{real_kind{}, std::string{"real"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("byte", Symbol{{byte_kind{}, std::string{"byte"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("complex", Symbol{{complex_kind{}, std::string{"complex"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("range", Symbol{{range_kind{}, std::string{"range"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("domain", Symbol{{domain_kind{}, std::string{"domain"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
-   addSymbolEntry("?", Symbol{{template_kind{}, std::string{"?"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
+   addSymbolEntry("nil", Symbol{{nil_kind{}, std::string{"nil"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("bool", Symbol{{bool_kind{}, std::string{"bool"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("string", Symbol{{string_kind{}, std::string{"string"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("int", Symbol{{int_kind{}, std::string{"int"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("real", Symbol{{real_kind{}, std::string{"real"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("byte", Symbol{{byte_kind{}, std::string{"byte"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("complex", Symbol{{complex_kind{}, std::string{"complex"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("range", Symbol{{range_kind{}, std::string{"range"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("domain", Symbol{{domain_kind{}, std::string{"domain"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
+   addSymbolEntry("?", Symbol{{template_kind{}, std::string{"?"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
 
    // inlinecxx - allows users to inline c++ code into their chapel programs
    //
    addSymbolEntry("inlinecxx",
-      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}, nil_kind{}}}), std::string{"inlinecxx"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}, nil_kind{}}}), std::string{"inlinecxx"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
 
    // +,-,*,/,%,=
    //
    addSymbolEntry("+",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "+", {}}}), std::string{"+"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "+", {}}}), std::string{"+"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
    addSymbolEntry("-",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "-", {}}}), std::string{"-"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "-", {}}}), std::string{"-"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
    addSymbolEntry("*",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "*", {}}}), std::string{"*"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "*", {}}}), std::string{"*"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
    addSymbolEntry("/",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "/", {}}}), std::string{"/"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "/", {}}}), std::string{"/"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
    addSymbolEntry("%",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "%", {}}}), std::string{"%"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "%", {}}}), std::string{"%"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
    addSymbolEntry("=",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "=", {}}}), std::string{"="}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "=", {}}}), std::string{"="}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
    addSymbolEntry("[]",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "[]", {}}}), std::string{"[]"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "[]", {}}}), std::string{"[]"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
    addSymbolEntry("==",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "==", {}}}), std::string{"=="}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "==", {}}}), std::string{"=="}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
    addSymbolEntry("<=>",
-      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "<=>", {}}}), std::string{"<=>"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}}
+      Symbol{{std::make_shared<func_kind>(func_kind{{{}, "<=>", {}}}), std::string{"<=>"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}}
    );
 }
 
@@ -236,8 +235,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                    std::make_optional<kind_types>(range_kind{}),
                    ident,
                    {}, -1, false, symbolTable.symbolTableRef->id
-                }}
-             );
+                }, {{{},{},{},-1,false,0}}});
 
              symbolTable.addEntry(fk->lutId, ident, fk->args.back());
 
@@ -250,7 +248,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
             std::make_optional<kind_types>(range_kind{}),
             std::string{"range_" + emitChapelLine(ast)},
             {}, -1, false, symbolTable.symbolTableRef->id
-          }});
+          }, {{{},{},{},-1,false,0}}});
 
           sym = symstack.back();
           symnode = ast;
@@ -471,7 +469,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
               }
            }
 
-           auto fsym = symbolTable.find("string");
+           auto fsym = symbolTable.find(0,"string");
            if(fsym.has_value()) {
              sym->get().kind = (*(fsym->kind));
              if(sym->get().literal) {
@@ -487,7 +485,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::StringLiteral:
     {
         if(!(sym && sym->get().kind.has_value() && 0 < sym->get().kind->index())) {
-           if(std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind))) {
+           if(sym && std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind))) {
               std::shared_ptr<func_kind> & fk =
                  std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
               if(0 < fk->args.size() && std::holds_alternative<nil_kind>(*(fk->args.back().kind))) {
@@ -495,7 +493,10 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
               }
            }
 
-           auto fsym = symbolTable.find("string");
+           std::optional<Symbol> fsym{};
+           symbolTable.find(0, "string", fsym);
+           //
+           //auto fsym = symbolTable.find(0,"string");
            if(fsym.has_value()) {
              sym->get().kind = (*(fsym->kind));
              if(sym->get().literal) {
@@ -615,7 +616,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 std::make_optional<kind_types>(),
                 ident,
                 {}, kindqual, false, symbolTable.symbolTableRef->id
-             }}
+             }, {{{},{},{},-1,false,0}}}
           );
 
           symbolTable.addEntry(fk->lutId, ident, fk->args.back());
@@ -661,7 +662,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::make_optional<kind_types>(),
           std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()},
           {}, kindqual, cfg, symbolTable.symbolTableRef->id
-       }});
+       }, {{{},{},{},-1, false, 0}}});
 
        sym = symstack.back();
        symnode = ast;
@@ -682,13 +683,13 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           //
           symstack.emplace_back(
              Symbol{{
-                std::optional<kind_types>{
+                std::make_optional<kind_types>(
                    std::make_shared<func_kind>(func_kind{{
                       symbolTable.symbolTableRef->id, {}, {}, {}}})
-                },
+                ),
                 std::string{"if" + emitChapelLine(ast)},
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -720,7 +721,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 },
                 std::string{"if" + emitChapelLine(ast)},
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -773,7 +774,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 // declaration's argument list; the following empty argument is
                 // state information about the ast traversal
                 // 
-                fk->args.emplace_back(Symbol{{nil_kind{}, std::string{"nil"}, {}, -1, false, symbolTable.symbolTableRef->id}, {}});
+                fk->args.emplace_back(Symbol{{nil_kind{}, std::string{"nil"}, {}, -1, false, symbolTable.symbolTableRef->id}, {{{},{},{},-1,false,0}}});
              }
           }
        }
@@ -821,7 +822,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 },
                 std::string{"coforall" + emitChapelLine(ast)},
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -850,7 +851,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 },
                 std::string{"coforall" + emitChapelLine(ast)},
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -886,7 +887,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 },
                 std::string{"for" + emitChapelLine(ast)},
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -915,7 +916,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 },
                 std::string{"for" + emitChapelLine(ast)},
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -951,7 +952,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 },
                 std::string{"forall" + emitChapelLine(ast)},
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -982,7 +983,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 },
                 std::string{"forall" + emitChapelLine(ast)},
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -1057,7 +1058,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 },
                 v.lookup,
                 {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+             }, {{{},{},{},-1,false,0}}});
 
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
@@ -1268,8 +1269,9 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
                 symnode.reset();
                 assert(0 < symstack.size());
                 symstack.pop_back();
-                if (!symstack.empty())
-                  sym = symstack.back();
+                if (!symstack.empty()) {
+                   sym = symstack.back();
+                }
             }
             else {
                 std::cerr << "chplx : " << (*(sym->get().identifier)) << " identifier already defined in current scope" << std::endl;
@@ -1414,11 +1416,15 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
 
              symbolTable.popScope();
           }
-          else {
-             std::shared_ptr<func_kind> & fk =
-                std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
+          else if (std::holds_alternative<std::shared_ptr<func_kind>>(*(sym->get().kind))) {
+              std::shared_ptr<func_kind> & fk =
+                 std::get<std::shared_ptr<func_kind>>(*(sym->get().kind));
 
-             std::cerr << "chplx : " << (*(fk->symbolTableSignature)) << " identifier already defined in current scope" << std::endl;
+              std::cerr << "chplx : " << (*(fk->symbolTableSignature)) << " identifier already defined in current scope" << std::endl;
+              return;
+           }
+          else {
+             std::cerr << "chplx : " << (*(sym->get().identifier)) << " identifier already defined in current scope" << std::endl;
              return;
           }
        }
