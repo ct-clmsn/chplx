@@ -83,12 +83,10 @@ struct string_kind {
 };
 struct range_kind {
    std::vector<std::int64_t> points;
-   range_kind() = default;
 };
 
 struct domain_kind {
    std::vector<range_kind> ranges;
-   domain_kind() = default;
 };
 
 struct ref_kind;
