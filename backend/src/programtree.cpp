@@ -130,7 +130,7 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
    std::visit(ScalarDeclarationExpressionVisitor{os}, akref->kind);
 
    int range_size = 1;
-   const auto & rngs = akref->dom->ranges;
+   const auto & rngs = akref->dom.ranges;
    for(const auto & rng : rngs) {
       if(rng.points.size() == 2) {
          range_size *= ( (rng.points[1] - rng.points[0]) + rng.points[0] );
@@ -290,7 +290,7 @@ struct ArgumentVisitor {
        std::visit(*this, e.kind);
     }
     void operator()(VariableExpression const& e) {
-       os << (*(e.sym->identifier));
+       os << e.sym->identifier;
     }
     void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
        node->emit(os);
@@ -338,7 +338,7 @@ void ReturnExpression::emit(std::ostream & os) const {
 }
 
 void FunctionCallExpression::emit(std::ostream & os) const {
-   if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(*symbol.kind)) {
+   if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(symbol.kind)) {
       const std::size_t args_sz = arguments.size();
       if(0 < args_sz) {
          std::string cxx_fmt_str{string_kind::value(std::get<LiteralExpression>(arguments[1]).value)};
@@ -354,12 +354,12 @@ void FunctionCallExpression::emit(std::ostream & os) const {
          os << fmt::vformat(cxx_fmt_str, store) << std::endl;
       }
    }
-   else if(std::holds_alternative<std::shared_ptr<func_kind>>(*symbol.kind)) {
+   else if(std::holds_alternative<std::shared_ptr<func_kind>>(symbol.kind)) {
       const std::size_t args_sz = arguments.size();
       std::string fn_fmt_str{};
       fmt::dynamic_format_arg_store<fmt::format_context> store;
 
-      if((*symbol.identifier) == "[]" && 0 < args_sz) {
+      if((symbol.identifier) == "[]" && 0 < args_sz) {
           ArgumentVisitor v{nullptr, std::stringstream{}};
           std::visit(v, arguments[0]);
 
@@ -382,8 +382,8 @@ void FunctionCallExpression::emit(std::ostream & os) const {
             store.push_back(v.os.str());
          }
 
-         auto pos = symbol.identifier->find('|');
-         os << symbol.identifier->substr( 0, (pos == std::string::npos) ? symbol.identifier->size() : pos ) << '(' << fmt::vformat(fn_fmt_str, store) << ")";
+         auto pos = symbol.identifier.find('|');
+         os << symbol.identifier.substr( 0, (pos == std::string::npos) ? symbol.identifier.size() : pos ) << '(' << fmt::vformat(fn_fmt_str, store) << ")";
       }
    }
 }
@@ -392,7 +392,7 @@ void FunctionDeclarationExpression::emit(std::ostream & os) const {
 }
 
 void VariableExpression::emit(std::ostream & os) const {
-    os << (*sym->identifier);
+    os << sym->identifier;
 };
 
 void LiteralExpression::emit(std::ostream & os) const {

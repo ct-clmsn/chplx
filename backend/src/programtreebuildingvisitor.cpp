@@ -17,6 +17,7 @@
 #include <sstream>
 #include <string>
 #include <filesystem>
+#include <cassert>
 
 using namespace chplx::ast::hpx;
 using namespace chpl::uast;
@@ -59,22 +60,22 @@ struct VariableVisitor {
    }
 
    void operator()(byte_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(bool_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(int_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(real_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(complex_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(string_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(template_kind const&) {
    }
@@ -89,7 +90,7 @@ struct VariableVisitor {
    void operator()(std::shared_ptr<class_kind> const&) {
    }
    void operator()(std::shared_ptr<array_kind> const& t) {
-      curStmts.push_back(ArrayDeclarationExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.push_back(ArrayDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(std::shared_ptr<associative_kind> const&) {
    }
@@ -114,22 +115,22 @@ struct VariableLiteralVisitor {
    }
 
    void operator()(byte_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
    }
    void operator()(bool_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
    }
    void operator()(int_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
    }
    void operator()(real_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
    }
    void operator()(complex_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
    }
    void operator()(string_kind const&) {
-      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, *sym.literal});
+      curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
    }
    void operator()(template_kind const&) {
    }
@@ -144,7 +145,7 @@ struct VariableLiteralVisitor {
    void operator()(std::shared_ptr<class_kind> const&) {
    }
    void operator()(std::shared_ptr<array_kind> const&) {
-      curStmts.push_back(ArrayDeclarationLiteralExpression{{{scopePtr}, identifier, *sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, *sym.literal});
+      curStmts.push_back(ArrayDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
    }
    void operator()(std::shared_ptr<associative_kind> const&) {
    }
@@ -289,11 +290,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::shared_ptr<ForLoopExpression> & fl =
                 std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
-             std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(*fl->symbol.kind);
+             std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(fl->symbol.kind);
 
-             if(!(fl->indexSet)) {
+             //if(!(fl->indexSet)) {
                 fl->indexSet = fc->args[0];
-             }
+             //}
           }
        }
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
@@ -303,11 +304,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::shared_ptr<ForallLoopExpression> & fl =
                 std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
-             std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(*fl->symbol.kind);
+             std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(fl->symbol.kind);
 
-             if(!(fl->indexSet)) {
+             //if(!(fl->indexSet)) {
                 fl->indexSet = fc->args[0];
-             }
+             //}
           }
        }
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<CoforallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
@@ -317,11 +318,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::shared_ptr<CoforallLoopExpression> & fl =
                 std::get<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
-             std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(*fl->symbol.kind);
+             std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(fl->symbol.kind);
 
-             if(!(fl->indexSet)) {
+             //if(!(fl->indexSet)) {
                 fl->indexSet = fc->args[0];
-             }
+             //}
           }
        }
     }
@@ -464,7 +465,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::optional<Symbol> varsym =
               symbolTable.find(symbolTableRef->id, identifier);
 
-           if(varsym.has_value() && std::holds_alternative<std::shared_ptr<array_kind>>(*varsym->kind)) {
+           if(varsym && std::holds_alternative<std::shared_ptr<array_kind>>(varsym->kind)) {
               auto paren = symbolTable.find(symbolTableRef->id, "[]");
 
               auto encop = operatorEncoder.find("[]");
@@ -693,7 +694,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        std::string identifier =
           std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()};
-
        std::optional<Symbol> varsym{};
        symbolTable.find(symbolTableRef->id, identifier, varsym);
 
@@ -703,43 +703,37 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::shared_ptr<ForLoopExpression> & fl =
                std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
-           if(!(fl->iterator)) {
-               fl->iterator = *varsym;
-               stmt = false;
-           }
+           fl->iterator = *varsym;
+           stmt = false;
        }
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            std::shared_ptr<ForallLoopExpression> & fl =
                std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
-           if(!(fl->iterator)) {
-               fl->iterator = *varsym;
-               stmt = false;
-           }
+           fl->iterator = *varsym;
+           stmt = false;
        }
        else if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<CoforallLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            std::shared_ptr<CoforallLoopExpression> & fl =
                std::get<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back());
 
-           if(!(fl->iterator)) {
-               fl->iterator = *varsym;
-               stmt = false;
-           }
+           fl->iterator = *varsym;
+           stmt = false;
        }
      
        if(stmt) {
-          if(varsym && !varsym->literal) {
+          if(varsym && varsym->literal.size() < 1) {
              std::vector<Statement> * cStmts = curStmts.back();
              std::visit(
                 VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
-                *varsym->kind
+                varsym->kind
              );
           }
-          else if(varsym && varsym->literal) {
+          else if(varsym) {
              std::vector<Statement> * cStmts = curStmts.back();
              std::visit(
                 VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
-                *varsym->kind
+                varsym->kind
              );
           }
        }
@@ -760,10 +754,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::optional<Symbol> varsym =
           symbolTable.find(symbolTableRef->id, identifier);
 
-       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(*varsym->kind)) {
+       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(varsym->kind)) {
           std::vector<Statement> * cStmts = curStmts.back();
 
-          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*varsym->kind);
+          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(varsym->kind);
           symbolTableRef = symbolTable.lut[fk->lutId];
 
           if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ConditionalExpression>>( curStmts[curStmts.size()-2]->back() )) {
@@ -772,12 +766,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
              auto ce = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
              ce->exprs.back().scopeId = fk->lutId;
-             ce->exprs.back().node = ast;
-
+             ce->exprs.back().node = const_cast<uast::AstNode *>(ast);
              curStmts.emplace_back(&(ce->exprs.back().conditions));
           }
           else {
-
              cStmts->emplace_back(
                 std::make_shared<ConditionalExpression>(
                    ConditionalExpression{{{fk->lutId}, ast}, *varsym, {ConditionedExpression{{{fk->lutId}, ast},{},{}}}}
@@ -785,6 +777,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              auto & fndecl = std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
              curStmts.emplace_back(&(fndecl->exprs.back().conditions));
           }
+       }
+       else {
+          std::optional<Symbol> condsym =
+             symbolTable.find(identifier);
+          std::cerr << std::string{"Error attempting to find: " + identifier} << std::endl;
+          assert(condsym.has_value()); 
        }
     }
     break;
@@ -850,10 +848,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::optional<Symbol> varsym =
           symbolTable.find(symbolTableRef->id, identifier);
 
-       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(*varsym->kind)) {
+       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(varsym->kind)) {
           std::vector<Statement> * cStmts = curStmts.back();
 
-          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*varsym->kind);
+          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(varsym->kind);
           symbolTableRef = symbolTable.lut[fk->lutId];
 
           cStmts->emplace_back(
@@ -872,10 +870,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::optional<Symbol> varsym =
           symbolTable.find(symbolTableRef->id, identifier);
 
-       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(*varsym->kind)) {
+       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(varsym->kind)) {
           std::vector<Statement> * cStmts = curStmts.back();
 
-          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*varsym->kind);
+          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(varsym->kind);
           symbolTableRef = symbolTable.lut[fk->lutId];
 
           cStmts->emplace_back(
@@ -884,7 +882,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           ));
 
           auto & fndecl = std::get<std::shared_ptr<ForLoopExpression>>(cStmts->back());
-          curStmts.emplace_back(&(fndecl->statements));
+          curStmts.push_back(  &fndecl->statements );
        }
     }
     break;
@@ -894,10 +892,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::optional<Symbol> varsym =
           symbolTable.find(symbolTableRef->id, identifier);
 
-       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(*varsym->kind)) {
+       if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(varsym->kind)) {
           std::vector<Statement> * cStmts = curStmts.back();
 
-          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*varsym->kind);
+          std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(varsym->kind);
           symbolTableRef = symbolTable.lut[fk->lutId];
 
           cStmts->emplace_back(
@@ -956,7 +954,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              symbolTable.find(symbolTableRef->id, v.lookup);
 
           if(sym) {
-             std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*sym->kind);
+             std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(sym->kind);
              symbolTableRef = symbolTable.lut[fk->lutId];
 
              std::vector<Statement> * cStmts = curStmts.back();
@@ -973,8 +971,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > fnsym
                 = symbolTable.findPrefix(symbolTableRef->id, v.lookup);
 
-             auto val = fnsym->second;
-             for(auto itr = fnsym->first; itr != fnsym->second; ++itr) {
+             assert(fnsym.has_value());
+
+             std::map<std::string, Symbol>::iterator val = fnsym->second;
+             for(std::map<std::string, Symbol>::iterator itr = fnsym->first; itr != fnsym->second; ++itr) {
                  if(v.lookup == itr->first) {
                     val = itr;
                  } 
@@ -984,7 +984,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
              //Symbol & fsym = val->second;
 
-             std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(*sym->kind);
+             std::shared_ptr<func_kind> & fk = std::get<std::shared_ptr<func_kind>>(sym->kind);
              symbolTableRef = symbolTable.lut[fk->lutId];
           }
        }
@@ -1186,8 +1186,8 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
           std::shared_ptr<ConditionalExpression> & fde =
              std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
        
-          if(symbolTable.lut[fde->scopeId]->parent && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent)) {
-             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent);
+          if(0 < symbolTable.lut[fde->scopeId]->parent.index() && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent)) {
+             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent);
           }
           else {
              symbolTableRef = symbolTable.lut[0];
@@ -1200,8 +1200,8 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
           std::shared_ptr<ForLoopExpression> & fde =
              std::get<std::shared_ptr<ForLoopExpression>>(cStmts->back());
        
-          if(symbolTable.lut[fde->scopeId]->parent && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent)) {
-             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent);
+          if(0 < symbolTable.lut[fde->scopeId]->parent.index() && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent)) {
+             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent);
           }
           else {
              symbolTableRef = symbolTable.lut[0];
@@ -1215,8 +1215,8 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
           std::shared_ptr<ForallLoopExpression> & fde =
              std::get<std::shared_ptr<ForallLoopExpression>>(cStmts->back());
        
-          if(symbolTable.lut[fde->scopeId]->parent && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent)) {
-             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent);
+          if(0 < symbolTable.lut[fde->scopeId]->parent.index() && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent)) {
+             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent);
           }
           else {
              symbolTableRef = symbolTable.lut[0];
@@ -1229,8 +1229,8 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
           std::shared_ptr<CoforallLoopExpression> & fde =
              std::get<std::shared_ptr<CoforallLoopExpression>>(cStmts->back());
        
-          if(symbolTable.lut[fde->scopeId]->parent && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent)) {
-             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent);
+          if(0 < symbolTable.lut[fde->scopeId]->parent.index() && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent)) {
+             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent);
           }
           else {
              symbolTableRef = symbolTable.lut[0];
@@ -1284,8 +1284,8 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
        std::shared_ptr<FunctionDeclarationExpression> & fde =
            std::get<std::shared_ptr<FunctionDeclarationExpression>>(cStmts->back());
        
-       if(symbolTable.lut[fde->scopeId]->parent && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent)) {
-           symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(*symbolTable.lut[fde->scopeId]->parent);
+       if(0 < symbolTable.lut[fde->scopeId]->parent.index() && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent)) {
+           symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent);
        }
        else {
            symbolTableRef = symbolTable.lut[0];

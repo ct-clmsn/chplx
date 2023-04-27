@@ -18,7 +18,6 @@
 #include "symboltypes.hpp"
 #include "programtree.hpp"
 
-#include <optional>
 #include <ostream>
 #include <string>
 #include <unordered_map>
@@ -96,8 +95,8 @@ struct CodegenVisitor {
    template <typename Kind, typename T>
    void emitLit(std::string const& ident, uast::AstNode const* ast, T & sym, char const* type) const;
 
-   bool emit(const uast::AstNode * ast, std::optional<Symbol> & sym);
-   bool emit_literal(const uast::AstNode * ast, std::optional<Symbol> & sym);
+   bool emit(const uast::AstNode * ast, Symbol & sym);
+   bool emit_literal(const uast::AstNode * ast, Symbol & sym);
 
    template<typename T>
    void visit(T && visitor) {}
@@ -110,7 +109,7 @@ struct CodegenVisitor {
    chpl::uast::BuilderResult const& br;
    std::size_t indent; 
    std::size_t scope;
-   std::optional<std::string> identifier;
+   std::string identifier;
    std::ostream & fstrm_;
    std::string cppFilePathStr;
    std::string chplFilePathStr;

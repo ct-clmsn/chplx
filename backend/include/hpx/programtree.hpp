@@ -169,7 +169,7 @@ struct ReturnExpression {
 };
 
 struct ScopeExpression : public ExpressionBase {
-   std::optional<uast::AstNode const*> node;
+   uast::AstNode const* node;
    SymbolTable symbolTable;
 
    void emit(std::ostream & os) const;
@@ -206,8 +206,8 @@ struct ConditionalExpression : public ScopeExpression {
 
 struct ForLoopExpression : public ScopeExpression {
    Symbol symbol;
-   std::optional<Symbol> iterator;
-   std::optional<Symbol> indexSet;
+   Symbol iterator;
+   Symbol indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 
@@ -216,8 +216,8 @@ struct ForLoopExpression : public ScopeExpression {
 
 struct ForallLoopExpression : public ScopeExpression {
    Symbol symbol;
-   std::optional<Symbol> iterator;
-   std::optional<Symbol> indexSet;
+   Symbol iterator;
+   Symbol indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 
@@ -226,8 +226,8 @@ struct ForallLoopExpression : public ScopeExpression {
 
 struct CoforallLoopExpression : public ScopeExpression {
    Symbol symbol;
-   std::optional<Symbol> iterator;
-   std::optional<Symbol> indexSet;
+   Symbol iterator;
+   Symbol indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 

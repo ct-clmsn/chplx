@@ -38,8 +38,8 @@ std::size_t SymbolTable::pushScope() {
 }
 
 void SymbolTable::popScope() {
-   if(symbolTableRef->parent && std::holds_alternative<std::shared_ptr<SymbolTableNode>>(*symbolTableRef->parent)) {
-      symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(*symbolTableRef->parent);
+   if(symbolTableRef->parent.index() != 0 && std::holds_alternative<std::shared_ptr<SymbolTableNode>>(symbolTableRef->parent)) {
+      symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(symbolTableRef->parent);
    }
 }
 
@@ -58,11 +58,11 @@ bool SymbolTable::findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string
       return true;
    }
 
-   if(!stref->parent || 0 == stref->parent->index()) {
+   if(0 == stref->parent.index()) {
       return false;
    }
 
-   return findImpl(std::get<std::shared_ptr<SymbolTableNode>>(*(stref->parent)), ident, ret);
+   return findImpl(std::get<std::shared_ptr<SymbolTableNode>>(stref->parent), ident, ret);
 }
 
 std::optional<Symbol> SymbolTable::find(std::string const& ident) {
@@ -72,8 +72,8 @@ std::optional<Symbol> SymbolTable::find(std::string const& ident) {
       return entry->second;
    } 
 
-   if(stref->parent) {
-      const bool found = findImpl(std::get<std::shared_ptr<SymbolTableNode>>(*stref->parent), ident, entry);
+   if(stref->parent.index() != 0) {
+      const bool found = findImpl(std::get<std::shared_ptr<SymbolTableNode>>(stref->parent), ident, entry);
       if(found) { return entry->second; }
    }
 
@@ -87,8 +87,8 @@ void SymbolTable::find(std::string const& ident, std::optional<Symbol> &s) {
       s = entry->second;
    } 
 
-   if(stref->parent) {
-      const bool found = findImpl(std::get<std::shared_ptr<SymbolTableNode>>(*stref->parent), ident, entry);
+   if(stref->parent.index() != 0) {
+      const bool found = findImpl(std::get<std::shared_ptr<SymbolTableNode>>(stref->parent), ident, entry);
       if(found) { s = entry->second; }
    }
 }
@@ -103,8 +103,8 @@ std::optional<Symbol> SymbolTable::find(const std::size_t idx, std::string const
       return entry->second;
    } 
 
-   if(stref->parent) {
-      const bool found = findImpl(std::get<std::shared_ptr<SymbolTableNode>>(*stref->parent), ident, entry);
+   if(stref->parent.index() != 0) {
+      const bool found = findImpl(std::get<std::shared_ptr<SymbolTableNode>>(stref->parent), ident, entry);
       if(found) { return entry->second; }
    }
 
@@ -125,11 +125,11 @@ std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std:
       return std::make_pair(ret, std::end(stref->entries));
    }
 
-   if(!stref->parent || 0 == stref->parent->index()) {
+   if(0 == stref->parent.index()) {
       return {};
    }
 
-   return findPrefixImpl(std::get<std::shared_ptr<SymbolTableNode>>(*(stref->parent)), ident);
+   return findPrefixImpl(std::get<std::shared_ptr<SymbolTableNode>>(stref->parent), ident);
 }
 
 std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > SymbolTable::findPrefix(const std::size_t idx, std::string const& ident) {
@@ -147,8 +147,8 @@ std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std:
       return std::make_pair(entry, std::end(stref->entries));
    } 
 
-   if(stref->parent) {
-      return findPrefixImpl(std::get<std::shared_ptr<SymbolTableNode>>(*stref->parent), ident);
+   if(stref->parent.index() != 0) {
+      return findPrefixImpl(std::get<std::shared_ptr<SymbolTableNode>>(stref->parent), ident);
    }
 
    return {};

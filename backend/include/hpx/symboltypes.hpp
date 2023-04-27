@@ -15,7 +15,6 @@
 //#include "hpx/variant.hpp"
 #include "fmt/core.h"
 
-#include <optional>
 #include <ostream>
 #include <string>
 #include <complex>
@@ -32,7 +31,7 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
 // support for chapel's template/generics '?" and "t : ?" types
 //
 struct template_kind {
-   std::optional<std::string> identifier;
+   std::string identifier;
    template_kind() = default;
 };
 
@@ -136,26 +135,19 @@ struct kind_node_type {
 
 struct ref_kind {
    kind_types kind;
-
-   ref_kind() = default;
 };
 
 struct const_kind {
    kind_types kind;
-
-   const_kind() = default;
 };
 
 struct config_kind {
    kind_types kind;
-
-   config_kind() = default;
 };
 
 struct array_kind {
    kind_types kind;
-   std::optional<domain_kind> dom;
-   array_kind() = default;
+   domain_kind dom;
 };
 
 struct associative_kind {
@@ -168,9 +160,9 @@ struct tuple_kind {
 };
 
 struct SymbolBase {
-    std::optional<kind_types> kind;
-    std::optional<std::string> identifier;
-    std::optional<std::vector<uast::AstNode const*>> literal;
+    kind_types kind;
+    std::string identifier;
+    std::vector<uast::AstNode const*> literal;
     int kindqualifier;
     bool isConfig;
     std::size_t scopeId;
@@ -211,7 +203,7 @@ struct SymbolTable {
       std::size_t id;
       std::map<std::string, Symbol> entries;
       std::vector<SymbolTableNodeImpl> children;
-      std::optional<SymbolTableNodeImpl> parent;
+      SymbolTableNodeImpl parent;
    };
 
    SymbolTable(SymbolTable const& v) = default;
@@ -275,9 +267,9 @@ struct SymbolTable {
 
 struct funcbase_kind {
    std::uint64_t lutId;
-   std::optional<std::string> symbolTableSignature;
+   std::string symbolTableSignature;
    std::vector<Symbol> args; 
-   std::optional<kind_types> retKind;
+   kind_types retKind;
 };
 
 struct cxxfunc_kind : public funcbase_kind {
