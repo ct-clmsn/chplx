@@ -246,6 +246,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
              symbolTable.addEntry(fk->lutId, ident, fk->args.back());
 
+             sym.reset();
              sym = symstack.back();
              symnode = const_cast<uast::AstNode*>(ast);
           }
@@ -257,6 +258,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
             {}, -1, false, symbolTable.symbolTableRef->id
           }});
 
+          sym.reset();
           sym = symstack.back();
           symnode = const_cast<uast::AstNode*>(ast);
        }
@@ -630,8 +632,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Variable:
     {
-       sym.reset();
-
        const Variable::Kind k = dynamic_cast<Variable const*>(ast)->kind();
        int kindqual = -1;
 
@@ -665,6 +665,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           {}, kindqual, cfg, symbolTable.symbolTableRef->id
        }});
 
+       sym.reset();
        sym = symstack.back();
        symnode = const_cast<uast::AstNode*>(ast);
     }
@@ -693,6 +694,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
           symbolTable.pushScope();
+          sym.reset();
           sym = symstack.back();
 
           std::shared_ptr<func_kind> & fk = 
@@ -716,7 +718,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           //
           if( sym->get().identifier == symstack.back().identifier &&
               sym->get().identifier.find("else") != std::string::npos ) {
-             sym.reset();
              symstack.pop_back();
              symbolTable.lut.pop_back();
              symbolTable.popScope();
@@ -734,6 +735,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              }});
 
           symbolTable.pushScope();
+          sym.reset();
           sym = symstack.back();
 
           std::shared_ptr<func_kind> & fk = 
@@ -798,6 +800,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
           symbolTable.pushScope();
+          sym.reset();
           sym = symstack.back();
 
           std::shared_ptr<func_kind> & fk = 
@@ -858,6 +861,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
           symbolTable.pushScope();
+          sym.reset();
           sym = symstack.back();
 
           std::shared_ptr<func_kind> & fk = 
@@ -919,6 +923,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
           symbolTable.pushScope();
+          sym.reset();
           sym = symstack.back();
 
           std::shared_ptr<func_kind> & fk = 
@@ -980,6 +985,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
           symbolTable.pushScope();
+          sym.reset();
           sym = symstack.back();
 
           std::shared_ptr<func_kind> & fk = 
@@ -1000,8 +1006,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           symnode = const_cast<uast::AstNode*>(ast);
        }
        else {
-          sym.reset();
-
           symstack.emplace_back(
              Symbol{{
                 std::make_shared<func_kind>(func_kind{{
@@ -1013,6 +1017,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
           symbolTable.pushScope();
+          sym.reset();
           sym = symstack.back();
 
           std::shared_ptr<func_kind> & fk = 
@@ -1085,6 +1090,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
           symbolTable.pushScope();
+          sym.reset();
           sym = symstack.back();
 
           std::shared_ptr<func_kind> & fk = 
