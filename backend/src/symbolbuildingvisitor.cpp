@@ -1010,8 +1010,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 {}, -1, false, symbolTable.symbolTableRef->id
              }});
 
-          symbolTable.addEntry(sym->get().identifier, *sym);
-
           std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
           const std::size_t parScope = symbolTable.symbolTableRef->id;
           symbolTable.pushScope();
@@ -1024,7 +1022,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           // func_kind.lutId = the scope where the function's symboltable references
           //
           fk->lutId = symbolTable.symbolTableRef->id;
-//          sym->get().parent->get().scopeId = parScope;
 
           symbolTable.parentSymbolTableId = parScope;
           symbolTable.symbolTableRef->parent = prevSymbolTableRef;
