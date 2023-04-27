@@ -711,7 +711,11 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
        // inside a for loop or a function
        //
        else {
-          if( sym->get().identifier != symstack.back().identifier ) {
+          // nested conditionals have an additional block node before the conditional node in the ast
+          // this logic detects the additional block and removes it from the symbol table
+          //
+          if( sym->get().identifier == symstack.back().identifier &&
+              sym->get().identifier.find("else") != std::string::npos ) {
              sym.reset();
              symstack.pop_back();
              symbolTable.lut.pop_back();
@@ -1368,6 +1372,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
              if(fk->retKind.index() < 1) {
                 fk->retKind = nil_kind{};
              }
+
              symbolTable.addEntry(sym->get().scopeId, fk->symbolTableSignature, *sym);
 
              sym.reset();
