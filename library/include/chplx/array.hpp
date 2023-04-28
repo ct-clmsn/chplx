@@ -28,14 +28,14 @@ template <typename T, typename Domain> class Array {
 public:
   static constexpr int rank = Domain::rank();
   static constexpr bool Stridable = Domain::stridable();
+
   using idxType = typename Domain::idxType;
+  using indexType = typename Domain::indexType;
+  using indicesType = typename Domain::indicesType;
 
 private:
   using arrayHandle =
       domains::BaseRectangularArray<T, rank, idxType, Stridable>;
-
-  using indexType = typename Domain::indexType;
-  using indicesType = typename Domain::indicesType;
 
 public:
   Array() = default;
@@ -154,6 +154,22 @@ public:
   // dimension.
   [[nodiscard]] constexpr auto dim(int i) const noexcept {
     return array->dsiGetBaseDomain()->dsiDim(i);
+  }
+
+  // Returns an integer representing the zero-based ordinal value of ind within
+  // the domain's sequence of values if it is a member of the sequence.
+  // Otherwise, returns -1. The indexOrder procedure is the reverse of
+  // orderToIndex.
+  [[nodiscard]] constexpr std::int64_t
+  indexOrder(indexType idx) const noexcept {
+    return array->dsiGetBaseDomain()->dsiIndexOrder(idx);
+  }
+
+  // Returns the zero-based ord-th element of this domain's represented
+  // sequence. The orderToIndex procedure is the reverse of indexOrder.
+  [[nodiscard]] constexpr indexType
+  orderToIndex(std::int64_t order) const noexcept {
+    return array->dsiGetBaseDomain()->dsiOrderToIndex(order);
   }
 
   // return the location of this array instance

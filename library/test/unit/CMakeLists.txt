@@ -11,17 +11,20 @@ set(tests
     atomic
     begin
     cobegin
+    coforall_loop_array
     coforall_loop_assoc_domain
     coforall_loop_domain
     coforall_loop_range
     coforall_loop_tuple
     coforall_loop_zip
     domain
+    forall_loop_array
     forall_loop_assoc_domain
     forall_loop_domain
     forall_loop_range
     forall_loop_tuple
     forall_loop_zip
+    for_loop_array
     for_loop_assoc_domain
     for_loop_domain
     for_loop_range

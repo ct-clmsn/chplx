@@ -159,7 +159,7 @@ void coforall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
 }
 
 //-----------------------------------------------------------------------------
-// forall loop for aray iteration
+// forall loop for array iteration
 template <typename T, typename Domain, typename F, typename... Args>
 void coforall(Array<T, Domain> const &a, F &&f, Args &&...args) {
 
@@ -170,7 +170,7 @@ void coforall(Array<T, Domain> const &a, F &&f, Args &&...args) {
   hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
       [&](std::size_t idx, auto &&...fargs) {
-        return f(a.orderToIndex(idx), std::forward<decltype(args)>(fargs)...);
+        return f(a(idx), std::forward<decltype(args)>(fargs)...);
       },
       a.size(),
       detail::task_intent<std::decay_t<Args>>::call(
