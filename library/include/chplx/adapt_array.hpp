@@ -20,7 +20,7 @@ namespace chplx {
 //-----------------------------------------------------------------------------
 // 1D iteration support
 template <typename T, typename Domain>
-hpx::generator<T> iterate(
+hpx::generator<T&, T> iterate(
     detail::IteratorGenerator<Array<T, Domain>> a) noexcept {
 
   auto size = a.size;

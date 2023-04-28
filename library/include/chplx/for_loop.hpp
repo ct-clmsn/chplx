@@ -104,4 +104,12 @@ void forLoop(Array<T, Domain> const &a, F &&f) {
   }
 }
 
+template <typename T, typename Domain, typename F>
+void forLoop(Array<T, Domain> &a, F &&f) {
+
+  for (auto &e : a.these()) {
+    f(e);
+  }
+}
+
 } // namespace chplx

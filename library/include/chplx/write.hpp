@@ -11,6 +11,7 @@
 
 namespace chplx {
 
+//-----------------------------------------------------------------------------
 template <typename T> void write_one(std::ostream &os, T &&t) { os << t; }
 
 template <typename... Ts> void write(std::ostream &os, Ts &&...ts) {
@@ -22,6 +23,9 @@ template <typename... Ts> void writeln(std::ostream &os, Ts &&...ts) {
   os << "\n";
 }
 
+inline void writeln(std::ostream &os) { os << "\n"; }
+
+//-----------------------------------------------------------------------------
 template <typename T, typename... Ts>
   requires(!std::is_convertible_v<std::decay_t<T> &, std::ostream &>)
 void write(T &&t, Ts &&...ts) {
@@ -33,5 +37,7 @@ template <typename T, typename... Ts>
 void writeln(T &&t, Ts &&...ts) {
   writeln(std::cout, std::forward<T>(t), std::forward<Ts>(ts)...);
 }
+
+inline void writeln() { writeln(std::cout); }
 
 } // namespace chplx
