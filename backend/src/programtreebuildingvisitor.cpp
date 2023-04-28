@@ -60,22 +60,27 @@ struct VariableVisitor {
    }
 
    void operator()(byte_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.emplace_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(bool_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.emplace_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(int_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.emplace_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(real_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.emplace_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(complex_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.emplace_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(string_kind const&) {
-      curStmts.push_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.emplace_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+   }
+   void operator()(expr_kind const&) {
+      curStmts.emplace_back(
+         std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig},{}})
+      );
    }
    void operator()(template_kind const&) {
    }
@@ -84,13 +89,16 @@ struct VariableVisitor {
    void operator()(domain_kind const&) {
    }
    void operator()(std::shared_ptr<func_kind> const&) {
+      curStmts.emplace_back(
+         std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig},{}})
+      );
    }
    void operator()(std::shared_ptr<record_kind> const&) {
    }
    void operator()(std::shared_ptr<class_kind> const&) {
    }
    void operator()(std::shared_ptr<array_kind> const& t) {
-      curStmts.push_back(ArrayDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+      curStmts.emplace_back(ArrayDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(std::shared_ptr<associative_kind> const&) {
    }
@@ -728,6 +736,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                 VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
                 varsym->kind
              );
+
+             if(std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back())) {
+               auto & se = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
+               curStmts.emplace_back(&(se->statements));
+             }
           }
           else if(varsym) {
              std::vector<Statement> * cStmts = curStmts.back();
@@ -1152,6 +1165,11 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::VarArgFormal:
     break;
     case asttags::Variable:
+    {
+       if(curStmts.size() > 1 && std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(curStmts[curStmts.size()-2]->back())) {
+          curStmts.pop_back();
+       }
+    }
     break;
     case asttags::END_VarLikeDecl:
     break;

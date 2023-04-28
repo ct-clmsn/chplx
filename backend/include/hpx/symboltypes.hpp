@@ -101,6 +101,7 @@ struct associative_kind;
 struct tuple_kind;
 struct kind_node_type;
 struct kind_node_term_type {};
+struct expr_kind {};
 
 using kind_types = std::variant<
    std::monostate,
@@ -126,7 +127,8 @@ using kind_types = std::variant<
    std::shared_ptr<associative_kind>,
    std::shared_ptr<tuple_kind>,
    std::shared_ptr<kind_node_type>,
-   kind_node_term_type
+   kind_node_term_type,
+   expr_kind
 >;
 
 struct kind_node_type {

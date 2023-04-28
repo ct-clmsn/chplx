@@ -139,33 +139,38 @@ struct ExprVisitor {
        node->emit(os);
     }
     void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
-       const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
-       const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
+       if(node->statements.size() == 2) {
+          const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
+          const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
 
-       if(lop) {
-           os << "( ";
+          if(lop) {
+             os << "( ";
+          }
+
+          std::visit(ExprVisitor{os}, node->statements[0]);
+
+          if(lop) {
+             os << " )";
+          }
+
+          os << ' ' << node->op << ' ';
+
+          if(rop) {
+             os << "( ";
+          }
+
+          std::visit(ExprVisitor{os}, node->statements[1]);
+
+          if(rop) {
+             os << " )";
+          }
        }
-
-       std::visit(ExprVisitor{os}, node->statements[0]);
-
-       if(lop) {
-           os << " )";
-       }
-
-       os << ' ' << node->op << ' ';
-
-       if(rop) {
-           os << "( ";
-       }
-
-       std::visit(ExprVisitor{os}, node->statements[1]);
-
-       if(rop) {
-           os << " )";
+       else if(node->statements.size() == 1) {
+          os << ' ' << node->op;
+          std::visit(ExprVisitor{os}, node->statements[0]);
        }
     }
-    void operator()(std::shared_ptr<UnaryOpExpression> const& node) {
-    }
+
     std::ostream & os;
 };
 
@@ -383,8 +388,13 @@ struct StatementVisitor {
             }
          }
 
-         os << ") -> ";
-         std::visit(fdav, fk->retKind);
+         if(std::holds_alternative<nil_kind>(fk->retKind)) {
+            os << ")";
+         }
+         else {
+            os << ") -> ";
+            std::visit(fdav, fk->retKind);
+         }
          os << " {";
          os << std::endl;
          ++indent;
@@ -415,6 +425,25 @@ struct StatementVisitor {
       os << ' ' << node->op << ' ';
 
       std::visit(ExprVisitor{os}, node->statements[1]);
+
+      if(!arg) {
+         os << ';' << std::endl;
+      }
+   }
+   void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const& node) {
+      std::optional<Symbol> s = symbolTable.find(node->scopeId, node->identifier);
+      if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationExprExpression " << node->identifier << " not found" << std::endl; }
+
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
+
+      emitIndent();
+      node->emit(os);
+      os << " = ";
+
+      std::visit(ExprVisitor{os}, node->statements[0]);
 
       if(!arg) {
          os << ';' << std::endl;

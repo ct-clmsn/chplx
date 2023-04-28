@@ -32,6 +32,13 @@ var h = true;
 var i = "value";
 var j = 1.0;
 
+var aa = 1 + 1;
+
+proc dd() {
+   return 1;
+}
+
+var bb = dd();
+
 //var a = {1..10};
 //var a : domain(1) = {1..10};
-

@@ -54,6 +54,15 @@ int hpx_main(int argc, char* argv[])
     std::string i = {"value"};
 #line 33 "../../backend/test/arr.chpl"
     double j = 1.000000;
+#line 35 "../../backend/test/arr.chpl"
+    auto aa = 1 + 1;
+#line 37 "../../backend/test/arr.chpl"
+    auto dd = [&]() {
+#line 38 "../../backend/test/arr.chpl"
+        return 1;
+    };
+#line 41 "../../backend/test/arr.chpl"
+    auto bb = dd();
 
     return hpx::finalize();
 }

@@ -350,10 +350,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                  std::get<std::shared_ptr<array_kind>>(sym->get().kind);
 
               if(!sym->get().literal.size() && symref->dom.ranges.size()) {
-//                 if(!symref->dom.ranges.size()) { 
-//                     symref->dom.ranges = {{}};
-//                 }
-
                  symref->dom.ranges.back().points.push_back( int_kind::value(ast) );
               }
               else if(!sym->get().literal.size()) {
@@ -503,8 +499,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
            std::optional<Symbol> fsym{};
            symbolTable.find(0, "string", fsym);
-           //
-           //auto fsym = symbolTable.find(0,"string");
+
            if(fsym.has_value()) {
              sym->get().kind = fsym->kind;
              sym->get().literal.push_back(ast);
@@ -520,7 +515,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::FnCall:
     {
-        if(sym.has_value() && sym->get().kind.index() == 0) {
+        if(sym.has_value() && std::holds_alternative<std::monostate>(sym->get().kind)) {
            const FnCall* fc = dynamic_cast<const FnCall*>(ast);
            std::string identifier{dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str()};
 
@@ -542,10 +537,19 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                  sym->get().kind = std::get<std::shared_ptr<func_kind>>(itr->second.kind)->retKind;
               }
            }
+
+           if(std::holds_alternative<nil_kind>(sym->get().kind)) {
+              sym->get().kind = expr_kind{};
+           }
         }
     }
     break;
     case asttags::OpCall:
+    {
+        if(sym.has_value() && std::holds_alternative<std::monostate>(sym->get().kind)) {
+            sym->get().kind = expr_kind{};
+        }
+    }
     break;
     case asttags::PrimCall:
     break;
@@ -909,130 +913,68 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::For:
     {
-       if(!(sym && 0 < sym->get().kind.index())) {
-          // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
-          //
-          symstack.emplace_back(
-             Symbol{{
-                std::make_shared<func_kind>(func_kind{{
-                   symbolTable.symbolTableRef->id, {}, {}, {}}}),
-                std::string{"for" + emitChapelLine(ast)},
-                {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+        // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
+        //
+        symstack.emplace_back(
+           Symbol{{
+              std::make_shared<func_kind>(func_kind{{
+                 symbolTable.symbolTableRef->id, {}, {}, {}}}),
+              std::string{"for" + emitChapelLine(ast)},
+              {}, -1, false, symbolTable.symbolTableRef->id
+        }});
 
-          std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
-          const std::size_t parScope = symbolTable.symbolTableRef->id;
-          symbolTable.pushScope();
-          sym.reset();
-          sym = symstack.back();
+        std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
+        const std::size_t parScope = symbolTable.symbolTableRef->id;
 
-          std::shared_ptr<func_kind> & fk = 
-             std::get<std::shared_ptr<func_kind>>(sym->get().kind);
+        symbolTable.pushScope();
+        sym.reset();
+        sym = symstack.back();
 
-          fk->symbolTableSignature = sym->get().identifier;
-          // func_kind.lutId = the scope where the function's symboltable references
-          //
-          fk->lutId = symbolTable.symbolTableRef->id;
+        std::shared_ptr<func_kind> & fk = 
+           std::get<std::shared_ptr<func_kind>>(sym->get().kind);
 
-          symbolTable.parentSymbolTableId = parScope;
-          symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+        fk->symbolTableSignature = sym->get().identifier;
+        // func_kind.lutId = the scope where the function's symboltable references
+        //
+        fk->lutId = symbolTable.symbolTableRef->id;
 
-          symnode = const_cast<uast::AstNode*>(ast);
-       }
-       else {
-          symstack.emplace_back(
-             Symbol{{
-                std::make_shared<func_kind>(func_kind{{
-                   symbolTable.symbolTableRef->id, {}, {}, {}}}),
-                std::string{"for" + emitChapelLine(ast)},
-                {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+        symbolTable.parentSymbolTableId = parScope;
+        symbolTable.symbolTableRef->parent = prevSymbolTableRef;
 
-          std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
-          const std::size_t parScope = symbolTable.symbolTableRef->id;
-          symbolTable.pushScope();
-
-          sym.reset();
-          sym = symstack.back();
-
-          std::shared_ptr<func_kind> & fk = 
-             std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-
-          fk->symbolTableSignature = sym->get().identifier;
-          // func_kind.lutId = the scope where the function's symboltable references
-          //
-          fk->lutId = symbolTable.symbolTableRef->id;
-
-          symbolTable.parentSymbolTableId = parScope;
-          symbolTable.symbolTableRef->parent = prevSymbolTableRef;
-          symnode = const_cast<uast::AstNode*>(ast);
-       }
+        symnode = const_cast<uast::AstNode*>(ast);
     }
     break;
     case asttags::Forall:
     {
-       if(!(sym && 0 < sym->get().kind.index())) {
-          // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
-          //
-          symstack.emplace_back(
-             Symbol{{
-                std::make_shared<func_kind>(func_kind{{
-                   symbolTable.symbolTableRef->id, {}, {}, {}}}),
-                std::string{"forall" + emitChapelLine(ast)},
-                {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+       // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
+       //
+       symstack.emplace_back(
+          Symbol{{
+             std::make_shared<func_kind>(func_kind{{
+                symbolTable.symbolTableRef->id, {}, {}, {}}}),
+             std::string{"forall" + emitChapelLine(ast)},
+             {}, -1, false, symbolTable.symbolTableRef->id
+          }});
 
-          std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
-          const std::size_t parScope = symbolTable.symbolTableRef->id;
-          symbolTable.pushScope();
-          sym.reset();
-          sym = symstack.back();
+       std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
+       const std::size_t parScope = symbolTable.symbolTableRef->id;
 
-          std::shared_ptr<func_kind> & fk = 
-             std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-          fk->symbolTableSignature = sym->get().identifier;
-          // func_kind.lutId = the scope where the function's symboltable references
-          //
-          fk->lutId = symbolTable.symbolTableRef->id;
+       symbolTable.pushScope();
+       sym.reset();
+       sym = symstack.back();
 
-//          if(!sym->get().parent) {
-//             sym->get().parent.swap(std::ref(*prevSymbolTableRef));
-//          }
-//          sym->get().parent->get().scopeId = parScope;
+       std::shared_ptr<func_kind> & fk = 
+          std::get<std::shared_ptr<func_kind>>(sym->get().kind);
 
-          symbolTable.parentSymbolTableId = parScope;
-          symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+       fk->symbolTableSignature = sym->get().identifier;
+       // func_kind.lutId = the scope where the function's symboltable references
+       //
+       fk->lutId = symbolTable.symbolTableRef->id;
 
-          symnode = const_cast<uast::AstNode*>(ast);
-       }
-       else {
-          symstack.emplace_back(
-             Symbol{{
-                std::make_shared<func_kind>(func_kind{{
-                   symbolTable.symbolTableRef->id, {}, {}, {}}}),
-                std::string{"forall" + emitChapelLine(ast)},
-                {}, -1, false, symbolTable.symbolTableRef->id
-             }});
+       symbolTable.parentSymbolTableId = parScope;
+       symbolTable.symbolTableRef->parent = prevSymbolTableRef;
 
-          std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
-          const std::size_t parScope = symbolTable.symbolTableRef->id;
-          symbolTable.pushScope();
-          sym.reset();
-          sym = symstack.back();
-
-          std::shared_ptr<func_kind> & fk = 
-             std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-
-          fk->symbolTableSignature = sym->get().identifier;
-          // func_kind.lutId = the scope where the function's symboltable references
-          //
-          fk->lutId = symbolTable.symbolTableRef->id;
-
-          symbolTable.parentSymbolTableId = parScope;
-          symbolTable.symbolTableRef->parent = prevSymbolTableRef;
-
-          symnode = const_cast<uast::AstNode*>(ast);
-       }
+       symnode = const_cast<uast::AstNode*>(ast);
     }
     break;
     case asttags::Foreach:

@@ -296,32 +296,34 @@ struct ArgumentVisitor {
        node->emit(os);
     }
     void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
-       const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
-       const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
+       if(node->statements.size() == 2) {
+          const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
+          const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
 
-       if(rop) {
-           os << "( ";
+          if(rop) {
+             os << "( ";
+          }
+          std::visit(*this, node->statements[1]);
+
+          if(rop) {
+             os << " )";
+          }
+
+          os << ' ' << node->op << ' ';
+
+          if(lop) {
+             os << "( ";
+          }
+          std::visit(*this, node->statements[0]);
+
+          if(lop) {
+             os << " )";
+          }
        }
-       std::visit(*this, node->statements[1]);
-
-       if(rop) {
-           os << " )";
+       else if(node->statements.size() == 1) {
+          os << ' ' << node->op;
+          std::visit(*this, node->statements[0]);
        }
-
-       os << ' ' << node->op << ' ';
-
-       if(lop) {
-           os << "( ";
-       }
-       std::visit(*this, node->statements[0]);
-
-       if(lop) {
-           os << " )";
-       }
-    }
-    void operator()(std::shared_ptr<UnaryOpExpression> const& node) {
-    }
-    void operator()(std::shared_ptr<TernaryOpExpression> const& node) {
     }
 
     uast::AstNode const* node;
@@ -414,6 +416,10 @@ void UnaryOpExpression::emit(std::ostream & os) const {
 }
 
 void BinaryOpExpression::emit(std::ostream & os) const {
+}
+
+void ScalarDeclarationExprExpression::emit(std::ostream & os) const {
+   os << "auto " << identifier;
 }
 
 void TernaryOpExpression::emit(std::ostream & os) const {
