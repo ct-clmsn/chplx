@@ -13,7 +13,7 @@
 
 using namespace chplx;
 
-template <typename... Ts> void write(std::ostream &os, Ts &&...ts) {
+template <typename... Ts> void writeStream(std::ostream &os, Ts &&...ts) {
   (os << ... << ts);
 }
 
@@ -21,7 +21,7 @@ template <typename Range>
 void testWriteRange(char const *expr, Range const &r, char const *expected) {
 
   std::stringstream strm;
-  write(strm, expr, " = ");
+  writeStream(strm, expr, " = ");
   // clang-format off
   if (r.boundedType() == BoundedRangeType::bounded ||
       ((isBoolType<typename Range::idxType> ||
@@ -35,8 +35,8 @@ void testWriteRange(char const *expr, Range const &r, char const *expected) {
     bool first = true;
     for (auto i : chplx::iterate(r)) {
       if (!first)
-        write(strm, ", ");
-      write(strm, i);
+        writeStream(strm, ", ");
+      writeStream(strm, i);
       first = false;
     }
 
@@ -45,19 +45,19 @@ void testWriteRange(char const *expr, Range const &r, char const *expected) {
     // - print the first three indices.  Note that in this and the next
     // case the sequence can be either increasing or decreasing.
     for (auto i : iterate(count(r, 3)))
-      write(strm, i, ", ");
-    write(strm, "...");
+      writeStream(strm, i, ", ");
+    writeStream(strm, "...");
 
   } else if (r.hasLast()) {
     // The range is not fully bounded, but its sequence has an ending point.
     // Print the last three indices.
-    write(strm, "...");
+    writeStream(strm, "...");
     for (auto i : iterate(count(r, -3)))
-      write(strm, ", ", i);
+      writeStream(strm, ", ", i);
 
   } else if (r.stride() == 1 || r.stride() == -1) {
     // If we are here, the range is fully unbounded.
-    write(strm, "all integers, ", r.stride() > 0 ? "increasing" : "decreasing");
+    writeStream(strm, "all integers, ", r.stride() > 0 ? "increasing" : "decreasing");
 
   } else {
     // We got a more complex range, do not elaborate.

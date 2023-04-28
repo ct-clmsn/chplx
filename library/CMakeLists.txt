@@ -19,10 +19,13 @@ set(CHPLX_LIBRARY_VERSION
 )
 
 if(NOT APPLE)
-set(CMAKE_CXX_STANDARD 20)
+  set(CMAKE_CXX_STANDARD 20)
 endif()
 
-if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND NOT APPLE)
+if(NOT WIN32
+   AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang"
+   AND NOT APPLE
+)
   set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -stdlib=libc++)
 endif()
 
@@ -40,6 +43,11 @@ find_package(HPX REQUIRED CONFIG)
 set(chplx_library_detail_headers include/chplx/detail/iterator_generator.hpp)
 source_group("Header Files/chplx/detail" FILES ${chplx_library_detail_headers})
 
+set(chplx_library_domain_headers include/chplx/domains/base_rectangular.hpp
+                                 include/chplx/domains/default_rectangular.hpp
+)
+source_group("Header Files/chplx/domains" FILES ${chplx_library_domain_headers})
+
 set(chplx_library_headers
     include/chplx/adapt_array.hpp
     include/chplx/adapt_domain.hpp
@@ -51,6 +59,7 @@ set(chplx_library_headers
     include/chplx/begin.hpp
     include/chplx/cobegin.hpp
     include/chplx/coforall_loop.hpp
+    include/chplx/dmap.hpp
     include/chplx/domain.hpp
     include/chplx/for_loop.hpp
     include/chplx/forall_loop.hpp
@@ -62,58 +71,64 @@ set(chplx_library_headers
     include/chplx/sync_variable.hpp
     include/chplx/tuple.hpp
     include/chplx/types.hpp
+    include/chplx/util.hpp
     include/chplx/version.hpp
+    include/chplx/write.hpp
     include/chplx/zip.hpp
+    include/chplx/setenv.h
 )
 source_group("Header Files/chplx" FILES ${chplx_library_headers})
 
-set(chplx_library_sources src/locale.cpp src/version.cpp)
+set(chplx_library_domain_sources src/domains/dmap.cpp)
+source_group("Source Files/domains" FILES ${chplx_library_domain_sources})
 
-set(chplx_library_headers ${chplx_library_detail_headers}
-                          ${chplx_library_headers} include/chplx.hpp
+set(chplx_library_sources ${chplx_library_domain_sources} src/locale.cpp
+                          src/version.cpp
 )
 
-add_library(
-  library STATIC ${chplx_library_sources} ${chplx_library_headers}
+set(chplx_library_headers
+    ${chplx_library_detail_headers} ${chplx_library_domain_headers}
+    ${chplx_library_headers} include/chplx.hpp
 )
 
-if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND APPLE)
+if(MSVC)
+  set(chplx_library_sources ${chplx_library_sources} src/setenv.c)
+endif()
+
+add_library(library STATIC ${chplx_library_sources} ${chplx_library_headers})
+
+if(NOT WIN32
+   AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang"
+   AND APPLE
+)
   find_library(CORE_LIBPATH NAMES CoreFoundation REQUIRED)
 
-  target_compile_options(library
-    PUBLIC
-      -nostdlib
-      -std=c++20
-      -stdlib=libc++
-  )
+  target_compile_options(library PUBLIC -nostdlib -std=c++20 -stdlib=libc++)
 
   target_link_libraries(library PRIVATE ${CORE_LIBPATH})
-  target_link_libraries(library
-    PUBLIC
-      c++
-  )
+  target_link_libraries(library PUBLIC c++)
 endif()
 
 target_link_libraries(library PUBLIC fmt::fmt-header-only HPX::hpx)
 
-target_include_directories(library 
-  PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_BINARY_DIR}/include
+target_include_directories(
+  library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+                 ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 # define additional properties
-define_property(TARGET
+define_property(
+  TARGET
   PROPERTY TARGET_BINARY_DIR
   FULL_DOCS "Base binary directory"
   BRIEF_DOCS "Base binary directory"
 )
 
-set_target_properties(library
-  PROPERTIES
-    OUTPUT_NAME chplx_library
-    FOLDER "Library"
-    TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}"
+set_target_properties(
+  library
+  PROPERTIES OUTPUT_NAME chplx_library
+             FOLDER "Library"
+             TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
 # generate version file

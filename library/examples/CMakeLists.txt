@@ -12,7 +12,7 @@ add_chplx_pseudo_target_folder(
 )
 add_chplx_pseudo_dependencies(examples examples.librarydir)
 
-set(examples print_range)
+set(examples heat heat_ghost print_range)
 
 foreach(example ${examples})
   chplx_library_add_example(${example})

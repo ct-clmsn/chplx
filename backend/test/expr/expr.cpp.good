@@ -5,176 +5,173 @@
 
 #include "expr.hpp"
 
-int hpx_main(int argc, char* argv[])
-{
-#line 8 "../../backend/test/expr.chpl"
-    std::int64_t a;
-#line 10 "../../backend/test/expr.chpl"
-    a = 1 + 1;
-#line 11 "../../backend/test/expr.chpl"
-    a = a + 1;
-#line 12 "../../backend/test/expr.chpl"
-    a = 1 + a;
-#line 13 "../../backend/test/expr.chpl"
-    a = a + a;
-#line 14 "../../backend/test/expr.chpl"
-    a = (a + a) + a;
-#line 15 "../../backend/test/expr.chpl"
-    a = (a + a) + 1;
-#line 16 "../../backend/test/expr.chpl"
-    a = ((1 + a) + a) + a;
-#line 17 "../../backend/test/expr.chpl"
-    a = ((a + 1) + a) + a;
-#line 18 "../../backend/test/expr.chpl"
-    a = ((a + a) + 1) + a;
-#line 19 "../../backend/test/expr.chpl"
-    a = ((a + a) + a) + 1;
-#line 21 "../../backend/test/expr.chpl"
-    a = 1 + (1 + 1);
-#line 22 "../../backend/test/expr.chpl"
-    a = (1 + 1) + 1;
-#line 23 "../../backend/test/expr.chpl"
-    a = a + ((a + a) + a);
-#line 24 "../../backend/test/expr.chpl"
-    a = ((a + a) + a) + a;
-#line 25 "../../backend/test/expr.chpl"
-    a = 1 + (1 * 1);
-#line 26 "../../backend/test/expr.chpl"
-    a = 1 + a;
-#line 27 "../../backend/test/expr.chpl"
-    a = a + a;
-#line 28 "../../backend/test/expr.chpl"
-    a = a + (a + a);
-#line 29 "../../backend/test/expr.chpl"
-    a = (a + a) + a;
-#line 30 "../../backend/test/expr.chpl"
-    a = a + ((a + a) + a);
-#line 31 "../../backend/test/expr.chpl"
-    a = ((a + a) + a) + a;
-#line 33 "../../backend/test/expr.chpl"
-    auto value = [&]() -> std::int64_t {
-#line 34 "../../backend/test/expr.chpl"
-        return 1;
-    };
-#line 37 "../../backend/test/expr.chpl"
-    a = value();
-#line 38 "../../backend/test/expr.chpl"
-    a = 1 + value();
-#line 39 "../../backend/test/expr.chpl"
-    a = value() + 1;
-#line 40 "../../backend/test/expr.chpl"
-    a = value() + value();
-#line 41 "../../backend/test/expr.chpl"
-    a = a + (value() + value());
-#line 42 "../../backend/test/expr.chpl"
-    a = (value() + value()) + a;
-#line 43 "../../backend/test/expr.chpl"
-    a = ((value() + value()) + value()) + a;
-#line 44 "../../backend/test/expr.chpl"
-    a = a + ((value() + value()) + value());
-#line 46 "../../backend/test/expr.chpl"
-    auto valuea = [&](std::int64_t a) -> std::int64_t {
-#line 47 "../../backend/test/expr.chpl"
-        return a;
-    };
-#line 50 "../../backend/test/expr.chpl"
-    a = valuea(a);
-#line 51 "../../backend/test/expr.chpl"
-    a = valuea(1 + a);
-#line 52 "../../backend/test/expr.chpl"
-    a = 1 + valuea(1 + a);
-#line 53 "../../backend/test/expr.chpl"
-    a = valuea(1 + a) + 1;
-#line 55 "../../backend/test/expr.chpl"
-    a = 1 + valuea(a);
-#line 56 "../../backend/test/expr.chpl"
-    a = valuea(a) + 1;
-#line 57 "../../backend/test/expr.chpl"
-    a = valuea(a) + valuea(a);
-#line 58 "../../backend/test/expr.chpl"
-    a = a + (valuea(a) + valuea(a));
-#line 59 "../../backend/test/expr.chpl"
-    a = (valuea(a) + valuea(a)) + a;
-#line 60 "../../backend/test/expr.chpl"
-    a = ((valuea(a) + valuea(a)) + valuea(a)) + a;
-#line 61 "../../backend/test/expr.chpl"
-    a = a + ((valuea(a) + valuea(a)) + valuea(a));
-#line 63 "../../backend/test/expr.chpl"
-    std::vector<std::int64_t> b(10);
-#line 65 "../../backend/test/expr.chpl"
-    b[0] = 1;
-#line 66 "../../backend/test/expr.chpl"
-    b[0] = a;
-#line 67 "../../backend/test/expr.chpl"
-    b[0] = a;
-#line 68 "../../backend/test/expr.chpl"
-    b[0] = b[0];
-#line 69 "../../backend/test/expr.chpl"
-    b[0] = b[0];
-#line 70 "../../backend/test/expr.chpl"
-    b[0] = b[0];
-#line 71 "../../backend/test/expr.chpl"
-    b[0] = b[0];
-#line 73 "../../backend/test/expr.chpl"
-    b[0 + 0] = 1;
-#line 74 "../../backend/test/expr.chpl"
-    b[0 + 0] = 1;
-#line 76 "../../backend/test/expr.chpl"
-    b[0 + 0] = a;
-#line 77 "../../backend/test/expr.chpl"
-    b[0 + 0] = a;
-#line 78 "../../backend/test/expr.chpl"
-    b[0 + 0] = b[0];
-#line 79 "../../backend/test/expr.chpl"
-    b[0 + 0] = b[0];
-#line 80 "../../backend/test/expr.chpl"
-    b[0 + 0] = b[0 + 0];
-#line 81 "../../backend/test/expr.chpl"
-    b[0 + 0] = b[0 + 0];
-#line 83 "../../backend/test/expr.chpl"
-    std::vector<std::vector<std::int64_t>> c = {{1, 2}, {3, 4}};
-#line 84 "../../backend/test/expr.chpl"
-    c[0][0] = 0;
-#line 85 "../../backend/test/expr.chpl"
-    c[0][0] = a;
-#line 86 "../../backend/test/expr.chpl"
-    c[0][0] = 0;
-#line 87 "../../backend/test/expr.chpl"
-    c[0][0] = a;
-#line 88 "../../backend/test/expr.chpl"
-    c[0][0] = c[0][0];
-#line 89 "../../backend/test/expr.chpl"
-    c[0][0] = c[0][0];
-#line 90 "../../backend/test/expr.chpl"
-    c[0][0] = c[0][0];
-#line 91 "../../backend/test/expr.chpl"
-    c[0][0] = c[0][0];
-#line 92 "../../backend/test/expr.chpl"
-    c[0 + 0][0] = 1;
-#line 93 "../../backend/test/expr.chpl"
-    c[0 + 0][0] = 1;
-#line 95 "../../backend/test/expr.chpl"
-    std::int64_t y = valuea(1);
-#line 96 "../../backend/test/expr.chpl"
-    std::int64_t z = valuea(a);
-#line 97 "../../backend/test/expr.chpl"
-    std::int64_t w = valuea(a);
-#line 98 "../../backend/test/expr.chpl"
-    std::int64_t u = valuea(1);
-#line 100 "../../backend/test/expr.chpl"
-    auto valueb = [&](std::int64_t a) -> std::int64_t {
-#line 101 "../../backend/test/expr.chpl"
-        std::int64_t x = valuea(a);
-#line 102 "../../backend/test/expr.chpl"
-        x = valuea(a);
-#line 103 "../../backend/test/expr.chpl"
-        return valuea(a) + x;
-    };
+int hpx_main(int argc, char *argv[]) {
 
-    return hpx::finalize();
+#line 8 "expr.chpl"
+  std::int64_t a;
+#line 10 "expr.chpl"
+  a = 1 + 1;
+#line 11 "expr.chpl"
+  a = a + 1;
+#line 12 "expr.chpl"
+  a = 1 + a;
+#line 13 "expr.chpl"
+  a = a + a;
+#line 14 "expr.chpl"
+  a = (a + a) + a;
+#line 15 "expr.chpl"
+  a = (a + a) + 1;
+#line 16 "expr.chpl"
+  a = ((1 + a) + a) + a;
+#line 17 "expr.chpl"
+  a = ((a + 1) + a) + a;
+#line 18 "expr.chpl"
+  a = ((a + a) + 1) + a;
+#line 19 "expr.chpl"
+  a = ((a + a) + a) + 1;
+#line 21 "expr.chpl"
+  a = 1 + (1 + 1);
+#line 22 "expr.chpl"
+  a = (1 + 1) + 1;
+#line 23 "expr.chpl"
+  a = a + ((a + a) + a);
+#line 24 "expr.chpl"
+  a = ((a + a) + a) + a;
+#line 25 "expr.chpl"
+  a = 1 + (1 * 1);
+#line 26 "expr.chpl"
+  a = 1 + a;
+#line 27 "expr.chpl"
+  a = a + a;
+#line 28 "expr.chpl"
+  a = a + (a + a);
+#line 29 "expr.chpl"
+  a = (a + a) + a;
+#line 30 "expr.chpl"
+  a = a + ((a + a) + a);
+#line 31 "expr.chpl"
+  a = ((a + a) + a) + a;
+#line 33 "expr.chpl"
+  auto value = [&]() -> std::int64_t {
+#line 34 "expr.chpl"
+    return 1;
+  };
+#line 37 "expr.chpl"
+  a = value();
+#line 38 "expr.chpl"
+  a = 1 + value();
+#line 39 "expr.chpl"
+  a = value() + 1;
+#line 40 "expr.chpl"
+  a = value() + value();
+#line 41 "expr.chpl"
+  a = a + (value() + value());
+#line 42 "expr.chpl"
+  a = (value() + value()) + a;
+#line 43 "expr.chpl"
+  a = ((value() + value()) + value()) + a;
+#line 44 "expr.chpl"
+  a = a + ((value() + value()) + value());
+#line 46 "expr.chpl"
+  auto valuea = [&](std::int64_t a) -> std::int64_t {
+#line 47 "expr.chpl"
+    return a;
+  };
+#line 50 "expr.chpl"
+  a = valuea(a);
+#line 51 "expr.chpl"
+  a = valuea(1 + a);
+#line 52 "expr.chpl"
+  a = 1 + valuea(1 + a);
+#line 53 "expr.chpl"
+  a = valuea(1 + a) + 1;
+#line 55 "expr.chpl"
+  a = 1 + valuea(a);
+#line 56 "expr.chpl"
+  a = valuea(a) + 1;
+#line 57 "expr.chpl"
+  a = valuea(a) + valuea(a);
+#line 58 "expr.chpl"
+  a = a + (valuea(a) + valuea(a));
+#line 59 "expr.chpl"
+  a = (valuea(a) + valuea(a)) + a;
+#line 60 "expr.chpl"
+  a = ((valuea(a) + valuea(a)) + valuea(a)) + a;
+#line 61 "expr.chpl"
+  a = a + ((valuea(a) + valuea(a)) + valuea(a));
+#line 63 "expr.chpl"
+  std::vector<std::int64_t> b(10);
+#line 65 "expr.chpl"
+  b[0] = 1;
+#line 66 "expr.chpl"
+  b[0] = a;
+#line 67 "expr.chpl"
+  b[0] = a;
+#line 68 "expr.chpl"
+  b[0] = b[0];
+#line 69 "expr.chpl"
+  b[0] = b[0];
+#line 70 "expr.chpl"
+  b[0] = b[0];
+#line 71 "expr.chpl"
+  b[0] = b[0];
+#line 73 "expr.chpl"
+  b[0 + 0] = 1;
+#line 74 "expr.chpl"
+  b[0 + 0] = 1;
+#line 76 "expr.chpl"
+  b[0 + 0] = a;
+#line 77 "expr.chpl"
+  b[0 + 0] = a;
+#line 78 "expr.chpl"
+  b[0 + 0] = b[0];
+#line 79 "expr.chpl"
+  b[0 + 0] = b[0];
+#line 80 "expr.chpl"
+  b[0 + 0] = b[0 + 0];
+#line 81 "expr.chpl"
+  b[0 + 0] = b[0 + 0];
+#line 83 "expr.chpl"
+  std::vector<std::vector<std::int64_t>> c = {{1, 2}, {3, 4}};
+#line 84 "expr.chpl"
+  c[0][0] = 0;
+#line 85 "expr.chpl"
+  c[0][0] = a;
+#line 86 "expr.chpl"
+  c[0][0] = 0;
+#line 87 "expr.chpl"
+  c[0][0] = a;
+#line 88 "expr.chpl"
+  c[0][0] = c[0][0];
+#line 89 "expr.chpl"
+  c[0][0] = c[0][0];
+#line 90 "expr.chpl"
+  c[0][0] = c[0][0];
+#line 91 "expr.chpl"
+  c[0][0] = c[0][0];
+#line 92 "expr.chpl"
+  c[0 + 0][0] = 1;
+#line 93 "expr.chpl"
+  c[0 + 0][0] = 1;
+#line 95 "expr.chpl"
+  std::int64_t y = valuea(1);
+#line 96 "expr.chpl"
+  std::int64_t z = valuea(a);
+#line 97 "expr.chpl"
+  std::int64_t w = valuea(a);
+#line 98 "expr.chpl"
+  std::int64_t u = valuea(1);
+#line 100 "expr.chpl"
+  auto valueb = [&](std::int64_t a) -> std::int64_t {
+#line 101 "expr.chpl"
+    std::int64_t x = valuea(a);
+#line 102 "expr.chpl"
+    x = valuea(a);
+#line 103 "expr.chpl"
+    return valuea(a) + x;
+  };
+
+  return hpx::finalize();
 }
 
-int main(int argc, char* argv[])
-{
-    return hpx::init(argc, argv);
-}
+int main(int argc, char *argv[]) { return hpx::init(argc, argv); }

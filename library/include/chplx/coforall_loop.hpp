@@ -160,8 +160,8 @@ void coforall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
 
 //-----------------------------------------------------------------------------
 // forall loop for aray iteration
-template <typename Domain, typename T, typename F, typename... Args>
-void coforall(Array<Domain, T> const &a, F &&f, Args &&...args) {
+template <typename T, typename Domain, typename F, typename... Args>
+void coforall(Array<T, Domain> const &a, F &&f, Args &&...args) {
 
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,

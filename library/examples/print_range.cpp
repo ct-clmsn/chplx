@@ -6,17 +6,10 @@
 
 #include <chplx.hpp>
 
-#include <iostream>
-
 using namespace chplx;
 
-template <typename... Ts> void write(Ts &&...ts) { (std::cout << ... << ts); }
-
-template <typename... Ts> void writeln(Ts &&...ts) {
-  (std::cout << ... << ts) << "\n";
-}
-
-template <typename Range> void testWriteRange(char const *expr, Range const &r) {
+template <typename Range>
+void testWriteRange(char const *expr, Range const &r) {
 
   write(expr, " = ");
   // clang-format off
@@ -67,25 +60,28 @@ void boundedRanges() {
   writeln("Closed interval ranges:");
 
   testWriteRange("1..10",
-             BoundedRange<int>(1, 10)); // = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+                 BoundedRange<int>(1, 10)); // = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
   testWriteRange("-3..3", BoundedRange<int>(-3, 3)); // = -3, -2, -1, 0, 1, 2, 3
-  testWriteRange("1..10 # 3", count(BoundedRange<int>(1, 10), 3));   // = 1, 2, 3
-  testWriteRange("1..10 # -3", count(BoundedRange<int>(1, 10), -3)); // = 8, 9, 10
-  testWriteRange("1..10 by 2", by(BoundedRange<int>(1, 10), 2)); // = 1, 3, 5, 7, 9
+  testWriteRange("1..10 # 3", count(BoundedRange<int>(1, 10), 3)); // = 1, 2, 3
+  testWriteRange("1..10 # -3",
+                 count(BoundedRange<int>(1, 10), -3)); // = 8, 9, 10
+  testWriteRange("1..10 by 2",
+                 by(BoundedRange<int>(1, 10), 2)); // = 1, 3, 5, 7, 9
   writeln();
 
   constexpr auto open = BoundsCategoryType::Open;
 
   writeln("Open interval ranges:");
   testWriteRange("1..<10",
-             BoundedRange<int>(1, 10, open)); // = 1, 2, 3, 4, 5, 6, 7, 8, 9
-  testWriteRange("-3..<3", BoundedRange<int>(-3, 3, open)); // = -3, -2, -1, 0, 1, 2
+                 BoundedRange<int>(1, 10, open)); // = 1, 2, 3, 4, 5, 6, 7, 8, 9
+  testWriteRange("-3..<3",
+                 BoundedRange<int>(-3, 3, open)); // = -3, -2, -1, 0, 1, 2
   testWriteRange("1..<10 # 3",
-             count(BoundedRange<int>(1, 10, open), 3)); // = 1, 2, 3
+                 count(BoundedRange<int>(1, 10, open), 3)); // = 1, 2, 3
   testWriteRange("1..<10 # -3",
-             count(BoundedRange<int>(1, 10, open), -3)); // = 7, 8, 9
+                 count(BoundedRange<int>(1, 10, open), -3)); // = 7, 8, 9
   testWriteRange("1..<10 by 2",
-             by(BoundedRange<int>(1, 10, open), 2)); // = 1, 3, 5, 7, 9
+                 by(BoundedRange<int>(1, 10, open), 2)); // = 1, 3, 5, 7, 9
   writeln();
 
   writeln("Empty ranges:");
@@ -96,9 +92,9 @@ void boundedRanges() {
 
   writeln("Decreasing range");
   testWriteRange("1..10 by -1", by(BoundedRange<int>(1, 10),
-                               -1)); // = 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+                                   -1)); // = 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
   testWriteRange("1..10 by -2",
-             by(BoundedRange<int>(1, 10), -2)); // = 10, 8, 6, 4, 2
+                 by(BoundedRange<int>(1, 10), -2)); // = 10, 8, 6, 4, 2
   writeln();
 }
 
@@ -109,9 +105,9 @@ void unboundedRanges() {
   testWriteRange("-3..", BoundedLowRange<int>(1)); // = -3, -2, -1, ...
 
   testWriteRange("..5", BoundedRange<int>(RangeInit::noValue,
-                                      5)); // = ..., 3, 4, 5
+                                          5)); // = ..., 3, 4, 5
   testWriteRange("..", BoundedRange<int>(RangeInit::noValue,
-                                     RangeInit::noValue)); // = ...
+                                         RangeInit::noValue)); // = ...
   testWriteRange("..", BoundedRange<int>());                   // = ...
   writeln();
 }
