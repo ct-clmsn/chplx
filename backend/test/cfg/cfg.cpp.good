@@ -10,23 +10,24 @@
 std::int64_t config_a;
 std::int64_t config_b = 1;
 
-int hpx_main(int argc, char * argv[]) {
-
-    #line 1 "../../backend/test/cfg.chpl"
+int hpx_main(int argc, char* argv[])
+{
+#line 1 "../../backend/test/cfg.chpl"
     const std::int64_t a = config_a;
-    #line 2 "../../backend/test/cfg.chpl"
+#line 2 "../../backend/test/cfg.chpl"
     std::int64_t b = config_b;
 
     return hpx::finalize();
 }
 
-int main(int argc, char * argv[]) {
+int main(int argc, char* argv[])
+{
     hpx::program::options::options::options_description options;
-    options.add_options()
-        ("a",
-            hpx::program_options::value<std::int64_t>(&config_a), "config var a : std::int64_t")
-        ("b",
-            hpx::program_options::value<std::int64_t>(&config_b), "config var b : std::int64_t");
+    options.add_options()("a",
+        hpx::program_options::value<std::int64_t>(&config_a),
+        "config var a : std::int64_t")("b",
+        hpx::program_options::value<std::int64_t>(&config_b),
+        "config var b : std::int64_t");
     hpx::init_params init_args;
     init_args.desc_cmdline = options;
     return hpx::init(argc, argv, init_args);
