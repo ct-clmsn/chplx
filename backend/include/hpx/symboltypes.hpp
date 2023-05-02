@@ -167,6 +167,7 @@ struct SymbolBase {
     std::vector<uast::AstNode const*> literal;
     int kindqualifier;
     bool isConfig;
+//  std::size_t parentModule;
     std::size_t scopeId;
 };
 
@@ -265,6 +266,13 @@ struct SymbolTable {
    std::vector<std::shared_ptr<SymbolTableNode>> lut;
 
    std::size_t parentSymbolTableId;
+
+   // reference to module information; each symbol contains an integer
+   // that 'points' to the parent module entry it belongs to...modules
+   // can reference their parent modules in this list...-1 is the global
+   // 'root' module
+   //
+   // std::vector<Symbol*> modules;
 };
 
 struct funcbase_kind {

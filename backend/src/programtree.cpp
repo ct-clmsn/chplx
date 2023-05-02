@@ -86,7 +86,14 @@ void ScalarDeclarationExpression::emit(std::ostream & os) const {
    if(-1 < qualifier) {
       VisitQualifierSuffix(os, qualifier);
    }
-   os << " " << identifier << ";" << std::endl;
+
+   os << " " << identifier;
+
+   if(config) {
+      os << " = config_" << identifier;
+   }
+
+   os << ";" << std::endl;
 }
 
 void ScalarDeclarationLiteralExpressionVisitor::operator()(bool_kind const&) {

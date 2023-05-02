@@ -1228,7 +1228,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
             const std::size_t lutId = sym->get().scopeId;
 
             if(sym->get().isConfig) {
-               configVars.push_back(&(sym->get()));
+               configVars.emplace_back(*sym);
             }
 
             auto lusym = symbolTable.find(lutId, sym->get().identifier);
