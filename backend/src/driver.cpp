@@ -183,16 +183,10 @@ int main(int argc, char ** argv) {
          std::cout << "[ProgramTreeBuildingVisitor] Exit" << std::endl;
       }
 
-      std::ofstream ofs(ofilePath);
-
-      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, sbv.configVars, program, br, ofilePath, chplFilePth.filename().string(), ofs};
+      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, sbv.configVars, program, br, ofilePath, chplFilePth.filename().string()};
       cgv.indent += 1;
+
       cgv.visit();
-
-      cgv.generateApplicationHeader(chplFilePth);
-
-      ofs.flush();
-      ofs.close();
 
       CMakeGenerator gen{};
       gen.generate(chplFilePth);

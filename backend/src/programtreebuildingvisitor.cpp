@@ -339,6 +339,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Return:
     {
+       // check to see if the function symbol has a 'kind' set;
+       // if not set, set it to something
+
        std::vector<Statement> * cStmts = curStmts.back();
 
        if(std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(curStmts[curStmts.size()-2]->back())) {
@@ -959,6 +962,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           std::string lookup;
        };
 
+       // check to see if the function symbol has a 'kind' set;
+       // if not set, set it to something (unknown is OK)
+       //
        if(node.has_value() && ast != (*node)) {
           ProgramTreeFunctionVisitor v{false, {}};
           ast->traverse(v);
@@ -1006,12 +1012,135 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Interface:
     break;
     case asttags::Module:
+    {
+       std::string lookup = static_cast<Module const*>(ast)->name().str();
+
+std::cout << symbolTableRef->id << ' ' << lookup << std::endl;
+       std::optional<Symbol> sym =
+          symbolTable.find(symbolTableRef->id, lookup);
+
+       if(sym) {
+          std::shared_ptr<module_kind> & fk = std::get<std::shared_ptr<module_kind>>(sym->kind);
+          symbolTableRef = symbolTable.lut[fk->lutId];
+
+          std::vector<Statement> * cStmts = curStmts.back();
+
+          cStmts->emplace_back(
+             std::make_shared<ModuleDeclarationExpression>(
+                ModuleDeclarationExpression{{{{fk->lutId}, ast, {}}, *sym, {}, emitChapelLine(ast)}}
+          ));
+
+          auto & fndecl = std::get<std::shared_ptr<ModuleDeclarationExpression>>(cStmts->back());
+          curStmts.emplace_back(&(fndecl->statements));
+       }
+       else {
+          std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > fnsym
+             = symbolTable.findPrefix(symbolTableRef->id, lookup);
+          assert(fnsym.has_value());
+
+          std::map<std::string, Symbol>::iterator val = fnsym->second;
+          for(std::map<std::string, Symbol>::iterator itr = fnsym->first; itr != fnsym->second; ++itr) {
+             if(lookup == itr->first) {
+                val = itr;
+             } 
+          }
+
+          if(val == fnsym->second) { return false; }
+
+          //Symbol & fsym = val->second;
+
+          std::shared_ptr<module_kind> & fk = std::get<std::shared_ptr<module_kind>>(sym->kind);
+          symbolTableRef = symbolTable.lut[fk->lutId];
+       }
+    }
     break;
     case asttags::START_AggregateDecl:
     break;
-    case asttags::Class:
-    break;
     case asttags::Record:
+    {
+       std::string lookup = static_cast<Class const*>(ast)->name().str();
+
+       std::optional<Symbol> sym =
+          symbolTable.find(symbolTableRef->id, lookup);
+
+       if(sym) {
+          std::shared_ptr<record_kind> & fk = std::get<std::shared_ptr<record_kind>>(sym->kind);
+          symbolTableRef = symbolTable.lut[fk->lutId];
+
+          std::vector<Statement> * cStmts = curStmts.back();
+
+          cStmts->emplace_back(
+             std::make_shared<RecordDeclarationExpression>(
+                RecordDeclarationExpression{{{fk->lutId}, ast, {}}, *sym, {}, emitChapelLine(ast)}
+          ));
+
+          auto & fndecl = std::get<std::shared_ptr<RecordDeclarationExpression>>(cStmts->back());
+          curStmts.emplace_back(&(fndecl->statements));
+       }
+       else {
+          std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > fnsym
+             = symbolTable.findPrefix(symbolTableRef->id, lookup);
+
+          assert(fnsym.has_value());
+
+          std::map<std::string, Symbol>::iterator val = fnsym->second;
+          for(std::map<std::string, Symbol>::iterator itr = fnsym->first; itr != fnsym->second; ++itr) {
+             if(lookup == itr->first) {
+                val = itr;
+             } 
+          }
+
+          if(val == fnsym->second) { return false; }
+
+          //Symbol & fsym = val->second;
+
+          std::shared_ptr<record_kind> & fk = std::get<std::shared_ptr<record_kind>>(sym->kind);
+          symbolTableRef = symbolTable.lut[fk->lutId];
+       }
+    }
+    break;
+    case asttags::Class:
+    {
+       std::string lookup = static_cast<Class const*>(ast)->name().str();
+
+       std::optional<Symbol> sym =
+          symbolTable.find(symbolTableRef->id, lookup);
+
+       if(sym) {
+          std::shared_ptr<class_kind> & fk = std::get<std::shared_ptr<class_kind>>(sym->kind);
+          symbolTableRef = symbolTable.lut[fk->lutId];
+
+          std::vector<Statement> * cStmts = curStmts.back();
+
+          cStmts->emplace_back(
+             std::make_shared<ClassDeclarationExpression>(
+                ClassDeclarationExpression{{{{fk->lutId}, ast, {}}, *sym, {}, emitChapelLine(ast)}}
+          ));
+
+          auto & fndecl = std::get<std::shared_ptr<ClassDeclarationExpression>>(cStmts->back());
+          curStmts.emplace_back(&(fndecl->statements));
+       }
+       else {
+          std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > fnsym
+             = symbolTable.findPrefix(symbolTableRef->id, lookup);
+
+          assert(fnsym.has_value());
+
+          std::map<std::string, Symbol>::iterator val = fnsym->second;
+          for(std::map<std::string, Symbol>::iterator itr = fnsym->first; itr != fnsym->second; ++itr) {
+             if(lookup == itr->first) {
+                val = itr;
+             } 
+          }
+
+          if(val == fnsym->second) { return false; }
+
+          //Symbol & fsym = val->second;
+
+          std::shared_ptr<class_kind> & fk = std::get<std::shared_ptr<class_kind>>(sym->kind);
+          symbolTableRef = symbolTable.lut[fk->lutId];
+       }
+    }
     break;
     case asttags::Union:
     break;

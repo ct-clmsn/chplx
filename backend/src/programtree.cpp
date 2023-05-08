@@ -77,6 +77,10 @@ void VisitQualifierSuffix(std::ostream & os, const int qualifier) {
 }
 
 void ScalarDeclarationExpression::emit(std::ostream & os) const {
+   if(config) {
+      os << "// ";
+   }
+
    if(-1 < qualifier) {
       VisitQualifierPrefix(os, qualifier);
    }   
@@ -87,13 +91,7 @@ void ScalarDeclarationExpression::emit(std::ostream & os) const {
       VisitQualifierSuffix(os, qualifier);
    }
 
-   os << " " << identifier;
-
-   if(config) {
-      os << " = config_" << identifier;
-   }
-
-   os << ";" << std::endl;
+   os << " " << identifier << ";" << std::endl;
 }
 
 void ScalarDeclarationLiteralExpressionVisitor::operator()(bool_kind const&) {
@@ -117,6 +115,10 @@ void ScalarDeclarationLiteralExpressionVisitor::operator()(string_kind const&) {
 }
 
 void ScalarDeclarationLiteralExpression::emit(std::ostream & os) const {
+   if(config) {
+      os << "// ";
+   }
+
    if(-1 < qualifier) {
       VisitQualifierPrefix(os, qualifier);
    }   
@@ -433,6 +435,12 @@ void TernaryOpExpression::emit(std::ostream & os) const {
 }
 
 void ForLoopExpression::emit(std::ostream & os) const {
+}
+
+void RecordDeclarationExpression::emit(std::ostream & os) const {
+}
+
+void ClassDeclarationExpression::emit(std::ostream & os) const {
 }
 
 } /* namespace hpx */ } /* namespace ast */ } /* namespace chpl */

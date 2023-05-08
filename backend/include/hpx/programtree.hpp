@@ -116,6 +116,10 @@ struct CoforallLoopExpression;
 struct StatementList;
 struct ScalarDeclarationExprExpression;
 
+struct RecordDeclarationExpression;
+struct ClassDeclarationExpression;
+struct ModuleDeclarationExpression;
+
 using Statement = std::variant<
    std::monostate,
    std::shared_ptr<StatementList>,
@@ -139,7 +143,10 @@ using Statement = std::variant<
    std::shared_ptr<ConditionalExpression>,
    std::shared_ptr<ForLoopExpression>,
    std::shared_ptr<ForallLoopExpression>,
-   std::shared_ptr<CoforallLoopExpression>
+   std::shared_ptr<CoforallLoopExpression>,
+   std::shared_ptr<RecordDeclarationExpression>,
+   std::shared_ptr<ClassDeclarationExpression>,
+   std::shared_ptr<ModuleDeclarationExpression>
 >;
 
 struct StatementList {
@@ -239,6 +246,22 @@ struct CoforallLoopExpression : public ScopeExpression {
    std::vector<Statement> statements;
    std::string chplLine;
 
+   void emit(std::ostream & os) const;
+};
+
+struct RecordDeclarationExpression : public ScopeExpression {
+   Symbol symbol;
+   std::vector<Statement> statements;
+   std::string chplLine;
+
+   void emit(std::ostream & os) const;
+};
+
+struct ClassDeclarationExpression : public RecordDeclarationExpression {
+   void emit(std::ostream & os) const;
+};
+
+struct ModuleDeclarationExpression : public RecordDeclarationExpression {
    void emit(std::ostream & os) const;
 };
 

@@ -102,6 +102,7 @@ struct tuple_kind;
 struct kind_node_type;
 struct kind_node_term_type {};
 struct expr_kind {};
+struct module_kind;
 
 using kind_types = std::variant<
    std::monostate,
@@ -127,6 +128,7 @@ using kind_types = std::variant<
    std::shared_ptr<associative_kind>,
    std::shared_ptr<tuple_kind>,
    std::shared_ptr<kind_node_type>,
+   std::shared_ptr<module_kind>,
    kind_node_term_type,
    expr_kind
 >;
@@ -161,15 +163,27 @@ struct tuple_kind {
    std::vector<kind_types> kinds;
 };
 
+enum class ScopeKind : std::uint8_t {
+   Module       = 0,
+   ForLoop      = 1,
+   ForallLoop   = 2,
+   CoforallLoop = 3,
+   Loop         = 4,
+   Function     = 5,
+   Lambda       = 6,
+   Record       = 7, 
+   Class        = 8 
+};
+
 struct SymbolBase {
     kind_types kind;
     std::string identifier;
     std::vector<uast::AstNode const*> literal;
     int kindqualifier;
     bool isConfig;
-//  std::size_t parentModule;
     std::size_t scopeId;
 };
+//  std::size_t parentModule;
 
 struct Symbol : public SymbolBase {
 };
@@ -204,6 +218,7 @@ struct SymbolTable {
 
    struct SymbolTableNode {
       std::size_t id;
+      // ScopeKind kind;
       std::map<std::string, Symbol> entries;
       std::vector<SymbolTableNodeImpl> children;
       SymbolTableNodeImpl parent;
@@ -292,15 +307,16 @@ struct itrfunc_kind : public func_kind {
 };
 
 struct record_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
-   SymbolTable symbolTable;
+   std::uint64_t lutId;
+   std::string symbolTableSignature;
+   std::vector<Symbol> members; 
 };
 
-struct class_kind {
-   std::vector<std::string> identifiers;
-   std::vector<kind_types> kinds;
-   SymbolTable symbolTable;
+struct class_kind : record_kind {
+   std::vector<Symbol> lineage; 
+};
+
+struct module_kind : funcbase_kind {
 };
 
 } /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chpl */

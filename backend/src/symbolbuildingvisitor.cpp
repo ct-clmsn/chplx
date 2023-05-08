@@ -542,6 +542,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
               sym->get().kind = expr_kind{};
            }
         }
+std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.index() << ' ' << symstack.back().identifier << std::endl;
     }
     break;
     case asttags::OpCall:
@@ -684,7 +685,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Conditional:
     {
-        if(!(sym && 0 < sym->get().kind.index())) {
+        if(!(sym && !std::holds_alternative<std::shared_ptr<module_kind>>(sym->get().kind))) {
           // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
           //
           symstack.emplace_back(
@@ -755,6 +756,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
           symnode = const_cast<uast::AstNode*>(ast);
        }
+std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.index() << ' ' << symstack.back().identifier << std::endl;
     }
     break;
     case asttags::Implements:
@@ -773,7 +775,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Block:
     {
-       if(sym && 0 < sym->get().kind.index()) {
+       if(sym && !std::holds_alternative<std::shared_ptr<module_kind>>(sym->get().kind)) { //0 < sym->get().kind.index()) {
          if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
@@ -818,6 +820,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           symbolTable.parentSymbolTableId = parScope;
           symbolTable.symbolTableRef->parent = prevSymbolTableRef;
        }
+std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.index() << ' ' << symstack.back().identifier << std::endl;
     }
     break;
     case asttags::Defer:
@@ -851,7 +854,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Coforall:
     {
-       if(!(sym && 0 < sym->get().kind.index())) {
+       if(!(sym && !std::holds_alternative<std::shared_ptr<module_kind>>(sym->get().kind))) { //)0 < sym->get().kind.index())) {
           // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
           //
           symstack.emplace_back(
@@ -1015,7 +1018,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           std::string lookup;
        };
 
-       if(!(sym && 0 < sym->get().kind.index())) {
+       //if(!(sym && std::holds_alternative<std::shared_ptr<module_kind>>(sym->get().kind))) { // 0 < sym->get().kind.index())) {
+       {
           ProgramTreeFunctionVisitor v{false};
           ast->traverse(v);
 
@@ -1054,12 +1058,109 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Interface:
     break;
     case asttags::Module:
+    {
+       std::string lookup = static_cast<Module const*>(ast)->name().str();
+       // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
+       //
+       symstack.emplace_back(
+          Symbol{{
+             std::make_shared<module_kind>(module_kind{{
+                symbolTable.symbolTableRef->id, lookup, {}, {}}}),
+             lookup,
+          {}, -1, false, symbolTable.symbolTableRef->id
+       }});
+
+       std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
+       const std::size_t parScope = symbolTable.symbolTableRef->id;
+       symbolTable.pushScope();
+       sym.reset();
+       sym = symstack.back();
+
+       std::shared_ptr<module_kind> & mk = 
+          std::get<std::shared_ptr<module_kind>>(sym->get().kind);
+
+       //fk->symbolTableSignature = std::string{v.lookup};
+       // func_kind.lutId = the scope where the function's symboltable references
+       //
+       mk->lutId = symbolTable.symbolTableRef->id;
+
+       symbolTable.parentSymbolTableId = parScope;
+       symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+
+       symnode = const_cast<uast::AstNode*>(ast);
+    }
     break;
     case asttags::START_AggregateDecl:
     break;
-    case asttags::Class:
-    break;
     case asttags::Record:
+    {
+       std::string lookup = static_cast<Record const*>(ast)->name().str();
+
+       // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
+       //
+       symstack.emplace_back(
+          Symbol{{
+             std::make_shared<record_kind>(record_kind{
+                symbolTable.symbolTableRef->id, lookup, {}}),
+             lookup,
+             {}, -1, false, symbolTable.symbolTableRef->id
+       }});
+
+       std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
+       const std::size_t parScope = symbolTable.symbolTableRef->id;
+       symbolTable.pushScope();
+       sym.reset();
+       sym = symstack.back();
+
+       std::shared_ptr<record_kind> & rk =
+          std::get<std::shared_ptr<record_kind>>(sym->get().kind);
+
+       //fk->symbolTableSignature = std::string{lookup};
+       // func_kind.lutId = the scope where the function's symboltable references
+       //
+
+       rk->lutId = symbolTable.symbolTableRef->id;
+
+       symbolTable.parentSymbolTableId = parScope;
+       symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+
+       symnode = const_cast<uast::AstNode*>(ast);
+    }
+    break;
+    case asttags::Class:
+    {
+       std::string lookup = static_cast<Class const*>(ast)->name().str();
+
+       // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
+       //
+       symstack.emplace_back(
+          Symbol{{
+             std::make_shared<class_kind>(class_kind{{
+                symbolTable.symbolTableRef->id, lookup, {}}, {}}),
+             lookup,
+             {}, -1, false, symbolTable.symbolTableRef->id
+       }});
+
+       std::shared_ptr<SymbolTable::SymbolTableNode> prevSymbolTableRef = symbolTable.symbolTableRef;
+       const std::size_t parScope = symbolTable.symbolTableRef->id;
+       symbolTable.pushScope();
+       sym.reset();
+       sym = symstack.back();
+
+       std::shared_ptr<class_kind> & ck =
+          std::get<std::shared_ptr<class_kind>>(sym->get().kind);
+
+       //fk->symbolTableSignature = std::string{lookup};
+       // func_kind.lutId = the scope where the function's symboltable references
+       //
+
+       ck->lutId = symbolTable.symbolTableRef->id;
+
+       symbolTable.parentSymbolTableId = parScope;
+       symbolTable.symbolTableRef->parent = prevSymbolTableRef;
+
+       symnode = const_cast<uast::AstNode*>(ast);
+    }
     break;
     case asttags::Union:
     break;
@@ -1306,10 +1407,10 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Block:
     {
        if(sym) {
+std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.index() << ' ' << symstack.back().identifier << std::endl;
           assert( 0 < sym->get().identifier.size() );
           auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
           const bool is_func = std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind);
-
           if(!lusym && is_func) {
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
@@ -1322,11 +1423,11 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
 
              sym.reset();
              symnode = nullptr;
-             if(1 < symstack.size()) {
+             if(2 < symstack.size()) {
                symstack.pop_back();
                sym = symstack.back();
              }
-             else if(0 < symstack.size()) {
+             else if(1 < symstack.size()) {
                symstack.pop_back();
              }
 
@@ -1357,7 +1458,8 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Function:
     {
        if(sym) {
-          assert( 0 < sym->get().identifier.size() );
+std::cout << "FN\t" << sym.has_value() << ' ' << sym->get().identifier << ' ' << sym->get().kind.index() << std::endl;
+          assert( sym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind));
           auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
           if(!lusym) {
              std::shared_ptr<func_kind> & fk =
@@ -1371,10 +1473,11 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
              sym.reset();
              symnode = nullptr;
 
-             if(0 < symstack.size()) {
+             if(1 < symstack.size()) {
                symstack.pop_back();
              }
-             if(1 < symstack.size()) {
+
+             if(2 < symstack.size()) {
                sym = symstack.back();
              }
 
@@ -1397,12 +1500,123 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Interface:
     break;
     case asttags::Module:
+    {
+       if(0 < symstack.size()) {
+           sym.reset();
+           sym = symstack.back();
+       }
+
+       if(sym) {
+          assert( 0 < sym->get().identifier.size() );
+          auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
+          if(!lusym) {
+             std::shared_ptr<module_kind> & fk =
+                std::get<std::shared_ptr<module_kind>>(sym->get().kind);
+
+             if(fk->retKind.index() < 1) {
+                fk->retKind = nil_kind{};
+             }
+
+             symbolTable.addEntry(sym->get().scopeId, fk->symbolTableSignature, *sym);
+             sym.reset();
+             symnode = nullptr;
+
+             if(1 < symstack.size()) {
+               symstack.pop_back();
+             }
+             if(2 < symstack.size()) {
+               sym = symstack.back();
+             }
+
+             symbolTable.popScope();
+          }
+          else if (0 < sym->get().kind.index() && std::holds_alternative<std::shared_ptr<module_kind>>(sym->get().kind)) {
+              std::shared_ptr<module_kind> & fk =
+                 std::get<std::shared_ptr<module_kind>>(sym->get().kind);
+
+              std::cerr << "chplx : " << fk->symbolTableSignature << " identifier already defined in current scope" << std::endl;
+              return;
+           }
+          else {
+             std::cerr << "chplx : " << sym->get().identifier << " identifier already defined in current scope" << std::endl;
+             return;
+          }
+       }
+    }
     break;
     case asttags::START_AggregateDecl:
     break;
-    case asttags::Class:
-    break;
     case asttags::Record:
+    {
+       if(sym) {
+          assert( 0 < sym->get().identifier.size() );
+          auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
+          if(!lusym) {
+             std::shared_ptr<record_kind> & rk =
+                std::get<std::shared_ptr<record_kind>>(sym->get().kind);
+
+             symbolTable.addEntry(sym->get().scopeId, rk->symbolTableSignature, *sym);
+             sym.reset();
+             symnode = nullptr;
+
+             if(1 < symstack.size()) {
+               symstack.pop_back();
+             }
+             if(2 < symstack.size()) {
+               sym = symstack.back();
+             }
+
+             symbolTable.popScope();
+          }
+          else if (0 < sym->get().kind.index() && std::holds_alternative<std::shared_ptr<record_kind>>(sym->get().kind)) {
+              std::shared_ptr<record_kind> & rk =
+                 std::get<std::shared_ptr<record_kind>>(sym->get().kind);
+
+              std::cerr << "chplx : " << rk->symbolTableSignature << " identifier already defined in current scope" << std::endl;
+              return;
+           }
+          else {
+             std::cerr << "chplx : " << sym->get().identifier << " identifier already defined in current scope" << std::endl;
+             return;
+          }
+       }
+    }
+    break;
+    case asttags::Class:
+    {
+       if(sym) {
+          assert( 0 < sym->get().identifier.size() );
+          auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
+          if(!lusym) {
+             std::shared_ptr<class_kind> & ck =
+                std::get<std::shared_ptr<class_kind>>(sym->get().kind);
+
+             symbolTable.addEntry(sym->get().scopeId, ck->symbolTableSignature, *sym);
+             sym.reset();
+             symnode = nullptr;
+
+             if(1 < symstack.size()) {
+               symstack.pop_back();
+             }
+             if(2 < symstack.size()) {
+               sym = symstack.back();
+             }
+
+             symbolTable.popScope();
+          }
+          else if (0 < sym->get().kind.index() && std::holds_alternative<std::shared_ptr<class_kind>>(sym->get().kind)) {
+              std::shared_ptr<class_kind> & ck =
+                 std::get<std::shared_ptr<class_kind>>(sym->get().kind);
+
+              std::cerr << "chplx : " << ck->symbolTableSignature << " identifier already defined in current scope" << std::endl;
+              return;
+           }
+          else {
+             std::cerr << "chplx : " << sym->get().identifier << " identifier already defined in current scope" << std::endl;
+             return;
+          }
+       }
+    }
     break;
     case asttags::Union:
     break;

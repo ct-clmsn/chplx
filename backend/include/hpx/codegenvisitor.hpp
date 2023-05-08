@@ -18,7 +18,6 @@
 #include "symboltypes.hpp"
 #include "programtree.hpp"
 
-#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -72,13 +71,12 @@ struct CodegenVisitor {
       ProgramTree & prgmTree,
       chpl::uast::BuilderResult const& chapelBr,
       std::string const& cppFilePathStr,
-      std::string const& chapelFilePathStr,
-      std::ostream & fstrm
+      std::string const& chapelFilePathStr
    );
 
    ~CodegenVisitor() = default;
 
-   void generateApplicationHeader(std::filesystem::path const& chplpth);
+   void generateApplicationHeader(std::string const& chplpth, std::string const& prefix, std::fstream & os);
 
    //template <typename Kind>
    //void addSymbolEntry(char const* type);
@@ -110,7 +108,6 @@ struct CodegenVisitor {
    std::size_t indent; 
    std::size_t scope;
    std::string identifier;
-   std::ostream & fstrm_;
    std::string cppFilePathStr;
    std::string chplFilePathStr;
    std::vector<bool> headers;
