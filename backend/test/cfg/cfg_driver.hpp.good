@@ -6,7 +6,7 @@
 #ifndef __CFG_DRIVER_HPP__
 #define __CFG_DRIVER_HPP__
 
-#include <chplx.hpp>
 #include "cfg.hpp"
+#include <chplx.hpp>
 
 #endif

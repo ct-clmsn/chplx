@@ -7,14 +7,12 @@
 
 using namespace cond;
 
-int hpx_main(int argc, char* argv[])
-{
-    cond::__this->__main();
-    return hpx::finalize();
+int hpx_main(int argc, char *argv[]) {
+  cond::__this->__main();
+  return hpx::finalize();
 }
 
-int main(int argc, char* argv[])
-{
-    chplx::registerModule<cond::__thisModule>();
-    return hpx::init(argc, argv);
+int main(int argc, char *argv[]) {
+  chplx::registerModule<cond::__thisModule>();
+  return hpx::init(argc, argv);
 }

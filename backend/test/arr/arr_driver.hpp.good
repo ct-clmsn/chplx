@@ -6,7 +6,7 @@
 #ifndef __ARR_DRIVER_HPP__
 #define __ARR_DRIVER_HPP__
 
-#include <chplx.hpp>
 #include "arr.hpp"
+#include <chplx.hpp>
 
 #endif

@@ -5,33 +5,32 @@
 
 namespace fn {
 
-    struct __thisModule* __this = nullptr;
+struct __thisModule *__this = nullptr;
 
-#line 11 "../../backend/test/fn.chpl"
-    void __thisModule::print()
-    {
-#line 12 "../../backend/test/fn.chpl"
-        std::int64_t j;
-#line 13 "../../backend/test/fn.chpl"
-        std::int64_t i = 1;
-#line 14 "../../backend/test/fn.chpl"
-        bool k = true;
-#line 15 "../../backend/test/fn.chpl"
-        double l = 1.000000;
-#line 16 "../../backend/test/fn.chpl"
-        bool m;
-#line 17 "../../backend/test/fn.chpl"
-        double n;
-#line 18 "../../backend/test/fn.chpl"
-        std::cout << "a" << std::endl;
-#line 19 "../../backend/test/fn.chpl"
-        std::cout << i << std::endl;
-#line 20 "../../backend/test/fn.chpl"
-        std::cout << i << std::endl;
-#line 21 "../../backend/test/fn.chpl"
-        std::cout << i << l << std::endl;
-    };
+#line 11 "fn.chpl"
+void __thisModule::print() {
+#line 12 "fn.chpl"
+  std::int64_t j;
+#line 13 "fn.chpl"
+  std::int64_t i = 1;
+#line 14 "fn.chpl"
+  bool k = true;
+#line 15 "fn.chpl"
+  double l = 1.000000;
+#line 16 "fn.chpl"
+  bool m;
+#line 17 "fn.chpl"
+  double n;
+#line 18 "fn.chpl"
+  std::cout << "a" << std::endl;
+#line 19 "fn.chpl"
+  std::cout << i << std::endl;
+#line 20 "fn.chpl"
+  std::cout << i << std::endl;
+#line 21 "fn.chpl"
+  std::cout << i << l << std::endl;
+};
 
-    void __thisModule::__main() {}
+void __thisModule::__main() {}
 
-}    // namespace fn
+} // namespace fn
