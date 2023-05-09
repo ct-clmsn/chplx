@@ -5,8 +5,8 @@
 
 namespace cfg {
 
-    struct __thisModule* __this = nullptr;
+struct __thisModule *__this = nullptr;
 
-    void __thisModule::__main() {}
+void __thisModule::__main() {}
 
-}    // namespace cfg
+} // namespace cfg

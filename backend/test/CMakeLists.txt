@@ -10,27 +10,43 @@ find_package(ClangFormat)
 
 add_chplx_pseudo_target(tests.unit.backend_dir)
 add_chplx_pseudo_target_folder(
-  backend TARGET tests.unit.backend_dir FOLDER "Backend/Tests/Targets"
+  backend
+  TARGET tests.unit.backend_dir
+  FOLDER "Backend/Tests/Targets"
 )
 
 add_chplx_pseudo_dependencies(tests.unit tests.unit.backend_dir)
 
-set(tests arr cond expr fn fnc forall)
+set(tests
+    arr
+    cfg
+    cond
+    expr
+    fn
+    fnc
+    forall
+)
 
 foreach(test ${tests})
   chplx_compile(${test} SOURCE ${test}.chpl)
 
   if(CLANGFORMAT_FOUND)
-    chplx_format_file(${test} SOURCES ${test}.cpp ${test}.hpp)
+    chplx_format_file(
+      ${test} SOURCES ${test}.cpp ${test}.hpp ${test}_driver.cpp
+                      ${test}_driver.hpp
+    )
   endif()
 
-  chplx_compare_result(${test}
-    SOURCES ${test}.cpp ${test}.hpp "CMakeLists.txt"
+  chplx_compare_result(
+    ${test}
+    SOURCES ${test}.cpp ${test}.hpp ${test}_driver.cpp ${test}_driver.hpp
+            "CMakeLists.txt"
     TEST_NAME "tests.unit.backend_dir.${test}"
   )
 
   # now build the created files
-  chplx_compile_project(${test}
+  chplx_compile_project(
+    ${test}
     TARGET ${test}
     TEST_NAME "tests.unit.backend_dir.${test}_cpp"
   )

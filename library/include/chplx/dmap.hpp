@@ -93,7 +93,7 @@ private:
 
 //-----------------------------------------------------------------------------
 // GlobalDistribution defines the Domain map Standard Interface (DSI) This class
-// is visible to the users of the domain map: the dmap wrapper in Chapel’s
+// is visible to the users of the domain map: the dmap wrapper in Chapel's
 // dmapped clauses wraps instances of this class. This class must be a subclass
 // of BaseDist.
 template <typename Derived> struct GlobalDistribution : BaseDist {

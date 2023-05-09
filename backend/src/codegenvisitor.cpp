@@ -870,7 +870,7 @@ static void generateSourceFooter(std::string const& modStr, SymbolTable & symtab
        << "    chplx::registerModule<" << modStr << "::__thisModule>();" << std::endl;
 
    if(0 < cfgVars.size()) {
-      fos << "    hpx::program::options::options::options_description options;\n    options.add_options()";
+      fos << "    hpx::program_options::options_description options;\n    options.add_options()";
       for(auto & opt : cfgVars) {
          fos << std::endl << "        (\"" << opt.identifier << "\"," << std::endl;
          FuncDeclArgVisitor v{fos};
@@ -878,7 +878,7 @@ static void generateSourceFooter(std::string const& modStr, SymbolTable & symtab
 
          std::visit(v, opt.kind);
 
-         std::string opt_identifier{"_this->" + opt.identifier};
+         std::string opt_identifier{"__this->" + opt.identifier};
          buildFullNamespaceString(opt_identifier, symtable, opt);
 
          fos << ">(&" << opt_identifier << "), " << "\"config ";

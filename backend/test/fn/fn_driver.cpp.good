@@ -7,14 +7,12 @@
 
 using namespace fn;
 
-int hpx_main(int argc, char* argv[])
-{
-    fn::__this->__main();
-    return hpx::finalize();
+int hpx_main(int argc, char *argv[]) {
+  fn::__this->__main();
+  return hpx::finalize();
 }
 
-int main(int argc, char* argv[])
-{
-    chplx::registerModule<fn::__thisModule>();
-    return hpx::init(argc, argv);
+int main(int argc, char *argv[]) {
+  chplx::registerModule<fn::__thisModule>();
+  return hpx::init(argc, argv);
 }
