@@ -542,7 +542,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
               sym->get().kind = expr_kind{};
            }
         }
-std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.index() << ' ' << symstack.back().identifier << std::endl;
     }
     break;
     case asttags::OpCall:
@@ -756,7 +755,6 @@ std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.in
 
           symnode = const_cast<uast::AstNode*>(ast);
        }
-std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.index() << ' ' << symstack.back().identifier << std::endl;
     }
     break;
     case asttags::Implements:
@@ -820,7 +818,6 @@ std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.in
           symbolTable.parentSymbolTableId = parScope;
           symbolTable.symbolTableRef->parent = prevSymbolTableRef;
        }
-std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.index() << ' ' << symstack.back().identifier << std::endl;
     }
     break;
     case asttags::Defer:
@@ -1060,6 +1057,7 @@ std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.in
     case asttags::Module:
     {
        std::string lookup = static_cast<Module const*>(ast)->name().str();
+       symbolTable.parentModuleId = symbolTable.modules.size();
        // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
        //
        symstack.emplace_back(
@@ -1407,7 +1405,6 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::Block:
     {
        if(sym) {
-std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.index() << ' ' << symstack.back().identifier << std::endl;
           assert( 0 < sym->get().identifier.size() );
           auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
           const bool is_func = std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind);
@@ -1458,7 +1455,6 @@ std::cout << "SYMSTACKSZ\t" << symstack.size() << ' ' << symstack.back().kind.in
     case asttags::Function:
     {
        if(sym) {
-std::cout << "FN\t" << sym.has_value() << ' ' << sym->get().identifier << ' ' << sym->get().kind.index() << std::endl;
           assert( sym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind));
           auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
           if(!lusym) {
@@ -1510,6 +1506,7 @@ std::cout << "FN\t" << sym.has_value() << ' ' << sym->get().identifier << ' ' <<
           assert( 0 < sym->get().identifier.size() );
           auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
           if(!lusym) {
+             symbolTable.parentModuleId -= 1;
              std::shared_ptr<module_kind> & fk =
                 std::get<std::shared_ptr<module_kind>>(sym->get().kind);
 
@@ -1517,6 +1514,7 @@ std::cout << "FN\t" << sym.has_value() << ' ' << sym->get().identifier << ' ' <<
                 fk->retKind = nil_kind{};
              }
 
+             symbolTable.modules.push_back(&(sym->get()));
              symbolTable.addEntry(sym->get().scopeId, fk->symbolTableSignature, *sym);
              sym.reset();
              symnode = nullptr;

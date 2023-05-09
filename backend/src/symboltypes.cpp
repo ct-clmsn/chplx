@@ -15,7 +15,7 @@
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-SymbolTable::SymbolTable() : symbolTableRef(), lut(), parentSymbolTableId(0) {
+SymbolTable::SymbolTable() : symbolTableRef(), lut(), parentSymbolTableId(0), modules(), parentModuleId(0) {
    symbolTableRoot =
       std::make_shared<SymbolTableNode>(
          SymbolTableNode{0, {}, {}, {}}
@@ -29,7 +29,7 @@ std::size_t SymbolTable::pushScope() {
    // the end of the symboltable
    //
    symbolTableRef->children.push_back(
-      std::make_shared<SymbolTableNode>(SymbolTableNode{lut.size(), {}, {}, symbolTableRef})
+      std::make_shared<SymbolTableNode>(SymbolTableNode{lut.size(), {}, {}, symbolTableRef, parentModuleId})
    );
 
    symbolTableRef = std::get<std::shared_ptr<SymbolTableNode>>(symbolTableRef->children.back());

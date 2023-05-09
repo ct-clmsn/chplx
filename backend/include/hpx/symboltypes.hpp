@@ -88,6 +88,8 @@ struct domain_kind {
    std::vector<range_kind> ranges;
 };
 
+struct auto_kind {};
+
 struct ref_kind;
 struct const_kind;
 struct config_kind;
@@ -130,7 +132,8 @@ using kind_types = std::variant<
    std::shared_ptr<kind_node_type>,
    std::shared_ptr<module_kind>,
    kind_node_term_type,
-   expr_kind
+   expr_kind,
+   auto_kind
 >;
 
 struct kind_node_type {
@@ -183,7 +186,6 @@ struct SymbolBase {
     bool isConfig;
     std::size_t scopeId;
 };
-//  std::size_t parentModule;
 
 struct Symbol : public SymbolBase {
 };
@@ -222,6 +224,7 @@ struct SymbolTable {
       std::map<std::string, Symbol> entries;
       std::vector<SymbolTableNodeImpl> children;
       SymbolTableNodeImpl parent;
+      std::size_t parentModuleId;
    };
 
    SymbolTable(SymbolTable const& v) = default;
@@ -282,12 +285,8 @@ struct SymbolTable {
 
    std::size_t parentSymbolTableId;
 
-   // reference to module information; each symbol contains an integer
-   // that 'points' to the parent module entry it belongs to...modules
-   // can reference their parent modules in this list...-1 is the global
-   // 'root' module
-   //
-   // std::vector<Symbol*> modules;
+   std::vector< Symbol* > modules;
+   std::size_t parentModuleId;
 };
 
 struct funcbase_kind {
@@ -317,6 +316,7 @@ struct class_kind : record_kind {
 };
 
 struct module_kind : funcbase_kind {
+   // std::size_t parentModuleId;
 };
 
 } /* namespace hpx */ } /* namespace visitors */ } /* namespace ast */ } /* namespace chpl */

@@ -77,17 +77,14 @@ void VisitQualifierSuffix(std::ostream & os, const int qualifier) {
 }
 
 void ScalarDeclarationExpression::emit(std::ostream & os) const {
-   if(config) {
-      os << "// ";
-   }
-
-   if(-1 < qualifier) {
+   if(!config && -1 < qualifier) {
+//      os << "// ";
       VisitQualifierPrefix(os, qualifier);
-   }   
+   }
 
    std::visit(ScalarDeclarationExpressionVisitor{os}, kind);
 
-   if(-1 < qualifier) {
+   if(!config && -1 < qualifier) {
       VisitQualifierSuffix(os, qualifier);
    }
 
@@ -115,11 +112,8 @@ void ScalarDeclarationLiteralExpressionVisitor::operator()(string_kind const&) {
 }
 
 void ScalarDeclarationLiteralExpression::emit(std::ostream & os) const {
-   if(config) {
-      os << "// ";
-   }
-
-   if(-1 < qualifier) {
+   if(!config && -1 < qualifier) {
+//      os << "// ";
       VisitQualifierPrefix(os, qualifier);
    }   
 
@@ -131,7 +125,7 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
    std::shared_ptr<array_kind> const& akref =
       std::get<std::shared_ptr<array_kind>>(kind);
 
-   if(-1 < qualifier) {
+   if(!config && -1 < qualifier) {
       VisitQualifierPrefix(os, qualifier);
    }   
 

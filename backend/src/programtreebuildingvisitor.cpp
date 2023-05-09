@@ -345,6 +345,17 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::vector<Statement> * cStmts = curStmts.back();
 
        if(std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(curStmts[curStmts.size()-2]->back())) {
+
+           // check to see if the return value is defined...
+           // if not defined, set to `auto`
+           //
+           auto & fnptr = std::get<std::shared_ptr<FunctionDeclarationExpression>>(curStmts[curStmts.size()-2]->back());
+           auto & fnk = std::get<std::shared_ptr<func_kind>>(fnptr->symbol.kind)->retKind;
+
+           if(std::holds_alternative<nil_kind>(fnk)) {
+              fnk = auto_kind{};
+           }
+
            cStmts->emplace_back(
                std::make_shared<ReturnExpression>(ReturnExpression{{}, {emitChapelLine(ast)}})
            );
@@ -1015,7 +1026,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        std::string lookup = static_cast<Module const*>(ast)->name().str();
 
-std::cout << symbolTableRef->id << ' ' << lookup << std::endl;
        std::optional<Symbol> sym =
           symbolTable.find(symbolTableRef->id, lookup);
 
