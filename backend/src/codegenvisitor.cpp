@@ -239,8 +239,9 @@ struct HppStatementVisitor {
          emitIndent();
          os << node.chplLine;
       }
-      emitIndent(); emitIndent(); emitIndent();
-      auto val = node.config;
+
+      os << "extern ";
+
       node.emit(os);
    }
    void operator()(ScalarDeclarationLiteralExpression const& node) {
@@ -252,14 +253,11 @@ struct HppStatementVisitor {
          os << node.chplLine;
       }
 
-      emitIndent(); emitIndent(); emitIndent();
+      os << "extern ";
 
       node.emit(os);
-      os << " = ";
-      if( 0 < node.literalValue.size() ) {
-         std::visit(ScalarDeclarationLiteralExpressionVisitor{s->literal[0], os}, node.kind);
-         os << ";" << std::endl;
-      }
+
+      os << ";" << std::endl;
    }
    void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const& node) {
       if(!node->config) { return; }
@@ -271,15 +269,11 @@ struct HppStatementVisitor {
          os << node->chplLine;
       }
 
-      emitIndent(); emitIndent(); emitIndent();
+      os << "extern ";
+
       node->emit(os);
-      os << " = ";
 
-      std::visit(ExprVisitor{os}, node->statements[0]);
-
-      if(!arg) {
-         os << ';' << std::endl;
-      }
+      os << ';' << std::endl;
    }
    void operator()(std::shared_ptr<FunctionDeclarationExpression> const& node) {
       if(node->symbol.identifier.size() < 1) { std::cerr << "codegenvisitor.cpp FunctionDeclarationExpression " << node->symbol.identifier << " not found" << std::endl; }
@@ -394,11 +388,11 @@ struct StatementVisitor {
       }
       emitIndent();
       node.emit(os);
-      os << " = ";
       if( 0 < node.literalValue.size() ) {
+         os << " = ";
          std::visit(ScalarDeclarationLiteralExpressionVisitor{s->literal[0], os}, node.kind);
-         os << ";" << std::endl;
       }
+      os << ";" << std::endl;
    }
    void operator()(ArrayDeclarationLiteralExpression const& node) {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
@@ -720,6 +714,19 @@ struct StatementVisitor {
          cppofs << std::endl;
       }
 
+      for(std::size_t i = 0; i < statements_size; ++i) {
+         auto const& stmt = node->statements[i];
+         if(
+            (std::holds_alternative<ScalarDeclarationExpression>(stmt) && std::get<ScalarDeclarationExpression>(stmt).config) ||
+            (std::holds_alternative<ScalarDeclarationLiteralExpression>(stmt) && std::get<ScalarDeclarationLiteralExpression>(stmt).config) ||
+            (std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(stmt) && std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(stmt)->config)
+         ) {
+            std::visit(cppv, stmt);
+         }
+      }
+
+      cppofs << std::endl;
+
       // populate main scope of module 
       //
       cppv.emitIndent();
@@ -744,6 +751,20 @@ struct StatementVisitor {
 
       hppv.emitIndent();
       hppofs << "extern struct __thisModule *__this;" << std::endl << std::endl;
+
+      for(std::size_t i = 0; i < statements_size; ++i) {
+         auto const& stmt = node->statements[i];
+         if(
+            (std::holds_alternative<ScalarDeclarationExpression>(stmt) && std::get<ScalarDeclarationExpression>(stmt).config) ||
+            (std::holds_alternative<ScalarDeclarationLiteralExpression>(stmt) && std::get<ScalarDeclarationLiteralExpression>(stmt).config) ||
+            (std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(stmt) && std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(stmt)->config)
+         ) {
+            std::visit(hppv, stmt);
+         }
+      }
+
+      hppofs << std::endl << std::endl;
+
       hppv.emitIndent();
 
       hppofs << "struct __thisModule {" << std::endl << std::endl;
@@ -754,10 +775,7 @@ struct StatementVisitor {
             std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(stmt) ||
             std::holds_alternative<std::shared_ptr<RecordDeclarationExpression>>(stmt) ||
             std::holds_alternative<std::shared_ptr<ClassDeclarationExpression>>(stmt) ||
-            std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(stmt) ||
-            (std::holds_alternative<ScalarDeclarationExpression>(stmt) && std::get<ScalarDeclarationExpression>(stmt).config) ||
-            (std::holds_alternative<ScalarDeclarationLiteralExpression>(stmt) && std::get<ScalarDeclarationLiteralExpression>(stmt).config) ||
-            (std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(stmt) && std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(stmt)->config)
+            std::holds_alternative<std::shared_ptr<FunctionDeclarationExpression>>(stmt)
          ) {
             std::visit(hppv, stmt);
          }
@@ -874,14 +892,12 @@ static void generateSourceFooter(std::string const& modStr, SymbolTable & symtab
       for(auto & opt : cfgVars) {
          fos << std::endl << "        (\"" << opt.identifier << "\"," << std::endl;
          FuncDeclArgVisitor v{fos};
-         fos << "            hpx::program_options::value<";
+         fos << "            hpx::program_options::value";
 
-         std::visit(v, opt.kind);
-
-         std::string opt_identifier{"__this->" + opt.identifier};
+         std::string opt_identifier{opt.identifier};
          buildFullNamespaceString(opt_identifier, symtable, opt);
 
-         fos << ">(&" << opt_identifier << "), " << "\"config ";
+         fos << "(&" << opt_identifier << "), " << "\"config ";
          if(0 < opt.kindqualifier) { VisitQualifierPrefix(fos, opt.kindqualifier); } else { fos <<  "var "; }
          fos << opt.identifier << " : ";
          std::visit(v, opt.kind);

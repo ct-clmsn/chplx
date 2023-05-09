@@ -7,6 +7,15 @@ namespace cfg {
 
 struct __thisModule *__this = nullptr;
 
+#line 8 "cfg.chpl"
+std::int64_t a;
+#line 9 "cfg.chpl"
+std::int64_t b = 1;
+#line 10 "cfg.chpl"
+std::int64_t c;
+#line 11 "cfg.chpl"
+std::int64_t d = 1;
+
 void __thisModule::__main() {}
 
 } // namespace cfg

@@ -11,16 +11,16 @@
 namespace cfg {
 extern struct __thisModule *__this;
 
-struct __thisModule {
-
 #line 8 "cfg.chpl"
-  std::int64_t a;
+extern std::int64_t a;
 #line 9 "cfg.chpl"
-  std::int64_t b = 1;
+extern std::int64_t b;
 #line 10 "cfg.chpl"
-  std::int64_t c;
+extern std::int64_t c;
 #line 11 "cfg.chpl"
-  std::int64_t d = 1;
+extern std::int64_t d;
+
+struct __thisModule {
 
   static void __construct() { cfg::__this = new __thisModule(); }
 
