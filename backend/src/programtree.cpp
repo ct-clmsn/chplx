@@ -115,7 +115,7 @@ void ScalarDeclarationLiteralExpression::emit(std::ostream & os) const {
    if(!config && -1 < qualifier) {
 //      os << "// ";
       VisitQualifierPrefix(os, qualifier);
-   }   
+   }
 
    std::visit(ScalarDeclarationExpressionVisitor{os}, kind);
    os << " " << identifier;
@@ -127,7 +127,7 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
 
    if(!config && -1 < qualifier) {
       VisitQualifierPrefix(os, qualifier);
-   }   
+   }
 
    os << "std::vector<";
    std::visit(ScalarDeclarationExpressionVisitor{os}, akref->kind);
@@ -197,7 +197,7 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
 
    if(-1 < qualifier) {
       VisitQualifierPrefix(os, qualifier);
-   }   
+   }
 
    // the following 2 loops could be performed in
    // parallel
