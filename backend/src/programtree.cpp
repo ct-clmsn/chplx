@@ -129,26 +129,26 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
       VisitQualifierPrefix(os, qualifier);
    }
 
-   os << "std::vector<";
+   os << "chplx::Array<";
    std::visit(ScalarDeclarationExpressionVisitor{os}, akref->kind);
 
-   int range_size = 1;
    const auto & rngs = akref->dom.ranges;
-   for(const auto & rng : rngs) {
-      if(rng.points.size() == 2) {
-         range_size *= ( (rng.points[1] - rng.points[0]) + rng.points[0] );
-      }
-      else if(rng.points.size() == 1) {
-         range_size *= rng.points[0];
-      }
-   }
+   os << ", chplx::Domain<" << rngs.size() << "> > " << identifier << "(";
 
-   if(range_size > 1) {
-      os << "> " << identifier << "(" << range_size << ");" << std::endl;
+   bool first = true;
+   for(const auto & rng : rngs) {
+      if (!first) {
+         first = false;
+         os << ", ";
+      }
+      if(rng.points.size() == 2) {
+         os << "chplx::Range(" << rng.points[0] << ", " << rng.points[1] << ")";
+      }
+      else if (rng.points.size() == 1) {
+         os << "chplx::Range(" << rng.points[0] << ")";
+      }
    }
-   else {
-      os << "> " << identifier << "{};" << std::endl;
-   }
+   os << ");" << std::endl;
 }
 
 struct ArrayDeclarationLiteralExpressionVisitor {
@@ -209,14 +209,13 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    // stored in the literal array then the
    // loop needs to terminate
    //
-   typelist << "std::vector<";
+   typelist << "chplx::Array<";
 
    for(std::size_t i = 0; i < children_sz; ++i) {
       const bool knt =
          std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i]);
 
       if(knt) {
-         typelist << "std::vector<";
          ++vec_count;
       }
       else {
@@ -225,9 +224,7 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
       }
    }
 
-   for(std::size_t i = 0; i < vec_count; ++i) {
-      typelist << ">";
-   }
+   typelist << ", chplx::Domain<" << vec_count + 1 << ">";
 
    typelist << ">";
 
@@ -369,18 +366,18 @@ void FunctionCallExpression::emit(std::ostream & os) const {
           std::visit(v, arguments[0]);
 
           for(std::size_t i = 1; i < args_sz; ++i) {
-             fn_fmt_str += "[{}]";
+             fn_fmt_str += (i == 1) ? "{}" : ", {}";
              Statement const& stmt = arguments[i];
              ArgumentVisitor v{nullptr, std::stringstream{}};
              std::visit(v, stmt);
              store.push_back(v.os.str());
           }
 
-          os << v.os.str() << fmt::vformat(fn_fmt_str, store);
+          os << v.os.str()  << '(' << fmt::vformat(fn_fmt_str, store) << ')';
       }
       else {
          for(std::size_t i = 1; i < args_sz; ++i) {
-            fn_fmt_str += (i == 1) ? "{}" : ",{}";
+            fn_fmt_str += (i == 1) ? "{}" : ", {}";
             Statement const& stmt = arguments[i];
             ArgumentVisitor v{nullptr, std::stringstream{}};
             std::visit(v, stmt);

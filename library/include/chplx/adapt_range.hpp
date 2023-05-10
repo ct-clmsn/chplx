@@ -27,7 +27,7 @@ hpx::generator<T> iterate(
 
   auto size = ni.size;
   for (auto ilo = ni.first; size-- != 0; ++ilo) {
-    co_yield ni.target.orderToIndex(ilo);
+    co_yield ni.target[ilo];
   }
 }
 

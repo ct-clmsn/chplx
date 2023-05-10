@@ -50,6 +50,9 @@ enum class BoundsCategoryType {
 // such as counting, striding, intersection, shifting, and comparisons. Ranges
 // form the basis for defining rectangular domains (Domains) and arrays (Arrays)
 // in Chapel.
+//
+// Note: the default values for the template arguments are commented out as
+// otherwise clang gets confused when using CTAD on this type.
 template <typename T /*= std::int64_t*/,
           BoundedRangeType BoundedType /*= BoundedRangeType::bounded*/,
           bool Stridable /* = false*/>
@@ -73,7 +76,7 @@ template <typename IndexType> class AssocDomain;
 
 // An array is a map from a domain's indices to a collection of variables of
 // homogeneous type.
-template <typename T, typename Domain> class Array;
+template <typename T, typename Domain = Domain<1>> class Array;
 
 // A locale is a Chapel abstraction for a piece of a target architecture that
 // has processing and storage capabilities.
@@ -241,8 +244,7 @@ template <typename T> inline constexpr auto MaxValue_v = MaxValue<T>::value;
 // reference_wrappers.
 template <typename T> struct task_intent : hpx::type_identity<T> {
 
-  template <typename T_>
-  static constexpr T_&& call(T_ &&arg) noexcept {
+  template <typename T_> static constexpr T_ &&call(T_ &&arg) noexcept {
     return std::forward<T_>(arg);
   }
 };

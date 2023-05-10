@@ -18,15 +18,15 @@ template <typename Target> struct IteratorGenerator {
 
   template <typename T>
     requires(!std::is_same_v<std::decay_t<T>, IteratorGenerator>)
-  explicit constexpr IteratorGenerator(T &&target)
-      : target(std::forward<T>(target)), first(0),
+  explicit constexpr IteratorGenerator(T &&rhs)
+      : target(std::forward<T>(rhs)), first(0),
         size(target.isBounded()
                  ? target.size()
                  : MaxValue_v<typename std::decay_t<T>::idxType>) {}
 
   template <typename T>
-  constexpr IteratorGenerator(T &&target, std::size_t first, std::size_t size)
-      : target(std::forward<T>(target)), first(first), size(size) {}
+  constexpr IteratorGenerator(T &&rhs, std::size_t first, std::size_t size)
+      : target(std::forward<T>(rhs)), first(first), size(size) {}
 
   constexpr bool operator==(IteratorGenerator const &rhs) noexcept {
     return target == rhs.target && first == rhs.first && size == rhs.size;

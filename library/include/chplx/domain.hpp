@@ -67,6 +67,12 @@ public:
                   std::logical_and<>(), true);
   }
 
+  // Returns true if this is an iterable domain, false otherwise.
+  [[nodiscard]] constexpr bool isIterable() const noexcept {
+    return reduce(detail::lift(dims(), [](auto &&r) { return r.isIterable(); }),
+                  std::logical_and<>(), true);
+  }
+
   // Yield the domain indices
   [[nodiscard]] decltype(auto) these() const { return iterate(*this); }
 
@@ -171,6 +177,18 @@ public:
   [[nodiscard]] constexpr indexType
   orderToIndex(std::int64_t order) const noexcept {
     return dom->orderToIndex(order);
+  }
+
+  [[nodiscard]] constexpr IndexType operator[](std::int64_t idx) const noexcept
+    requires(Rank == 1)
+  {
+    return std::get<0>(orderToIndex(idx));
+  }
+
+  [[nodiscard]] constexpr indexType operator[](std::int64_t idx) const noexcept
+    requires(Rank != 1)
+  {
+    return orderToIndex(idx);
   }
 
   using baseDomain = domains::BaseRectangularDomain<N, IndexType, Stridable>;

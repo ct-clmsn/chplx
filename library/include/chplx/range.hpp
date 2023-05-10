@@ -636,7 +636,7 @@ struct Range {
   // Otherwise, returns -1. It is an error to invoke indexOrder if the
   // represented sequence is not defined or the range does not have a first
   // index. The indexOrder procedure is the reverse of orderToIndex.
-  constexpr std::int64_t indexOrder(idxType idx) const noexcept {
+  [[nodiscard]] constexpr std::int64_t indexOrder(idxType idx) const noexcept {
 
     std::int64_t result;
     if (stride() > 0) {
@@ -655,12 +655,17 @@ struct Range {
   // It is an error to invoke orderToIndex if the range is not defined, or if
   // ord is negative or greater than the range's size. The orderToIndex
   // procedure is the reverse of indexOrder.
-  constexpr idxType orderToIndex(std::int64_t order) const noexcept {
+  [[nodiscard]] constexpr idxType
+  orderToIndex(std::int64_t order) const noexcept {
 
     HPX_ASSERT(order >= 0 && ((isBounded() && order <= size()) || hasFirst()));
     auto result = first() + order * stride();
 
     return result;
+  }
+
+  [[nodiscard]] constexpr T operator[](std::int64_t idx) const noexcept {
+    return orderToIndex(idx);
   }
 
 private:

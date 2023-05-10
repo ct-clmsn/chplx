@@ -29,13 +29,38 @@ template <typename T> std::size_t size(std::vector<std::vector<T>> const &d) {
   return d.size() * d[0].size();
 }
 
+template <typename T> auto shape(std::vector<std::vector<T>> const &d) {
+
+  if (d.empty()) {
+    return chplx::Tuple(chplx::BoundedRange<std::int64_t>(),
+                        chplx::BoundedRange<std::int64_t>());
+  }
+
+  return chplx::Tuple(chplx::BoundedRange<std::int64_t>(0, d.size() - 1),
+                      chplx::BoundedRange<std::int64_t>(0, d[0].size() - 1));
+}
+
 template <typename T>
 std::size_t size(std::vector<std::vector<std::vector<T>>> const &d) {
 
   if (d.empty() || d[0].empty()) {
     return 0;
   }
-  return d.size() * d[0].size() * d[0][0].size();
+  return d[0][0].size() * d[0].size() * d.size();
+}
+
+template <typename T>
+auto shape(std::vector<std::vector<std::vector<T>>> const &d) {
+
+  if (d.empty() || d[0].empty()) {
+    return chplx::Tuple(chplx::BoundedRange<std::int64_t>(),
+                        chplx::BoundedRange<std::int64_t>(),
+                        chplx::BoundedRange<std::int64_t>());
+  }
+
+  return chplx::Tuple(chplx::BoundedRange<std::int64_t>(0, d.size() - 1),
+                      chplx::BoundedRange<std::int64_t>(0, d[0].size() - 1),
+                      chplx::BoundedRange<std::int64_t>(0, d[0][0].size() - 1));
 }
 
 template <typename Domain, typename T>
@@ -123,7 +148,20 @@ std::size_t size(std::initializer_list<std::initializer_list<T>> const &il) {
   if (il.size() == 0) {
     return 0;
   }
-  return il.size() * il.begin()->size();
+  return il.begin()->size() * il.size();
+}
+
+template <typename T>
+auto shape(std::initializer_list<std::initializer_list<T>> const &il) {
+
+  if (il.size() == 0) {
+    return chplx::Tuple(chplx::BoundedRange<std::int64_t>(),
+                        chplx::BoundedRange<std::int64_t>());
+  }
+
+  return chplx::Tuple(
+      chplx::BoundedRange<std::int64_t>(0, il.size() - 1),
+      chplx::BoundedRange<std::int64_t>(0, il.begin()->size() - 1));
 }
 
 template <typename T>
@@ -134,7 +172,24 @@ std::size_t size(
   if (il.size() == 0 || il.begin()->size() == 0) {
     return 0;
   }
-  return il.size() * il.begin()->size() * il.begin()->begin()->size();
+  return il.begin()->begin()->size() * il.begin()->size() * il.size();
+}
+
+template <typename T>
+auto shape(
+    std::initializer_list<std::initializer_list<std::initializer_list<T>>> const
+        &il) {
+
+  if (il.size() == 0 || il.begin()->size() == 0) {
+    return chplx::Tuple(chplx::BoundedRange<std::int64_t>(),
+                        chplx::BoundedRange<std::int64_t>(),
+                        chplx::BoundedRange<std::int64_t>());
+  }
+
+  return chplx::Tuple(
+      chplx::BoundedRange<std::int64_t>(0, il.size() - 1),
+      chplx::BoundedRange<std::int64_t>(0, il.begin()->size() - 1),
+      chplx::BoundedRange<std::int64_t>(0, il.begin()->begin()->size() - 1));
 }
 
 template <typename Domain, typename T>

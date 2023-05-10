@@ -127,7 +127,7 @@ template <typename... Rs> struct ZipRange : Tuple<Rs...> {
 
   using base_type = Tuple<Rs...>;
 
-  using idxType = std::common_type_t<typename std::decay_t<Rs>::indexType...>;
+  using idxType = std::common_type_t<typename std::decay_t<Rs>::idxType...>;
   using indexType = Tuple<typename std::decay_t<Rs>::indexType...>;
 
   base_type &base() { return static_cast<base_type &>(*this); }
@@ -173,17 +173,26 @@ template <typename... Rs> struct ZipRange : Tuple<Rs...> {
 
   // Yield the zipped indices
   [[nodiscard]] decltype(auto) these() const { return iterate(*this); }
+
+  constexpr auto operator[](std::size_t idx) noexcept {
+    return lift(base(), [idx](auto &&r) -> decltype(auto) { return r[idx]; });
+  }
+  constexpr auto operator[](std::size_t idx) const noexcept {
+    return lift(base(), [idx](auto &&r) -> decltype(auto) { return r[idx]; });
+  }
+
+  using resultType = decltype(std::declval<ZipRange>()[0]);
 };
 
 template <typename... Rs>
-hpx::generator<typename ZipRange<Rs...>::indexType>
+hpx::generator<typename ZipRange<Rs...>::resultType>
 iterate(IteratorGenerator<ZipRange<Rs...>> zr) noexcept {
 
   HPX_ASSERT(zr.target.isIterable());
 
   auto size = zr.size;
   for (auto ilo = zr.first; size-- != 0; ++ilo) {
-    co_yield zr.target.orderToIndex(ilo);
+    co_yield zr.target[ilo];
   }
 }
 
@@ -198,7 +207,7 @@ decltype(auto) iterate(ZipRange<Rs...> const &zr) noexcept {
 
 //-----------------------------------------------------------------------------
 template <typename R, typename... Rs>
-constexpr detail::ZipRange<R, Rs...> zip(R &&r, Rs &&...rs) {
+constexpr decltype(auto) zip(R &&r, Rs &&...rs) {
 
   HPX_ASSERT_MSG(r.isIterable() && (rs.isIterable() && ...),
                  "all zippered objects need to be iterable");

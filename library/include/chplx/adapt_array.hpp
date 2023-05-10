@@ -20,12 +20,12 @@ namespace chplx {
 //-----------------------------------------------------------------------------
 // 1D iteration support
 template <typename T, typename Domain>
-hpx::generator<T&, T> iterate(
-    detail::IteratorGenerator<Array<T, Domain>> a) noexcept {
+hpx::generator<T &, T>
+iterate(detail::IteratorGenerator<Array<T, Domain>> a) noexcept {
 
   auto size = a.size;
   for (auto ilo = a.first; size-- != 0; ++ilo) {
-    co_yield a.target(ilo);
+    co_yield a.target[ilo];
   }
 }
 
@@ -34,6 +34,12 @@ template <typename T, typename Domain>
 decltype(auto) iterate(Array<T, Domain> const &a) noexcept {
 
   return iterate(detail::IteratorGenerator(a));
+}
+
+template <typename T, typename Domain>
+decltype(auto) iterate(Array<T, Domain> &&a) noexcept {
+
+  return iterate(detail::IteratorGenerator(std::move(a)));
 }
 
 } // namespace chplx
