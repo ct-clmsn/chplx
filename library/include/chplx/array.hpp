@@ -10,7 +10,10 @@
 #include <chplx/detail/iterator_generator.hpp>
 #include <chplx/domain.hpp>
 #include <chplx/locale.hpp>
+#include <chplx/range.hpp>
+#include <chplx/tuple.hpp>
 #include <chplx/types.hpp>
+#include <chplx/zip.hpp>
 
 #include <chplx/domains/default_rectangular.hpp>
 
@@ -26,7 +29,7 @@ namespace chplx {
 template <typename T, typename Domain> class Array {
 
 public:
-  static constexpr int rank = Domain::rank();
+  static constexpr int Rank = Domain::rank();
   static constexpr bool Stridable = Domain::stridable();
 
   using idxType = typename Domain::idxType;
@@ -35,41 +38,92 @@ public:
 
 private:
   using arrayHandle =
-      domains::BaseRectangularArray<T, rank, idxType, Stridable>;
+      domains::BaseRectangularArray<T, Rank, idxType, Stridable>;
+
+  enum class take_ref { init = 0 };
+  Array(Array const &rhs, take_ref) : array(rhs.array) {}
+  Array ref() const { return Array(*this, take_ref::init); }
 
 public:
-  Array() = default;
+  Array() : array(Domain().template buildArray<T>()) {}
 
   explicit Array(Domain domain) : array(domain.template buildArray<T>()) {}
   Array(Domain domain, T init) : array(domain.template buildArray<T>(init)) {}
 
+  template <typename R, typename... Rs>
+  explicit Array(R &&r, Rs &&...rs)
+    requires((Rank == sizeof...(Rs) + 1) && isRangeType<R> &&
+             (isRangeType<Rs> && ...))
+      : array(Domain(std::forward<R>(r), std::forward<Rs>(rs)...)
+                  .template buildArray<T>()) {}
+
+  // Rank == 1
+  explicit Array(std::vector<T> &&data)
+    requires(Rank == 1)
+      : array(Domain(Range(0, data.size() - 1))
+                  .template buildArray<T>(std::move(data))) {}
+  Array(std::initializer_list<T> &&data)
+    requires(Rank == 1)
+      : array(Domain(Range(0, data.size() - 1))
+                  .template buildArray<T>(std::move(data))) {}
+
   Array(Domain domain, std::vector<T> &&data)
-    requires(rank == 1)
+    requires(Rank == 1)
       : array(domain.template buildArray<T>(std::move(data))) {}
   Array(Domain domain, std::initializer_list<T> &&data)
-    requires(rank == 1)
+    requires(Rank == 1)
       : array(domain.template buildArray<T>(std::move(data))) {}
+
+  // Rank == 2
+  explicit Array(std::vector<std::vector<T>> &&data)
+    requires(Rank == 2)
+      : array(Domain(domains::detail::shape(data))
+                  .template buildArray<T>(std::move(data))) {}
+  Array(std::initializer_list<std::initializer_list<T>> &&data)
+    requires(Rank == 2)
+      : array(Domain(domains::detail::shape(data))
+                  .template buildArray<T>(std::move(data))) {}
 
   Array(Domain domain, std::vector<std::vector<T>> &&data)
-    requires(rank == 2)
+    requires(Rank == 2)
       : array(domain.template buildArray<T>(std::move(data))) {}
   Array(Domain domain, std::initializer_list<std::initializer_list<T>> &&data)
-    requires(rank == 2)
+    requires(Rank == 2)
       : array(domain.template buildArray<T>(std::move(data))) {}
 
+  // Rank == 3
+  explicit Array(std::vector<std::vector<std::vector<T>>> &&data)
+    requires(Rank == 3)
+      : array(Domain(domains::detail::shape(data))
+                  .template buildArray<T>(std::move(data))) {}
+  Array(std::initializer_list<std::initializer_list<std::initializer_list<T>>>
+            &&data)
+    requires(Rank == 3)
+      : array(Domain(domains::detail::shape(data))
+                  .template buildArray<T>(std::move(data))) {}
+
   Array(Domain domain, std::vector<std::vector<std::vector<T>>> &&data)
-    requires(rank == 3)
+    requires(Rank == 3)
       : array(domain.template buildArray<T>(std::move(data))) {}
   Array(Domain domain,
         std::initializer_list<std::initializer_list<std::initializer_list<T>>>
             &&data)
-    requires(rank == 3)
+    requires(Rank == 3)
       : array(domain.template buildArray<T>(std::move(data))) {}
 
-  Array(Array const &) = default;
-  Array(Array &&) = default;
+  Array(Array const &rhs) : array(Domain(rhs.dims()).template buildArray<T>()) {
+    for (auto &&e : chplx::zip(*this, rhs).these()) {
+      std::get<0>(e) = std::get<1>(e);
+    }
+  }
+  Array &operator=(Array const &rhs) {
+    for (auto &&e : chplx::zip(*this, rhs).these()) {
+      std::get<0>(e) = std::get<1>(e);
+    }
+    return *this;
+  }
 
-  Array &operator=(Array const &) = default;
+  Array(Array &&) = default;
   Array &operator=(Array &&) = default;
 
   ~Array() = default;
@@ -96,39 +150,32 @@ public:
     return array->dsiAccess(array->dsiGetBaseDomain()->dsiIndexOrder(idx));
   }
 
-  constexpr T &operator()(idxType idx) noexcept {
+  constexpr T &operator[](std::int64_t idx) noexcept {
     return array->dsiAccess(idx);
   }
-  constexpr T const &operator()(idxType idx) const noexcept {
-    return array->dsiAccess(idx);
-  }
-
-  constexpr T &operator[](idxType idx) noexcept {
-    return array->dsiAccess(idx);
-  }
-  constexpr T const &operator[](idxType idx) const noexcept {
+  constexpr T const &operator[](std::int64_t idx) const noexcept {
     return array->dsiAccess(idx);
   }
 
   template <typename... Ts>
-    requires(sizeof...(Ts) == rank && sizeof...(Ts) > 1 &&
+    requires(sizeof...(Ts) == Rank &&
              (std::is_convertible_v<Ts, std::size_t> && ...))
   constexpr T &operator()(Ts... idxs) noexcept {
     return array->dsiAccess(array->dsiGetBaseDomain()->dsiIndexOrder(
-        detail::generate_tuple_type_t<rank, std::common_type_t<Ts...>>(
+        detail::generate_tuple_type_t<Rank, std::common_type_t<Ts...>>(
             idxs...)));
   }
   template <typename... Ts>
-    requires(sizeof...(Ts) == rank && sizeof...(Ts) > 1 &&
+    requires(sizeof...(Ts) == Rank &&
              (std::is_convertible_v<Ts, std::size_t> && ...))
   constexpr T const &operator()(Ts... idxs) const noexcept {
     return array->dsiAccess(array->dsiGetBaseDomain()->dsiIndexOrder(
-        detail::generate_tuple_type_t<rank, std::common_type_t<Ts...>>(
+        detail::generate_tuple_type_t<Rank, std::common_type_t<Ts...>>(
             idxs...)));
   }
 
   // Yield the array values
-  [[nodiscard]] decltype(auto) these() const { return iterate(*this); }
+  [[nodiscard]] decltype(auto) these() const { return iterate(ref()); }
 
   // Return the number of indices in this array as an int.
   [[nodiscard]] constexpr std::int64_t size() const noexcept {
@@ -172,6 +219,48 @@ public:
     return array->dsiGetBaseDomain()->dsiOrderToIndex(order);
   }
 
+  // Arrays are always iterable
+  [[nodiscard]] static constexpr bool isIterable() noexcept { return true; }
+
+  // Array assignment is by value. Arrays can be assigned arrays, ranges,
+  // domains, iterators, or tuples as long as the two expressions are compatible
+  // in terms of number of dimensions and shape.
+  template <typename T1, typename Domain1>
+    requires(std::is_convertible_v<T1, T> && Domain1::Rank == Rank)
+  Array &operator=(Array<T1, Domain1> const &rhs) {
+    for (auto &&e : chplx::zip(*this, rhs).these()) {
+      std::get<0>(e) = std::get<1>(e);
+    }
+    return *this;
+  }
+
+  template <typename T1, BoundedRangeType BoundedType, bool Stridable>
+    requires(std::is_convertible_v<T1, T>)
+  Array &operator=(Range<T1, BoundedType, Stridable> const &rhs) {
+    for (auto &&e : chplx::zip(*this, rhs).these()) {
+      std::get<0>(e) = std::get<1>(e);
+    }
+    return *this;
+  }
+
+  template <int N, typename IndexType, bool Stridable>
+    requires(N == Rank && std::is_convertible_v<IndexType, T>)
+  Array &operator=(chplx::Domain<N, IndexType, Stridable> const &rhs) {
+    for (auto &&e : chplx::zip(*this, rhs).these()) {
+      std::get<0>(e) = std::get<1>(e);
+    }
+    return *this;
+  }
+
+  template <typename... Ts>
+    requires((std::is_convertible_v<Ts, T> && ...))
+  Array &operator=(Tuple<Ts...> const &rhs) {
+    for (auto &&e : chplx::zip(*this, rhs).these()) {
+      std::get<0>(e) = std::get<1>(e);
+    }
+    return *this;
+  }
+
   // return the location of this array instance
   chplx::locale locale = chplx::here;
 
@@ -179,17 +268,59 @@ private:
   hpx::intrusive_ptr<arrayHandle> array;
 };
 
+//-----------------------------------------------------------------------------
 template <typename Domain, typename T>
   requires(isDomainType<Domain>)
 Array(Domain, T) -> Array<T, Domain>;
 
-template <typename Domain, typename T>
-  requires(isDomainType<Domain>)
-Array(Domain, std::vector<T> &&) -> Array<T, Domain>;
+template <typename T>
+  requires(!isDomainType<T>)
+Array(T) -> Array<T, Domain<1>>;
+
+template <typename T> Array(std::vector<T> &&) -> Array<T, Domain<1>>;
 
 template <typename Domain, typename T>
-  requires(isDomainType<Domain>)
+  requires(isDomainType<Domain> && Domain::Rank == 1)
+Array(Domain, std::vector<T> &&) -> Array<T, Domain>;
+
+template <typename T>
+Array(std::vector<std::vector<T>> &&) -> Array<T, Domain<2>>;
+
+template <typename Domain, typename T>
+  requires(isDomainType<Domain> && Domain::Rank == 2)
+Array(Domain, std::vector<std::vector<T>> &&) -> Array<T, Domain>;
+
+template <typename T>
+Array(std::vector<std::vector<std::vector<T>>> &&) -> Array<T, Domain<3>>;
+
+template <typename Domain, typename T>
+  requires(isDomainType<Domain> && Domain::Rank == 3)
+Array(Domain, std::vector<std::vector<std::vector<T>>> &&) -> Array<T, Domain>;
+
+template <typename T> Array(std::initializer_list<T> &&) -> Array<T, Domain<1>>;
+
+template <typename Domain, typename T>
+  requires(isDomainType<Domain> && Domain::Rank == 1)
 Array(Domain, std::initializer_list<T> &&) -> Array<T, Domain>;
+
+template <typename T>
+Array(std::initializer_list<std::initializer_list<T>> &&)
+    -> Array<T, Domain<2>>;
+
+template <typename Domain, typename T>
+  requires(isDomainType<Domain> && Domain::Rank == 2)
+Array(Domain, std::initializer_list<std::initializer_list<T>> &&)
+    -> Array<T, Domain>;
+
+template <typename T>
+Array(std::initializer_list<std::initializer_list<std::initializer_list<T>>> &&)
+    -> Array<T, Domain<3>>;
+
+template <typename Domain, typename T>
+  requires(isDomainType<Domain> && Domain::Rank == 3)
+Array(Domain,
+      std::initializer_list<std::initializer_list<std::initializer_list<T>>> &&)
+    -> Array<T, Domain>;
 
 //-----------------------------------------------------------------------------
 namespace detail {

@@ -114,59 +114,59 @@ void __thisModule::__main() {
 #line 61 "expr.chpl"
   a = a + ((valuea(a) + valuea(a)) + valuea(a));
 #line 63 "expr.chpl"
-  std::vector<std::int64_t> b(10);
+  chplx::Array<std::int64_t, chplx::Domain<1>> b(chplx::Range(0, 10));
 #line 65 "expr.chpl"
-  b[0] = 1;
+  b(0) = 1;
 #line 66 "expr.chpl"
-  b[0] = a;
+  b(0) = a;
 #line 67 "expr.chpl"
-  b[0] = a;
+  b(0) = a;
 #line 68 "expr.chpl"
-  b[0] = b[0];
+  b(0) = b(0);
 #line 69 "expr.chpl"
-  b[0] = b[0];
+  b(0) = b(0);
 #line 70 "expr.chpl"
-  b[0] = b[0];
+  b(0) = b(0);
 #line 71 "expr.chpl"
-  b[0] = b[0];
+  b(0) = b(0);
 #line 73 "expr.chpl"
-  b[0 + 0] = 1;
+  b(0 + 0) = 1;
 #line 74 "expr.chpl"
-  b[0 + 0] = 1;
+  b(0 + 0) = 1;
 #line 76 "expr.chpl"
-  b[0 + 0] = a;
+  b(0 + 0) = a;
 #line 77 "expr.chpl"
-  b[0 + 0] = a;
+  b(0 + 0) = a;
 #line 78 "expr.chpl"
-  b[0 + 0] = b[0];
+  b(0 + 0) = b(0);
 #line 79 "expr.chpl"
-  b[0 + 0] = b[0];
+  b(0 + 0) = b(0);
 #line 80 "expr.chpl"
-  b[0 + 0] = b[0 + 0];
+  b(0 + 0) = b(0 + 0);
 #line 81 "expr.chpl"
-  b[0 + 0] = b[0 + 0];
+  b(0 + 0) = b(0 + 0);
 #line 83 "expr.chpl"
-  std::vector<std::vector<std::int64_t>> c = {{1, 2}, {3, 4}};
+  chplx::Array<std::int64_t, chplx::Domain<2>> c = {{1, 2}, {3, 4}};
 #line 84 "expr.chpl"
-  c[0][0] = 0;
+  c(0, 0) = 0;
 #line 85 "expr.chpl"
-  c[0][0] = a;
+  c(0, 0) = a;
 #line 86 "expr.chpl"
-  c[0][0] = 0;
+  c(0, 0) = 0;
 #line 87 "expr.chpl"
-  c[0][0] = a;
+  c(0, 0) = a;
 #line 88 "expr.chpl"
-  c[0][0] = c[0][0];
+  c(0, 0) = c(0, 0);
 #line 89 "expr.chpl"
-  c[0][0] = c[0][0];
+  c(0, 0) = c(0, 0);
 #line 90 "expr.chpl"
-  c[0][0] = c[0][0];
+  c(0, 0) = c(0, 0);
 #line 91 "expr.chpl"
-  c[0][0] = c[0][0];
+  c(0, 0) = c(0, 0);
 #line 92 "expr.chpl"
-  c[0 + 0][0] = 1;
+  c(0 + 0, 0) = 1;
 #line 93 "expr.chpl"
-  c[0 + 0][0] = 1;
+  c(0 + 0, 0) = 1;
 #line 95 "expr.chpl"
   std::int64_t y = valuea(1);
 #line 96 "expr.chpl"

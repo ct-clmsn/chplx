@@ -26,6 +26,9 @@ template <typename... Ts> struct Tuple : std::tuple<Ts...> {
 
   using base_type = std::tuple<Ts...>;
 
+  using idxType = std::int64_t;
+  using indexType = std::int64_t;
+
   using std::tuple<Ts...>::tuple;
 
   constexpr std::tuple<Ts...> &base() noexcept {
@@ -35,7 +38,11 @@ template <typename... Ts> struct Tuple : std::tuple<Ts...> {
     return static_cast<std::tuple<Ts...> const &>(*this);
   }
 
-  static constexpr bool isHomogenous() noexcept {
+  // Tuples are always iterable and bounded
+  [[nodiscard]] static constexpr bool isIterable() noexcept { return true; }
+  [[nodiscard]] static constexpr bool isBounded() noexcept { return true; }
+
+  [[nodiscard]] static constexpr bool isHomogenous() noexcept {
 
     if constexpr (size() == 0) {
       return true;
@@ -46,13 +53,13 @@ template <typename... Ts> struct Tuple : std::tuple<Ts...> {
   }
 
   // Returns the size of the tuple.
-  static constexpr std::size_t size() noexcept {
+  [[nodiscard]] static constexpr std::size_t size() noexcept {
     return std::tuple_size_v<std::tuple<Ts...>>;
   }
 
   // Returns the range 0..<this.size representing the indices that are legal for
   // indexing into the tuple.
-  static constexpr auto indices() noexcept {
+  [[nodiscard]] static constexpr auto indices() noexcept {
     return Range(static_cast<std::size_t>(0), size(),
                  chplx::BoundsCategoryType::Open);
   }
