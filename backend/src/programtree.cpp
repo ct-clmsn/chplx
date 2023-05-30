@@ -244,11 +244,17 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
 
    bool skip = false;
    std::size_t domcount = 0;
+   std::size_t prev_idx = 0;
    for(auto & kt : kindtypes) {
-      if(std::holds_alternative<std::shared_ptr<array_kind>>(kt)) { ++domcount; }
+      if(std::holds_alternative<std::shared_ptr<array_kind>>(kt) &&
+         (prev_idx == 0 || prev_idx == 18)) {
+         ++domcount;
+         prev_idx = kt.index();
+      }
       else if(!skip) {
          std::visit(ArrayDeclarationLiteralExpressionVisitor{typelist}, kt);
          skip = true;
+         prev_idx = kt.index();
       }
    }
 
