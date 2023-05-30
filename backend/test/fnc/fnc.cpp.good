@@ -5,36 +5,39 @@
 
 namespace fnc {
 
-struct __thisModule *__this = nullptr;
+    struct __thisModule* __this = nullptr;
 
-#line 1 "fnc.chpl"
-void __thisModule::alpha() {
-#line 2 "fnc.chpl"
-  std::int64_t a;
-};
+#line 1 "../../backend/test/fnc.chpl"
+    void __thisModule::alpha()
+    {
+#line 2 "../../backend/test/fnc.chpl"
+        std::int64_t a;
+    };
 
-#line 7 "fnc.chpl"
-std::int64_t __thisModule::delta(std::int64_t c) {
-#line 8 "fnc.chpl"
-  return c;
-};
+#line 7 "../../backend/test/fnc.chpl"
+    std::int64_t __thisModule::delta(std::int64_t c)
+    {
+#line 8 "../../backend/test/fnc.chpl"
+        return c;
+    };
 
-#line 11 "fnc.chpl"
-std::int64_t __thisModule::beta(std::int64_t b) {
-#line 12 "fnc.chpl"
-  return b + delta(b);
-};
+#line 11 "../../backend/test/fnc.chpl"
+    std::int64_t __thisModule::beta(std::int64_t b)
+    {
+#line 12 "../../backend/test/fnc.chpl"
+        return b + delta(b);
+    };
 
-void __thisModule::__main() {
+    void __thisModule::__main()
+    {
+#line 5 "../../backend/test/fnc.chpl"
+        alpha();
+#line 15 "../../backend/test/fnc.chpl"
+        std::int64_t c = 1;
+#line 16 "../../backend/test/fnc.chpl"
+        beta(c);
+#line 17 "../../backend/test/fnc.chpl"
+        c = beta(c);
+    }
 
-#line 5 "fnc.chpl"
-  alpha();
-#line 15 "fnc.chpl"
-  std::int64_t c = 1;
-#line 16 "fnc.chpl"
-  beta(c);
-#line 17 "fnc.chpl"
-  c = beta(c);
-}
-
-} // namespace fnc
+}    // namespace fnc

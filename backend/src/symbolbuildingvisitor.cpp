@@ -45,14 +45,50 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("real", Symbol{{real_kind{}, std::string{"real"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("byte", Symbol{{byte_kind{}, std::string{"byte"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("complex", Symbol{{complex_kind{}, std::string{"complex"}, {}, -1, false, symbolTable.symbolTableRef->id}});
-   addSymbolEntry("range", Symbol{{range_kind{{}}, std::string{"range"}, {}, -1, false, symbolTable.symbolTableRef->id}});
-   addSymbolEntry("domain", Symbol{{domain_kind{}, std::string{"domain"}, {}, -1, false, symbolTable.symbolTableRef->id}});
+   addSymbolEntry("range", Symbol{{std::make_shared<range_kind>(range_kind{{}}), std::string{"range"}, {}, -1, false, symbolTable.symbolTableRef->id}});
+   addSymbolEntry("domain", Symbol{{std::make_shared<domain_kind>(domain_kind{{}}), std::string{"domain"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("?", Symbol{{template_kind{}, std::string{"?"}, {}, -1, false, symbolTable.symbolTableRef->id}});
 
    // inlinecxx - allows users to inline c++ code into their chapel programs
    //
    addSymbolEntry("inlinecxx",
       Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "inlinecxx", {}, nil_kind{}}}), std::string{"inlinecxx"}, {}, -1, false, symbolTable.symbolTableRef->id}}
+   );
+
+   // incdirs - allows users to provide include paths for header files used in `inlinecxx` 
+   //
+   addSymbolEntry("incdirs",
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "incdirs", {}, nil_kind{}}}), std::string{"incdirs"}, {}, -1, false, symbolTable.symbolTableRef->id}}
+   );
+
+   // libdirs - allows users to provide library paths for libraries used in `inlinecxx` 
+   //
+   addSymbolEntry("libdirs",
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "libdirs", {}, nil_kind{}}}), std::string{"libdirs"}, {}, -1, false, symbolTable.symbolTableRef->id}}
+   );
+
+   // libs - allows users to provide libraries used in `inlinecxx` 
+   //
+   addSymbolEntry("libs",
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "libs", {}, nil_kind{}}}), std::string{"libs"}, {}, -1, false, symbolTable.symbolTableRef->id}}
+   );
+
+   // findpkgs - allows users to provide cmake packages used in `inlinecxx` 
+   //
+   addSymbolEntry("findpkgs",
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "findpkgs", {}, nil_kind{}}}), std::string{"findpkgs"}, {}, -1, false, symbolTable.symbolTableRef->id}}
+   );
+
+   // pkgcfg - allows users to provide gnu pkg-config packages used in `inlinecxx` 
+   //
+   addSymbolEntry("pkgcfg",
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "pkgcfg", {}, nil_kind{}}}), std::string{"pkgcfg"}, {}, -1, false, symbolTable.symbolTableRef->id}}
+   );
+
+   // flagscxx - allows users to provide `-D` compile time arguments
+   //
+   addSymbolEntry("flagscxx",
+      Symbol{{std::make_shared<cxxfunc_kind>(cxxfunc_kind{{{}, "flagscxx", {}, nil_kind{}}}), std::string{"flagscxx"}, {}, -1, false, symbolTable.symbolTableRef->id}}
    );
 
    // +,-,*,/,%,=
@@ -106,17 +142,43 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     {
         if(sym.has_value()) {
            if(sym->get().kind.index() == 0) {
-              sym->get().kind = std::make_shared<array_kind>();
-              std::get<std::shared_ptr<array_kind>>(sym->get().kind)->kind =
-                 std::make_shared<kind_node_type>(kind_node_type{});
-              std::get<std::shared_ptr<array_kind>>(sym->get().kind)->dom =
-                 domain_kind{{}};
+              sym->get().kind = std::make_shared<array_kind>(
+                 array_kind{{
+                    symbolTable.symbolTableRef->id,
+                    std::string{"array_" + emitChapelLine(ast)},
+                    {Symbol{{
+                       std::make_shared<domain_kind>(domain_kind{{
+                          symbolTable.symbolTableRef->id,
+                          std::string{"domain_" + emitChapelLine(ast)}, {}, 
+                          std::make_shared<kind_node_type>(kind_node_type{})
+                       }}),
+                       std::string{"domain_" + emitChapelLine(ast)},
+                       {}, -1, false, symbolTable.symbolTableRef->id,
+                    }}},
+                    std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<array_kind>(array_kind{{}})}})
+                 }}
+              );
            }
            else {
               std::get<std::shared_ptr<kind_node_type>>(
-                 std::get<std::shared_ptr<array_kind>>(sym->get().kind)->kind
+                 std::get<std::shared_ptr<array_kind>>(sym->get().kind)->retKind
               )->children.emplace_back(
-                 std::make_shared<kind_node_type>(kind_node_type{})
+                 std::make_shared<array_kind>(
+                    array_kind{{
+                       symbolTable.symbolTableRef->id,
+                       std::string{"array_" + emitChapelLine(ast)},
+                       {Symbol{{
+                          std::make_shared<domain_kind>(domain_kind{{
+                             symbolTable.symbolTableRef->id,
+                             std::string{"domain_" + emitChapelLine(ast)}, {}, 
+                             std::make_shared<kind_node_type>(kind_node_type{})
+                          }}),
+                          std::string{"domain_" + emitChapelLine(ast)},
+                          {}, -1, false, symbolTable.symbolTableRef->id,
+                       }}},
+                       std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<array_kind>(array_kind{{}})}})
+                    }}
+                 )
               );
            }
         }
@@ -135,10 +197,17 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Domain:
     {
         if(sym.has_value()) {
-            if(std::holds_alternative<std::monostate>(sym->get().kind)) {
-                if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
-                    std::get<std::shared_ptr<array_kind>>(sym->get().kind)->dom = domain_kind{{}};
-                }
+            if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
+               std::get<std::shared_ptr<array_kind>>(sym->get().kind)->args.emplace_back(
+                  Symbol{{
+                      std::make_shared<domain_kind>(domain_kind{{
+                         symbolTable.symbolTableRef->id,
+                         std::string{"domain_" + emitChapelLine(ast)}, {}, 
+                         std::make_shared<kind_node_type>(kind_node_type{})
+                      }}),
+                      std::string{"domain_" + emitChapelLine(ast)},
+                      {}, -1, false, symbolTable.symbolTableRef->id,
+                  }});
             }
         }
     }
@@ -158,20 +227,31 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
        std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
 
        if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
-          const std::size_t lutId =
-             std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) ?
-                std::get<std::shared_ptr<func_kind>>(sym->get().kind)->lutId :
-                0;
+          const std::size_t lutId = sym->get().scopeId;
+             //std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) ?
+             //   std::get<std::shared_ptr<func_kind>>(sym->get().kind)->lutId :
+             //   sym->get().scopeId; // :
+             //   0;
           if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
              auto fsym = symbolTable.find(lutId, identifier_str);
+
              if(fsym) {
-                std::get<std::shared_ptr<array_kind>>(sym->get().kind)->kind = fsym->kind;
-                sym->get().scopeId = symbolTable.symbolTableRef->id;
+                std::shared_ptr<array_kind> & symref =
+                   std::get<std::shared_ptr<array_kind>>(sym->get().kind);
+
+                auto & domk = std::get<std::shared_ptr<domain_kind>>(symref->args.back().kind);
+                auto & rngk = std::get<std::shared_ptr<range_kind>>(domk->args.back().kind);
+                if(fsym->scopeId != 0 && rngk->args.size() < 2) {
+                   rngk->args.emplace_back(*fsym);
+                }
+                else {
+                   std::get<std::shared_ptr<array_kind>>(sym->get().kind)->retKind = fsym->kind;
+                   sym->get().scopeId = symbolTable.symbolTableRef->id;
+                }
              }
           }
           else if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) && 
                   !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(sym->get().kind)) {
-
              std::shared_ptr<func_kind> & fk =
                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
 
@@ -203,7 +283,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           else {
              auto fsym = symbolTable.find(lutId, identifier_str);
              if(fsym.has_value()) {
-                sym->get().kind = fsym->kind;
+                sym->get().kind = std::holds_alternative<std::shared_ptr<func_kind>>(fsym->kind) ?
+                   std::get<std::shared_ptr<func_kind>>(fsym->kind)->retKind : fsym->kind;
                 sym->get().scopeId = symbolTable.symbolTableRef->id;
              }
           }
@@ -230,7 +311,17 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
           if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
-             std::get<std::shared_ptr<array_kind>>(sym->get().kind)->dom.ranges.push_back(range_kind{});
+
+             std::string ident{std::string{"range_" + emitChapelLine(ast)}};
+
+             auto & arrk = std::get<std::shared_ptr<array_kind>>(sym->get().kind);
+             auto & domk = std::get<std::shared_ptr<domain_kind>>(arrk->args.back().kind);
+             domk->args.emplace_back(
+                Symbol{{
+                   std::make_shared<range_kind>(range_kind{{}}),
+                   ident,
+                   {}, -1, false, symbolTable.symbolTableRef->id
+                }});
           }
           else if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) && (sym->get().identifier.find("for") != std::string::npos)) {
              std::shared_ptr<func_kind> & fk =
@@ -239,7 +330,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
              std::string ident{std::string{"range_" + emitChapelLine(ast)}};
              fk->args.emplace_back(
                 Symbol{{
-                   range_kind{{}},
+                   std::make_shared<range_kind>(range_kind{{}}),
                    ident,
                    {}, -1, false, symbolTable.symbolTableRef->id
                 }});
@@ -253,7 +344,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
        }
        else {
           symstack.emplace_back(Symbol{{
-            range_kind{},
+            std::make_shared<range_kind>(range_kind{{}}),
             std::string{"range_" + emitChapelLine(ast)},
             {}, -1, false, symbolTable.symbolTableRef->id
           }});
@@ -336,10 +427,16 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
               std::shared_ptr<func_kind> & fk =
                  std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-              if(0 < fk->args.size() && std::holds_alternative<range_kind>(fk->args.back().kind)) {
-                 range_kind & symref =
-                    std::get<range_kind>(fk->args.back().kind);
-                 symref.points.emplace_back( int_kind::value(ast) );
+              if(0 < fk->args.size() && std::holds_alternative<std::shared_ptr<range_kind>>(fk->args.back().kind)) {
+                 auto & symref =
+                    std::get<std::shared_ptr<range_kind>>(fk->args.back().kind);
+
+                 symref->args.emplace_back(
+                    Symbol{{
+                       int_kind{},
+                       std::string{},
+                       {ast}, -1, false, symbolTable.symbolTableRef->id
+                    }});
               }
               else if(0 < fk->args.size() && std::holds_alternative<nil_kind>(fk->args.back().kind)) {
                  return true;
@@ -349,29 +446,52 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
               std::shared_ptr<array_kind> & symref =
                  std::get<std::shared_ptr<array_kind>>(sym->get().kind);
 
-              if(!sym->get().literal.size() && symref->dom.ranges.size()) {
-                 symref->dom.ranges.back().points.push_back( int_kind::value(ast) );
-              }
-              else if(!sym->get().literal.size()) {
-                 sym->get().literal.push_back(ast);
-                 std::get<std::shared_ptr<kind_node_type>>(symref->kind)->children.emplace_back(
-                    int_kind{}
-                 );
-              }
-              else {
-                 sym->get().literal.push_back(ast);
-                 if(std::holds_alternative<std::monostate>(symref->kind)) {
-                     symref->kind = std::make_shared<kind_node_type>(kind_node_type{{}});
+              // user has an array that's undefined type and
+              // provided a literal declaration of the array
+              //
+              if( //0 < symref->args.size() &&
+                 std::holds_alternative<std::shared_ptr<kind_node_type>>(symref->retKind) ) {
+
+                 if(std::holds_alternative<std::shared_ptr<kind_node_type>>(symref->retKind)) {
+                    std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
+
+                    if(std::holds_alternative<std::shared_ptr<domain_kind>>(symref->args.back().kind)) {
+                       std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(int_kind{});
+                       auto & domk = std::get<std::shared_ptr<domain_kind>>(symref->args.back().kind);
+                       if(domk->args.size() &&
+                          std::holds_alternative<std::shared_ptr<range_kind>>(domk->args.back().kind)) {
+                          auto & rngk = std::get<std::shared_ptr<range_kind>>(domk->args.back().kind);
+                          rngk->args.emplace_back(
+                             Symbol{{
+                                int_kind{},
+                                ident,
+                                {ast}, -1, false, symbolTable.symbolTableRef->id
+                             }});
+                       }
+                       else {
+                          // literal indicator
+                          //
+                          domk->args.emplace_back(
+                             Symbol{{
+                                int_kind{},
+                                ident,
+                                {ast}, -1, false, symbolTable.symbolTableRef->id
+                             }});
+                       }
+                    }
                  }
-                 std::get<std::shared_ptr<kind_node_type>>(symref->kind)->children.emplace_back(
-                    int_kind{}
-                 );
               }
            }
-           else if(std::holds_alternative<range_kind>(sym->get().kind)) {
-              range_kind & symref =
-                 std::get<range_kind>(sym->get().kind);
-              symref.points.push_back( int_kind::value(ast) );
+           else if(std::holds_alternative<std::shared_ptr<range_kind>>(sym->get().kind)) {
+              std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
+              auto & symref =
+                 std::get<std::shared_ptr<range_kind>>(sym->get().kind);
+              symref->args.push_back(
+                 Symbol{{
+                    int_kind{},
+                    ident,
+                    {ast}, -1, false, symbolTable.symbolTableRef->id
+                 }});
            }
         }
         else if (sym) {
@@ -845,7 +965,14 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::BracketLoop:
     {
         if(sym.has_value()) {
-            sym->get().kind = std::make_shared<array_kind>();
+            sym->get().kind = std::make_shared<array_kind>(
+                 array_kind{{
+                    symbolTable.symbolTableRef->id,
+                    std::string{"array_" + emitChapelLine(ast)},
+                    {},
+                    std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<array_kind>(array_kind{{}})}})
+                 }}
+            );
         }
     }
     break;
@@ -1020,12 +1147,16 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           ProgramTreeFunctionVisitor v{false};
           ast->traverse(v);
 
+          Function const* astfn = static_cast<Function const*>(ast);
+          const bool is_iter = astfn->kind() == Function::Kind::ITER;
+          const bool is_lambda = astfn->kind() == Function::Kind::LAMBDA;
+
           // symbol.scopePtr = the scope where the function is defined (equivalent to a lutId)
           //
           symstack.emplace_back(
              Symbol{{
                 std::make_shared<func_kind>(func_kind{{
-                   symbolTable.symbolTableRef->id, v.lookup, {}, {}}}),
+                   symbolTable.symbolTableRef->id, v.lookup, {}, {}}, is_iter, is_lambda}),
                 v.lookup,
                 {}, -1, false, symbolTable.symbolTableRef->id
              }});
@@ -1193,15 +1324,6 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::As:
     break;
     case asttags::Array:
-    {
-        if(sym.has_value()) {
-           std::get<std::shared_ptr<kind_node_type>>(
-              std::get<std::shared_ptr<array_kind>>(sym->get().kind)->kind
-           )->children.emplace_back(
-              kind_node_term_type{}
-           );
-        }
-    }
     break;
     case asttags::Attributes:
     break;
@@ -1237,7 +1359,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Range:
     {
-        if(sym && 0 < sym->get().kind.index() && std::holds_alternative<range_kind>(sym->get().kind)) {
+        if(sym && 0 < sym->get().kind.index() && std::holds_alternative<std::shared_ptr<range_kind>>(sym->get().kind)) {
            symbolTable.addEntry(sym->get().identifier, *sym);
            sym.reset();
            symnode = nullptr;

@@ -7,12 +7,14 @@
 
 using namespace arr;
 
-int hpx_main(int argc, char *argv[]) {
-  arr::__this->__main();
-  return hpx::finalize();
+int hpx_main(int argc, char* argv[])
+{
+    arr::__this->__main();
+    return hpx::finalize();
 }
 
-int main(int argc, char *argv[]) {
-  chplx::registerModule<arr::__thisModule>();
-  return hpx::init(argc, argv);
+int main(int argc, char* argv[])
+{
+    chplx::registerModule<arr::__thisModule>();
+    return hpx::init(argc, argv);
 }

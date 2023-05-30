@@ -128,6 +128,9 @@ struct ExprVisitor {
     void operator()(ScalarDeclarationLiteralExpression const& node) {
        node.emit(os);
     }
+    void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const node) {
+      node->emit(os);
+    }
     void operator()(LiteralExpression const& node) {
        node.emit(os);
     }
@@ -358,6 +361,7 @@ struct StatementVisitor {
       node.emit(os);
    }
    void operator()(ArrayDeclarationExpression const& node) {
+/*
       headers[static_cast<std::size_t>(HeaderEnum::std_vector)] = true;
 
       std::shared_ptr<array_kind> const& akref =
@@ -372,6 +376,7 @@ struct StatementVisitor {
             std::holds_alternative<string_kind>(akref->kind);
       }
 
+*/
       if(printChplLine) {
          emitIndent();
          os << node.chplLine;
@@ -396,7 +401,7 @@ struct StatementVisitor {
    }
    void operator()(ArrayDeclarationLiteralExpression const& node) {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
-      if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
+      if(!s) { std::cerr << "codegenvisitor.cpp ArrayDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
       if(printChplLine) {
          emitIndent();
          os << node.chplLine;
@@ -443,8 +448,21 @@ struct StatementVisitor {
       }
       emitIndent();
 
-      range_kind const& rk = std::get<range_kind>(node->indexSet.kind);
-      os << "chplx::forLoop(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
+      auto & indices = rk->args;
+
+      os << "chplx::forLoop(chplx::Range{";
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         os << int_kind::value(indices[0].literal[0]);
+      }
+
+      os << ", ";
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         os << int_kind::value(indices[1].literal[0]);
+      }
+
+      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);
@@ -460,8 +478,22 @@ struct StatementVisitor {
       }
       emitIndent();
 
-      range_kind const& rk = std::get<range_kind>(node->indexSet.kind);
-      os << "chplx::forall(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
+      auto & indices = rk->args;
+
+      os << "chplx::forall(chplx::Range{";
+
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         os << int_kind::value(indices[0].literal[0]);
+      }
+
+      os << ", ";
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         os << int_kind::value(indices[1].literal[0]);
+      }
+
+      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);
@@ -477,8 +509,21 @@ struct StatementVisitor {
       }
       emitIndent();
 
-      range_kind const& rk = std::get<range_kind>(node->indexSet.kind);
-      os << "chplx::coforall(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
+      auto & indices = rk->args;
+
+      os << "chplx::coforall(chplx::Range{";
+
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         os << int_kind::value(indices[0].literal[0]);
+      }
+
+      os << ", ";
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         os << int_kind::value(indices[1].literal[0]);
+      }
+
+      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);
@@ -620,6 +665,7 @@ struct StatementVisitor {
       }
    }
    void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const& node) {
+      assert(node->statements.size());
       std::optional<Symbol> s = symbolTable.find(node->scopeId, node->identifier);
       if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationExprExpression " << node->identifier << " not found" << std::endl; }
 
@@ -659,7 +705,9 @@ struct StatementVisitor {
    void operator()(std::shared_ptr<ModuleDeclarationExpression> const& node) {
       // needs to open a file and generate the module template provided by HK
       //
-      std::fstream cppofs(node->symbol.identifier + ".cpp", std::ios_base::out);
+      
+      std::filesystem::path ofile = chplx::util::output_path / node->symbol.identifier;
+      std::fstream cppofs(ofile.string() + ".cpp", std::ios_base::out);
       StatementVisitor cppv{symbolTable, br, cppofs, indent, headers, true, false, true};
 
       // populate prologue of template
@@ -745,7 +793,7 @@ struct StatementVisitor {
 
       // populate hpp
       //
-      std::fstream hppofs(node->symbol.identifier + ".hpp", std::ios_base::out);
+      std::fstream hppofs(ofile.string() + ".hpp", std::ios_base::out);
       HppStatementVisitor hppv{symbolTable, br, hppofs, indent, headers, true, false};
       hppv.prologue(node);
 
@@ -922,9 +970,7 @@ void CodegenVisitor::visit() {
    // generate cpp code `filename_driver.cpp`
    //    - figure this out...
    //
-
    std::string fn{};
-   std::string prefix{};
 
    if(chplx::util::fullFilePath) {
       fn = chplFilePathStr;
@@ -934,14 +980,15 @@ void CodegenVisitor::visit() {
    }
 
    const auto pos = fn.find(".");
-   prefix = fn.substr(0, pos);
+   std::string prefix = fn.substr(0, pos);
+   std::filesystem::path ofile = chplx::util::output_path / prefix;
    {
-      std::fstream ofs(prefix + "_driver.hpp", std::ios_base::out);
+      std::fstream ofs(ofile.string() + "_driver.hpp", std::ios_base::out);
       generateApplicationHeader(fn, prefix, ofs);
    }
 
    {
-      std::fstream ofs(prefix + "_driver.cpp", std::ios_base::out);
+      std::fstream ofs(ofile.string() + "_driver.cpp", std::ios_base::out);
       generateSourceHeader(cfgVars, ofs, prefix, fn);
       generateHpxMain(ofs, prefix);
       generateSourceFooter(prefix, symbolTable, cfgVars, ofs);

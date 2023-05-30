@@ -50,6 +50,7 @@ R"(chplx -help:
     options: -E: suppress generating #line directives (default: false)
              -F: suppress generating full path for #line directives (default: true)
              -d: debug compiler phases (default : false) 
+             -o: output path (default : $CWD)
 )";
 
    std::cout << helpstring << std::flush;
@@ -68,7 +69,7 @@ int main(int argc, char ** argv) {
    int opt = 0;
 
    // Retrieve the options:
-   while ( (opt = getopt(argc, argv, "f:hEFd")) != -1 ) {  // for each option...
+   while ( (opt = getopt(argc, argv, "f:hEFdo:")) != -1 ) {  // for each option...
       switch ( opt ) {
          case 'f':
             filePath = std::string{optarg};
@@ -81,6 +82,20 @@ int main(int argc, char ** argv) {
          break;
          case 'd':
             chplx::util::compilerDebug = true;
+         break;
+         case 'o':
+            chplx::util::output_path = std::filesystem::path{std::string{optarg}};
+            if(!std::filesystem::exists(chplx::util::output_path)) {
+               std::error_code ec;
+               if(!std::filesystem::create_directory(chplx::util::output_path, ec)) {
+                  std::cerr << "chplx: unable to create " << chplx::util::output_path << "; check the `-o` argument for valid parent path" << std::endl;
+                  return 0;
+               }
+            }
+            else if(!std::filesystem::is_directory(chplx::util::output_path)) {
+               std::cerr << "chplx: `-o` argument may not be a valid path to a directory" << std::endl;
+               return 0;
+            }
          break;
          default:
             std::cout << "chplx: unknown command line option: -" << opt << std::endl << std::flush;
@@ -102,6 +117,10 @@ int main(int argc, char ** argv) {
          std::cerr << "chplx : error, file does not exist error\t" << *filePath << std::endl << std::flush;
          return 0;
       }
+   }
+
+   if(chplx::util::output_path.string().size() < 1) {
+       chplx::util::output_path = std::filesystem::current_path();
    }
 
    std::ifstream is(*filePath);

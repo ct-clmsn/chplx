@@ -8,31 +8,34 @@
 
 #include <chplx.hpp>
 #include <functional>
-#include <vector>
-#line 1 "expr.chpl"
+#line 1 "../../backend/test/expr.chpl"
 namespace expr {
-extern struct __thisModule *__this;
+    extern struct __thisModule* __this;
 
-struct __thisModule {
+    struct __thisModule
+    {
+#line 31 "../../backend/test/expr.chpl"
+        std::int64_t value();
+#line 44 "../../backend/test/expr.chpl"
+        std::int64_t valuea(std::int64_t a);
+#line 98 "../../backend/test/expr.chpl"
+        std::int64_t valueb(std::int64_t a);
 
-#line 33 "expr.chpl"
-  std::int64_t value();
-#line 46 "expr.chpl"
-  std::int64_t valuea(std::int64_t a);
-#line 100 "expr.chpl"
-  std::int64_t valueb(std::int64_t a);
+        static void __construct()
+        {
+            expr::__this = new __thisModule();
+        }
 
-  static void __construct() { expr::__this = new __thisModule(); }
+        static void __destruct() noexcept
+        {
+            auto* m = expr::__this;
+            expr::__this = nullptr;
+            delete m;
+        }
 
-  static void __destruct() noexcept {
-    auto *m = expr::__this;
-    expr::__this = nullptr;
-    delete m;
-  }
+        void __main();
+    };    // end struct __thisModule
 
-  void __main();
-}; // end struct __thisModule
-
-} // namespace expr
+}    // namespace expr
 
 #endif

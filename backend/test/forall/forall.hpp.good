@@ -9,27 +9,30 @@
 #include <chplx.hpp>
 #include <functional>
 #include <iostream>
-#include <vector>
-#line 1 "forall.chpl"
+#line 1 "../../backend/test/forall.chpl"
 namespace forall {
-extern struct __thisModule *__this;
+    extern struct __thisModule* __this;
 
-struct __thisModule {
+    struct __thisModule
+    {
+#line 19 "../../backend/test/forall.chpl"
+        void alpha();
 
-#line 19 "forall.chpl"
-  void alpha();
+        static void __construct()
+        {
+            forall::__this = new __thisModule();
+        }
 
-  static void __construct() { forall::__this = new __thisModule(); }
+        static void __destruct() noexcept
+        {
+            auto* m = forall::__this;
+            forall::__this = nullptr;
+            delete m;
+        }
 
-  static void __destruct() noexcept {
-    auto *m = forall::__this;
-    forall::__this = nullptr;
-    delete m;
-  }
+        void __main();
+    };    // end struct __thisModule
 
-  void __main();
-}; // end struct __thisModule
-
-} // namespace forall
+}    // namespace forall
 
 #endif

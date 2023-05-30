@@ -130,24 +130,55 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
    }
 
    os << "chplx::Array<";
-   std::visit(ScalarDeclarationExpressionVisitor{os}, akref->kind);
+   std::visit(ScalarDeclarationExpressionVisitor{os}, akref->retKind);
 
-   const auto & rngs = akref->dom.ranges;
+   const auto & rngs= std::get<std::shared_ptr<domain_kind>>(akref->args[0].kind)->args;
    os << ", chplx::Domain<" << rngs.size() << "> > " << identifier << "(";
 
    bool first = true;
    for(const auto & rng : rngs) {
+      auto & indices = std::get<std::shared_ptr<range_kind>>(rng.kind)->args;
+
       if (!first) {
          first = false;
          os << ", ";
       }
-      if(rng.points.size() == 2) {
-         os << "chplx::Range(" << rng.points[0] << ", " << rng.points[1] << ")";
+      if(indices.size() == 2) {
+         os << "chplx::Range(";
+         if(std::holds_alternative<int_kind>(indices[0].kind)) {
+            if(indices[0].identifier.find("#line") == std::string::npos) {
+               os << indices[0].identifier;
+            }
+            else {
+               os << int_kind::value(indices[0].literal[0]);
+            }
+         }
+         os << ", ";
+
+         if(std::holds_alternative<int_kind>(indices[1].kind)) {
+            if(indices[1].identifier.find("#line") == std::string::npos) {
+               os << indices[1].identifier;
+            }
+            else {
+               os << int_kind::value(indices[1].literal[0]);
+            }
+         }
+         os << ")";
       }
-      else if (rng.points.size() == 1) {
-         os << "chplx::Range(" << rng.points[0] << ")";
+      else if (indices.size() == 1) {
+         os << "chplx::Range(";
+         if(std::holds_alternative<int_kind>(indices[0].kind)) {
+            if(indices[1].identifier.find("lit") == std::string::npos) {
+               os << indices[0].identifier;
+            }
+            else {
+               os << int_kind::value(indices[0].literal[0]);
+            }
+         }
+         os << ")";
       }
    }
+
    os << ");" << std::endl;
 }
 
@@ -186,13 +217,13 @@ struct ArrayDeclarationLiteralExpressionVisitor {
 void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    std::shared_ptr<array_kind> const& akref =
       std::get<std::shared_ptr<array_kind>>(kind);
-
    std::stringstream typelist{}, literallist{};
 
-   std::vector<kind_types> & children =
-      std::get<std::shared_ptr<kind_node_type>>(akref->kind)->children;
+   auto & kindtypes =
+      std::get<std::shared_ptr<kind_node_type>>(akref->retKind)->children;
 
-   const std::size_t children_sz = children.size();
+   const std::size_t children_sz = kindtypes.size();
+
    std::size_t vec_count = 0;
 
    if(-1 < qualifier) {
@@ -211,20 +242,17 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    //
    typelist << "chplx::Array<";
 
-   for(std::size_t i = 0; i < children_sz; ++i) {
-      const bool knt =
-         std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i]);
-
-      if(knt) {
-         ++vec_count;
-      }
-      else {
-         std::visit(ArrayDeclarationLiteralExpressionVisitor{typelist}, children[i]);
-         break;
+   bool skip = false;
+   std::size_t domcount = 0;
+   for(auto & kt : kindtypes) {
+      if(std::holds_alternative<std::shared_ptr<array_kind>>(kt)) { ++domcount; }
+      else if(!skip) {
+         std::visit(ArrayDeclarationLiteralExpressionVisitor{typelist}, kt);
+         skip = true;
       }
    }
 
-   typelist << ", chplx::Domain<" << vec_count + 1 << ">";
+   typelist << ", chplx::Domain<" << domcount << ">";
 
    typelist << ">";
 
@@ -236,38 +264,51 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    // above
    //
    std::size_t lit = 0;
+   std::size_t bracec = 0;
 
-   literallist << "{";
-   for(std::size_t i = 0; i < children_sz; ++i) {
+   auto & domk = std::get<std::shared_ptr<domain_kind>>(literalValues[0]->kind);
+
+   for(std::size_t i = 0; i < kindtypes.size()-1; ++i) {
       const bool knt =
-         std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i]);
+         std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i]);
       const bool kntend =
-         std::holds_alternative<kind_node_term_type>(children[i]);
-      const bool kntbeg =
-         (i < children_sz - 1) ? std::holds_alternative<std::shared_ptr<kind_node_type>>(children[i+1]) : false;
-      const bool kntendnxt =
-         (i < children_sz - 1) ? std::holds_alternative<kind_node_term_type>(children[i+1]) : false;
+         std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i+1]);
 
-     if(knt) { literallist << "{"; }
+     if(knt) { literallist << "{"; ++bracec;}
      else {
-        if(!knt && !kntend) {
-           std::visit(ScalarDeclarationLiteralExpressionVisitor{literalValues[lit], literallist}, children[i]);
+        if(!knt) {
+           std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
            ++lit;
         }
 
-        if(!knt && !kntend && !kntbeg && !kntendnxt) {
+        if(!knt && !kntend) {
            literallist << ",";
         }
-        else if(!knt && kntend && kntbeg) {
+        else if(!knt && kntend) {
            literallist << "},";
+           --bracec;
         }
         else if(kntend){
            literallist << "}";
+           --bracec;
+        }
+
+        if(i+1 == kindtypes.size()-1) {
+           if(!std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i+1])) {
+              std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
+              ++lit;
+              literallist << "}";
+              --bracec;
+           }
         }
      }
    }
+   
+   for(std::size_t i = 0; i < bracec; ++i) {
+      literallist << "}";
+   }
 
-   os << typelist.str() << " " << identifier << " = " << literallist.str() << ";" << std::endl;
+   os << typelist.str() << " " << identifier << "(" << literallist.str() << ");" << std::endl;
 }
 
 struct ArgumentVisitor {
@@ -341,6 +382,9 @@ void ReturnExpression::emit(std::ostream & os) const {
 
 void FunctionCallExpression::emit(std::ostream & os) const {
    if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(symbol.kind)) {
+
+      if(symbol.identifier != "inlinecxx") return;
+
       const std::size_t args_sz = arguments.size();
       if(0 < args_sz) {
          std::string cxx_fmt_str{string_kind::value(std::get<LiteralExpression>(arguments[1]).value)};
@@ -356,11 +400,11 @@ void FunctionCallExpression::emit(std::ostream & os) const {
          os << fmt::vformat(cxx_fmt_str, store) << std::endl;
       }
    }
-   else if(std::holds_alternative<std::shared_ptr<func_kind>>(symbol.kind)) {
+   else if(std::holds_alternative<std::shared_ptr<func_kind>>(symbol.kind) ||
+           std::holds_alternative<std::shared_ptr<array_kind>>(symbol.kind)) {
       const std::size_t args_sz = arguments.size();
       std::string fn_fmt_str{};
       fmt::dynamic_format_arg_store<fmt::format_context> store;
-
       if((symbol.identifier) == "[]" && 0 < args_sz) {
           ArgumentVisitor v{nullptr, std::stringstream{}};
           std::visit(v, arguments[0]);

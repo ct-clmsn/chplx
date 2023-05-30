@@ -80,13 +80,6 @@ struct string_kind {
       return dynamic_cast<uast_type const*>(ast)->value().str();
    }
 };
-struct range_kind {
-   std::vector<std::int64_t> points;
-};
-
-struct domain_kind {
-   std::vector<range_kind> ranges;
-};
 
 struct auto_kind {};
 
@@ -95,7 +88,6 @@ struct const_kind;
 struct config_kind;
 struct cxxfunc_kind;
 struct func_kind;
-struct itrfunc_kind;
 struct record_kind;
 struct class_kind;
 struct array_kind;
@@ -105,6 +97,9 @@ struct kind_node_type;
 struct kind_node_term_type {};
 struct expr_kind {};
 struct module_kind;
+struct iter_kind;
+struct range_kind;
+struct domain_kind;
 
 using kind_types = std::variant<
    std::monostate,
@@ -116,14 +111,13 @@ using kind_types = std::variant<
    real_kind,
    complex_kind,
    string_kind,
-   range_kind,
-   domain_kind,
+   std::shared_ptr<range_kind>,
+   std::shared_ptr<domain_kind>,
    std::shared_ptr<ref_kind>,
    std::shared_ptr<const_kind>,
    std::shared_ptr<config_kind>,
    std::shared_ptr<cxxfunc_kind>,
    std::shared_ptr<func_kind>,
-   std::shared_ptr<itrfunc_kind>,
    std::shared_ptr<record_kind>,
    std::shared_ptr<class_kind>,
    std::shared_ptr<array_kind>,
@@ -133,7 +127,8 @@ using kind_types = std::variant<
    std::shared_ptr<module_kind>,
    kind_node_term_type,
    expr_kind,
-   auto_kind
+   auto_kind,
+   std::shared_ptr<iter_kind>
 >;
 
 struct kind_node_type {
@@ -150,11 +145,6 @@ struct const_kind {
 
 struct config_kind {
    kind_types kind;
-};
-
-struct array_kind {
-   kind_types kind;
-   domain_kind dom;
 };
 
 struct associative_kind {
@@ -299,10 +289,18 @@ struct funcbase_kind {
 struct cxxfunc_kind : public funcbase_kind {
 };
 
-struct func_kind : public funcbase_kind {
+struct range_kind : funcbase_kind {
 };
 
-struct itrfunc_kind : public func_kind {
+struct domain_kind : funcbase_kind {
+};
+
+struct array_kind : funcbase_kind {
+};
+
+struct func_kind : public funcbase_kind {
+   bool is_iter;
+   bool is_lambda;
 };
 
 struct record_kind {

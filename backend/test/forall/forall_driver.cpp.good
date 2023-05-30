@@ -7,12 +7,14 @@
 
 using namespace forall;
 
-int hpx_main(int argc, char *argv[]) {
-  forall::__this->__main();
-  return hpx::finalize();
+int hpx_main(int argc, char* argv[])
+{
+    forall::__this->__main();
+    return hpx::finalize();
 }
 
-int main(int argc, char *argv[]) {
-  chplx::registerModule<forall::__thisModule>();
-  return hpx::init(argc, argv);
+int main(int argc, char* argv[])
+{
+    chplx::registerModule<forall::__thisModule>();
+    return hpx::init(argc, argv);
 }

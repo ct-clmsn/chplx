@@ -58,7 +58,6 @@ struct VariableVisitor {
    template<typename T>
    void operator()(T const& t) {
    }
-
    void operator()(byte_kind const&) {
       curStmts.emplace_back(ScalarDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
@@ -140,6 +139,11 @@ struct VariableLiteralVisitor {
    void operator()(string_kind const&) {
       curStmts.push_back(ScalarDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
    }
+   void operator()(expr_kind const&) {
+      curStmts.emplace_back(
+         std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig},{}})
+      );
+   }
    void operator()(template_kind const&) {
    }
    void operator()(range_kind const&) {
@@ -152,8 +156,12 @@ struct VariableLiteralVisitor {
    }
    void operator()(std::shared_ptr<class_kind> const&) {
    }
-   void operator()(std::shared_ptr<array_kind> const&) {
-      curStmts.push_back(ArrayDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, sym.literal});
+   void operator()(std::shared_ptr<array_kind> const& ak) {
+      curStmts.push_back(ArrayDeclarationLiteralExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}, {}});
+      // literal arrays always have 1 domain in the symboltable
+      //
+      assert(ak->args.size() == 1);
+      std::get<ArrayDeclarationLiteralExpression>(curStmts.back()).literalValues.push_back(&(ak->args[0]));
    }
    void operator()(std::shared_ptr<associative_kind> const&) {
    }
@@ -486,7 +494,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
            std::optional<Symbol> varsym =
               symbolTable.find(symbolTableRef->id, identifier);
-
            if(varsym && std::holds_alternative<std::shared_ptr<array_kind>>(varsym->kind)) {
               auto paren = symbolTable.find(symbolTableRef->id, "[]");
 
@@ -547,7 +554,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               return false;
            }
            else {
-              if(std::holds_alternative<ScalarDeclarationExpression>(cStmts->back())) {
+              if(0 < cStmts->size() && std::holds_alternative<ScalarDeclarationExpression>(cStmts->back())) {
                  auto scalarDecl = std::get<ScalarDeclarationExpression>(cStmts->back());
                  cStmts->pop_back();
                  cStmts->emplace_back(
@@ -557,8 +564,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                  );
                  auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
                  bo->statements.emplace_back(
-                    ScalarDeclarationLiteralExpression{{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine, scalarDecl.qualifier, scalarDecl.config}, {}}
-                 );
+                    std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression
+                       {{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine, scalarDecl.qualifier, scalarDecl.config}, {}}
+                 ));
 
                  auto itr = fsym->first;
                  for(; itr != fsym->second; ++itr) {
@@ -572,9 +580,8 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                     }
                  }
               }
-              else if(std::holds_alternative<VariableExpression>(cStmts->back())) {
-                 cStmts->pop_back();
-                 auto scalarDecl = std::get<ScalarDeclarationExpression>(cStmts->back());
+              else if(0 < cStmts->size() && std::holds_alternative<ScalarDeclarationLiteralExpression>(cStmts->back())) {
+                 auto scalarDecl = std::get<ScalarDeclarationLiteralExpression>(cStmts->back());
                  cStmts->pop_back();
                  cStmts->emplace_back(
                      std::make_shared<BinaryOpExpression>(BinaryOpExpression{
@@ -583,9 +590,58 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                  );
                  auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
                  bo->statements.emplace_back(
-                    ScalarDeclarationLiteralExpression{{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine, scalarDecl.qualifier, scalarDecl.config}, {}}
-                 );
+                    std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression
+                       {{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine, scalarDecl.qualifier, scalarDecl.config}, {}}
+                 ));
 
+                 auto itr = fsym->first;
+                 for(; itr != fsym->second; ++itr) {
+                    if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                       bo->statements.emplace_back(
+                          std::make_shared<FunctionCallExpression>(
+                             FunctionCallExpression{{symbolTableRef->id}, itr->second, {}, emitChapelLine(ast), symbolTable}
+                       ));
+                       curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(bo->statements.back())->arguments));
+                       break;
+                    }
+                 }
+              }
+              else if(0 < cStmts->size() && std::holds_alternative<VariableExpression>(cStmts->back())) {
+                 cStmts->pop_back();
+
+                 if(std::holds_alternative<VariableExpression>(cStmts->back())) {
+                    auto scalarDecl = std::get<VariableExpression>(cStmts->back());
+
+                    cStmts->pop_back();
+                    cStmts->emplace_back(
+                       std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                           {{symbolTableRef->id}, "=", ast}, {}
+                       })
+                    );
+
+                    auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                    bo->statements.emplace_back(
+                       std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression
+                          {{{scalarDecl.sym->scopeId}, scalarDecl.sym->identifier, scalarDecl.sym->kind, emitChapelLine(ast), scalarDecl.sym->kindqualifier, scalarDecl.sym->isConfig}, {}}
+                    ));
+                 }
+                 else {
+                    auto scalarDecl = std::get<ScalarDeclarationLiteralExpression>(cStmts->back());
+
+                    cStmts->pop_back();
+                    cStmts->emplace_back(
+                       std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                          {{symbolTableRef->id}, "=", ast}, {}
+                       })
+                    );
+                    auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                    bo->statements.emplace_back(
+                       std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression
+                          {{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine, scalarDecl.qualifier, scalarDecl.config}, {}}
+                    ));
+                 }
+
+                 auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
                  auto itr = fsym->first;
                  for(; itr != fsym->second; ++itr) {
                     if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
@@ -646,7 +702,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
        std::optional<Symbol> varsym =
            symbolTable.find(symbolTableRef->id, identifier);
-
        if(!varsym) {
            std::cerr << "programtreebuildingvisitor.cpp, enter, OpCall, identifier not found" << std::endl << std::flush;
            return false;
@@ -718,7 +773,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           std::string{dynamic_cast<NamedDecl const*>(ast)->name().c_str()};
        std::optional<Symbol> varsym{};
        symbolTable.find(symbolTableRef->id, identifier, varsym);
-
        bool stmt = true;
 
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForLoopExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
@@ -744,7 +798,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        }
      
        if(stmt) {
-          if(varsym && varsym->literal.size() < 1) {
+          if(varsym &&
+             std::holds_alternative<std::shared_ptr<array_kind>>(varsym->kind) &&
+             std::holds_alternative<std::shared_ptr<domain_kind>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->args.back().kind) &&
+             std::holds_alternative<std::shared_ptr<range_kind>>(
+                std::get<std::shared_ptr<domain_kind>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->args.back().kind)->args.back().kind
+          )) {
              std::vector<Statement> * cStmts = curStmts.back();
              std::visit(
                 VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
@@ -762,6 +821,18 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                 VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
                 varsym->kind
              );
+             if(std::holds_alternative<std::monostate>(varsym->kind) || std::holds_alternative<nil_kind>(varsym->kind)) {
+               cStmts->emplace_back(
+                  std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{
+                     {{symbolTableRef->id}, identifier, varsym->kind, emitChapelLine(ast), varsym->kindqualifier, varsym->isConfig},{}}
+                  ));
+               auto & se = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
+               curStmts.emplace_back(&(se->statements));
+             }
+             else if(std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back())) {
+               auto & se = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
+               curStmts.emplace_back(&(se->statements));
+             }
           }
        }
     }

@@ -66,7 +66,7 @@ struct ArrayDeclarationExpression : public VariableDeclarationExpression {
 };
 
 struct ArrayDeclarationLiteralExpression : public VariableDeclarationExpression {
-   std::vector<uast::AstNode const*> literalValues;
+   std::vector<Symbol*> literalValues;
    void emit(std::ostream & os) const;
 };
 

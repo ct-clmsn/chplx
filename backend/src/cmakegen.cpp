@@ -6,6 +6,7 @@
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include "hpx/cmakegen.hpp"
+#include "hpx/util.hpp"
 #include <fstream>
 #include <cassert>
 #include <iostream>
@@ -67,9 +68,60 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
     auto pos = cppfilename.find(".chpl");
     assert(pos != std::string::npos);
 
+    std::string incdirs_str{};
+    std::string libdirs_str{};
+    std::string libs_str{};
+    std::string cxxflags_str{};
+    std::string cmake_packages{};
+
+    // process incdirs
+    if(0 < chplx::util::incdirs.size()) {
+        incdirs_str = "target_include_directories({1} PUBLIC \n";
+        for(auto & incdir : chplx::util::incdirs) {
+           incdirs_str += incdir.string() + "\n";
+        }
+        incdirs_str += ")";
+    }
+
+    // process libdirs
+    if(0 < chplx::util::libdirs.size()) {
+        for(auto & libdir : chplx::util::libdirs) {
+           libdirs_str += libdir.string() + " ";
+        }
+    }
+
+    // process libs
+    if(0 < chplx::util::libs.size()) {
+        for(auto & lib : chplx::util::libs) {
+           libs_str += lib + " ";
+        }
+    }
+
+    // process flagscxx
+    if(0 < chplx::util::flagscxx.size()) {
+        for(auto & cxxflag : chplx::util::flagscxx) {
+           cxxflags_str += cxxflag + " "; 
+        }
+    }
+
+    // process packages_cmake
+    if(0 < chplx::util::packages_cmake.size()) {
+        for(auto & cmake_pkg : chplx::util::packages_cmake) {
+           cmake_packages += "find_package(" + cmake_pkg + " REQUIRED CONFIG)\n";
+        }
+    }
+/*
+    // process packages_pkgconfig
+    if(0 < chplx::util::packages_pkgconfig.size()) {
+        for(auto & incdir : chplx::util::packages_pkgconfig) {
+           find_pkgconfig_package += "find_package(" + cmake_pkg + " REQUIRED CONFIG)"
+        }
+    }
+*/
     const std::string cppprefix =
         cppfilename.substr(0, pos);
 
-    std::ofstream ofs("CMakeLists.txt");
+    std::filesystem::path opath = chplx::util::output_path / "CMakeLists.txt";
+    std::ofstream ofs(opath.string());
     ofs << fmt::format(CMakeListsTemplate, cppfilename, cppprefix);
 }

@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2023 Hartmut Kaiser
  * Copyright (c) 2023 Christopher Taylor
  *
  * SPDX-License-Identifier: BSL-1.0
@@ -8,8 +9,9 @@
 
 #include <hpx/util.hpp>
 
-#include <filesystem>
 #include <string>
+#include <filesystem>
+#include <vector>
 
 #include <fmt/core.h>
 
@@ -19,6 +21,15 @@ namespace chplx::util {
 bool suppressLineDirectives = false;
 bool fullFilePath = true;
 bool compilerDebug = false;
+std::filesystem::path output_path = {};
+
+std::vector<std::filesystem::path> incdirs = {};
+std::vector<std::filesystem::path> libdirs = {};
+std::vector<std::string> libs = {};
+std::vector<std::string> flagscxx = {};
+
+std::vector<std::string> packages_cmake = {};
+std::vector<std::string> packages_pkgconfig = {};
 
 // emit line directive
 std::string emitLineDirective(char const* name, int line) {

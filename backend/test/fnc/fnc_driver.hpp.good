@@ -6,7 +6,7 @@
 #ifndef __FNC_DRIVER_HPP__
 #define __FNC_DRIVER_HPP__
 
-#include "fnc.hpp"
 #include <chplx.hpp>
+#include "fnc.hpp"
 
 #endif
