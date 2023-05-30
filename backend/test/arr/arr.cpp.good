@@ -7,6 +7,13 @@ namespace arr {
 
     struct __thisModule* __this = nullptr;
 
+#line 36 "../../backend/test/arr.chpl"
+    auto __thisModule::dd()
+    {
+#line 37 "../../backend/test/arr.chpl"
+        return 1;
+    };
+
     void __thisModule::__main()
     {
 #line 7 "../../backend/test/arr.chpl"
@@ -18,12 +25,61 @@ namespace arr {
 #line 10 "../../backend/test/arr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<2>> n({{1, 2}, {1, 2}});
 #line 11 "../../backend/test/arr.chpl"
-        chplx::Array<std::int64_t, chplx::Domain<3>> o(
-            {{{1, 2}, {1, 2}, {3, 4}, {{5, 6}, {7, 8}}}});
+        chplx::Array<std::int64_t, chplx::Domain<3>> o({{{1, 2}, {1, 2}, {3, 4},
+            {{5, 6}, {7, 8}, {{9, 10}, {11, 12}, {13, 14}}}}});
 #line 12 "../../backend/test/arr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<2>> p({{1, 2, 3, 4, 5}});
 #line 13 "../../backend/test/arr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<3>> q({{{1, 2, 3, 4, 5}}});
+#line 15 "../../backend/test/arr.chpl"
+        bool u;
+#line 16 "../../backend/test/arr.chpl"
+        double v;
+#line 17 "../../backend/test/arr.chpl"
+        std::uint8_t w;
+#line 18 "../../backend/test/arr.chpl"
+        std::int64_t x;
+#line 19 "../../backend/test/arr.chpl"
+        std::complex<double> y;
+#line 20 "../../backend/test/arr.chpl"
+        std::string z;
+#line 22 "../../backend/test/arr.chpl"
+        chplx::Array<std::int64_t, chplx::Domain<1>> a(chplx::Range(1, 10));
+#line 23 "../../backend/test/arr.chpl"
+        chplx::Array<double, chplx::Domain<1>> b(chplx::Range(1, 10));
+#line 24 "../../backend/test/arr.chpl"
+        chplx::Array<std::complex<double>, chplx::Domain<1>> c(
+            chplx::Range(1, 10));
+#line 25 "../../backend/test/arr.chpl"
+        chplx::Array<std::string, chplx::Domain<1>> d(chplx::Range(1, 10));
+#line 26 "../../backend/test/arr.chpl"
+        chplx::Array<std::uint8_t, chplx::Domain<1>> e(chplx::Range(1, 10));
+#line 27 "../../backend/test/arr.chpl"
+        chplx::Array<bool, chplx::Domain<1>> f(chplx::Range(1, 10));
+#line 29 "../../backend/test/arr.chpl"
+        std::int64_t g = 1;
+#line 30 "../../backend/test/arr.chpl"
+        bool h = true;
+#line 31 "../../backend/test/arr.chpl"
+        std::string i = {"value"};
+#line 32 "../../backend/test/arr.chpl"
+        double j = 1.000000;
+#line 34 "../../backend/test/arr.chpl"
+        auto aa = 1 + 1;
+#line 40 "../../backend/test/arr.chpl"
+        auto bb = dd();
+#line 41 "../../backend/test/arr.chpl"
+        std::int64_t zz = 1;
+#line 42 "../../backend/test/arr.chpl"
+        chplx::Array<double, chplx::Domain<1>> aaa(chplx::Range(zz, 10));
+#line 43 "../../backend/test/arr.chpl"
+        chplx::Array<std::int64_t, chplx::Domain<1>> aaaa(chplx::Range(1, zz));
+#line 44 "../../backend/test/arr.chpl"
+        chplx::Array<std::int64_t, chplx::Domain<1>> bbbb(chplx::Range(zz, zz));
+#line 45 "../../backend/test/arr.chpl"
+        aaa(zz) = aaa(zz);
+#line 46 "../../backend/test/arr.chpl"
+        aaa(zz) = aaa(zz);
     }
 
 }    // namespace arr
