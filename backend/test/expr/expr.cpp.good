@@ -149,7 +149,7 @@ namespace expr {
 #line 79 "../../backend/test/expr.chpl"
         b(0 + 0) = b(0 + 0);
 #line 81 "../../backend/test/expr.chpl"
-        chplx::Array<std::int64_t, chplx::Domain<3>> c({{1, 2}, {3, 4}});
+        chplx::Array<std::int64_t, chplx::Domain<2>> c({{1, 2}, {3, 4}});
 #line 82 "../../backend/test/expr.chpl"
         c(0, 0) = 0;
 #line 83 "../../backend/test/expr.chpl"
