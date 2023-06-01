@@ -152,10 +152,6 @@ struct associative_kind {
    kind_types value_kind;
 }; 
 
-struct tuple_kind {
-   std::vector<kind_types> kinds;
-};
-
 enum class ScopeKind : std::uint8_t {
    Module       = 0,
    ForLoop      = 1,
@@ -289,18 +285,21 @@ struct funcbase_kind {
 struct cxxfunc_kind : public funcbase_kind {
 };
 
-struct range_kind : funcbase_kind {
+struct range_kind : public funcbase_kind {
 };
 
-struct domain_kind : funcbase_kind {
+struct domain_kind : public funcbase_kind {
 };
 
-struct array_kind : funcbase_kind {
+struct array_kind : public funcbase_kind {
 };
 
 struct func_kind : public funcbase_kind {
    bool is_iter;
    bool is_lambda;
+};
+
+struct tuple_kind : public funcbase_kind {
 };
 
 struct record_kind {

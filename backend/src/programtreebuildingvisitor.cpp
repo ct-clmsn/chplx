@@ -815,6 +815,19 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                curStmts.emplace_back(&(se->statements));
              }
           }
+          else if(varsym && std::holds_alternative<std::shared_ptr<tuple_kind>>(varsym->kind)) {
+             std::shared_ptr<tuple_kind> & tk =
+                std::get<std::shared_ptr<tuple_kind>>(varsym->kind);
+
+             if(tk->args.size()) {
+               std::vector<Statement> * cStmts = curStmts.back();
+               cStmts->emplace_back(TupleDeclarationLiteralExpression{{{symbolTableRef->id}, identifier, varsym->kind, emitChapelLine(ast), varsym->kindqualifier, varsym->isConfig},{}});
+               auto & tdle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
+               for(auto arg : tk->args) {
+                  tdle.literalValues.push_back(arg.literal[0]);
+               }
+             }
+          }
           else if(varsym) {
              std::vector<Statement> * cStmts = curStmts.back();
              std::visit(

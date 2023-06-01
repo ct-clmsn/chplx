@@ -45,6 +45,7 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
    addSymbolEntry("real", Symbol{{real_kind{}, std::string{"real"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("byte", Symbol{{byte_kind{}, std::string{"byte"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("complex", Symbol{{complex_kind{}, std::string{"complex"}, {}, -1, false, symbolTable.symbolTableRef->id}});
+   addSymbolEntry("tuple", Symbol{{std::make_shared<tuple_kind>(tuple_kind{{}}), std::string{"tuple"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("range", Symbol{{std::make_shared<range_kind>(range_kind{{}}), std::string{"range"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("domain", Symbol{{std::make_shared<domain_kind>(domain_kind{{}}), std::string{"domain"}, {}, -1, false, symbolTable.symbolTableRef->id}});
    addSymbolEntry("?", Symbol{{template_kind{}, std::string{"?"}, {}, -1, false, symbolTable.symbolTableRef->id}});
@@ -442,6 +443,19 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                  return true;
               }
            }
+           else if(std::holds_alternative<std::shared_ptr<tuple_kind>>(sym->get().kind)) {
+              std::shared_ptr<tuple_kind> & symref =
+                 std::get<std::shared_ptr<tuple_kind>>(sym->get().kind);
+
+              std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
+              std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(int_kind{});
+              symref->args.emplace_back(
+                 Symbol{{
+                    int_kind{},
+                    ident,
+                    {ast}, -1, false, symbolTable.symbolTableRef->id
+                 }});
+           }
            else if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
               std::shared_ptr<array_kind> & symref =
                  std::get<std::shared_ptr<array_kind>>(sym->get().kind);
@@ -519,8 +533,20 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                  return true;
               }
            }
+           else if(std::holds_alternative<std::shared_ptr<tuple_kind>>(sym->get().kind)) {
+              std::shared_ptr<tuple_kind> & symref =
+                 std::get<std::shared_ptr<tuple_kind>>(sym->get().kind);
 
-           if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
+              std::string ident{std::string{"reallit_" + emitChapelLine(ast)}};
+              std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(real_kind{});
+              symref->args.emplace_back(
+                 Symbol{{
+                    real_kind{},
+                    ident,
+                    {ast}, -1, false, symbolTable.symbolTableRef->id
+                 }});
+           }
+           else if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
               std::shared_ptr<func_kind> & fk =
                  std::get<std::shared_ptr<func_kind>>(sym->get().kind);
               if(0 < fk->args.size() && std::holds_alternative<nil_kind>(fk->args.back().kind)) {
@@ -680,6 +706,24 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Scan:
     break;
     case asttags::Tuple:
+    {
+       if(sym) {
+           Tuple const* astfn = static_cast<Tuple const*>(ast);
+
+           auto fsym = symbolTable.find(0, "tuple");
+
+           if(sym->get().kind.index() == 0) {
+              sym->get().kind = std::make_shared<tuple_kind>(
+                 tuple_kind{{
+                    symbolTable.symbolTableRef->id,
+                    std::string{"tuple_" + emitChapelLine(ast)},
+                    {},
+                    std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<tuple_kind>(tuple_kind{{}})}})
+                 }}
+              );
+           }
+       }
+    }
     break;
     case asttags::Zip:
     break;

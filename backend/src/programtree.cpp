@@ -317,6 +317,31 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    os << typelist.str() << " " << identifier << "(" << literallist.str() << ");" << std::endl;
 }
 
+void TupleDeclarationExpression::emit(std::ostream & os) const {
+}
+
+void TupleDeclarationLiteralExpression::emit(std::ostream & os) const {
+   std::shared_ptr<tuple_kind> const& akref =
+      std::get<std::shared_ptr<tuple_kind>>(kind);
+   std::stringstream typelist{}, literallist{};
+
+   typelist << "chplx::Tuple<";
+   for(std::size_t i = 0; i < akref->args.size(); ++i) {
+      auto & elem = akref->args[i];
+      std::visit(ScalarDeclarationExpressionVisitor{typelist}, elem.kind);
+      if(0 < elem.literal.size()) {
+         std::visit(ScalarDeclarationLiteralExpressionVisitor{elem.literal[0], literallist}, elem.kind);
+      }
+      if(i != akref->args.size()-1) {
+         typelist << ',';
+         literallist << ',';
+      }
+   }
+   typelist << ">";
+
+   os << typelist.str() << " " << identifier << "{" << literallist.str() << "};" << std::endl;
+}
+
 struct ArgumentVisitor {
     template<typename T>
     void operator()(T const&) {}
