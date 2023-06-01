@@ -280,22 +280,25 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
       const bool kntend =
          std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i+1]);
 
-     if(knt) { literallist << "{"; ++bracec;}
-     else {
-        if(!knt) {
-           std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
-           ++lit;
+     if(knt) {
+        if(1 < i && kntend) {
+           literallist.seekp(-1, std::ios_base::end);
+           literallist << "},{";
         }
+        else {
+           literallist << "{";
+           ++bracec;
+        }
+     }
+     else {
+        std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
+        ++lit;
 
         if(!knt && !kntend) {
            literallist << ",";
         }
         else if(!knt && kntend) {
            literallist << "},";
-           --bracec;
-        }
-        else if(kntend){
-           literallist << "}";
            --bracec;
         }
 
