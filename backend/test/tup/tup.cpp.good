@@ -9,7 +9,7 @@ namespace tup {
 
     void __thisModule::__main()
     {
-#line 8 "../../backend/test/tup.chpl"
+#line 8 "tup.chpl"
         chplx::Tuple<std::int64_t, std::int64_t> a{1, 2};
     }
 

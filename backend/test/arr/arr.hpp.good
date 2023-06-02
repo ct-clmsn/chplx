@@ -7,7 +7,7 @@
 #define __ARR_HPP__
 
 #include <chplx.hpp>
-#line 1 "../../backend/test/arr.chpl"
+#line 1 "arr.chpl"
 namespace arr {
     extern struct __thisModule* __this;
 

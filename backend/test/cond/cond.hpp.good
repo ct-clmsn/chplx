@@ -9,13 +9,13 @@
 #include <chplx.hpp>
 #include <functional>
 #include <iostream>
-#line 1 "../../backend/test/cond.chpl"
+#line 1 "cond.chpl"
 namespace cond {
     extern struct __thisModule* __this;
 
     struct __thisModule
     {
-#line 38 "../../backend/test/cond.chpl"
+#line 38 "cond.chpl"
         void alpha();
 
         static void __construct()

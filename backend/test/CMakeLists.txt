@@ -25,6 +25,7 @@ set(tests
     fn
     fnc
     forall
+    tup
 )
 
 foreach(test ${tests})
