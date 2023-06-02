@@ -25,8 +25,9 @@ namespace arr {
 #line 10 "../../backend/test/arr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<2>> n({{1, 2}, {1, 2}});
 #line 11 "../../backend/test/arr.chpl"
-        chplx::Array<std::int64_t, chplx::Domain<3>> o({{{1, 2}, {1, 2}, {3, 4},
-            {{5, 6}, {7, 8}, {{9, 10}, {11, 12}, {13, 14}}}}});
+        chplx::Array<std::int64_t, chplx::Domain<3>> o(
+            {{{1, 2}, {1, 2}, {3, 4}}, {{5, 6}, {7, 8}},
+                {{9, 10}, {11, 12}, {13, 14}}});
 #line 12 "../../backend/test/arr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<2>> p({{1, 2, 3, 4, 5}});
 #line 13 "../../backend/test/arr.chpl"
