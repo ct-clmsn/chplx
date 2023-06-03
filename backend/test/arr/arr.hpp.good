@@ -7,12 +7,16 @@
 #define __ARR_HPP__
 
 #include <chplx.hpp>
+#include <functional>
 #line 1 "arr.chpl"
 namespace arr {
     extern struct __thisModule* __this;
 
     struct __thisModule
     {
+#line 36 "arr.chpl"
+        auto dd();
+
         static void __construct()
         {
             arr::__this = new __thisModule();
