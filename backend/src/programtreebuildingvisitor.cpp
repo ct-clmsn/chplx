@@ -827,6 +827,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   tdle.literalValues.push_back(arg.literal[0]);
                }
              }
+             else {
+               std::vector<Statement> * cStmts = curStmts.back();
+               cStmts->emplace_back(TupleDeclarationExpression{{{symbolTableRef->id}, identifier, varsym->kind, emitChapelLine(ast), varsym->kindqualifier, varsym->isConfig}});
+             }
           }
           else if(varsym) {
              std::vector<Statement> * cStmts = curStmts.back();

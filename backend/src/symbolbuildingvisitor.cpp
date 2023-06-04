@@ -251,6 +251,23 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 }
              }
           }
+          else if(std::holds_alternative<std::shared_ptr<tuple_kind>>(sym->get().kind)) {
+             auto fsym = symbolTable.find(lutId, identifier_str);
+             if(fsym) {
+                std::shared_ptr<tuple_kind> & symref =
+                   std::get<std::shared_ptr<tuple_kind>>(sym->get().kind);
+
+                std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(fsym->kind);
+/*
+                symref->args.emplace_back(
+                   Symbol{{
+                      fsym->kind,
+                      fsym->identifier,
+                      {ast}, -1, false, symbolTable.symbolTableRef->id
+                   }});
+*/
+             }
+          }
           else if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) && 
                   !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(sym->get().kind)) {
              std::shared_ptr<func_kind> & fk =

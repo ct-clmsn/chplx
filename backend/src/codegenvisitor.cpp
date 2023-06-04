@@ -409,6 +409,16 @@ struct StatementVisitor {
       emitIndent();
       node.emit(os);
    }
+   void operator()(TupleDeclarationExpression const& node) {
+      std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
+      if(!s) { std::cerr << "codegenvisitor.cpp TupleDeclarationExpression " << node.identifier << " not found" << std::endl; }
+      if(printChplLine) {
+         emitIndent();
+         os << node.chplLine;
+      }
+      emitIndent();
+      node.emit(os);
+   }
    void operator()(TupleDeclarationLiteralExpression const& node) {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
       if(!s) { std::cerr << "codegenvisitor.cpp TupleDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }

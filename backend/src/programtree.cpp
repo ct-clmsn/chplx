@@ -214,6 +214,42 @@ struct ArrayDeclarationLiteralExpressionVisitor {
     std::ostream & os;
 };
 
+struct TupleDeclarationExpressionVisitor {
+    template<typename T>
+    void operator()(T const&) {}
+
+    void operator()(bool_kind const& kind) {
+       os << "bool";
+    }
+    void operator()(byte_kind const&) {
+       os << "std::uint8_t";
+    }
+    void operator()(int_kind const&) {
+       os << "std::int64_t";
+    }
+    void operator()(real_kind const&) {
+       os << "double";
+    }
+    void operator()(complex_kind const&) {
+       os << "std::complex<double>";
+    }
+    void operator()(string_kind const&) {
+       os << "std::string";
+    }
+    void operator()(std::shared_ptr<kind_node_type> const& n) {
+       os << "chplx::Tuple<";
+       for(std::size_t i = 0; i < n->children.size(); ++i) {
+          std::visit(*this, n->children[i]);
+          if(0 < i && i != n->children.size()-1) {
+             os << ',';
+          }
+       }
+       os << ">";
+    }
+
+    std::ostream & os;
+};
+
 void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
    std::shared_ptr<array_kind> const& akref =
       std::get<std::shared_ptr<array_kind>>(kind);
@@ -321,6 +357,14 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
 }
 
 void TupleDeclarationExpression::emit(std::ostream & os) const {
+   std::shared_ptr<tuple_kind> const& akref =
+      std::get<std::shared_ptr<tuple_kind>>(kind);
+   std::stringstream typelist{};
+
+   std::visit(TupleDeclarationExpressionVisitor{typelist}, akref->retKind);
+
+   os << typelist.str() << " " << identifier << "{};" << std::endl;
+
 }
 
 void TupleDeclarationLiteralExpression::emit(std::ostream & os) const {
