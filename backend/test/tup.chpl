@@ -6,13 +6,15 @@
 //
 
 var a = (1, 2);
-var f : (int, real);
+var e = a(1);
+e = a(0);
+//var d : int = a(0);
+var f : (int, int);
 
 /*
+f = (1, 2.0);
 var b = a(0);
 var c = a(1);
-var d : int = a(0);
-var e : int = a(1);
 
 var g = f(1);
 var h : real = f(1);

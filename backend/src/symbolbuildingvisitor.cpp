@@ -300,7 +300,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           }
           else {
              auto fsym = symbolTable.find(lutId, identifier_str);
-             if(fsym.has_value()) {
+             if(std::holds_alternative<std::monostate>(sym->get().kind) && fsym.has_value()) {
                 sym->get().kind = std::holds_alternative<std::shared_ptr<func_kind>>(fsym->kind) ?
                    std::get<std::shared_ptr<func_kind>>(fsym->kind)->retKind : fsym->kind;
                 sym->get().scopeId = symbolTable.symbolTableRef->id;
@@ -480,35 +480,31 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
               // user has an array that's undefined type and
               // provided a literal declaration of the array
               //
-              if( //0 < symref->args.size() &&
-                 std::holds_alternative<std::shared_ptr<kind_node_type>>(symref->retKind) ) {
+              if(std::holds_alternative<std::shared_ptr<kind_node_type>>(symref->retKind) ) {
+                 std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
 
-                 if(std::holds_alternative<std::shared_ptr<kind_node_type>>(symref->retKind)) {
-                    std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
-
-                    if(std::holds_alternative<std::shared_ptr<domain_kind>>(symref->args.back().kind)) {
-                       std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(int_kind{});
-                       auto & domk = std::get<std::shared_ptr<domain_kind>>(symref->args.back().kind);
-                       if(domk->args.size() &&
-                          std::holds_alternative<std::shared_ptr<range_kind>>(domk->args.back().kind)) {
-                          auto & rngk = std::get<std::shared_ptr<range_kind>>(domk->args.back().kind);
-                          rngk->args.emplace_back(
-                             Symbol{{
-                                int_kind{},
-                                ident,
-                                {ast}, -1, false, symbolTable.symbolTableRef->id
-                             }});
-                       }
-                       else {
-                          // literal indicator
-                          //
-                          domk->args.emplace_back(
-                             Symbol{{
-                                int_kind{},
-                                ident,
-                                {ast}, -1, false, symbolTable.symbolTableRef->id
-                             }});
-                       }
+                 if(std::holds_alternative<std::shared_ptr<domain_kind>>(symref->args.back().kind)) {
+                    std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(int_kind{});
+                    auto & domk = std::get<std::shared_ptr<domain_kind>>(symref->args.back().kind);
+                    if(domk->args.size() &&
+                       std::holds_alternative<std::shared_ptr<range_kind>>(domk->args.back().kind)) {
+                       auto & rngk = std::get<std::shared_ptr<range_kind>>(domk->args.back().kind);
+                       rngk->args.emplace_back(
+                          Symbol{{
+                             int_kind{},
+                             ident,
+                             {ast}, -1, false, symbolTable.symbolTableRef->id
+                          }});
+                    }
+                    else {
+                       // literal indicator
+                       //
+                       domk->args.emplace_back(
+                          Symbol{{
+                             int_kind{},
+                             ident,
+                             {ast}, -1, false, symbolTable.symbolTableRef->id
+                          }});
                     }
                  }
               }
@@ -684,6 +680,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
            auto rsym =
               symbolTable.findPrefix(symbolTable.symbolTableRef->id, identifier);
+
            auto itr = rsym->first;
            for(; itr != rsym->second; ++itr) {
 
@@ -698,6 +695,20 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                  std::holds_alternative<std::shared_ptr<func_kind>>(itr->second.kind)
               ) {
                  sym->get().kind = std::get<std::shared_ptr<func_kind>>(itr->second.kind)->retKind;
+                 break;
+              }
+              else if(std::holds_alternative<std::monostate>(sym->get().kind) && std::holds_alternative<std::shared_ptr<tuple_kind>>(itr->second.kind)) {
+                 assert(0 < fc->numActuals());
+                 const AstNode* idx = fc->actual(0);
+                 assert(idx->tag() == asttags::IntLiteral);
+                 std::shared_ptr<tuple_kind> & symref =
+                    std::get<std::shared_ptr<tuple_kind>>(itr->second.kind);
+                 std::shared_ptr<kind_node_type> & knt =
+                    std::get<std::shared_ptr<kind_node_type>>(symref->retKind);
+                 const auto tup_idx = int_kind::value(idx);
+                 assert( tup_idx <= knt->children.size() );
+                 sym->get().kind = knt->children[tup_idx];
+                 break;
               }
            }
 

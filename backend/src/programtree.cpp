@@ -478,6 +478,21 @@ void FunctionCallExpression::emit(std::ostream & os) const {
          os << fmt::vformat(cxx_fmt_str, store) << std::endl;
       }
    }
+   else if(std::holds_alternative<std::shared_ptr<tuple_kind>>(symbol.kind)) {
+      const std::size_t args_sz = arguments.size();
+      std::string fn_fmt_str{};
+      fmt::dynamic_format_arg_store<fmt::format_context> store;
+
+      for(std::size_t i = 0; i < args_sz; ++i) {
+         fn_fmt_str += (i == 0) ? "{}" : ", {}";
+         Statement const& stmt = arguments[i];
+         ArgumentVisitor v{nullptr, std::stringstream{}};
+         std::visit(v, stmt);
+         store.push_back(v.os.str());
+      }
+
+      os << symbol.identifier  << '(' << fmt::vformat(fn_fmt_str, store) << ')';
+   }
    else if(std::holds_alternative<std::shared_ptr<func_kind>>(symbol.kind) ||
            std::holds_alternative<std::shared_ptr<array_kind>>(symbol.kind)) {
       const std::size_t args_sz = arguments.size();

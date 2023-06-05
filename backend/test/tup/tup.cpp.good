@@ -12,7 +12,11 @@ namespace tup {
 #line 8 "tup.chpl"
         chplx::Tuple<std::int64_t, std::int64_t> a{1, 2};
 #line 9 "tup.chpl"
-        chplx::Tuple<std::int64_t, double> f{};
+        auto e = a(1);
+#line 10 "tup.chpl"
+        e = a(0);
+#line 12 "tup.chpl"
+        chplx::Tuple<std::int64_t, std::int64_t> f{};
     }
 
 }    // namespace tup
