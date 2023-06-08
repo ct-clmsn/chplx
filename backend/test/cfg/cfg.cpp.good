@@ -8,7 +8,7 @@ namespace cfg {
     struct __thisModule* __this = nullptr;
 
 #line 8 "cfg.chpl"
-    std::int64_t a;
+    std::int64_t a = 1;
 #line 9 "cfg.chpl"
     std::int64_t b = 1;
 #line 10 "cfg.chpl"

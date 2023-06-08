@@ -14,7 +14,7 @@ namespace arr {
 
     struct __thisModule
     {
-#line 36 "arr.chpl"
+#line 37 "arr.chpl"
         auto dd();
 
         static void __construct()
