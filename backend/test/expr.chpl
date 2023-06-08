@@ -15,7 +15,6 @@ a = 1 + a + a + a;
 a = a + 1 + a + a;
 a = a + a + 1 + a;
 a = a + a + a + 1;
-
 a = 1 + (1 + 1);
 a = (1 + 1) + 1;
 a = a + ( ( a + a ) + a );
@@ -49,7 +48,6 @@ a = valuea(a);
 a = valuea(a+1);
 a = 1 + valuea(a+1);
 a = valuea(a+1) + 1;
-
 a = 1 + valuea(a);
 a = valuea(a) + 1;
 a = ( valuea(a) + valuea(a) );
@@ -94,7 +92,6 @@ var y = valuea(1);
 var z = valuea(a);
 var w : int = valuea(a);
 var u : int = valuea(1);
-
 proc valueb(a : int) : int {
    var x = valuea(a);
    x = valuea(a);

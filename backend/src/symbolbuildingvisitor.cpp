@@ -258,14 +258,13 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                    std::get<std::shared_ptr<tuple_kind>>(sym->get().kind);
 
                 std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(fsym->kind);
-/*
-                symref->args.emplace_back(
-                   Symbol{{
-                      fsym->kind,
-                      fsym->identifier,
-                      {ast}, -1, false, symbolTable.symbolTableRef->id
-                   }});
-*/
+
+                //symref->args.emplace_back(
+                //   Symbol{{
+                //      fsym->kind,
+                //      fsym->identifier,
+                //      {ast}, -1, false, symbolTable.symbolTableRef->id
+                //   }});
              }
           }
           else if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) && 
@@ -466,6 +465,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
               std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
               std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(int_kind{});
+
               symref->args.emplace_back(
                  Symbol{{
                     int_kind{},
@@ -552,6 +552,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
               std::string ident{std::string{"reallit_" + emitChapelLine(ast)}};
               std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(real_kind{});
+
               symref->args.emplace_back(
                  Symbol{{
                     real_kind{},
@@ -701,13 +702,21 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                  assert(0 < fc->numActuals());
                  const AstNode* idx = fc->actual(0);
                  assert(idx->tag() == asttags::IntLiteral);
+
                  std::shared_ptr<tuple_kind> & symref =
                     std::get<std::shared_ptr<tuple_kind>>(itr->second.kind);
+
                  std::shared_ptr<kind_node_type> & knt =
                     std::get<std::shared_ptr<kind_node_type>>(symref->retKind);
+
                  const auto tup_idx = int_kind::value(idx);
+
                  assert( tup_idx <= knt->children.size() );
                  sym->get().kind = knt->children[tup_idx];
+
+                 //assert( tup_idx <= symref->args.size() );
+                 //sym->get().kind = symref->args[tup_idx].kind;
+
                  break;
               }
            }

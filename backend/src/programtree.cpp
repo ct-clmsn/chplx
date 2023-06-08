@@ -389,6 +389,10 @@ void TupleDeclarationLiteralExpression::emit(std::ostream & os) const {
    os << typelist.str() << " " << identifier << "{" << literallist.str() << "};" << std::endl;
 }
 
+void TupleDeclarationExprExpression::emit(std::ostream & os) const {
+   os << "auto " << identifier;
+}
+
 struct ArgumentVisitor {
     template<typename T>
     void operator()(T const&) {}
@@ -483,8 +487,8 @@ void FunctionCallExpression::emit(std::ostream & os) const {
       std::string fn_fmt_str{};
       fmt::dynamic_format_arg_store<fmt::format_context> store;
 
-      for(std::size_t i = 0; i < args_sz; ++i) {
-         fn_fmt_str += (i == 0) ? "{}" : ", {}";
+      for(std::size_t i = 1; i < args_sz; ++i) {
+         fn_fmt_str += (i == 1) ? "{}" : ", {}";
          Statement const& stmt = arguments[i];
          ArgumentVisitor v{nullptr, std::stringstream{}};
          std::visit(v, stmt);

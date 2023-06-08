@@ -4,6 +4,7 @@
 // Distributed under the Boost Software License, Version 1.0. *(See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
+
 var k = [1,2,3,4,5];
 var l = [[1,2], [3,4]];
 var m = [[1],[2], [3,4,5]];
@@ -38,10 +39,12 @@ proc dd() {
 }
 
 var bb = dd();
+
 var zz = 1;
 var aaa : [zz..10] real;
 var aaaa : [1..zz] int;
 var bbbb : [zz..zz] int;
+
 aaa[zz] = aaa[zz];
 aaa(zz) = aaa(zz);
 

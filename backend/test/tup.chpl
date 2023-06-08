@@ -6,28 +6,27 @@
 //
 
 var a = (1, 2);
-var e = a(1);
-e = a(0);
-//var d : int = a(0);
+var b = a(1);
+b = a(0);
+var c : int = a(0);
+var d : int = 1;
+var e = 1;
 var f : (int, int);
+var z : (int, int) = (1, 1);
 
 /*
 f = (1, 2.0);
-var b = a(0);
-var c = a(1);
-
-var g = f(1);
-var h : real = f(1);
 f(0) = 1;
-f(1) = 1.0;
 f(0) = b;
 f(1) = f(1);
-f(1) = g;
-f(1) = h;
+
+for a in f {
+   f(0) = a; 
+}
 
 var (i, j) = f;
 var k : int;
 var l : real;
-(k, l) = f;
-f = (k, l);
+(k, l) = (1, 1.0);
+f = (k, 1);
 */

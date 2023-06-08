@@ -115,6 +115,7 @@ struct CoforallLoopExpression;
 
 struct StatementList;
 struct ScalarDeclarationExprExpression;
+struct TupleDeclarationExprExpression;
 
 struct RecordDeclarationExpression;
 struct ClassDeclarationExpression;
@@ -130,6 +131,7 @@ using Statement = std::variant<
    ArrayDeclarationLiteralExpression,
    TupleDeclarationExpression,
    TupleDeclarationLiteralExpression,
+   std::shared_ptr<TupleDeclarationExprExpression>,
    LiteralExpression,
    VariableExpression,
    OpExpression,
@@ -172,6 +174,12 @@ struct TernaryOpExpression : public ArithmeticOpExpression {
 };
 
 struct ScalarDeclarationExprExpression : public VariableDeclarationExpression {
+   std::vector<Statement> statements;
+
+   void emit(std::ostream & os) const;
+};
+
+struct TupleDeclarationExprExpression : public VariableDeclarationExpression {
    std::vector<Statement> statements;
 
    void emit(std::ostream & os) const;

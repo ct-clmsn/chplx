@@ -128,7 +128,7 @@ struct ExprVisitor {
     void operator()(ScalarDeclarationLiteralExpression const& node) {
        node.emit(os);
     }
-    void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const node) {
+    void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const& node) {
       node->emit(os);
     }
     void operator()(LiteralExpression const& node) {
@@ -138,6 +138,9 @@ struct ExprVisitor {
        node.emit(os);
     }
     void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
+       node->emit(os);
+    }
+    void operator()(std::shared_ptr<TupleDeclarationExprExpression> const& node) {
        node->emit(os);
     }
     void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
@@ -395,7 +398,7 @@ struct StatementVisitor {
       node.emit(os);
       if( 0 < node.literalValue.size() ) {
          os << " = ";
-         std::visit(ScalarDeclarationLiteralExpressionVisitor{s->literal[0], os}, node.kind);
+         std::visit(ScalarDeclarationLiteralExpressionVisitor{node.literalValue[0], os}, node.kind);
       }
       os << ";" << std::endl;
    }
@@ -428,6 +431,16 @@ struct StatementVisitor {
       }
       emitIndent();
       node.emit(os);
+   }
+   void operator()(std::shared_ptr<TupleDeclarationExprExpression> const& node) {
+      std::optional<Symbol> s = symbolTable.find(node->scopeId, node->identifier);
+      if(!s) { std::cerr << "codegenvisitor.cpp TupleDeclarationExprExpression " << node->identifier << " not found" << std::endl; }
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
+      emitIndent();
+      node->emit(os);
    }
    void operator()(VariableExpression const& node) {
       if(arg) {
@@ -674,6 +687,7 @@ struct StatementVisitor {
       if(!arg) {
          emitIndent();
       }
+
       std::visit(ExprVisitor{os}, node->statements[0]);
 
       os << ' ' << node->op << ' ';
@@ -685,6 +699,7 @@ struct StatementVisitor {
       }
    }
    void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const& node) {
+      if( node->statements.size() < 1) { std::cerr << node->chplLine << std::endl; }
       assert(node->statements.size());
       std::optional<Symbol> s = symbolTable.find(node->scopeId, node->identifier);
       if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationExprExpression " << node->identifier << " not found" << std::endl; }
@@ -695,10 +710,14 @@ struct StatementVisitor {
       }
 
       emitIndent();
-      node->emit(os);
-      os << " = ";
-
-      std::visit(ExprVisitor{os}, node->statements[0]);
+//      if(std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0])) {
+//         std::visit(ExprVisitor{os}, node->statements[0]);
+//      }
+//      else {
+         node->emit(os);
+         os << " = ";
+         std::visit(ExprVisitor{os}, node->statements[0]);
+//      }
 
       if(!arg) {
          os << ';' << std::endl;

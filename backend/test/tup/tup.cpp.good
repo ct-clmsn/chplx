@@ -12,11 +12,19 @@ namespace tup {
 #line 8 "tup.chpl"
         chplx::Tuple<std::int64_t, std::int64_t> a{1, 2};
 #line 9 "tup.chpl"
-        auto e = a(1);
+        std::int64_t b = a(1);
 #line 10 "tup.chpl"
-        e = a(0);
+        b = a(0);
+#line 11 "tup.chpl"
+        std::int64_t c = a(0);
 #line 12 "tup.chpl"
+        std::int64_t d = 1;
+#line 13 "tup.chpl"
+        std::int64_t e = 1;
+#line 14 "tup.chpl"
         chplx::Tuple<std::int64_t, std::int64_t> f{};
+#line 15 "tup.chpl"
+        chplx::Tuple<std::int64_t, std::int64_t> z{1, 1};
     }
 
 }    // namespace tup
