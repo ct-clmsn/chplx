@@ -589,11 +589,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               }
               else if(cStmts->size() && 
                  !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(fnsym->kind) &&
-                 ( std::holds_alternative<ScalarDeclarationLiteralExpression>(cStmts->back()) ||
-                 std::holds_alternative<ArrayDeclarationLiteralExpression>(cStmts->back()) ) ) {
+                 std::holds_alternative<ScalarDeclarationLiteralExpression>(cStmts->back()) ) {
 
                  ScalarDeclarationLiteralExpression stmt =
                     std::get<ScalarDeclarationLiteralExpression>(cStmts->back());
+                 if(stmt.literalValue.size()) { return true; }
+
                  cStmts->pop_back();
                  cStmts->emplace_back(
                     std::make_shared<BinaryOpExpression>(BinaryOpExpression{
@@ -675,27 +676,43 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               }
               else if(0 < cStmts->size() && std::holds_alternative<ScalarDeclarationLiteralExpression>(cStmts->back())) {
                  auto scalarDecl = std::get<ScalarDeclarationLiteralExpression>(cStmts->back());
-                 cStmts->pop_back();
-                 cStmts->emplace_back(
-                     std::make_shared<BinaryOpExpression>(BinaryOpExpression{
-                         {{symbolTableRef->id}, "=", ast}, {}
-                     })
-                 );
-                 auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
-                 bo->statements.emplace_back(
-                    std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression
-                       {{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine, scalarDecl.qualifier, scalarDecl.config}, {}}
-                 ));
+                 if(scalarDecl.literalValue.size() < 1) {
+                    cStmts->pop_back();
+                    cStmts->emplace_back(
+                       std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                          {{symbolTableRef->id}, "=", ast}, {}
+                       })
+                    );
+                    auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                    bo->statements.emplace_back(
+                       std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression
+                          {{{scalarDecl.scopeId}, scalarDecl.identifier, scalarDecl.kind, scalarDecl.chplLine, scalarDecl.qualifier, scalarDecl.config}, {}}
+                    ));
 
-                 auto itr = fsym->first;
-                 for(; itr != fsym->second; ++itr) {
-                    if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
-                       bo->statements.emplace_back(
-                          std::make_shared<FunctionCallExpression>(
-                             FunctionCallExpression{{symbolTableRef->id}, itr->second, {}, emitChapelLine(ast), symbolTable}
-                       ));
-                       curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(bo->statements.back())->arguments));
-                       break;
+                    auto itr = fsym->first;
+                    for(; itr != fsym->second; ++itr) {
+                       if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                          bo->statements.emplace_back(
+                             std::make_shared<FunctionCallExpression>(
+                                FunctionCallExpression{{symbolTableRef->id}, itr->second, {}, emitChapelLine(ast), symbolTable}
+                          ));
+                          curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(bo->statements.back())->arguments));
+                          break;
+                       }
+                    }
+                 }
+                 else {
+                    auto itr = fsym->first;
+                    for(; itr != fsym->second; ++itr) {
+                       if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                          cStmts->emplace_back(
+                             std::make_shared<FunctionCallExpression>(
+                                FunctionCallExpression{{symbolTableRef->id}, itr->second, {}, emitChapelLine(ast), symbolTable}
+                          ));
+
+                          curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back())->arguments));
+                          break;
+                       }
                     }
                  }
               }
