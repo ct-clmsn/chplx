@@ -9,7 +9,7 @@ proc delta(c : int) : int {
 }
 
 proc beta(b : int) : int {
-   return b; //delta(b); // + b;
+   return delta(b) + b;
 }
 
 var c = 1;
