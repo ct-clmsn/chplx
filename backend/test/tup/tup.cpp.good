@@ -9,22 +9,28 @@ namespace tup {
 
     void __thisModule::__main()
     {
-#line 8 "tup.chpl"
+#line 7 "tup.chpl"
         chplx::Tuple<std::int64_t, std::int64_t> a{1, 2};
-#line 9 "tup.chpl"
+#line 8 "tup.chpl"
         std::int64_t b = a(1);
-#line 10 "tup.chpl"
+#line 9 "tup.chpl"
         b = a(0);
-#line 11 "tup.chpl"
+#line 10 "tup.chpl"
         std::int64_t c = a(0);
-#line 12 "tup.chpl"
+#line 11 "tup.chpl"
         std::int64_t d = 1;
-#line 13 "tup.chpl"
+#line 12 "tup.chpl"
         std::int64_t e = 1;
+#line 13 "tup.chpl"
+        chplx::Tuple<std::int64_t, std::int64_t> z{1, 1};
 #line 14 "tup.chpl"
         chplx::Tuple<std::int64_t, std::int64_t> f{};
 #line 15 "tup.chpl"
-        chplx::Tuple<std::int64_t, std::int64_t> z{1, 1};
+        f(0) = 1;
+#line 16 "tup.chpl"
+        f(0) = b;
+#line 17 "tup.chpl"
+        f(1) = f(1);
     }
 
 }    // namespace tup
