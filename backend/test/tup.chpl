@@ -15,10 +15,13 @@ var f : (int, int);
 f(0) = 1;
 f(0) = b;
 f(1) = f(1);
-
+var w : (int, int);
+w = (1, 2);
 /*
-f = (1, 2.0);
-f = (b, b);
+w = (b, b);
+w = (1, b);
+w = (b, 2);
+f = (f(0), f(1));
 
 for a in f {
    f(0) = a; 

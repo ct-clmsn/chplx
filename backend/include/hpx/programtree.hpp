@@ -74,11 +74,6 @@ struct TupleDeclarationExpression : public VariableDeclarationExpression {
    void emit(std::ostream & os) const;
 };
 
-struct TupleDeclarationLiteralExpression : public VariableDeclarationExpression {
-   std::vector<uast::AstNode const*> literalValues;
-   void emit(std::ostream & os) const;
-};
-
 struct ArithmeticOpExpression : public ExpressionBase {
    std::string op;
    uast::AstNode const *ast;
@@ -87,6 +82,11 @@ struct ArithmeticOpExpression : public ExpressionBase {
 struct LiteralExpression {
    kind_types kind;
    uast::AstNode const * value;
+   void emit(std::ostream & os) const;
+};
+
+struct TupleDeclarationLiteralExpression : public VariableDeclarationExpression {
+   std::vector<LiteralExpression> literalValues;
    void emit(std::ostream & os) const;
 };
 

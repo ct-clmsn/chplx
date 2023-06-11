@@ -405,6 +405,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::shared_ptr<ReturnExpression> & ret = std::get<std::shared_ptr<ReturnExpression>>(cStmts->back());
            ret->statement.emplace_back(LiteralExpression{bool_kind{}, ast});
        }
+       else if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>(cStmts->back())) {
+          //auto & sle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
+          //sle.literalValues.push_back(LiteralExpression{bool_kind{}, ast});
+          //sle.kind = bool_kind{};
+       }
        else {
            cStmts->emplace_back(LiteralExpression{bool_kind{}, ast});
        }
@@ -416,7 +421,14 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        std::vector<Statement> * cStmts = curStmts.back();
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
-           cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
+           if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>( cStmts->back() )) {
+              TupleDeclarationLiteralExpression & tdl =
+                 std::get<TupleDeclarationLiteralExpression>(cStmts->back());
+                 tdl.literalValues.push_back(LiteralExpression{int_kind{}, ast});
+           }
+           else {
+              cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
+           }
        }
        else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
           std::shared_ptr<FunctionCallExpression> & fce =
@@ -431,6 +443,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           auto & sle = std::get<ScalarDeclarationLiteralExpression>(cStmts->back());
           sle.literalValue.push_back(ast);
           sle.kind = int_kind{};
+       }
+       else if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>(cStmts->back())) {
+          //auto & sle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
+          //sle.literalValues.push_back(LiteralExpression{int_kind{}, ast});
+          //sle.kind = int_kind{};
        }
        else {
            cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
@@ -452,6 +469,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::shared_ptr<ReturnExpression> & ret = std::get<std::shared_ptr<ReturnExpression>>(cStmts->back());
            ret->statement.emplace_back(LiteralExpression{real_kind{}, ast});
        }
+       else if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>(cStmts->back())) {
+          //auto & sle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
+          //sle.literalValues.push_back(LiteralExpression{real_kind{},ast});
+          //sle.kind = real_kind{};
+       }
        else {
            cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
        }
@@ -469,7 +491,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     {
        std::vector<Statement> * cStmts = curStmts.back();
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
-          cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
+          cStmts->emplace_back(LiteralExpression{string_kind{}, ast});
        }
        else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
           std::shared_ptr<FunctionCallExpression> & fce =
@@ -479,6 +501,11 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ReturnExpression>>(cStmts->back())) {
            std::shared_ptr<ReturnExpression> & ret = std::get<std::shared_ptr<ReturnExpression>>(cStmts->back());
            ret->statement.emplace_back(LiteralExpression{string_kind{}, ast});
+       }
+       else if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>(cStmts->back())) {
+          //auto & sle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
+          //sle.literalValues.push_back(LiteralExpression{string_kind{},ast});
+          //sle.kind = string_kind{};
        }
        else {
            cStmts->emplace_back(LiteralExpression{string_kind{}, ast});
@@ -878,6 +905,25 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Scan:
     break;
     case asttags::Tuple:
+    {
+       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+          std::vector<Statement> * cStmts = curStmts.back();
+          cStmts->emplace_back(
+             TupleDeclarationLiteralExpression{
+                {{symbolTableRef->id},
+                std::string{},
+                   std::make_shared<tuple_kind>(
+                      tuple_kind{{
+                         0,
+                         std::string{"tuple_" + emitChapelLine(ast)},
+                         {},
+                         std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<tuple_kind>(tuple_kind{{}})}})
+                   }}),
+                emitChapelLine(ast), 0, false},{}
+          });
+
+       }
+    }
     break;
     case asttags::Zip:
     break;
@@ -956,7 +1002,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                cStmts->emplace_back(TupleDeclarationLiteralExpression{{{symbolTableRef->id}, identifier, varsym->kind, emitChapelLine(ast), varsym->kindqualifier, varsym->isConfig},{}});
                auto & tdle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
                for(auto arg : tk->args) {
-                  tdle.literalValues.push_back(arg.literal[0]);
+                  tdle.literalValues.push_back(LiteralExpression{arg.kind,arg.literal[0]});
                }
              }
              else {

@@ -31,6 +31,10 @@ namespace tup {
         f(0) = b;
 #line 17 "tup.chpl"
         f(1) = f(1);
+#line 18 "tup.chpl"
+        chplx::Tuple<std::int64_t, std::int64_t> w{};
+#line 19 "tup.chpl"
+        w = chplx::Tuple<std::int64_t, std::int64_t>{1, 2};
     }
 
 }    // namespace tup

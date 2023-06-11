@@ -364,7 +364,6 @@ void TupleDeclarationExpression::emit(std::ostream & os) const {
    std::visit(TupleDeclarationExpressionVisitor{typelist}, akref->retKind);
 
    os << typelist.str() << " " << identifier << "{};" << std::endl;
-
 }
 
 void TupleDeclarationLiteralExpression::emit(std::ostream & os) const {
@@ -372,21 +371,38 @@ void TupleDeclarationLiteralExpression::emit(std::ostream & os) const {
       std::get<std::shared_ptr<tuple_kind>>(kind);
    std::stringstream typelist{}, literallist{};
 
-   typelist << "chplx::Tuple<";
-   for(std::size_t i = 0; i < akref->args.size(); ++i) {
-      auto & elem = akref->args[i];
-      std::visit(ScalarDeclarationExpressionVisitor{typelist}, elem.kind);
-      if(0 < elem.literal.size()) {
-         std::visit(ScalarDeclarationLiteralExpressionVisitor{elem.literal[0], literallist}, elem.kind);
+   if(akref->args.size()) {
+      typelist << "chplx::Tuple<";
+      for(std::size_t i = 0; i < akref->args.size(); ++i) {
+         auto & elem = akref->args[i];
+         std::visit(ScalarDeclarationExpressionVisitor{typelist}, elem.kind);
+         if(0 < elem.literal.size()) {
+            std::visit(ScalarDeclarationLiteralExpressionVisitor{elem.literal[0], literallist}, elem.kind);
+         }
+         if(i != akref->args.size()-1) {
+            typelist << ',';
+            literallist << ',';
+         }
       }
-      if(i != akref->args.size()-1) {
-         typelist << ',';
-         literallist << ',';
-      }
-   }
-   typelist << ">";
+      typelist << ">";
 
-   os << typelist.str() << " " << identifier << "{" << literallist.str() << "};" << std::endl;
+      os << typelist.str() << " " << identifier << "{" << literallist.str() << "};" << std::endl;
+   }
+   else if(literalValues.size()) {
+      typelist << "chplx::Tuple<";
+      for(std::size_t i = 0; i < literalValues.size(); ++i) {
+         LiteralExpression const& elem = literalValues[i];
+         std::visit(ScalarDeclarationExpressionVisitor{typelist}, elem.kind);
+         std::visit(ScalarDeclarationLiteralExpressionVisitor{elem.value, literallist}, elem.kind);
+         if(i != literalValues.size()-1) {
+            typelist << ',';
+            literallist << ',';
+         }
+      }
+      typelist << ">";
+      
+      os << typelist.str() << " " << identifier << "{" << literallist.str() << "}";
+   }
 }
 
 void TupleDeclarationExprExpression::emit(std::ostream & os) const {

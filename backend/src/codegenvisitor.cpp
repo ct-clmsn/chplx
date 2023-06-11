@@ -143,6 +143,9 @@ struct ExprVisitor {
     void operator()(std::shared_ptr<TupleDeclarationExprExpression> const& node) {
        node->emit(os);
     }
+    void operator()(TupleDeclarationLiteralExpression const& node) {
+       node.emit(os);
+    }
     void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
        if(node->statements.size() == 2) {
           const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);

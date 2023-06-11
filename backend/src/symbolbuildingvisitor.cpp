@@ -747,8 +747,6 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
        if(sym) {
            Tuple const* astfn = static_cast<Tuple const*>(ast);
 
-           auto fsym = symbolTable.find(0, "tuple");
-
            if(sym->get().kind.index() == 0) {
               sym->get().kind = std::make_shared<tuple_kind>(
                  tuple_kind{{
