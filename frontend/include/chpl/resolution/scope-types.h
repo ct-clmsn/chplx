@@ -28,6 +28,7 @@
 
 #include <unordered_map>
 #include <utility>
+#include <optional>
 
 #include "llvm/ADT/Optional.h"
 
