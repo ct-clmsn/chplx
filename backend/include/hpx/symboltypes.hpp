@@ -23,6 +23,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <optional>
 
 //using namespace chplx::util;
 
