@@ -43,6 +43,9 @@ set(chplx_sources
     src/symboltypes.cpp src/symbolbuildingvisitor.cpp src/programtree.cpp
     src/programtreebuildingvisitor.cpp src/codegenvisitor.cpp src/cmakegen.cpp src/driver.cpp
     src/util.cpp
+    src/symbolbuilding/array.cpp
+    src/symbolbuilding/domain.cpp
+    src/symbolbuilding/identifier.cpp
 )
 
 set(chplx_headers

@@ -134,57 +134,13 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
                 << "***\tCurrent Scope\t" << symbolTable.symbolTableRef->id << std::endl
                 << "***\t" << emitChapelLine(ast);
    }
-   switch(ast->tag()) {
+   auto val = ast->tag();
+   switch(val) {
     case asttags::AnonFormal:
     break;
     case asttags::As:
     break;
-    case asttags::Array:
-    {
-        if(sym.has_value()) {
-           if(sym->get().kind.index() == 0) {
-              sym->get().kind = std::make_shared<array_kind>(
-                 array_kind{{
-                    symbolTable.symbolTableRef->id,
-                    std::string{"array_" + emitChapelLine(ast)},
-                    {Symbol{{
-                       std::make_shared<domain_kind>(domain_kind{{
-                          symbolTable.symbolTableRef->id,
-                          std::string{"domain_" + emitChapelLine(ast)}, {}, 
-                          std::make_shared<kind_node_type>(kind_node_type{})
-                       }}),
-                       std::string{"domain_" + emitChapelLine(ast)},
-                       {}, -1, false, symbolTable.symbolTableRef->id,
-                    }}},
-                    std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<array_kind>(array_kind{{}})}})
-                 }}
-              );
-           }
-           else {
-              std::get<std::shared_ptr<kind_node_type>>(
-                 std::get<std::shared_ptr<array_kind>>(sym->get().kind)->retKind
-              )->children.emplace_back(
-                 std::make_shared<array_kind>(
-                    array_kind{{
-                       symbolTable.symbolTableRef->id,
-                       std::string{"array_" + emitChapelLine(ast)},
-                       {Symbol{{
-                          std::make_shared<domain_kind>(domain_kind{{
-                             symbolTable.symbolTableRef->id,
-                             std::string{"domain_" + emitChapelLine(ast)}, {}, 
-                             std::make_shared<kind_node_type>(kind_node_type{})
-                          }}),
-                          std::string{"domain_" + emitChapelLine(ast)},
-                          {}, -1, false, symbolTable.symbolTableRef->id,
-                       }}},
-                       std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<array_kind>(array_kind{{}})}})
-                    }}
-                 )
-              );
-           }
-        }
-    }
-    break;
+    MAKE_CASE(Array)
     case asttags::Attributes:
     break;
     case asttags::Break:
@@ -195,24 +151,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Delete:
     break;
-    case asttags::Domain:
-    {
-        if(sym.has_value()) {
-            if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
-               std::get<std::shared_ptr<array_kind>>(sym->get().kind)->args.emplace_back(
-                  Symbol{{
-                      std::make_shared<domain_kind>(domain_kind{{
-                         symbolTable.symbolTableRef->id,
-                         std::string{"domain_" + emitChapelLine(ast)}, {}, 
-                         std::make_shared<kind_node_type>(kind_node_type{})
-                      }}),
-                      std::string{"domain_" + emitChapelLine(ast)},
-                      {}, -1, false, symbolTable.symbolTableRef->id,
-                  }});
-            }
-        }
-    }
-    break;
+    MAKE_CASE(Domain)
     case asttags::Dot:
     break;
     case asttags::EmptyStmt:
@@ -223,99 +162,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::FunctionSignature:
     break;
-    case asttags::Identifier:
-    {
-       std::string identifier_str{dynamic_cast<Identifier const*>(ast)->name().c_str()};
-
-       if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
-          const std::size_t lutId = sym->get().scopeId;
-             //std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) ?
-             //   std::get<std::shared_ptr<func_kind>>(sym->get().kind)->lutId :
-             //   sym->get().scopeId; // :
-             //   0;
-          if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
-             auto fsym = symbolTable.find(lutId, identifier_str);
-
-             if(fsym) {
-                std::shared_ptr<array_kind> & symref =
-                   std::get<std::shared_ptr<array_kind>>(sym->get().kind);
-
-                auto & domk = std::get<std::shared_ptr<domain_kind>>(symref->args.back().kind);
-                auto & rngk = std::get<std::shared_ptr<range_kind>>(domk->args.back().kind);
-                if(fsym->scopeId != 0 && rngk->args.size() < 2) {
-                   rngk->args.emplace_back(*fsym);
-                }
-                else {
-                   std::get<std::shared_ptr<array_kind>>(sym->get().kind)->retKind = fsym->kind;
-                   sym->get().scopeId = symbolTable.symbolTableRef->id;
-                }
-             }
-          }
-          else if(std::holds_alternative<std::shared_ptr<tuple_kind>>(sym->get().kind)) {
-             auto fsym = symbolTable.find(lutId, identifier_str);
-             if(fsym) {
-                std::shared_ptr<tuple_kind> & symref =
-                   std::get<std::shared_ptr<tuple_kind>>(sym->get().kind);
-
-                std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(fsym->kind);
-
-                //symref->args.emplace_back(
-                //   Symbol{{
-                //      fsym->kind,
-                //      fsym->identifier,
-                //      {ast}, -1, false, symbolTable.symbolTableRef->id
-                //   }});
-             }
-          }
-          else if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) && 
-                  !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(sym->get().kind)) {
-             std::shared_ptr<func_kind> & fk =
-                std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-
-             std::optional<Symbol> fsym;
-             symbolTable.find(sym->get().scopeId, identifier_str, fsym);
-             //auto fsym = symbolTable.find(sym->get().scopeId, identifier_str);
-
-             if(fsym.has_value()) {
-                if(std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(fsym->kind)) {
-                      return true;
-                }
-                else if(0 < fk->args.size()) {
-                   if(std::holds_alternative<nil_kind>(fk->args.back().kind)) {
-                      return true;
-                   }
-                   else if(fk->args.back().kind.index() < 1) {
-                     fk->args.back().kind = fsym->kind;
-                   }
-                   else if( !std::holds_alternative<std::shared_ptr<func_kind>>(fsym->kind) && 
-                            !std::holds_alternative<std::shared_ptr<cxxfunc_kind>>(fsym->kind) ) {
-                      fk->retKind = fsym->kind;
-                   }
-                }
-                else if(0 == fk->args.size()) {
-                   fk->retKind = fsym->kind;
-                }
-             }
-          }
-          else {
-             auto fsym = symbolTable.find(lutId, identifier_str);
-             if(std::holds_alternative<std::monostate>(sym->get().kind) && fsym.has_value()) {
-                sym->get().kind = std::holds_alternative<std::shared_ptr<func_kind>>(fsym->kind) ?
-                   std::get<std::shared_ptr<func_kind>>(fsym->kind)->retKind : fsym->kind;
-                sym->get().scopeId = symbolTable.symbolTableRef->id;
-             }
-          }
-       }
-       else if (sym) {
-          std::optional<Symbol> fsym{};
-          symbolTable.find(identifier_str, fsym);
-          if(fsym.has_value()) {
-             sym->get().kind = fsym->kind;
-             sym->get().scopeId = symbolTable.symbolTableRef->id;
-          }
-       }
-    }
-    break;
+    MAKE_CASE(Identifier)
     case asttags::Import:
     break;
     case asttags::Include:
@@ -1390,6 +1237,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
    return true;
 }
+
+
 
 void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
    if(chplx::util::compilerDebug) {
