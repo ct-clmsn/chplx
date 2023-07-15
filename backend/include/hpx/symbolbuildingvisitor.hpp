@@ -27,19 +27,24 @@
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-#define SYMBOL_VISITOR_DEF(x)                                                      \
-    template <>                                                                \
+// clang-format off
+
+#define SYMBOL_VISITOR_DEF(x) \
+    template <>\
     void enter_helper<uast::asttags::x>(const uast::AstNode* ast);\
 
-#define SYMBOL_VISITOR_DEF_F(x)                                                      \
-    template <>                                                                \
+#define SYMBOL_VISITOR_DEF_F(x) \
+    template <> \
     void SymbolBuildingVisitor::enter_helper<uast::asttags::x>(const uast::AstNode* ast)\
 
-#define MAKE_CASE(x) case asttags::x:\
-                        enter_helper<MAKE_ENUM_T(x)>(ast);\
-                     break;\
+#define MAKE_CASE(x) \
+         case asttags::x:\
+            enter_helper<MAKE_ENUM_T(x)>(ast);\
+         break;\
 
 #define MAKE_ENUM_T(x) uast::asttags::x
+
+// clang-format on
 
 struct SymbolBuildingVisitor {
 

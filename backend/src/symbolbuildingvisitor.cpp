@@ -171,54 +171,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::New:
     break;
-    case asttags::Range:
-    {
-       if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
-          if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
-
-             std::string ident{std::string{"range_" + emitChapelLine(ast)}};
-
-             auto & arrk = std::get<std::shared_ptr<array_kind>>(sym->get().kind);
-             auto & domk = std::get<std::shared_ptr<domain_kind>>(arrk->args.back().kind);
-             domk->args.emplace_back(
-                Symbol{{
-                   std::make_shared<range_kind>(range_kind{{}}),
-                   ident,
-                   {}, -1, false, symbolTable.symbolTableRef->id
-                }});
-          }
-          else if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) && (sym->get().identifier.find("for") != std::string::npos)) {
-             std::shared_ptr<func_kind> & fk =
-                std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-
-             std::string ident{std::string{"range_" + emitChapelLine(ast)}};
-             fk->args.emplace_back(
-                Symbol{{
-                   std::make_shared<range_kind>(range_kind{{}}),
-                   ident,
-                   {}, -1, false, symbolTable.symbolTableRef->id
-                }});
-
-             symbolTable.addEntry(fk->lutId, ident, fk->args.back());
-
-             sym.reset();
-             sym = symstack.back();
-             symnode = const_cast<uast::AstNode*>(ast);
-          }
-       }
-       else {
-          symstack.emplace_back(Symbol{{
-            std::make_shared<range_kind>(range_kind{{}}),
-            std::string{"range_" + emitChapelLine(ast)},
-            {}, -1, false, symbolTable.symbolTableRef->id
-          }});
-
-          sym.reset();
-          sym = symstack.back();
-          symnode = const_cast<uast::AstNode*>(ast);
-       }
-    }
-    break;
+    MAKE_CASE(Range)
     case asttags::Require:
     break;
     case asttags::Return:
@@ -237,54 +190,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::START_Literal:
     break;
-    case asttags::BoolLiteral:
-    {
-        if(!(sym && !std::holds_alternative<std::monostate>(sym->get().kind) && 0 < sym->get().kind.index())) {
-           if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
-              std::shared_ptr<func_kind> & fk =
-                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-              if(0 < fk->args.size() && std::holds_alternative<nil_kind>(fk->args.back().kind)) {
-                 return true;
-              }
-           }
-
-           auto fsym = symbolTable.find("bool");
-           if(fsym.has_value()) {
-              sym->get().kind = (fsym->kind);
-              if(sym->get().literal.size()) {
-                 sym->get().literal.push_back(ast);
-              }
-              else {
-                 sym->get().literal = {ast,};
-              }
-           }
-        }
-    }
-    break;
-    case asttags::ImagLiteral:
-    {
-        if(!(sym && 0 < sym->get().kind.index())) {
-           if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
-              std::shared_ptr<func_kind> & fk =
-                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-              if(0 < fk->args.size() && std::holds_alternative<nil_kind>(fk->args.back().kind)) {
-                 return true;
-              }
-           }
-
-           auto fsym = symbolTable.find("complex");
-           if(fsym.has_value()) {
-              sym->get().kind = (fsym->kind);
-              if(sym->get().literal.size()) {
-                 sym->get().literal.push_back(ast);
-              }
-              else {
-                 sym->get().literal = {ast,};
-              }
-           }
-        }
-    }
-    break;
+    MAKE_CASE(BoolLiteral)
+    MAKE_CASE(ImagLiteral)
     case asttags::IntLiteral:
     {
         if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
