@@ -111,6 +111,10 @@ void ScalarDeclarationLiteralExpressionVisitor::operator()(string_kind const&) {
    os << "{\"" << string_kind::value(ast) << "\"}";
 }
 
+void ScalarDeclarationLiteralExpressionVisitor::operator()(std::shared_ptr<array_kind> const& n)  {
+   std::cout << "ARRK" << std::endl;
+}
+
 void ScalarDeclarationLiteralExpression::emit(std::ostream & os) const {
    if(!config && -1 < qualifier) {
 //      os << "// ";
@@ -203,6 +207,9 @@ struct ArrayDeclarationLiteralExpressionVisitor {
     }
     void operator()(string_kind const&) {
        os << "std::string";
+    }
+    void operator()(std::shared_ptr<array_kind> const& arr) {
+    std::cout << "ARRK" << std::endl;
     }
     void operator()(kind_node_type const& n) {
        // does not terminate vector declaration
@@ -310,11 +317,12 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
 
    auto & domk = std::get<std::shared_ptr<domain_kind>>(literalValues[0]->kind);
 
-   for(std::size_t i = 0; i < kindtypes.size()-1; ++i) {
+   for(std::size_t i = 0; i < kindtypes.size(); ++i) {
+      const bool end = i == kindtypes.size()-1;
       const bool knt =
          std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i]);
       const bool kntend =
-         std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i+1]);
+         i < kindtypes.size()-1 && std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i+1]);
 
      if(knt) {
         if(1 < i && kntend) {
@@ -327,25 +335,37 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
         }
      }
      else {
-        std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
-        ++lit;
+      if(!std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i])) {
+         if(std::holds_alternative<std::shared_ptr<func_kind>>(kindtypes[i])) {
+            auto & fk = std::get<std::shared_ptr<func_kind>>(kindtypes[i]);
 
-        if(!knt && !kntend) {
-           literallist << ",";
+            const auto pos = domk->args[lit].identifier.find('|');
+            literallist << domk->args[lit].identifier.substr(0, pos) << '('; 
+            for(std::size_t it = 0; it < fk->args.size(); ++it) {
+            }
+            literallist << ')';
+         }
+         else {
+           if(domk->args[lit].identifier.find("#line") != std::string::npos) {
+              std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
+              ++lit;
+           }
         }
-        else if(!knt && kntend) {
-           literallist << "},";
+
+        if(i < kindtypes.size()-1 && std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i+1])) {
+           literallist << "}";
            --bracec;
         }
 
-        if(i+1 == kindtypes.size()-1) {
-           if(!std::holds_alternative<std::shared_ptr<array_kind>>(kindtypes[i+1])) {
-              std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
-              ++lit;
-              literallist << "}";
-              --bracec;
-           }
+        if(!end) {
+           literallist << ",";
         }
+      }
+
+      if(end) {
+         literallist << "}";
+         --bracec;
+      }
      }
    }
    
@@ -371,29 +391,30 @@ void TupleDeclarationLiteralExpression::emit(std::ostream & os) const {
       std::get<std::shared_ptr<tuple_kind>>(kind);
    std::stringstream typelist{}, literallist{};
 
-   if(akref->args.size()) {
+   if(identifier.find("tuple_") == std::string::npos) {
       typelist << "chplx::Tuple<";
       for(std::size_t i = 0; i < akref->args.size(); ++i) {
          auto & elem = akref->args[i];
          std::visit(ScalarDeclarationExpressionVisitor{typelist}, elem.kind);
-         if(0 < elem.literal.size()) {
+
+         if(!elem.isIntegralKind() && 0 < elem.literal.size() && elem.identifier.find("lit_") != std::string::npos) {
             std::visit(ScalarDeclarationLiteralExpressionVisitor{elem.literal[0], literallist}, elem.kind);
-         }
-         if(i != akref->args.size()-1) {
-            typelist << ',';
-            literallist << ',';
+            if(i != akref->args.size()-1) {
+               typelist << ',';
+               literallist << ',';
+            }
          }
       }
       typelist << ">";
 
       os << typelist.str() << " " << identifier << "{" << literallist.str() << "};" << std::endl;
    }
-   else if(literalValues.size()) {
+   else {
       typelist << "chplx::Tuple<";
       for(std::size_t i = 0; i < literalValues.size(); ++i) {
-         LiteralExpression const& elem = literalValues[i];
+         Symbol const& elem = literalValues[i];
          std::visit(ScalarDeclarationExpressionVisitor{typelist}, elem.kind);
-         std::visit(ScalarDeclarationLiteralExpressionVisitor{elem.value, literallist}, elem.kind);
+         std::visit(ScalarDeclarationLiteralExpressionVisitor{elem.literal[0], literallist}, elem.kind);
          if(i != literalValues.size()-1) {
             typelist << ',';
             literallist << ',';
@@ -403,6 +424,10 @@ void TupleDeclarationLiteralExpression::emit(std::ostream & os) const {
       
       os << typelist.str() << " " << identifier << "{" << literallist.str() << "}";
    }
+}
+
+void ArrayDeclarationExprExpression::emit(std::ostream & os) const {
+   os << "auto " << identifier;
 }
 
 void TupleDeclarationExprExpression::emit(std::ostream & os) const {

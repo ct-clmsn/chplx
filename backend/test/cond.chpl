@@ -13,7 +13,7 @@ inlinecxx("std::cout << a << std::endl;");
 
 var b = 0;
 
-if (b == 0) {
+if b == 0 {
 inlinecxx("std::cout << b << std::endl;");
 }
 else if(b == 1) {
@@ -41,3 +41,4 @@ proc alpha() {
       inlinecxx("std::cout << d << std::endl;");
    }
 }
+

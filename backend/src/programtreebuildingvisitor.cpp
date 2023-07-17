@@ -215,7 +215,10 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        const bool cStmtsnz = 0 < cStmts->size();
            std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
 
-       if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+       if (1 < curStmts.size() &&
+           0 < curStmts[curStmts.size()-2]->size() &&
+           std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+
            std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
            std::optional<Symbol> varsym =
                symbolTable.find(symbolTableRef->id, identifier);
@@ -257,6 +260,129 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            for(; itr != rsym->second; ++itr) {
               if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
                  ret->statement.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 break;
+              }
+           }
+       }
+       else if(1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          std::shared_ptr<ForLoopExpression> & fle =
+             std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+           std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
+           std::optional<Symbol> varsym =
+               symbolTable.find(symbolTableRef->id, identifier);
+           if(varsym) { 
+              if(fle->indexSet.size() < 2) {
+                 fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              else if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+                auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+                bo->statements.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              else {
+                cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              return true;
+           }
+
+           auto rsym =
+              symbolTable.findPrefix(symbolTableRef->id, identifier);
+
+           auto itr = rsym->first;
+           for(; itr != rsym->second; ++itr) {
+              if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                 if(fle->indexSet.size() < 2 && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+                    auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+                    bo->statements.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
+                 else if(fle->indexSet.size() < 2) {
+                    fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
+                 else {
+                    cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
+                 break;
+              }
+           }
+       }
+       else if(1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          std::shared_ptr<ForallLoopExpression> & fle =
+             std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+           std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
+           std::optional<Symbol> varsym =
+               symbolTable.find(symbolTableRef->id, identifier);
+           if(varsym) { 
+              if(fle->indexSet.size() < 2) {
+                 fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              else if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+                auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+                bo->statements.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              else {
+                cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              return true;
+           }
+
+           auto rsym =
+              symbolTable.findPrefix(symbolTableRef->id, identifier);
+
+           auto itr = rsym->first;
+           for(; itr != rsym->second; ++itr) {
+              if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                 if(fle->indexSet.size() < 2 && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+                    auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+                    bo->statements.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
+                 else if(fle->indexSet.size() < 2) {
+                    fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
+                 else {
+                    cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
+                 break;
+              }
+           }
+       }
+       else if(1 < curStmts.size() && std::holds_alternative<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          std::shared_ptr<CoforallLoopExpression> & fle =
+             std::get<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+           std::string identifier{dynamic_cast<Identifier const*>(ast)->name().c_str()};
+           std::optional<Symbol> varsym =
+               symbolTable.find(symbolTableRef->id, identifier);
+           if(varsym) { 
+              if(fle->indexSet.size() < 2) {
+                 fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              else if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+                auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+                bo->statements.emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              else {
+                cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(*varsym)});
+              }
+              return true;
+           }
+
+           auto rsym =
+              symbolTable.findPrefix(symbolTableRef->id, identifier);
+
+           auto itr = rsym->first;
+           for(; itr != rsym->second; ++itr) {
+              if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                 if(fle->indexSet.size() < 2 && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+                    auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+                    bo->statements.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
+                 else if(fle->indexSet.size() < 2) {
+                    fle->indexSet.emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
+                 else {
+                    cStmts->emplace_back(VariableExpression{std::make_shared<Symbol>(itr->second)});
+                 }
                  break;
               }
            }
@@ -313,7 +439,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(fl->symbol.kind);
 
              //if(!(fl->indexSet)) {
-                fl->indexSet = fc->args[0];
+             //   fl->indexSet = fc->args[0];
              //}
           }
        }
@@ -327,7 +453,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(fl->symbol.kind);
 
              //if(!(fl->indexSet)) {
-                fl->indexSet = fc->args[0];
+             //   fl->indexSet = fc->args[0];
              //}
           }
        }
@@ -341,7 +467,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              std::shared_ptr<func_kind> & fc = std::get<std::shared_ptr<func_kind>>(fl->symbol.kind);
 
              //if(!(fl->indexSet)) {
-                fl->indexSet = fc->args[0];
+             //   fl->indexSet = fc->args[0];
              //}
           }
        }
@@ -405,11 +531,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::shared_ptr<ReturnExpression> & ret = std::get<std::shared_ptr<ReturnExpression>>(cStmts->back());
            ret->statement.emplace_back(LiteralExpression{bool_kind{}, ast});
        }
+/*
        else if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>(cStmts->back())) {
           //auto & sle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
           //sle.literalValues.push_back(LiteralExpression{bool_kind{}, ast});
           //sle.kind = bool_kind{};
        }
+*/
        else {
            cStmts->emplace_back(LiteralExpression{bool_kind{}, ast});
        }
@@ -422,13 +550,52 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        std::vector<Statement> * cStmts = curStmts.back();
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
            if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>( cStmts->back() )) {
+              return true;
+/*
               TupleDeclarationLiteralExpression & tdl =
                  std::get<TupleDeclarationLiteralExpression>(cStmts->back());
                  tdl.literalValues.push_back(LiteralExpression{int_kind{}, ast});
+*/
            }
            else {
               cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
            }
+       }
+       else if(1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          std::shared_ptr<ForLoopExpression> & fle =
+             std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+          if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+             auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+             bo->statements.emplace_back(LiteralExpression{int_kind{}, ast});
+          }
+          else {
+             fle->indexSet.emplace_back(LiteralExpression{int_kind{}, ast});
+          }
+       }
+       else if(1 < curStmts.size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          std::shared_ptr<ForallLoopExpression> & fle =
+             std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+          if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+             auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+             bo->statements.emplace_back(LiteralExpression{int_kind{}, ast});
+          }
+          else {
+             fle->indexSet.emplace_back(LiteralExpression{int_kind{}, ast});
+          }
+       }
+       else if(1 < curStmts.size() && std::holds_alternative<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          std::shared_ptr<CoforallLoopExpression> & fle =
+             std::get<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+          if(fle->indexSet.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back())) {
+             auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(fle->indexSet.back());
+             bo->statements.emplace_back(LiteralExpression{int_kind{}, ast});
+          }
+          else {
+             fle->indexSet.emplace_back(LiteralExpression{int_kind{}, ast});
+          }
        }
        else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<FunctionCallExpression>>(cStmts->back())) {
           std::shared_ptr<FunctionCallExpression> & fce =
@@ -442,13 +609,15 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        else if(0 < cStmts->size() && std::holds_alternative<ScalarDeclarationLiteralExpression>(cStmts->back())) {
           auto & sle = std::get<ScalarDeclarationLiteralExpression>(cStmts->back());
           sle.literalValue.push_back(ast);
-          sle.kind = int_kind{};
+//          sle.kind = int_kind{};
        }
+/*
        else if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>(cStmts->back())) {
           //auto & sle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
           //sle.literalValues.push_back(LiteralExpression{int_kind{}, ast});
           //sle.kind = int_kind{};
        }
+*/
        else {
            cStmts->emplace_back(LiteralExpression{int_kind{}, ast});
        }
@@ -469,11 +638,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::shared_ptr<ReturnExpression> & ret = std::get<std::shared_ptr<ReturnExpression>>(cStmts->back());
            ret->statement.emplace_back(LiteralExpression{real_kind{}, ast});
        }
+/*
        else if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>(cStmts->back())) {
           //auto & sle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
           //sle.literalValues.push_back(LiteralExpression{real_kind{},ast});
           //sle.kind = real_kind{};
        }
+*/
        else {
            cStmts->emplace_back(LiteralExpression{real_kind{}, ast});
        }
@@ -502,11 +673,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::shared_ptr<ReturnExpression> & ret = std::get<std::shared_ptr<ReturnExpression>>(cStmts->back());
            ret->statement.emplace_back(LiteralExpression{string_kind{}, ast});
        }
+/*
        else if(0 < cStmts->size() && std::holds_alternative<TupleDeclarationLiteralExpression>(cStmts->back())) {
           //auto & sle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
           //sle.literalValues.push_back(LiteralExpression{string_kind{},ast});
           //sle.kind = string_kind{};
        }
+*/
        else {
            cStmts->emplace_back(LiteralExpression{string_kind{}, ast});
        }
@@ -528,7 +701,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
            std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) &&
            fc->calledExpression()->tag() == asttags::Identifier &&
            !fc->callUsedSquareBrackets() ) {
-
            std::string identifier{dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str()};
 
            std::optional<Symbol> varsym =
@@ -573,7 +745,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
        //
        else if(fc->calledExpression()->tag() == asttags::Identifier && !fc->callUsedSquareBrackets()) {
            std::string identifier{dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str()};
-
            std::optional<Symbol> fnsym =
               symbolTable.find(symbolTableRef->id, identifier);
            if(fnsym) { 
@@ -637,36 +808,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                  curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(bo->statements.back())->arguments));
                  return true;
               }
-              else if(cStmts->size() && std::holds_alternative<ArrayDeclarationLiteralExpression>(cStmts->back())) {
-                 ArrayDeclarationLiteralExpression stmt = std::get<ArrayDeclarationLiteralExpression>(cStmts->back());
-                 cStmts->pop_back();
-                 cStmts->emplace_back(
-                    std::make_shared<BinaryOpExpression>(BinaryOpExpression{
-                       {{symbolTableRef->id}, "=", ast}, {}
-                    })
-                 );
-                 auto & bo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
-                 bo->statements.emplace_back(
-                    std::make_shared<TupleDeclarationExprExpression>(TupleDeclarationExprExpression
-                       {{{stmt.scopeId}, stmt.identifier, stmt.kind, stmt.chplLine, stmt.qualifier, stmt.config}, {}}
-                 ));
-                 bo->statements.emplace_back(
-                    std::make_shared<FunctionCallExpression>(
-                       FunctionCallExpression{{symbolTableRef->id}, *fnsym, {}, emitChapelLine(ast), symbolTable}
-                 ));
-                 curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(bo->statements.back())->arguments));
-                 return true;
-              }
-              else {
-                 cStmts->emplace_back(
-                    std::make_shared<FunctionCallExpression>(
-                       FunctionCallExpression{{symbolTableRef->id}, {*fnsym}, {}, emitChapelLine(ast), symbolTable}
-                 ));
-                 curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(cStmts->back())->arguments));
-                 return true;
-              }
            }
-
            std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > fsym =
               symbolTable.findPrefix(symbolTableRef->id, identifier);
 
@@ -743,6 +885,9 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                     }
                  }
               }
+              else if(0 < cStmts->size() && std::holds_alternative<ArrayDeclarationLiteralExpression>(cStmts->back())) {
+                 break;
+              }   
               else if(0 < cStmts->size() && std::holds_alternative<VariableExpression>(cStmts->back())) {
                  //cStmts->pop_back();
 
@@ -882,6 +1027,88 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                   auto & nbo = std::get<std::shared_ptr<BinaryOpExpression>>(bo->statements.back());
                   curStmts.push_back(&(nbo->statements));
                }
+               else if(0 < cStmts->size() && std::holds_alternative<ScalarDeclarationLiteralExpression>(cStmts->back())) {
+                  ScalarDeclarationLiteralExpression sle =
+                     std::get<ScalarDeclarationLiteralExpression>(cStmts->back());
+
+                  cStmts->pop_back();
+                  cStmts->emplace_back(
+                     std::make_shared<ScalarDeclarationExprExpression>(ScalarDeclarationExprExpression{
+                        {{sle.scopeId}, sle.identifier, sle.kind, sle.chplLine, sle.qualifier, sle.config},
+                     {
+                        std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                           {{symbolTableRef->id}, identifier, ast}, {}
+                        })
+                     }
+                  }));
+
+                  auto & bo = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
+                  auto & nbo = std::get<std::shared_ptr<BinaryOpExpression>>(bo->statements.back());
+                  curStmts.push_back(&(nbo->statements));
+               }
+               else if(1 < curStmts.size() && curStmts[curStmts.size()-2]->size() && std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+                  std::shared_ptr<ForLoopExpression> & fle =
+                     std::get<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+                  if(fle->indexSet.size() < 2) {
+                     fle->indexSet.emplace_back(
+                        std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                           {{symbolTableRef->id}, identifier, ast}, {}
+                        })
+                     );
+                  }
+                  else {
+                     cStmts->emplace_back(
+                        std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                           {{symbolTableRef->id}, identifier, ast}, {}
+                        })
+                     );
+                     auto & nbo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                     curStmts.push_back(&(nbo->statements));
+                  }
+               }
+               else if(1 < curStmts.size() && curStmts[curStmts.size()-2]->size() && std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+                  std::shared_ptr<ForallLoopExpression> & fle =
+                     std::get<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+                  if(fle->indexSet.size() < 2) {
+                     fle->indexSet.emplace_back(
+                        std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                           {{symbolTableRef->id}, identifier, ast}, {}
+                        })
+                     );
+                  }
+                  else {
+                     cStmts->emplace_back(
+                        std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                           {{symbolTableRef->id}, identifier, ast}, {}
+                        })
+                     );
+                     auto & nbo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                     curStmts.push_back(&(nbo->statements));
+                  }
+               }
+               else if(1 < curStmts.size() && curStmts[curStmts.size()-2]->size() && std::holds_alternative<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+                  std::shared_ptr<CoforallLoopExpression> & fle =
+                     std::get<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back());
+
+                  if(fle->indexSet.size() < 2) {
+                     fle->indexSet.emplace_back(
+                        std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                           {{symbolTableRef->id}, identifier, ast}, {}
+                        })
+                     );
+                  }
+                  else {
+                     cStmts->emplace_back(
+                        std::make_shared<BinaryOpExpression>(BinaryOpExpression{
+                           {{symbolTableRef->id}, identifier, ast}, {}
+                        })
+                     );
+                     auto & nbo = std::get<std::shared_ptr<BinaryOpExpression>>(cStmts->back());
+                     curStmts.push_back(&(nbo->statements));
+                  }
+               }
                else {
                   cStmts->emplace_back(
                      std::make_shared<BinaryOpExpression>(BinaryOpExpression{
@@ -907,20 +1134,41 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     case asttags::Tuple:
     {
        if (1 < curStmts.size() && std::holds_alternative<std::shared_ptr<BinaryOpExpression>>( curStmts[curStmts.size()-2]->back() ) ) {
+          std::string identifier{"tuplelit_" + emitChapelLine(ast)};
+          std::optional<Symbol> varsym =
+             symbolTable.find(symbolTableRef->id, identifier);
+
           std::vector<Statement> * cStmts = curStmts.back();
-          cStmts->emplace_back(
-             TupleDeclarationLiteralExpression{
-                {{symbolTableRef->id},
-                std::string{},
-                   std::make_shared<tuple_kind>(
-                      tuple_kind{{
-                         0,
-                         std::string{"tuple_" + emitChapelLine(ast)},
-                         {},
-                         std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<tuple_kind>(tuple_kind{{}})}})
-                   }}),
-                emitChapelLine(ast), 0, false},{}
-          });
+          if(varsym) {
+             cStmts->emplace_back(
+                TupleDeclarationLiteralExpression{
+                   {{symbolTableRef->id},
+                   std::string{},
+                      std::make_shared<tuple_kind>(
+                         tuple_kind{{
+                            0,
+                            identifier,
+                            {},
+                            std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<tuple_kind>(tuple_kind{{}})}})
+                      }}),
+                   emitChapelLine(ast), 0, false},{*varsym}
+             });
+          }
+          else {
+             cStmts->emplace_back(
+                TupleDeclarationLiteralExpression{
+                   {{symbolTableRef->id},
+                   std::string{},
+                      std::make_shared<tuple_kind>(
+                         tuple_kind{{
+                            0,
+                            identifier,
+                            {},
+                            std::make_shared<kind_node_type>(kind_node_type{{std::make_shared<tuple_kind>(tuple_kind{{}})}})
+                      }}),
+                   emitChapelLine(ast), 0, false},{}
+             });
+          }
 
        }
     }
@@ -1000,10 +1248,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              if(0 < tk->args.size()) {
                std::vector<Statement> * cStmts = curStmts.back();
                cStmts->emplace_back(TupleDeclarationLiteralExpression{{{symbolTableRef->id}, identifier, varsym->kind, emitChapelLine(ast), varsym->kindqualifier, varsym->isConfig},{}});
+/*
                auto & tdle = std::get<TupleDeclarationLiteralExpression>(cStmts->back());
                for(auto arg : tk->args) {
                   tdle.literalValues.push_back(LiteralExpression{arg.kind,arg.literal[0]});
                }
+*/
              }
              else {
                std::vector<Statement> * cStmts = curStmts.back();
@@ -1055,6 +1305,12 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
 
        std::optional<Symbol> varsym =
           symbolTable.find(symbolTableRef->id, identifier);
+
+       if(!varsym) {
+          identifier = "else" + identifier;
+          varsym =
+             symbolTable.find(symbolTableRef->id, identifier);
+       }
 
        if(varsym.has_value() && std::holds_alternative<std::shared_ptr<func_kind>>(varsym->kind)) {
           std::vector<Statement> * cStmts = curStmts.back();
@@ -1275,7 +1531,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
           else {
              std::optional< std::pair< std::map<std::string, Symbol>::iterator, std::map<std::string, Symbol>::iterator > > fnsym
                 = symbolTable.findPrefix(symbolTableRef->id, v.lookup);
-
              assert(fnsym.has_value());
 
              std::map<std::string, Symbol>::iterator val = fnsym->second;
@@ -1538,13 +1793,26 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     case asttags::START_Call:
     break;
     case asttags::For:
-    break;
     case asttags::Forall:
     break;
     case asttags::Return:
     case asttags::FnCall:
+       curStmts.pop_back();
+    break;
     case asttags::OpCall:
     {
+       // these conditionals are a side effect of the addition of expression support
+       // to the range of loops
+       //
+       if(std::holds_alternative<std::shared_ptr<ForLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          return;
+       }
+       else if(std::holds_alternative<std::shared_ptr<ForallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          return;
+       }
+       else if(std::holds_alternative<std::shared_ptr<CoforallLoopExpression>>(curStmts[curStmts.size()-2]->back())) {
+          return;
+       }
        curStmts.pop_back();
     }
     break;
@@ -1619,7 +1887,7 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
              std::get<std::shared_ptr<ConditionalExpression>>(cStmts->back());
        
           if(0 < symbolTable.lut[fde->scopeId]->parent.index() && std::holds_alternative<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent)) {
-             symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent);
+             //symbolTableRef = std::get<std::shared_ptr<SymbolTable::SymbolTableNode>>(symbolTable.lut[fde->scopeId]->parent);
           }
           else {
              symbolTableRef = symbolTable.lut[0];

@@ -56,6 +56,7 @@ struct ScalarDeclarationLiteralExpressionVisitor {
     void operator()(int_kind const&);
     void operator()(real_kind const&);
     void operator()(string_kind const&);
+    void operator()(std::shared_ptr<array_kind> const&);
 
     uast::AstNode const* ast;
     std::ostream & os;
@@ -86,7 +87,7 @@ struct LiteralExpression {
 };
 
 struct TupleDeclarationLiteralExpression : public VariableDeclarationExpression {
-   std::vector<LiteralExpression> literalValues;
+   std::vector<Symbol> literalValues;
    void emit(std::ostream & os) const;
 };
 
@@ -115,6 +116,7 @@ struct CoforallLoopExpression;
 
 struct StatementList;
 struct ScalarDeclarationExprExpression;
+struct ArrayDeclarationExprExpression;
 struct TupleDeclarationExprExpression;
 
 struct RecordDeclarationExpression;
@@ -129,6 +131,7 @@ using Statement = std::variant<
    std::shared_ptr<ScalarDeclarationExprExpression>,
    ArrayDeclarationExpression,
    ArrayDeclarationLiteralExpression,
+   std::shared_ptr<ArrayDeclarationExprExpression>,
    TupleDeclarationExpression,
    TupleDeclarationLiteralExpression,
    std::shared_ptr<TupleDeclarationExprExpression>,
@@ -174,6 +177,12 @@ struct TernaryOpExpression : public ArithmeticOpExpression {
 };
 
 struct ScalarDeclarationExprExpression : public VariableDeclarationExpression {
+   std::vector<Statement> statements;
+
+   void emit(std::ostream & os) const;
+};
+
+struct ArrayDeclarationExprExpression : public VariableDeclarationExpression {
    std::vector<Statement> statements;
 
    void emit(std::ostream & os) const;
@@ -230,7 +239,9 @@ struct ConditionalExpression : public ScopeExpression {
 struct ForLoopExpression : public ScopeExpression {
    Symbol symbol;
    Symbol iterator;
-   Symbol indexSet;
+   // this needs to store Statements
+   //Symbol indexSet;
+   std::vector<Statement> indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 
@@ -240,7 +251,8 @@ struct ForLoopExpression : public ScopeExpression {
 struct ForallLoopExpression : public ScopeExpression {
    Symbol symbol;
    Symbol iterator;
-   Symbol indexSet;
+   //Symbol indexSet;
+   std::vector<Statement> indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 
@@ -250,7 +262,8 @@ struct ForallLoopExpression : public ScopeExpression {
 struct CoforallLoopExpression : public ScopeExpression {
    Symbol symbol;
    Symbol iterator;
-   Symbol indexSet;
+   //Symbol indexSet;
+   std::vector<Statement> indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 
