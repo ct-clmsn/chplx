@@ -53,6 +53,7 @@ set(chplx_sources
     src/symbolbuilding/realliteral.cpp
     src/symbolbuilding/uintliteral.cpp
     src/symbolbuilding/bytesliteral.cpp
+    src/symbolbuilding/cstringliteral.cpp
 )
 
 set(chplx_headers
