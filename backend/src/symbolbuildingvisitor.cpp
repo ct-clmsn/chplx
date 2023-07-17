@@ -169,29 +169,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     MAKE_CASE_WITH_ENTER_HELPER_F(ImagLiteral)
     MAKE_CASE_WITH_ENTER_HELPER_F(IntLiteral)
     MAKE_CASE_WITH_ENTER_HELPER_F(RealLiteral)
-    case asttags::UintLiteral:
-    {
-        if(!(sym && 0 < sym->get().kind.index())) {
-           if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
-              std::shared_ptr<func_kind> & fk =
-                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-              if(0 < fk->args.size() && std::holds_alternative<nil_kind>(fk->args.back().kind)) {
-                 return true;
-              }
-           }
-
-           auto fsym = symbolTable.find("int");
-           if(fsym.has_value()) {
-              sym->get().kind = (fsym->kind);
-              if(sym->get().literal.size()) {
-                 sym->get().literal.push_back(ast);
-              }
-              else {
-                 sym->get().literal = {ast,};
-              }
-           }
-        }
-    }
+    MAKE_CASE_WITH_ENTER_HELPER_F(UintLiteral)
     MAKE_CASE_NO_F(START_StringLikeLiteral)
     case asttags::BytesLiteral:
     {
