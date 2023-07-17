@@ -54,6 +54,7 @@ set(chplx_sources
     src/symbolbuilding/uintliteral.cpp
     src/symbolbuilding/bytesliteral.cpp
     src/symbolbuilding/cstringliteral.cpp
+    src/symbolbuilding/stringliteral.cpp
 )
 
 set(chplx_headers

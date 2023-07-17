@@ -173,26 +173,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
     MAKE_CASE_NO_F(START_StringLikeLiteral)
     MAKE_CASE_WITH_ENTER_HELPER_F(BytesLiteral)
     MAKE_CASE_WITH_ENTER_HELPER_F(CStringLiteral)
-    case asttags::StringLiteral:
-    {
-        if(!(sym && 0 < sym->get().kind.index())) {
-           if(sym && std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
-              std::shared_ptr<func_kind> & fk =
-                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-              if(0 < fk->args.size() && std::holds_alternative<nil_kind>(fk->args.back().kind)) {
-                 return true;
-              }
-           }
-
-           std::optional<Symbol> fsym{};
-           symbolTable.find(0, "string", fsym);
-
-           if(fsym.has_value()) {
-             sym->get().kind = fsym->kind;
-             sym->get().literal.push_back(ast);
-           }
-        }
-    }
+    MAKE_CASE_WITH_ENTER_HELPER_F(StringLiteral)
     MAKE_CASE_NO_F(END_StringLikeLiteral)
     MAKE_CASE_NO_F(END_Literal)
     MAKE_CASE_NO_F(START_Call)
