@@ -136,206 +136,39 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
    }
    auto val = ast->tag();
    switch(val) {
-    case asttags::AnonFormal:
-    break;
-    case asttags::As:
-    break;
-    MAKE_CASE(Array)
-    case asttags::Attributes:
-    break;
-    case asttags::Break:
-    break;
-    case asttags::Comment:
-    break;
-    case asttags::Continue:
-    break;
-    case asttags::Delete:
-    break;
-    MAKE_CASE(Domain)
-    case asttags::Dot:
-    break;
-    case asttags::EmptyStmt:
-    break;
-    case asttags::ErroneousExpression:
-    break;
-    case asttags::ExternBlock:
-    break;
-    case asttags::FunctionSignature:
-    break;
-    MAKE_CASE(Identifier)
-    case asttags::Import:
-    break;
-    case asttags::Include:
-    break;
-    case asttags::Let:
-    break;
-    case asttags::New:
-    break;
-    MAKE_CASE(Range)
-    case asttags::Require:
-    break;
-    case asttags::Return:
-    break;
-    case asttags::Throw:
-    break;
-    case asttags::TypeQuery:
-    break;
-    case asttags::Use:
-    break;
-    case asttags::VisibilityClause:
-    break;
-    case asttags::WithClause:
-    break;
-    case asttags::Yield:
-    break;
-    case asttags::START_Literal:
-    break;
-    MAKE_CASE(BoolLiteral)
-    MAKE_CASE(ImagLiteral)
-    case asttags::IntLiteral:
-    {
-        if(sym && !std::holds_alternative<std::monostate>(sym->get().kind)) {
-           if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
-              std::shared_ptr<func_kind> & fk =
-                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-              if(0 < fk->args.size() && std::holds_alternative<std::shared_ptr<range_kind>>(fk->args.back().kind)) {
-                 auto & symref =
-                    std::get<std::shared_ptr<range_kind>>(fk->args.back().kind);
-
-                 symref->args.emplace_back(
-                    Symbol{{
-                       int_kind{},
-                       std::string{},
-                       {ast}, -1, false, symbolTable.symbolTableRef->id
-                    }});
-              }
-              else if(0 < fk->args.size() && std::holds_alternative<nil_kind>(fk->args.back().kind)) {
-                 return true;
-              }
-           }
-           else if(std::holds_alternative<std::shared_ptr<tuple_kind>>(sym->get().kind)) {
-              std::shared_ptr<tuple_kind> & symref =
-                 std::get<std::shared_ptr<tuple_kind>>(sym->get().kind);
-
-              std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
-              std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(int_kind{});
-
-              symref->args.emplace_back(
-                 Symbol{{
-                    int_kind{},
-                    ident,
-                    {ast}, -1, false, symbolTable.symbolTableRef->id
-                 }});
-           }
-           else if(std::holds_alternative<std::shared_ptr<array_kind>>(sym->get().kind)) {
-              std::shared_ptr<array_kind> & symref =
-                 std::get<std::shared_ptr<array_kind>>(sym->get().kind);
-
-              // user has an array that's undefined type and
-              // provided a literal declaration of the array
-              //
-              if(std::holds_alternative<std::shared_ptr<kind_node_type>>(symref->retKind) ) {
-                 std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
-
-                 if(std::holds_alternative<std::shared_ptr<domain_kind>>(symref->args.back().kind)) {
-                    std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(int_kind{});
-                    auto & domk = std::get<std::shared_ptr<domain_kind>>(symref->args.back().kind);
-                    if(domk->args.size() &&
-                       std::holds_alternative<std::shared_ptr<range_kind>>(domk->args.back().kind)) {
-                       auto & rngk = std::get<std::shared_ptr<range_kind>>(domk->args.back().kind);
-                       rngk->args.emplace_back(
-                          Symbol{{
-                             int_kind{},
-                             ident,
-                             {ast}, -1, false, symbolTable.symbolTableRef->id
-                          }});
-                    }
-                    else {
-                       // literal indicator
-                       //
-                       domk->args.emplace_back(
-                          Symbol{{
-                             int_kind{},
-                             ident,
-                             {ast}, -1, false, symbolTable.symbolTableRef->id
-                          }});
-                    }
-                 }
-              }
-           }
-           else if(std::holds_alternative<std::shared_ptr<range_kind>>(sym->get().kind)) {
-              std::string ident{std::string{"intlit_" + emitChapelLine(ast)}};
-              auto & symref =
-                 std::get<std::shared_ptr<range_kind>>(sym->get().kind);
-              symref->args.push_back(
-                 Symbol{{
-                    int_kind{},
-                    ident,
-                    {ast}, -1, false, symbolTable.symbolTableRef->id
-                 }});
-           }
-        }
-        else if (sym) {
-           auto fsym = symbolTable.find(0, "int");
-
-           if(fsym.has_value()) {
-              sym->get().kind = (fsym->kind);
-              if(sym->get().literal.size()) {
-                 sym->get().literal.push_back(ast);
-              }
-              else {
-                 sym->get().literal = {ast,};
-              }
-           }
-        }
-    }
-    break;
-    case asttags::RealLiteral:
-    {
-        if(!(sym && 0 < sym->get().kind.index())) {
-           if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
-              std::shared_ptr<func_kind> & fk =
-                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-              if(std::holds_alternative<nil_kind>(fk->args.back().kind)) {
-                 return true;
-              }
-           }
-           else if(std::holds_alternative<std::shared_ptr<tuple_kind>>(sym->get().kind)) {
-              std::shared_ptr<tuple_kind> & symref =
-                 std::get<std::shared_ptr<tuple_kind>>(sym->get().kind);
-
-              std::string ident{std::string{"reallit_" + emitChapelLine(ast)}};
-              std::get<std::shared_ptr<kind_node_type>>(symref->retKind)->children.emplace_back(real_kind{});
-
-              symref->args.emplace_back(
-                 Symbol{{
-                    real_kind{},
-                    ident,
-                    {ast}, -1, false, symbolTable.symbolTableRef->id
-                 }});
-           }
-           else if(std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind)) {
-              std::shared_ptr<func_kind> & fk =
-                 std::get<std::shared_ptr<func_kind>>(sym->get().kind);
-              if(0 < fk->args.size() && std::holds_alternative<nil_kind>(fk->args.back().kind)) {
-                 return true;
-              }
-           }
-
-           auto fsym = symbolTable.find("real");
-
-           if(fsym.has_value()) {
-              sym->get().kind = (fsym->kind);
-              if(sym->get().literal.size()) {
-                 sym->get().literal.push_back(ast);
-              }
-              else {
-                 sym->get().literal = {ast,};
-              }
-           }
-        }
-    }
-    break;
+    MAKE_CASE_NO_F(AnonFormal)
+    MAKE_CASE_NO_F(As)
+    MAKE_CASE_WITH_ENTER_HELPER_F(Array)
+    MAKE_CASE_NO_F(Attributes)
+    MAKE_CASE_NO_F(Break)
+    MAKE_CASE_NO_F(Comment)
+    MAKE_CASE_NO_F(Continue)
+    MAKE_CASE_NO_F(Delete)
+    MAKE_CASE_WITH_ENTER_HELPER_F(Domain)
+    MAKE_CASE_NO_F(Dot)
+    MAKE_CASE_NO_F(EmptyStmt)
+    MAKE_CASE_NO_F(ErroneousExpression)
+    MAKE_CASE_NO_F(ExternBlock)
+    MAKE_CASE_NO_F(FunctionSignature)
+    MAKE_CASE_WITH_ENTER_HELPER_F(Identifier)
+    MAKE_CASE_NO_F(Import)
+    MAKE_CASE_NO_F(Include)
+    MAKE_CASE_NO_F(Let)
+    MAKE_CASE_NO_F(New)
+    MAKE_CASE_WITH_ENTER_HELPER_F(Range)
+    MAKE_CASE_NO_F(Require)
+    MAKE_CASE_NO_F(Return)
+    MAKE_CASE_NO_F(Throw)
+    MAKE_CASE_NO_F(TypeQuery)
+    MAKE_CASE_NO_F(Use)
+    MAKE_CASE_NO_F(VisibilityClause)
+    MAKE_CASE_NO_F(WithClause)
+    MAKE_CASE_NO_F(Yield)
+    MAKE_CASE_NO_F(START_Literal)
+    MAKE_CASE_WITH_ENTER_HELPER_F(BoolLiteral)
+    MAKE_CASE_WITH_ENTER_HELPER_F(ImagLiteral)
+    MAKE_CASE_WITH_ENTER_HELPER_F(IntLiteral)
+    MAKE_CASE_WITH_ENTER_HELPER_F(RealLiteral)
     case asttags::UintLiteral:
     {
         if(!(sym && 0 < sym->get().kind.index())) {
@@ -359,9 +192,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            }
         }
     }
-    break;
-    case asttags::START_StringLikeLiteral:
-    break;
+    MAKE_CASE_NO_F(START_StringLikeLiteral)
     case asttags::BytesLiteral:
     {
         if(!(sym && 0 < sym->get().kind.index())) {
@@ -420,13 +251,9 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            }
         }
     }
-    break;
-    case asttags::END_StringLikeLiteral:
-    break;
-    case asttags::END_Literal:
-    break;
-    case asttags::START_Call:
-    break;
+    MAKE_CASE_NO_F(END_StringLikeLiteral)
+    MAKE_CASE_NO_F(END_Literal)
+    MAKE_CASE_NO_F(START_Call)
     case asttags::FnCall:
     {
         if(sym.has_value() && std::holds_alternative<std::monostate>(sym->get().kind)) {
@@ -487,15 +314,10 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
             sym->get().kind = expr_kind{};
         }
     }
-    break;
-    case asttags::PrimCall:
-    break;
-    case asttags::Reduce:
-    break;
-    case asttags::ReduceIntent:
-    break;
-    case asttags::Scan:
-    break;
+    MAKE_CASE_NO_F(PrimCall)
+    MAKE_CASE_NO_F(Reduce)
+    MAKE_CASE_NO_F(ReduceIntent)
+    MAKE_CASE_NO_F(Scan)
     case asttags::Tuple:
     {
        if(sym) {
@@ -513,21 +335,13 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
            }
        }
     }
-    break;
-    case asttags::Zip:
-    break;
-    case asttags::END_Call:
-    break;
-    case asttags::MultiDecl:
-    break;
-    case asttags::TupleDecl:
-    break;
-    case asttags::ForwardingDecl:
-    break;
-    case asttags::EnumElement:
-    break;
-    case asttags::START_VarLikeDecl:
-    break;
+    MAKE_CASE_NO_F(Zip)
+    MAKE_CASE_NO_F(END_Call)
+    MAKE_CASE_NO_F(MultiDecl)
+    MAKE_CASE_NO_F(TupleDecl)
+    MAKE_CASE_NO_F(ForwardingDecl)
+    MAKE_CASE_NO_F(EnumElement)
+    MAKE_CASE_NO_F(START_VarLikeDecl)
     case asttags::Formal:
     {
        if(sym.has_value() && 0 < sym->get().kind.index() &&
@@ -582,11 +396,8 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           symbolTable.addEntry(fk->lutId, ident, fk->args.back());
        }
     }
-    break;
-    case asttags::TaskVar:
-    break;
-    case asttags::VarArgFormal:
-    break;
+    MAKE_CASE_NO_F(TaskVar)
+    MAKE_CASE_NO_F(VarArgFormal)
     case asttags::Variable:
     {
        const Variable::Kind k = dynamic_cast<Variable const*>(ast)->kind();
@@ -626,15 +437,10 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
        sym = symstack.back();
        symnode = const_cast<uast::AstNode*>(ast);
     }
-    break;
-    case asttags::END_VarLikeDecl:
-    break;
-    case asttags::Enum:
-    break;
-    case asttags::Catch:
-    break;
-    case asttags::Cobegin:
-    break;
+    MAKE_CASE_NO_F(END_VarLikeDecl)
+    MAKE_CASE_NO_F(Enum)
+    MAKE_CASE_NO_F(Catch)
+    MAKE_CASE_NO_F(Cobegin)
     case asttags::Conditional:
     {
         if(!(sym && !std::holds_alternative<std::shared_ptr<module_kind>>(sym->get().kind))) {
@@ -709,21 +515,13 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           symnode = const_cast<uast::AstNode*>(ast);
        }
     }
-    break;
-    case asttags::Implements:
-    break;
-    case asttags::Label: // contains a loop
-    break;
-    case asttags::Select:
-    break;
-    case asttags::Sync:
-    break;
-    case asttags::Try:
-    break;
-    case asttags::START_SimpleBlockLike:
-    break;
-    case asttags::Begin:
-    break;
+    MAKE_CASE_NO_F(Implements)
+    MAKE_CASE_NO_F(Label) // contains a loop
+    MAKE_CASE_NO_F(Select)
+    MAKE_CASE_NO_F(Sync)
+    MAKE_CASE_NO_F(Try)
+    MAKE_CASE_NO_F(START_SimpleBlockLike)
+    MAKE_CASE_NO_F(Begin)
     case asttags::Block:
     {
        if(sym && !std::holds_alternative<std::shared_ptr<module_kind>>(sym->get().kind)) { //0 < sym->get().kind.index()) {
@@ -772,29 +570,17 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           symbolTable.symbolTableRef->parent = prevSymbolTableRef;
        }
     }
-    break;
-    case asttags::Defer:
-    break;
-    case asttags::Local:
-    break;
-    case asttags::Manage:
-    break;
-    case asttags::On:
-    break;
-    case asttags::Serial:
-    break;
-    case asttags::When:
-    break;
-    case asttags::END_SimpleBlockLike:
-    break;
-    case asttags::START_Loop:
-    break;
-    case asttags::DoWhile:
-    break;
-    case asttags::While:
-    break;
-    case asttags::START_IndexableLoop:
-    break;
+    MAKE_CASE_NO_F(Defer)
+    MAKE_CASE_NO_F(Local)
+    MAKE_CASE_NO_F(Manage)
+    MAKE_CASE_NO_F(On)
+    MAKE_CASE_NO_F(Serial)
+    MAKE_CASE_NO_F(When)
+    MAKE_CASE_NO_F(END_SimpleBlockLike)
+    MAKE_CASE_NO_F(START_Loop)
+    MAKE_CASE_NO_F(DoWhile)
+    MAKE_CASE_NO_F(While)
+    MAKE_CASE_NO_F(START_IndexableLoop)
     case asttags::BracketLoop:
     {
         if(sym.has_value()) {
@@ -936,19 +722,12 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
        symnode = const_cast<uast::AstNode*>(ast);
     }
-    break;
-    case asttags::Foreach:
-    break;
-    case asttags::END_IndexableLoop:
-    break;
-    case asttags::END_Loop:
-    break;
-    case asttags::START_Decl:
-    break;
-    case asttags::START_NamedDecl:
-    break;
-    case asttags::START_TypeDecl:
-    break;
+    MAKE_CASE_NO_F(Foreach)
+    MAKE_CASE_NO_F(END_IndexableLoop)
+    MAKE_CASE_NO_F(END_Loop)
+    MAKE_CASE_NO_F(START_Decl)
+    MAKE_CASE_NO_F(START_NamedDecl)
+    MAKE_CASE_NO_F(START_TypeDecl)
     case asttags::Function:
     {
        // pattern to repeat in the symbol table builder
@@ -1015,9 +794,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
           symnode = const_cast<uast::AstNode*>(ast);
        }
     }
-    break;
-    case asttags::Interface:
-    break;
+    MAKE_CASE_NO_F(Interface)
     case asttags::Module:
     {
        std::string lookup = static_cast<Module const*>(ast)->name().str();
@@ -1051,9 +828,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
        symnode = const_cast<uast::AstNode*>(ast);
     }
-    break;
-    case asttags::START_AggregateDecl:
-    break;
+    MAKE_CASE_NO_F(START_AggregateDecl)
     case asttags::Record:
     {
        std::string lookup = static_cast<Record const*>(ast)->name().str();
@@ -1123,21 +898,13 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
 
        symnode = const_cast<uast::AstNode*>(ast);
     }
-    break;
-    case asttags::Union:
-    break;
-    case asttags::END_AggregateDecl:
-    break;
-    case asttags::END_Decl:
-    break;
-    case asttags::END_NamedDecl:
-    break;
-    case asttags::END_TypeDecl:
-    break;
-    case asttags::NUM_AST_TAGS:
-    break;
-    case asttags::AST_TAG_UNKNOWN:
-    break;
+    MAKE_CASE_NO_F(Union)
+    MAKE_CASE_NO_F(END_AggregateDecl)
+    MAKE_CASE_NO_F(END_Decl)
+    MAKE_CASE_NO_F(END_NamedDecl)
+    MAKE_CASE_NO_F(END_TypeDecl)
+    MAKE_CASE_NO_F(NUM_AST_TAGS)
+    MAKE_CASE_NO_F(AST_TAG_UNKNOWN)
     default:
     break;
    }
@@ -1154,44 +921,25 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
                 << "---\t" << emitChapelLine(ast);
    }
    switch(ast->tag()) {
-    case asttags::AnonFormal:
-    break;
-    case asttags::As:
-    break;
-    case asttags::Array:
-    break;
-    case asttags::Attributes:
-    break;
-    case asttags::Break:
-    break;
-    case asttags::Comment:
-    break;
-    case asttags::Continue:
-    break;
-    case asttags::Delete:
-    break;
-    case asttags::Domain:
-    break;
-    case asttags::Dot:
-    break;
-    case asttags::EmptyStmt:
-    break;
-    case asttags::ErroneousExpression:
-    break;
-    case asttags::ExternBlock:
-    break;
-    case asttags::FunctionSignature:
-    break;
-    case asttags::Identifier:
-    break;
-    case asttags::Import:
-    break;
-    case asttags::Include:
-    break;
-    case asttags::Let:
-    break;
-    case asttags::New:
-    break;
+    MAKE_CASE_NO_F(AnonFormal)
+    MAKE_CASE_NO_F(As)
+    MAKE_CASE_NO_F(Array)
+    MAKE_CASE_NO_F(Attributes)
+    MAKE_CASE_NO_F(Break)
+    MAKE_CASE_NO_F(Comment)
+    MAKE_CASE_NO_F(Continue)
+    MAKE_CASE_NO_F(Delete)
+    MAKE_CASE_NO_F(Domain)
+    MAKE_CASE_NO_F(Dot)
+    MAKE_CASE_NO_F(EmptyStmt)
+    MAKE_CASE_NO_F(ErroneousExpression)
+    MAKE_CASE_NO_F(ExternBlock)
+    MAKE_CASE_NO_F(FunctionSignature)
+    MAKE_CASE_NO_F(Identifier)
+    MAKE_CASE_NO_F(Import)
+    MAKE_CASE_NO_F(Include)
+    MAKE_CASE_NO_F(Let)
+    MAKE_CASE_NO_F(New)
     case asttags::Range:
     {
         if(sym && 0 < sym->get().kind.index() && std::holds_alternative<std::shared_ptr<range_kind>>(sym->get().kind)) {
@@ -1200,83 +948,44 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
            symnode = nullptr;
         }
     }
-    break;
-    case asttags::Require:
-    break;
-    case asttags::Return:
-    break;
-    case asttags::Throw:
-    break;
-    case asttags::TypeQuery:
-    break;
-    case asttags::Use:
-    break;
-    case asttags::VisibilityClause:
-    break;
-    case asttags::WithClause:
-    break;
-    case asttags::Yield:
-    break;
-    case asttags::START_Literal:
-    break;
-    case asttags::BoolLiteral:
-    break;
-    case asttags::ImagLiteral:
-    break;
-    case asttags::IntLiteral:
-    break;
-    case asttags::RealLiteral:
-    break;
-    case asttags::UintLiteral:
-    break;
-    case asttags::BytesLiteral:
-    break;
-    case asttags::CStringLiteral:
-    break;
-    case asttags::StringLiteral:
-    break;
-    case asttags::START_StringLikeLiteral:
-    break;
-    case asttags::END_StringLikeLiteral:
-    break;
-    case asttags::END_Literal:
-    break;
-    case asttags::START_Call:
-    break;
-    case asttags::FnCall:
-    break;
-    case asttags::OpCall:
-    break;
-    case asttags::PrimCall:
-    break;
-    case asttags::Reduce:
-    break;
-    case asttags::ReduceIntent:
-    break;
-    case asttags::Scan:
-    break;
-    case asttags::Tuple:
-    break;
-    case asttags::Zip:
-    break;
-    case asttags::END_Call:
-    break;
-    case asttags::MultiDecl:
-    break;
-    case asttags::TupleDecl:
-    break;
-    case asttags::ForwardingDecl:
-    break;
-    case asttags::EnumElement:
-    break;
-    case asttags::START_VarLikeDecl:
-    break;
-    case asttags::Formal:
-    break;
-    case asttags::TaskVar:
-    break;
-    case asttags::VarArgFormal:
-    break;
+    MAKE_CASE_NO_F(Require)
+    MAKE_CASE_NO_F(Return)
+    MAKE_CASE_NO_F(Throw)
+    MAKE_CASE_NO_F(TypeQuery)
+    MAKE_CASE_NO_F(Use)
+    MAKE_CASE_NO_F(VisibilityClause)
+    MAKE_CASE_NO_F(WithClause)
+    MAKE_CASE_NO_F(Yield)
+    MAKE_CASE_NO_F(START_Literal)
+    MAKE_CASE_NO_F(BoolLiteral)
+    MAKE_CASE_NO_F(ImagLiteral)
+    MAKE_CASE_NO_F(IntLiteral)
+    MAKE_CASE_NO_F(RealLiteral)
+    MAKE_CASE_NO_F(UintLiteral)
+    MAKE_CASE_NO_F(BytesLiteral)
+    MAKE_CASE_NO_F(CStringLiteral)
+    MAKE_CASE_NO_F(StringLiteral)
+    MAKE_CASE_NO_F(START_StringLikeLiteral)
+    MAKE_CASE_NO_F(END_StringLikeLiteral)
+    MAKE_CASE_NO_F(END_Literal)
+    MAKE_CASE_NO_F(START_Call)
+    MAKE_CASE_NO_F(FnCall)
+    MAKE_CASE_NO_F(OpCall)
+    MAKE_CASE_NO_F(PrimCall)
+    MAKE_CASE_NO_F(Reduce)
+    MAKE_CASE_NO_F(ReduceIntent)
+    MAKE_CASE_NO_F(Scan)
+    MAKE_CASE_NO_F(Tuple)
+    MAKE_CASE_NO_F(Zip)
+    MAKE_CASE_NO_F(END_Call)
+    MAKE_CASE_NO_F(MultiDecl)
+    MAKE_CASE_NO_F(TupleDecl)
+    MAKE_CASE_NO_F(ForwardingDecl)
+    MAKE_CASE_NO_F(EnumElement)
+    MAKE_CASE_NO_F(START_VarLikeDecl)
+    MAKE_CASE_NO_F(Formal)
+    MAKE_CASE_NO_F(TaskVar)
+    MAKE_CASE_NO_F(VarArgFormal)
     case asttags::Variable:
     {
         if(sym) {
@@ -1305,60 +1014,33 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
             }
         }
     }
-    break;
-    case asttags::END_VarLikeDecl:
-    break;
-    case asttags::Enum:
-    break;
-    case asttags::Catch:
-    break;
-    case asttags::Cobegin:
-    break;
-    case asttags::Implements:
-    break;
-    case asttags::Label: // contains a loop
-    break;
-    case asttags::Select:
-    break;
-    case asttags::Sync:
-    break;
-    case asttags::Try:
-    break;
-    case asttags::START_SimpleBlockLike:
-    break;
-    case asttags::Begin:
-    break;
-    case asttags::Defer:
-    break;
-    case asttags::Local:
-    break;
-    case asttags::Manage:
-    break;
-    case asttags::On:
-    break;
-    case asttags::Serial:
-    break;
-    case asttags::When:
-    break;
-    case asttags::END_SimpleBlockLike:
-    break;
-    case asttags::START_Loop:
-    break;
-    case asttags::DoWhile:
-    break;
-    case asttags::While:
-    break;
-    case asttags::START_IndexableLoop:
-    break;
-    case asttags::BracketLoop:
-    break;
-    case asttags::Coforall:
-    break;
-    case asttags::For:
-    break;
-    case asttags::Forall:
-    break;
-    case asttags::Conditional:
+    MAKE_CASE_NO_F(END_VarLikeDecl)
+    MAKE_CASE_NO_F(Enum)
+    MAKE_CASE_NO_F(Catch)
+    MAKE_CASE_NO_F(Cobegin)
+    MAKE_CASE_NO_F(Implements)
+    MAKE_CASE_NO_F(Label) // contains a loop
+    MAKE_CASE_NO_F(Select)
+    MAKE_CASE_NO_F(Sync)
+    MAKE_CASE_NO_F(Try)
+    MAKE_CASE_NO_F(START_SimpleBlockLike)
+    MAKE_CASE_NO_F(Begin)
+    MAKE_CASE_NO_F(Defer)
+    MAKE_CASE_NO_F(Local)
+    MAKE_CASE_NO_F(Manage)
+    MAKE_CASE_NO_F(On)
+    MAKE_CASE_NO_F(Serial)
+    MAKE_CASE_NO_F(When)
+    MAKE_CASE_NO_F(END_SimpleBlockLike)
+    MAKE_CASE_NO_F(START_Loop)
+    MAKE_CASE_NO_F(DoWhile)
+    MAKE_CASE_NO_F(While)
+    MAKE_CASE_NO_F(START_IndexableLoop)
+    MAKE_CASE_NO_F(BracketLoop)
+    MAKE_CASE_NO_F(Coforall)
+    MAKE_CASE_NO_F(For)
+    MAKE_CASE_NO_F(Forall)
+    MAKE_CASE_NO_F(Conditional)
     case asttags::Block:
     {
        if(sym) {
@@ -1396,19 +1078,12 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
           }
        }
     }
-    break;
-    case asttags::Foreach:
-    break;
-    case asttags::END_IndexableLoop:
-    break;
-    case asttags::END_Loop:
-    break;
-    case asttags::START_Decl:
-    break;
-    case asttags::START_NamedDecl:
-    break;
-    case asttags::START_TypeDecl:
-    break;
+    MAKE_CASE_NO_F(Foreach)
+    MAKE_CASE_NO_F(END_IndexableLoop)
+    MAKE_CASE_NO_F(END_Loop)
+    MAKE_CASE_NO_F(START_Decl)
+    MAKE_CASE_NO_F(START_NamedDecl)
+    MAKE_CASE_NO_F(START_TypeDecl)
     case asttags::Function:
     {
        if(sym) {
@@ -1449,9 +1124,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
           }
        }
     }
-    break;
-    case asttags::Interface:
-    break;
+    MAKE_CASE_NO_F(Interface)
     case asttags::Module:
     {
        if(0 < symstack.size()) {
@@ -1498,9 +1171,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
           }
        }
     }
-    break;
-    case asttags::START_AggregateDecl:
-    break;
+    MAKE_CASE_NO_F(START_AggregateDecl)
     case asttags::Record:
     {
        if(sym) {
@@ -1572,21 +1243,13 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
           }
        }
     }
-    break;
-    case asttags::Union:
-    break;
-    case asttags::END_AggregateDecl:
-    break;
-    case asttags::END_Decl:
-    break;
-    case asttags::END_NamedDecl:
-    break;
-    case asttags::END_TypeDecl:
-    break;
-    case asttags::NUM_AST_TAGS:
-    break;
-    case asttags::AST_TAG_UNKNOWN:
-    break;
+    MAKE_CASE_NO_F(Union)
+    MAKE_CASE_NO_F(END_AggregateDecl)
+    MAKE_CASE_NO_F(END_Decl)
+    MAKE_CASE_NO_F(END_NamedDecl)
+    MAKE_CASE_NO_F(END_TypeDecl)
+    MAKE_CASE_NO_F(NUM_AST_TAGS)
+    MAKE_CASE_NO_F(AST_TAG_UNKNOWN)
     default:
     break;
    }

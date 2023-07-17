@@ -37,9 +37,13 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
     template <> \
     void SymbolBuildingVisitor::enter_helper<uast::asttags::x>(const uast::AstNode* ast)\
 
-#define MAKE_CASE(x) \
+#define MAKE_CASE_WITH_ENTER_HELPER_F(x) \
          case asttags::x:\
             enter_helper<MAKE_ENUM_T(x)>(ast);\
+         break;\
+
+#define MAKE_CASE_NO_F(x) \
+         case asttags::x:\
          break;\
 
 #define MAKE_ENUM_T(x) uast::asttags::x

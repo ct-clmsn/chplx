@@ -49,6 +49,8 @@ set(chplx_sources
     src/symbolbuilding/range.cpp
     src/symbolbuilding/boolliteral.cpp
     src/symbolbuilding/imagliteral.cpp
+    src/symbolbuilding/intliteral.cpp
+    src/symbolbuilding/realliteral.cpp
 )
 
 set(chplx_headers
