@@ -8,7 +8,7 @@ extern bool fullFilePath;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-    SYMBOL_VISITOR_DEF_F(ImagLiteral)
+    SYMBOL_VISITOR_DEF_ENTER_H_F(ImagLiteral)
     {
         if (!(sym && 0 < sym->get().kind.index()))
         {

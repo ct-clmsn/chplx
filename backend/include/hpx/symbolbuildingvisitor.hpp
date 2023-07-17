@@ -33,9 +33,13 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
     template <>\
     void enter_helper<uast::asttags::x>(const uast::AstNode* ast);\
 
-#define SYMBOL_VISITOR_DEF_F(x) \
+#define SYMBOL_VISITOR_DEF_ENTER_H_F(x) \
     template <> \
     void SymbolBuildingVisitor::enter_helper<uast::asttags::x>(const uast::AstNode* ast)\
+
+#define SYMBOL_VISITOR_DEF_EXIT_H_F(x) \
+    template <> \
+    void SymbolBuildingVisitor::exit_helper<uast::asttags::x>(const uast::AstNode* ast)\
 
 #define MAKE_CASE_WITH_ENTER_HELPER_F(x) \
          case asttags::x:\
@@ -91,6 +95,9 @@ struct SymbolBuildingVisitor {
    // static std::unordered_map<uast::asttags::AstTag, auto> vals_map = {{}};
    template<uast::asttags::AstTag t>
    void enter_helper(const uast::AstNode*);
+
+   template<uast::asttags::AstTag t>
+   void exit_helper(const uast::AstNode*);
 
    SYMBOL_VISITOR_DEF(AnonFormal)    //
    SYMBOL_VISITOR_DEF(As)            //

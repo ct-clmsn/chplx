@@ -8,7 +8,7 @@ extern bool fullFilePath;
 
 namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
-    SYMBOL_VISITOR_DEF_F(Range)
+    SYMBOL_VISITOR_DEF_ENTER_H_F(Range)
     {
         if (sym && !std::holds_alternative<std::monostate>(sym->get().kind))
         {
