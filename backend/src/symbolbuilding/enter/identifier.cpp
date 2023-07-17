@@ -16,10 +16,10 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
         if (sym && !std::holds_alternative<std::monostate>(sym->get().kind))
         {
             const std::size_t lutId = sym->get().scopeId;
-            //std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) ?
-            //   std::get<std::shared_ptr<func_kind>>(sym->get().kind)->lutId :
-            //   sym->get().scopeId; // :
-            //   0;
+            // std::holds_alternative<std::shared_ptr<func_kind>>(sym->get().kind) ?
+            //    std::get<std::shared_ptr<func_kind>>(sym->get().kind)->lutId :
+            //    sym->get().scopeId; // :
+            //    0;
             if (std::holds_alternative<std::shared_ptr<array_kind>>(
                     sym->get().kind))
             {
@@ -58,12 +58,12 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
                     std::get<std::shared_ptr<kind_node_type>>(symref->retKind)
                         ->children.emplace_back(fsym->kind);
 
-                    //symref->args.emplace_back(
-                    //   Symbol{{
-                    //      fsym->kind,
-                    //      fsym->identifier,
-                    //      {ast}, -1, false, symbolTable.symbolTableRef->id
-                    //   }});
+                    // symref->args.emplace_back(
+                    //    Symbol{{
+                    //       fsym->kind,
+                    //       fsym->identifier,
+                    //       {ast}, -1, false, symbolTable.symbolTableRef->id
+                    //    }});
                 }
             }
             else if (std::holds_alternative<std::shared_ptr<func_kind>>(
@@ -76,7 +76,7 @@ namespace chpl { namespace ast { namespace visitors { namespace hpx {
 
                 std::optional<Symbol> fsym;
                 symbolTable.find(sym->get().scopeId, identifier_str, fsym);
-                //auto fsym = symbolTable.find(sym->get().scopeId, identifier_str);
+                // auto fsym = symbolTable.find(sym->get().scopeId, identifier_str);
 
                 if (fsym.has_value())
                 {

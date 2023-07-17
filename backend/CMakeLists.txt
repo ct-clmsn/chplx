@@ -43,18 +43,40 @@ set(chplx_sources
     src/symboltypes.cpp src/symbolbuildingvisitor.cpp src/programtree.cpp
     src/programtreebuildingvisitor.cpp src/codegenvisitor.cpp src/cmakegen.cpp src/driver.cpp
     src/util.cpp
-    src/symbolbuilding/array.cpp
-    src/symbolbuilding/domain.cpp
-    src/symbolbuilding/identifier.cpp
-    src/symbolbuilding/range.cpp
-    src/symbolbuilding/boolliteral.cpp
-    src/symbolbuilding/imagliteral.cpp
-    src/symbolbuilding/intliteral.cpp
-    src/symbolbuilding/realliteral.cpp
-    src/symbolbuilding/uintliteral.cpp
-    src/symbolbuilding/bytesliteral.cpp
-    src/symbolbuilding/cstringliteral.cpp
-    src/symbolbuilding/stringliteral.cpp
+    src/symbolbuilding/enter/imagliteral.cpp
+    src/symbolbuilding/enter/block.cpp
+    src/symbolbuilding/enter/identifier.cpp
+    src/symbolbuilding/enter/function.cpp
+    src/symbolbuilding/enter/variable.cpp
+    src/symbolbuilding/enter/class.cpp
+    src/symbolbuilding/enter/fncall.cpp
+    src/symbolbuilding/enter/stringliteral.cpp
+    src/symbolbuilding/enter/array.cpp
+    src/symbolbuilding/enter/tuple.cpp
+    src/symbolbuilding/enter/record.cpp
+    src/symbolbuilding/enter/intliteral.cpp
+    src/symbolbuilding/enter/for.cpp
+    src/symbolbuilding/enter/uintliteral.cpp
+    src/symbolbuilding/enter/forall.cpp
+    src/symbolbuilding/enter/cstringliteral.cpp
+    src/symbolbuilding/enter/realliteral.cpp
+    src/symbolbuilding/enter/module.cpp
+    src/symbolbuilding/enter/coforall.cpp
+    src/symbolbuilding/enter/boolliteral.cpp
+    src/symbolbuilding/enter/opcall.cpp
+    src/symbolbuilding/enter/conditional.cpp
+    src/symbolbuilding/enter/range.cpp
+    src/symbolbuilding/enter/bytesliteral.cpp
+    src/symbolbuilding/enter/bracketloop.cpp
+    src/symbolbuilding/enter/domain.cpp
+    src/symbolbuilding/enter/formal.cpp
+    src/symbolbuilding/exit/block.cpp
+    src/symbolbuilding/exit/function.cpp
+    src/symbolbuilding/exit/variable.cpp
+    src/symbolbuilding/exit/class.cpp
+    src/symbolbuilding/exit/record.cpp
+    src/symbolbuilding/exit/module.cpp
+    src/symbolbuilding/exit/range.cpp
 )
 
 set(chplx_headers
