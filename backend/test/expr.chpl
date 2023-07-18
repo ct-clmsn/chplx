@@ -87,7 +87,7 @@ c(0,0) = c[0,0];
 c(0,0) = c(0,0);
 c[0 + 0, 0] = 1;
 c(0 + 0, 0) = 1;
-
+/*
 var y = valuea(1);
 var z = valuea(a);
 var w : int = valuea(a);
@@ -97,3 +97,4 @@ proc valueb(a : int) : int {
    x = valuea(a);
    return x + valuea(a);
 }
+*/
