@@ -7,34 +7,13 @@ namespace tup {
 
     struct __thisModule* __this = nullptr;
 
-    void __thisModule::__main()
+#line 8 "../../backend/test/tup.chpl"
+    auto __thisModule::dd()
     {
-#line 7 "tup.chpl"
-        chplx::Tuple<std::int64_t, std::int64_t> a{1, 2};
-#line 8 "tup.chpl"
-        std::int64_t b = a(1);
-#line 9 "tup.chpl"
-        b = a(0);
-#line 10 "tup.chpl"
-        std::int64_t c = a(0);
-#line 11 "tup.chpl"
-        std::int64_t d = 1;
-#line 12 "tup.chpl"
-        std::int64_t e = 1;
-#line 13 "tup.chpl"
-        chplx::Tuple<std::int64_t, std::int64_t> z{1, 1};
-#line 14 "tup.chpl"
-        chplx::Tuple<std::int64_t, std::int64_t> f{};
-#line 15 "tup.chpl"
-        f(0) = 1;
-#line 16 "tup.chpl"
-        f(0) = b;
-#line 17 "tup.chpl"
-        f(1) = f(1);
-#line 18 "tup.chpl"
-        chplx::Tuple<std::int64_t, std::int64_t> w{};
-#line 19 "tup.chpl"
-        w = chplx::Tuple<std::int64_t, std::int64_t>{1, 2};
-    }
+#line 9 "../../backend/test/tup.chpl"
+        return 1;
+    };
+
+    void __thisModule::__main() {}
 
 }    // namespace tup

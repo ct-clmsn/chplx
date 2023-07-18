@@ -7,17 +7,17 @@
 #define __CFG_HPP__
 
 #include <chplx.hpp>
-#line 1 "cfg.chpl"
+#line 1 "../../backend/test/cfg.chpl"
 namespace cfg {
     extern struct __thisModule* __this;
 
-#line 8 "cfg.chpl"
+#line 8 "../../backend/test/cfg.chpl"
     extern std::int64_t a;
-#line 9 "cfg.chpl"
+#line 9 "../../backend/test/cfg.chpl"
     extern std::int64_t b;
-#line 10 "cfg.chpl"
+#line 10 "../../backend/test/cfg.chpl"
     extern std::int64_t c;
-#line 11 "cfg.chpl"
+#line 11 "../../backend/test/cfg.chpl"
     extern std::int64_t d;
 
     struct __thisModule
