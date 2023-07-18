@@ -50,12 +50,10 @@ proc update(d : []real, d2 : []real) {
 */
   inlinecxx("hpx::chrono::high_resolution_timer t;");
 
-  for t in 1..10 do { //nt do {
+  for t in 1..nt do {
     update(data, data2);
-    data <=> data2;
+//    data <=> data2;
   }
-
-  inlinecxx("std::cout << \"chapelng,{},{},\" << hpx::resource::get_num_threads() << \",{},{},\" << t.elapsed() << \",0\");", nx, nt, dt, dx);
 
 /*
   t.stop();
@@ -64,5 +62,8 @@ proc update(d : []real, d2 : []real) {
   }
   writeln("chapelng,",nx,",",nt,",",getenv('CHPL_RT_NUM_THREADS_PER_LOCALE'.c_str()):string,",",dt,",",dx,",",t.elapsed(),",0");
 */
+
+  inlinecxx("const auto elapsed = t.elapsed();");
+  inlinecxx("std::cout << \"chapelng,{},{},\" << hpx::resource::get_num_threads() << \",{},{},\" << elapsed << \",0\");", nx, nt, dt, dx);
 
 //}
