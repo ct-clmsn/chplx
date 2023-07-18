@@ -7,10 +7,10 @@ namespace tup {
 
     struct __thisModule* __this = nullptr;
 
-#line 8 "../../backend/test/tup.chpl"
+#line 8 "tup.chpl"
     auto __thisModule::dd()
     {
-#line 9 "../../backend/test/tup.chpl"
+#line 9 "tup.chpl"
         return 1;
     };
 
