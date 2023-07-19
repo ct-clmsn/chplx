@@ -1,63 +1,4 @@
-FROM debian:11
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash \
-    ca-certificates \
-    clang-11 \
-    cmake \
-    curl \
-    file \
-    gcc \
-    git \
-    g++ \
-    libclang-11-dev \
-    libclang-cpp11-dev \
-    libedit-dev \
-    libgmp10 \
-    libgmp-dev \
-    llvm-11-dev \
-    llvm-11 \
-    llvm-11-tools \
-    locales \
-    make \
-    mawk \
-    m4 \
-    perl \
-    pkg-config \
-    protobuf-compiler \
-    python-setuptools \
-    python3 \
-    python3-pip \
-    python3-venv \
-    python3-dev \
-    wget && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN git clone --recursive https://github.com/chapel-lang/chapel.git /opt/chapel
-WORKDIR /opt/chapel
-RUN . util/quickstart/setchplenv.sh
-
-# configure dummy git user (required for Mason unit tests)
-RUN git config --global user.email "noreply@example.com" && \
-    git config --global user.name "Chapel user"
-
-# set up Chapel environment variables
-ENV CHPL_HOME=/opt/chapel \
-    CHPL_GMP=system \
-    CHPL_LLVM=system
-
-# configure locale
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    echo 'LANG="en_US.UTF-8"' >/etc/default/locale && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=en_US.UTF-8
-
-RUN CHPL_TARGET_COMPILER=llvm make -j8
-
-RUN cd $CHPL_HOME/bin && ln -s */* .
-
 FROM ubuntu:22.04
-
-COPY --from=0 /opt/chapel /opt/chapel
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -88,6 +29,7 @@ RUN apt-get update -qq && apt-get install -y -qq \
         clang-tools-15 \
         clang-15-doc \
         libclang-common-15-dev \
+        libclang-cpp15-dev \
         libclang-15-dev \
         libclang1-15 \
         clang-format-15 \
@@ -103,14 +45,9 @@ RUN apt-get update -qq && apt-get install -y -qq \
         llvm-15-doc \
         llvm-15-examples \
         llvm-15-runtime \
-        libclang-11-dev \
-        libclang-cpp11-dev \
         libedit-dev \
         libgmp10 \
         libgmp-dev \
-        llvm-11-dev \
-        llvm-11 \
-        llvm-11-tools \
         libc++1-15 \
         libc++abi1-15 \
         liblldb-15-dev \
@@ -169,6 +106,28 @@ RUN wget -q https://github.com/mozilla/grcov/releases/download/v0.7.1/grcov-linu
     mv grcov /usr/bin && \
     rm grcov.tar.bz2
 
+
+RUN git clone --recursive -b release/1.31 --depth 1 https://github.com/chapel-lang/chapel.git /opt/chapel
+WORKDIR /opt/chapel
+RUN . util/quickstart/setchplenv.sh
+
+# configure dummy git user (required for Mason unit tests)
+RUN git config --global user.email "noreply@example.com" && \
+    git config --global user.name "Chapel user"
+
+# set up Chapel environment variables
+ENV CHPL_HOME=/opt/chapel \
+    CHPL_GMP=system \
+    CHPL_LLVM=system
+
+RUN apt install  -qq --no-install-recommends -y gcc g++
+RUN ./configure
+RUN CHPL_TARGET_COMPILER=llvm make -j8
+
+RUN cd $CHPL_HOME/bin && ln -s */* .
+
+WORKDIR /opt/chplx
+
 COPY docs_requirements.txt docs_requirements.txt
 
 # Creating a python env to eliminate conflicts with system python packages
@@ -208,10 +167,8 @@ COPY .gitignore .
 
 RUN rm -rf build/
 RUN mkdir -p build 
-RUN mv /usr/lib/llvm-11 /tmp/llvm-11
 RUN cd build && cmake .. -G Ninja -DCHPL_HOME=frontend/
 RUN cd build && ninja
-RUN mv /tmp/llvm-11 /usr/lib/llvm-11
 
 # set up Chapel environment variables
 ENV CHPL_HOME=/opt/chapel \
