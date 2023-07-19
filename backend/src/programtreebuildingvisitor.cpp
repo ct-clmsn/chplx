@@ -888,7 +888,6 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
               else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back())) {
                  std::shared_ptr<ScalarDeclarationExprExpression> stmt =
                     std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
-
                  auto itr = fsym->first;
                  for(; itr != fsym->second; ++itr) {
                     if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {

@@ -834,7 +834,16 @@ struct StatementVisitor {
    void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
       if(printChplLine) {
          emitIndent();
-         emitChapelLine(os, node->ast);
+         if(node->statements.size() &&
+            !std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0])) {
+            emitChapelLine(os, node->ast);
+         }
+
+         if(node->statements.size() &&
+            std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0])) {
+            auto & sdee = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0]);
+            os << sdee->chplLine;
+         }
       }
 
       if(!arg) {
@@ -844,6 +853,17 @@ struct StatementVisitor {
       std::visit(ExprVisitor{os}, node->statements[0]);
 
       os << ' ' << node->op << ' ';
+
+      if(std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0])) {
+         auto & sdee = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0]);
+         if(sdee->statements.size()) {
+            std::visit(ExprVisitor{os}, sdee->statements[0]);
+            os << ';' << std::endl;
+            if(1 < node->statements.size()) {
+               emitIndent();
+            }
+         }
+      }
 
       if(std::holds_alternative<std::shared_ptr<ArrayDeclarationExprExpression>>(node->statements[0])) {
          auto & adee = std::get<std::shared_ptr<ArrayDeclarationExprExpression>>(node->statements[0]);

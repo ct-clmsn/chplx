@@ -49,8 +49,8 @@ aaa[zz] = aaa[zz];
 aaa(zz) = aaa(zz);
 
 var za = [dd(), dd()];
-var zc = [1];
-var zb = [1, dd()];
+//var zc = [1];
+//var zb = [1, dd()];
 
 //var a = {1..10};
 //var a : domain(1) = {1..10};

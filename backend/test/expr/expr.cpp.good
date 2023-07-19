@@ -7,157 +7,156 @@ namespace expr {
 
     struct __thisModule* __this = nullptr;
 
-#line 30 "expr.chpl"
+#line 31 "expr.chpl"
     std::int64_t __thisModule::value()
     {
-#line 31 "expr.chpl"
+#line 32 "expr.chpl"
         return 1;
     };
 
-#line 43 "expr.chpl"
+#line 44 "expr.chpl"
     auto __thisModule::valuea(std::int64_t a)
     {
-#line 44 "expr.chpl"
+#line 45 "expr.chpl"
         return a;
     };
 
-#line 97 "expr.chpl"
+#line 98 "expr.chpl"
     auto __thisModule::valueb(std::int64_t a)
     {
 #line 99 "expr.chpl"
-        auto x = x = valuea(a);
-#line 100 "expr.chpl"
+        auto x = valuea(a);
+        x = valuea(a);
+#line 101 "expr.chpl"
         return valuea(a) + x;
     };
 
     void __thisModule::__main()
     {
-#line 7 "expr.chpl"
-        std::int64_t a;
 #line 8 "expr.chpl"
-        a = 1 + 1;
+        std::int64_t a;
 #line 9 "expr.chpl"
-        a = a + 1;
+        a = 1 + 1;
 #line 10 "expr.chpl"
-        a = 1 + a;
+        a = a + 1;
 #line 11 "expr.chpl"
-        a = a + a;
-#line 12 "expr.chpl"
-        a = (a + a) + a;
-#line 13 "expr.chpl"
-        a = (a + a) + 1;
-#line 14 "expr.chpl"
-        a = ((1 + a) + a) + a;
-#line 15 "expr.chpl"
-        a = ((a + 1) + a) + a;
-#line 16 "expr.chpl"
-        a = ((a + a) + 1) + a;
-#line 17 "expr.chpl"
-        a = ((a + a) + a) + 1;
-#line 18 "expr.chpl"
-        a = 1 + (1 + 1);
-#line 19 "expr.chpl"
-        a = (1 + 1) + 1;
-#line 20 "expr.chpl"
-        a = a + ((a + a) + a);
-#line 21 "expr.chpl"
-        a = ((a + a) + a) + a;
-#line 22 "expr.chpl"
-        a = 1 + (1 * 1);
-#line 23 "expr.chpl"
         a = 1 + a;
-#line 24 "expr.chpl"
+#line 12 "expr.chpl"
         a = a + a;
-#line 25 "expr.chpl"
-        a = a + (a + a);
-#line 26 "expr.chpl"
+#line 13 "expr.chpl"
         a = (a + a) + a;
-#line 27 "expr.chpl"
+#line 14 "expr.chpl"
+        a = (a + a) + 1;
+#line 15 "expr.chpl"
+        a = ((1 + a) + a) + a;
+#line 16 "expr.chpl"
+        a = ((a + 1) + a) + a;
+#line 17 "expr.chpl"
+        a = ((a + a) + 1) + a;
+#line 18 "expr.chpl"
+        a = ((a + a) + a) + 1;
+#line 19 "expr.chpl"
+        a = 1 + (1 + 1);
+#line 20 "expr.chpl"
+        a = (1 + 1) + 1;
+#line 21 "expr.chpl"
         a = a + ((a + a) + a);
-#line 28 "expr.chpl"
+#line 22 "expr.chpl"
         a = ((a + a) + a) + a;
-#line 34 "expr.chpl"
-        a = value();
+#line 23 "expr.chpl"
+        a = 1 + (1 * 1);
+#line 24 "expr.chpl"
+        a = 1 + a;
+#line 25 "expr.chpl"
+        a = a + a;
+#line 26 "expr.chpl"
+        a = a + (a + a);
+#line 27 "expr.chpl"
+        a = (a + a) + a;
+#line 28 "expr.chpl"
+        a = a + ((a + a) + a);
+#line 29 "expr.chpl"
+        a = ((a + a) + a) + a;
 #line 35 "expr.chpl"
-        a = 1 + value();
+        a = value();
 #line 36 "expr.chpl"
-        a = value() + 1;
+        a = 1 + value();
 #line 37 "expr.chpl"
-        a = value() + value();
+        a = value() + 1;
 #line 38 "expr.chpl"
-        a = a + (value() + value());
+        a = value() + value();
 #line 39 "expr.chpl"
-        a = (value() + value()) + a;
+        a = a + (value() + value());
 #line 40 "expr.chpl"
-        a = ((value() + value()) + value()) + a;
+        a = (value() + value()) + a;
 #line 41 "expr.chpl"
+        a = ((value() + value()) + value()) + a;
+#line 42 "expr.chpl"
         a = a + ((value() + value()) + value());
-#line 47 "expr.chpl"
-        a = valuea(a);
 #line 48 "expr.chpl"
-        a = valuea(1 + a);
+        a = valuea(a);
 #line 49 "expr.chpl"
-        a = 1 + valuea(1 + a);
+        a = valuea(1 + a);
 #line 50 "expr.chpl"
-        a = valuea(1 + a) + 1;
+        a = 1 + valuea(1 + a);
 #line 51 "expr.chpl"
-        a = 1 + valuea(a);
+        a = valuea(1 + a) + 1;
 #line 52 "expr.chpl"
-        a = valuea(a) + 1;
+        a = 1 + valuea(a);
 #line 53 "expr.chpl"
-        a = valuea(a) + valuea(a);
+        a = valuea(a) + 1;
 #line 54 "expr.chpl"
-        a = a + (valuea(a) + valuea(a));
+        a = valuea(a) + valuea(a);
 #line 55 "expr.chpl"
-        a = (valuea(a) + valuea(a)) + a;
+        a = a + (valuea(a) + valuea(a));
 #line 56 "expr.chpl"
-        a = ((valuea(a) + valuea(a)) + valuea(a)) + a;
+        a = (valuea(a) + valuea(a)) + a;
 #line 57 "expr.chpl"
+        a = ((valuea(a) + valuea(a)) + valuea(a)) + a;
+#line 58 "expr.chpl"
         a = a + ((valuea(a) + valuea(a)) + valuea(a));
-#line 59 "expr.chpl"
+#line 60 "expr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<1>> b(chplx::Range(0, 10));
-#line 61 "expr.chpl"
-        b(0) = 1;
 #line 62 "expr.chpl"
-        b(0) = a;
+        b(0) = 1;
 #line 63 "expr.chpl"
         b(0) = a;
 #line 64 "expr.chpl"
-        b(0) = b(0);
+        b(0) = a;
 #line 65 "expr.chpl"
         b(0) = b(0);
 #line 66 "expr.chpl"
         b(0) = b(0);
 #line 67 "expr.chpl"
         b(0) = b(0);
-#line 69 "expr.chpl"
-        b(0 + 0) = 1;
+#line 68 "expr.chpl"
+        b(0) = b(0);
 #line 70 "expr.chpl"
         b(0 + 0) = 1;
-#line 72 "expr.chpl"
-        b(0 + 0) = a;
+#line 71 "expr.chpl"
+        b(0 + 0) = 1;
 #line 73 "expr.chpl"
         b(0 + 0) = a;
 #line 74 "expr.chpl"
-        b(0 + 0) = b(0);
+        b(0 + 0) = a;
 #line 75 "expr.chpl"
         b(0 + 0) = b(0);
 #line 76 "expr.chpl"
-        b(0 + 0) = b(0 + 0);
+        b(0 + 0) = b(0);
 #line 77 "expr.chpl"
         b(0 + 0) = b(0 + 0);
-#line 79 "expr.chpl"
+#line 78 "expr.chpl"
+        b(0 + 0) = b(0 + 0);
+#line 80 "expr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<2>> c({{1, 2}, {3, 4}});
-#line 81 "expr.chpl"
-        c(0, 0) = 0;
 #line 82 "expr.chpl"
-        c(0, 0) = a;
-#line 83 "expr.chpl"
         c(0, 0) = 0;
-#line 84 "expr.chpl"
+#line 83 "expr.chpl"
         c(0, 0) = a;
+#line 84 "expr.chpl"
+        c(0, 0) = 0;
 #line 85 "expr.chpl"
-        c(0, 0) = c(0, 0);
+        c(0, 0) = a;
 #line 86 "expr.chpl"
         c(0, 0) = c(0, 0);
 #line 87 "expr.chpl"
@@ -165,16 +164,18 @@ namespace expr {
 #line 88 "expr.chpl"
         c(0, 0) = c(0, 0);
 #line 89 "expr.chpl"
-        c(0 + 0, 0) = 1;
+        c(0, 0) = c(0, 0);
 #line 90 "expr.chpl"
         c(0 + 0, 0) = 1;
-#line 92 "expr.chpl"
-        auto y = valuea();
+#line 91 "expr.chpl"
+        c(0 + 0, 0) = 1;
 #line 93 "expr.chpl"
-        auto z = valuea(a);
+        auto y = valuea();
 #line 94 "expr.chpl"
-        auto w = valuea(a);
+        auto z = valuea(a);
 #line 95 "expr.chpl"
+        auto w = valuea(a);
+#line 96 "expr.chpl"
         auto u = valuea(1);
     }
 
