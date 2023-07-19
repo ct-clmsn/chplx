@@ -97,7 +97,7 @@ struct VariableVisitor {
    void operator()(std::shared_ptr<class_kind> const&) {
    }
    void operator()(std::shared_ptr<array_kind> const& t) {
-      curStmts.emplace_back(ArrayDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
+        curStmts.emplace_back(ArrayDeclarationExpression{{{scopePtr}, identifier, sym.kind, emitChapelLine(ast), sym.kindqualifier, sym.isConfig}});
    }
    void operator()(std::shared_ptr<associative_kind> const&) {
    }
@@ -885,6 +885,23 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                     }
                  }
               }
+              else if(0 < cStmts->size() && std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back())) {
+                 std::shared_ptr<ScalarDeclarationExprExpression> stmt =
+                    std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
+
+                 auto itr = fsym->first;
+                 for(; itr != fsym->second; ++itr) {
+                    if(itr->first.size() >= identifier.size() && itr->first.substr(0, identifier.size()) == identifier) {
+                       stmt->statements.emplace_back(
+                          std::make_shared<FunctionCallExpression>(
+                             FunctionCallExpression{{symbolTableRef->id}, itr->second, {}, emitChapelLine(ast), symbolTable}
+                       ));
+
+                       curStmts.push_back(&(std::get<std::shared_ptr<FunctionCallExpression>>(stmt->statements.back())->arguments));
+                       break;
+                    }
+                 }
+              }
               else if(0 < cStmts->size() && std::holds_alternative<ArrayDeclarationLiteralExpression>(cStmts->back())) {
                  break;
               }   
@@ -1231,10 +1248,22 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                 std::get<std::shared_ptr<domain_kind>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->args.back().kind)->args.back().kind
           )) {
              std::vector<Statement> * cStmts = curStmts.back();
-             std::visit(
-                VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
-                varsym->kind
-             );
+
+             // this situation is not likely to happen
+             //
+             if(varsym->literal.size() ||
+                std::holds_alternative<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->retKind) ) {
+                   std::visit(
+                      VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
+                      varsym->kind
+                   );
+                }
+                else {
+                   std::visit(
+                   VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
+                   varsym->kind
+                   );
+             }
 
              if(std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back())) {
                auto & se = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(cStmts->back());
@@ -1282,10 +1311,20 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                curStmts.emplace_back(&(te->statements));
              }
              else {
-                std::visit(
-                   VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
-                   varsym->kind
-                );
+                if(varsym->literal.size() ||
+                   ( std::holds_alternative<std::shared_ptr<array_kind>>(varsym->kind) &&
+                     std::holds_alternative<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->retKind)) ) {
+                   std::visit(
+                      VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
+                      varsym->kind
+                   );
+                }
+                else {
+                   std::visit(
+                      VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
+                      varsym->kind
+                   );
+                }
              }
           }
        }

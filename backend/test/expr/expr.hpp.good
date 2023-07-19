@@ -18,6 +18,8 @@ namespace expr {
         std::int64_t value();
 #line 43 "expr.chpl"
         auto valuea(std::int64_t a);
+#line 97 "expr.chpl"
+        auto valueb(std::int64_t a);
 
         static void __construct()
         {

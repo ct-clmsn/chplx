@@ -21,10 +21,23 @@ namespace expr {
         return a;
     };
 
+#line 97 "expr.chpl"
+    auto __thisModule::valueb(std::int64_t a)
+    {
+#line 99 "expr.chpl"
+        auto x = x = valuea(a);
+#line 100 "expr.chpl"
+        return valuea(a) + x;
+    };
+
     void __thisModule::__main()
     {
+#line 7 "expr.chpl"
+        std::int64_t a;
+#line 8 "expr.chpl"
+        a = 1 + 1;
 #line 9 "expr.chpl"
-        auto a = a = (a + 1);
+        a = a + 1;
 #line 10 "expr.chpl"
         a = 1 + a;
 #line 11 "expr.chpl"
@@ -135,16 +148,14 @@ namespace expr {
         b(0 + 0) = b(0 + 0);
 #line 79 "expr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<2>> c({{1, 2}, {3, 4}});
-#line 80 "expr.chpl"
-        c(0, 0) = 0;
 #line 81 "expr.chpl"
-        c(0, 0) = a;
-#line 82 "expr.chpl"
         c(0, 0) = 0;
-#line 83 "expr.chpl"
+#line 82 "expr.chpl"
         c(0, 0) = a;
+#line 83 "expr.chpl"
+        c(0, 0) = 0;
 #line 84 "expr.chpl"
-        c(0, 0) = c(0, 0);
+        c(0, 0) = a;
 #line 85 "expr.chpl"
         c(0, 0) = c(0, 0);
 #line 86 "expr.chpl"
@@ -152,9 +163,19 @@ namespace expr {
 #line 87 "expr.chpl"
         c(0, 0) = c(0, 0);
 #line 88 "expr.chpl"
-        c(0 + 0, 0) = 1;
+        c(0, 0) = c(0, 0);
 #line 89 "expr.chpl"
         c(0 + 0, 0) = 1;
+#line 90 "expr.chpl"
+        c(0 + 0, 0) = 1;
+#line 92 "expr.chpl"
+        auto y = valuea();
+#line 93 "expr.chpl"
+        auto z = valuea(a);
+#line 94 "expr.chpl"
+        auto w = valuea(a);
+#line 95 "expr.chpl"
+        auto u = valuea(1);
     }
 
 }    // namespace expr

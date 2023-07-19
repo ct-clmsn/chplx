@@ -739,14 +739,20 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
         )) {
            const FnCall* fc = dynamic_cast<const FnCall*>(ast);
            std::string identifier{dynamic_cast<const Identifier*>(fc->calledExpression())->name().c_str()};
+std::cout << "FNCALL1" << std::endl;
            auto rsym =
               symbolTable.findPrefix(symbolTable.symbolTableRef->id, identifier);
+std::cout << "FNCALL2" << std::endl;
+std::cout << "FNCALL\t" << symbolTable.symbolTableRef->id << ' ' << identifier << std::endl;
+           assert(rsym.has_value());
            auto itr = rsym->first;
-           for(; itr != rsym->second; ++itr) {
+           for(; itr != rsym->second; itr++) {
+std::cout << "FNCALL3" << std::endl;
 
               auto pipeloc = itr->first.find('|');
+std::cout << "FNCALL4" << std::endl;
               std::string itrstr {(pipeloc == itr->first.npos) ? itr->first : itr->first.substr(0,pipeloc)};
-
+std::cout << "FNCALL5" << std::endl;
               // assign variable the return value of the function...
               //
               if(itrstr.size() >= identifier.size() &&
@@ -1937,10 +1943,10 @@ std::cout << "POP BLOCK HERE2" << std::endl;
           auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
           if(!lusym) {
              symbolTable.parentModuleId -= 1;
-std::cout << "MODULE\t" << sym->get().identifier << '\t' << sym->get().kind.index() << std::endl;
+//std::cout << "MODULE\t" << sym->get().identifier << '\t' << sym->get().kind.index() << std::endl;
              std::shared_ptr<module_kind> & fk =
                 std::get<std::shared_ptr<module_kind>>(sym->get().kind);
-std::cout << "MODULE" << std::endl;
+//std::cout << "MODULE" << std::endl;
 
              if(fk->retKind.index() < 1) {
                 fk->retKind = nil_kind{};

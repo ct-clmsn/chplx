@@ -81,6 +81,8 @@ namespace arr {
         aaa(zz) = aaa(zz);
 #line 49 "arr.chpl"
         aaa(zz) = aaa(zz);
+#line 51 "arr.chpl"
+        chplx::Array<, chplx::Domain<1>> za({dd(), dd()});
     }
 
 }    // namespace arr

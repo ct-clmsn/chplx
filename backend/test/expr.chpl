@@ -77,6 +77,7 @@ b[0 + 0] = b[0+0];
 b(0 + 0) = b(0+0);
 
 var c = [[1,2], [3,4]];
+
 c[0,0] = 0;
 c[0,0] = a;
 c(0,0) = 0;
@@ -87,14 +88,14 @@ c(0,0) = c[0,0];
 c(0,0) = c(0,0);
 c[0 + 0, 0] = 1;
 c(0 + 0, 0) = 1;
-/*
-var y = valuea(1);
+
+var y = value();
 var z = valuea(a);
 var w : int = valuea(a);
 var u : int = valuea(1);
+
 proc valueb(a : int) : int {
    var x = valuea(a);
    x = valuea(a);
    return x + valuea(a);
 }
-*/
