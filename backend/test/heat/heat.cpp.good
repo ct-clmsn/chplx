@@ -43,7 +43,7 @@ namespace heat {
 #line 16 "heat.chpl"
 #include <hpx/include/util.hpp>
 #line 28 "heat.chpl"
-        auto NX = nx + 1;
+        auto NX = 1000000 + 1;
 #line 30 "heat.chpl"
         chplx::Array<double, chplx::Domain<1>> data(chplx::Range(0, NX));
 #line 31 "heat.chpl"
@@ -65,7 +65,9 @@ namespace heat {
 #line 68 "heat.chpl"
         const auto elapsed = t.elapsed();
 #line 69 "heat.chpl"
-    std::cout << "chapelng," << nx << "," << nt << "," << hpx::resource::get_num_threads() << "," << dt << "," << dx << "," << elapsed << ",0");
+        std::cout << "chapelng," << nx << "," << nt << ","
+                  << hpx::resource::get_num_threads() << "," << dt << "," << dx
+                  << "," << elapsed << ",0";
     }
 
 }    // namespace heat

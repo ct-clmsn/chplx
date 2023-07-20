@@ -25,7 +25,7 @@ config const nx: int = 1000000;
 config const nt: int = 100;
 config const threads: int = 1;
 
-const NX : int = nx + 1;
+config const NX : int = 1000000 + 1; // nx + 1;
 
 var data: [0..NX] real;
 var data2: [0..NX] real;
@@ -66,6 +66,6 @@ proc update(d : []real, d2 : []real) {
 */
 
   inlinecxx("const auto elapsed = t.elapsed();");
-  inlinecxx("std::cout << \"chapelng,\" << {} << \",\" << {} << \",\" << hpx::resource::get_num_threads() << \",\" << {} << \",\" << {} << \",\" << elapsed << \",0\");", nx, nt, dt, dx);
+  inlinecxx("std::cout << \"chapelng,\" << {} << \",\" << {} << \",\" << hpx::resource::get_num_threads() << \",\" << {} << \",\" << {} << \",\" << elapsed << \",0\";", nx, nt, dt, dx);
 
 //}
