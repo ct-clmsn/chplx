@@ -13,8 +13,6 @@
 
 //use Time;
 
-inlinecxx("#include <hpx/include/util.hpp>");
-
 //extern proc getenv(name : c_string) : c_string;
 config const ghosts: int = 1;
 config const k: real = 0.4;
@@ -37,10 +35,10 @@ proc update(d : []real, d2 : []real) {
 
 //proc main() {
 
-const NX : int = nx + 1;
+  const NX : int = nx + 1;
 
-var data: [0..NX] real;
-var data2: [0..NX] real;
+  var data: [0..NX] real;
+  var data2: [0..NX] real;
 
   forall i in 0..NX do {
     data[i] = 1 + (i-1 + nx) % nx;

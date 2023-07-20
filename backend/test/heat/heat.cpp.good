@@ -7,66 +7,64 @@ namespace heat {
 
     struct __thisModule* __this = nullptr;
 
-#line 28 "heat.chpl"
+#line 26 "heat.chpl"
     void __thisModule::update(chplx::Array<double, chplx::Domain<1>>& d,
         chplx::Array<double, chplx::Domain<1>>& d2)
     {
-#line 29 "heat.chpl"
+#line 27 "heat.chpl"
         auto NX = nx + 1;
-#line 30 "heat.chpl"
+#line 28 "heat.chpl"
         chplx::forall(chplx::Range{1, NX - 1}, [&](auto i) {
-#line 32 "heat.chpl"
+#line 30 "heat.chpl"
             d2(i) = d(i) +
                 (((dt * k) / (dx * dx)) * ((d(1 + i) + d(1 - i)) - (2 * d(i))));
         });
-#line 34 "heat.chpl"
+#line 32 "heat.chpl"
         d2(0) = d2(1 - NX);
-#line 35 "heat.chpl"
+#line 33 "heat.chpl"
         d2(NX) = d2(1);
     };
 
-#line 19 "heat.chpl"
+#line 17 "heat.chpl"
     std::int64_t ghosts = 1;
-#line 20 "heat.chpl"
+#line 18 "heat.chpl"
     double k = 0.400000;
-#line 21 "heat.chpl"
+#line 19 "heat.chpl"
     double dt = 1.000000;
-#line 22 "heat.chpl"
+#line 20 "heat.chpl"
     double dx = 1.000000;
-#line 24 "heat.chpl"
+#line 22 "heat.chpl"
     std::int64_t nx = 1000000;
-#line 25 "heat.chpl"
+#line 23 "heat.chpl"
     std::int64_t nt = 100;
-#line 26 "heat.chpl"
+#line 24 "heat.chpl"
     std::int64_t threads = 1;
 
     void __thisModule::__main()
     {
-#line 16 "heat.chpl"
-#include <hpx/include/util.hpp>
-#line 40 "heat.chpl"
+#line 38 "heat.chpl"
         auto NX = nx + 1;
-#line 42 "heat.chpl"
+#line 40 "heat.chpl"
         chplx::Array<double, chplx::Domain<1>> data(chplx::Range(0, NX));
-#line 43 "heat.chpl"
+#line 41 "heat.chpl"
         chplx::Array<double, chplx::Domain<1>> data2(chplx::Range(0, NX));
-#line 45 "heat.chpl"
+#line 43 "heat.chpl"
         chplx::forall(chplx::Range{0, NX}, [&](auto i) {
-#line 46 "heat.chpl"
+#line 44 "heat.chpl"
             data(i) = 1 + (((i - 1) + nx) % nx);
-#line 47 "heat.chpl"
+#line 45 "heat.chpl"
             data2(i) = 0;
         });
-#line 54 "heat.chpl"
+#line 52 "heat.chpl"
         hpx::chrono::high_resolution_timer t;
-#line 56 "heat.chpl"
+#line 54 "heat.chpl"
         chplx::forLoop(chplx::Range{1, nt}, [&](auto t) {
-#line 57 "heat.chpl"
+#line 55 "heat.chpl"
             update(data, data2);
         });
-#line 69 "heat.chpl"
+#line 67 "heat.chpl"
         const auto elapsed = t.elapsed();
-#line 70 "heat.chpl"
+#line 68 "heat.chpl"
         std::cout << "chapelng," << nx << "," << nt << ","
                   << hpx::resource::get_num_threads() << "," << dt << "," << dx
                   << "," << elapsed << ",0";
