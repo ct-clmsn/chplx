@@ -25,9 +25,6 @@ config const nx: int = 1000000;
 config const nt: int = 100;
 config const threads: int = 1;
 
-var data: [0..NX] real;
-var data2: [0..NX] real;
-
 proc update(d : []real, d2 : []real) {
   const NX : int = nx + 1;
   forall i in 1..NX-1 do {
@@ -40,7 +37,10 @@ proc update(d : []real, d2 : []real) {
 
 //proc main() {
 
-  const NX : int = nx + 1;
+const NX : int = nx + 1;
+
+var data: [0..NX] real;
+var data2: [0..NX] real;
 
   forall i in 0..NX do {
     data[i] = 1 + (i-1 + nx) % nx;

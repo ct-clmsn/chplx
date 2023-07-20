@@ -7,21 +7,21 @@ namespace heat {
 
     struct __thisModule* __this = nullptr;
 
-#line 31 "heat.chpl"
+#line 28 "heat.chpl"
     void __thisModule::update(chplx::Array<double, chplx::Domain<1>>& d,
         chplx::Array<double, chplx::Domain<1>>& d2)
     {
-#line 32 "heat.chpl"
+#line 29 "heat.chpl"
         auto NX = nx + 1;
-#line 33 "heat.chpl"
+#line 30 "heat.chpl"
         chplx::forall(chplx::Range{1, NX - 1}, [&](auto i) {
-#line 35 "heat.chpl"
+#line 32 "heat.chpl"
             d2(i) = d(i) +
                 (((dt * k) / (dx * dx)) * ((d(1 + i) + d(1 - i)) - (2 * d(i))));
         });
-#line 37 "heat.chpl"
+#line 34 "heat.chpl"
         d2(0) = d2(1 - NX);
-#line 38 "heat.chpl"
+#line 35 "heat.chpl"
         d2(NX) = d2(1);
     };
 
@@ -44,12 +44,12 @@ namespace heat {
     {
 #line 16 "heat.chpl"
 #include <hpx/include/util.hpp>
-#line 28 "heat.chpl"
-        chplx::Array<double, chplx::Domain<1>> data(chplx::Range(0));
-#line 29 "heat.chpl"
-        chplx::Array<double, chplx::Domain<1>> data2(chplx::Range(0));
-#line 43 "heat.chpl"
+#line 40 "heat.chpl"
         auto NX = nx + 1;
+#line 42 "heat.chpl"
+        chplx::Array<double, chplx::Domain<1>> data(chplx::Range(0, NX));
+#line 43 "heat.chpl"
+        chplx::Array<double, chplx::Domain<1>> data2(chplx::Range(0, NX));
 #line 45 "heat.chpl"
         chplx::forall(chplx::Range{0, NX}, [&](auto i) {
 #line 46 "heat.chpl"
