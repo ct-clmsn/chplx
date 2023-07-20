@@ -12,6 +12,7 @@
 // CHPL_RT_NUM_THREADS_PER_LOCALE=6 ./heat --nx=10_000_000
 
 //use Time;
+
 inlinecxx("#include <hpx/include/util.hpp>");
 
 //extern proc getenv(name : c_string) : c_string;
@@ -23,6 +24,7 @@ config const dx: real = 1.0;
 config const nx: int = 1000000;
 config const nt: int = 100;
 config const threads: int = 1;
+
 const NX : int = nx + 1;
 
 var data: [0..NX] real;
@@ -64,6 +66,6 @@ proc update(d : []real, d2 : []real) {
 */
 
   inlinecxx("const auto elapsed = t.elapsed();");
-  inlinecxx("std::cout << \"chapelng,{},{},\" << hpx::resource::get_num_threads() << \",{},{},\" << elapsed << \",0\");", nx, nt, dt, dx);
+  inlinecxx("std::cout << \"chapelng,\" << {} << \",\" << {} << \",\" << hpx::resource::get_num_threads() << \",\" << {} << \",\" << {} << \",\" << elapsed << \",0\");", nx, nt, dt, dx);
 
 //}

@@ -147,10 +147,12 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
          first = false;
          os << ", ";
       }
+
       if(indices.size() == 2) {
          os << "chplx::Range(";
          if(std::holds_alternative<int_kind>(indices[0].kind)) {
-            if(indices[0].identifier.find("#line") == std::string::npos) {
+            if(indices[0].identifier.find("#line") == std::string::npos &&
+               indices[0].identifier.find("intlit") == std::string::npos) { 
                os << indices[0].identifier;
             }
             else {
@@ -160,7 +162,8 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
          os << ", ";
 
          if(std::holds_alternative<int_kind>(indices[1].kind)) {
-            if(indices[1].identifier.find("#line") == std::string::npos) {
+            if(indices[1].identifier.find("#line") == std::string::npos &&
+               indices[1].identifier.find("intlit") == std::string::npos) { 
                os << indices[1].identifier;
             }
             else {
@@ -172,7 +175,8 @@ void ArrayDeclarationExpression::emit(std::ostream & os) const {
       else if (indices.size() == 1) {
          os << "chplx::Range(";
          if(std::holds_alternative<int_kind>(indices[0].kind)) {
-            if(indices[1].identifier.find("lit") == std::string::npos) {
+            if(indices[0].identifier.find("#line") == std::string::npos &&
+               indices[0].identifier.find("intlit") == std::string::npos) { 
                os << indices[0].identifier;
             }
             else {
@@ -209,7 +213,7 @@ struct ArrayDeclarationLiteralExpressionVisitor {
        os << "std::string";
     }
     void operator()(std::shared_ptr<array_kind> const& arr) {
-    std::cout << "ARRK" << std::endl;
+       std::cout << "ARRK" << std::endl;
     }
     void operator()(kind_node_type const& n) {
        // does not terminate vector declaration
@@ -347,6 +351,10 @@ void ArrayDeclarationLiteralExpression::emit(std::ostream & os) const {
          }
          else {
            if(domk->args[lit].identifier.find("#line") != std::string::npos) {
+              std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
+              ++lit;
+           }
+           else if(domk->args[lit].identifier.find("intlit_") != std::string::npos) {
               std::visit(ScalarDeclarationLiteralExpressionVisitor{domk->args[lit].literal[0], literallist}, kindtypes[i]);
               ++lit;
            }

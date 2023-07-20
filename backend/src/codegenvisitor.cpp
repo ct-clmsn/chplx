@@ -187,6 +187,9 @@ struct ExprVisitor {
     template<typename T>
     void operator()(T const&) {}
 
+    void operator()(ScalarDeclarationExpression const& node) {
+       node.emit(os);
+    }
     void operator()(ScalarDeclarationLiteralExpression const& node) {
        node.emit(os);
     }
@@ -696,7 +699,7 @@ struct StatementVisitor {
           ExprVisitor ev{os};
           std::visit(ev, node->indexSet[0]);
           os << ',';
-          std::visit(ev, node->indexSet[0]);
+          std::visit(ev, node->indexSet[1]);
       }
       else {
          assert(node->indexSet.size() < 3);

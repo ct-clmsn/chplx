@@ -5,10 +5,12 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-var a : int;
-a = 1 + 1;
+var a : int = 1 + 1;
 a = a + 1;
+a = 1;
 a = 1 + a;
+a = 1 + 1;
+a = a;
 a = a + a;
 a = a + a + a;
 a = a + a + 1;
@@ -89,6 +91,12 @@ c(0,0) = c[0,0];
 c(0,0) = c(0,0);
 c[0 + 0, 0] = 1;
 c(0 + 0, 0) = 1;
+
+var d = 1;
+d = d + 1;
+
+var e : int;
+e = e + 1;
 
 var y = value();
 var z = valuea(a);

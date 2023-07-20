@@ -15,7 +15,7 @@ namespace forall {
 
     struct __thisModule
     {
-#line 37 "forall.chpl"
+#line 38 "forall.chpl"
         void alpha();
 
         static void __construct()

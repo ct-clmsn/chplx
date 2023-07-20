@@ -49,6 +49,7 @@ aaa[zz] = aaa[zz];
 aaa(zz) = aaa(zz);
 
 var za = [dd(), dd()];
+
 //var zc = [1];
 //var zb = [1, dd()];
 

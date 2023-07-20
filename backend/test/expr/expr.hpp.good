@@ -14,11 +14,11 @@ namespace expr {
 
     struct __thisModule
     {
-#line 30 "expr.chpl"
+#line 33 "expr.chpl"
         std::int64_t value();
-#line 43 "expr.chpl"
+#line 46 "expr.chpl"
         auto valuea(std::int64_t a);
-#line 97 "expr.chpl"
+#line 106 "expr.chpl"
         auto valueb(std::int64_t a);
 
         static void __construct()

@@ -7,95 +7,95 @@ namespace forall {
 
     struct __thisModule* __this = nullptr;
 
-#line 37 "forall.chpl"
+#line 38 "forall.chpl"
     void __thisModule::alpha()
     {
-#line 38 "forall.chpl"
-        chplx::Array<double, chplx::Domain<1>> B(chplx::Range(0, 9));
 #line 39 "forall.chpl"
-        chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
+        chplx::Array<double, chplx::Domain<1>> B(chplx::Range(0, 9));
 #line 40 "forall.chpl"
+        chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
+#line 41 "forall.chpl"
             B(i) = 1.000000;
         });
-#line 42 "forall.chpl"
-        chplx::forall(chplx::Range{0, 9}, [&](auto i) {
 #line 43 "forall.chpl"
+        chplx::forall(chplx::Range{0, 9}, [&](auto i) {
+#line 44 "forall.chpl"
             B(i) = 1.000000;
         });
     };
 
     void __thisModule::__main()
     {
-#line 7 "forall.chpl"
+#line 8 "forall.chpl"
         const std::int64_t N = 10;
-#line 9 "forall.chpl"
+#line 10 "forall.chpl"
         chplx::Array<double, chplx::Domain<1>> A(chplx::Range(0, N));
-#line 11 "forall.chpl"
-        chplx::forLoop(chplx::Range{0, 10}, [&](auto i) {
 #line 12 "forall.chpl"
+        chplx::forLoop(chplx::Range{0, 10}, [&](auto i) {
+#line 13 "forall.chpl"
             std::cout << i << std::endl;
         });
-#line 15 "forall.chpl"
-        chplx::forall(chplx::Range{0, 10}, [&](auto i) {
 #line 16 "forall.chpl"
+        chplx::forall(chplx::Range{0, 10}, [&](auto i) {
+#line 17 "forall.chpl"
             std::cout << i << std::endl;
         });
-#line 19 "forall.chpl"
-        chplx::forLoop(chplx::Range{0, N}, [&](auto i) {
 #line 20 "forall.chpl"
+        chplx::forLoop(chplx::Range{0, N}, [&](auto i) {
+#line 21 "forall.chpl"
             std::cout << i << std::endl;
         });
-#line 23 "forall.chpl"
-        chplx::forall(chplx::Range{0, N}, [&](auto i) {
 #line 24 "forall.chpl"
+        chplx::forall(chplx::Range{0, N}, [&](auto i) {
+#line 25 "forall.chpl"
             std::cout << i << std::endl;
         });
-#line 27 "forall.chpl"
-        chplx::forLoop(chplx::Range{0, N + 1}, [&](auto i) {
 #line 28 "forall.chpl"
-            A(i) = 1.000000;
+        chplx::forLoop(chplx::Range{0, N + 1}, [&](auto i) {
 #line 29 "forall.chpl"
-            std::cout << i << std::endl;
-        });
-#line 32 "forall.chpl"
-        chplx::forall(chplx::Range{0, N + 1}, [&](auto i) {
-#line 33 "forall.chpl"
             A(i) = 1.000000;
-#line 34 "forall.chpl"
+#line 30 "forall.chpl"
             std::cout << i << std::endl;
         });
-#line 47 "forall.chpl"
-        chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
+#line 33 "forall.chpl"
+        chplx::forall(chplx::Range{0, N + 1}, [&](auto i) {
+#line 34 "forall.chpl"
+            A(i) = 1.000000;
+#line 35 "forall.chpl"
+            std::cout << i << std::endl;
+        });
 #line 48 "forall.chpl"
+        chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
+#line 49 "forall.chpl"
             A(i) = i;
         });
-#line 50 "forall.chpl"
-        chplx::forall(chplx::Range{0, 9}, [&](auto i) {
 #line 51 "forall.chpl"
+        chplx::forall(chplx::Range{0, 9}, [&](auto i) {
+#line 52 "forall.chpl"
             A(i) = i;
         });
-#line 53 "forall.chpl"
+#line 54 "forall.chpl"
         chplx::Array<std::int64_t, chplx::Domain<1>> B(chplx::Range(0, 2));
-#line 55 "forall.chpl"
-        chplx::coforall(chplx::Range{0, 0}, [&](auto tid) {
 #line 56 "forall.chpl"
+        chplx::coforall(chplx::Range{0, 2}, [&](auto tid) {
+#line 57 "forall.chpl"
             B(tid) = tid;
         });
-#line 59 "forall.chpl"
-        chplx::forLoop(chplx::Range{0, 2}, [&](auto i) {
 #line 60 "forall.chpl"
+        chplx::forLoop(chplx::Range{0, 2}, [&](auto i) {
+#line 61 "forall.chpl"
             std::cout << B(i) << std::endl;
         });
-#line 62 "forall.chpl"
-        chplx::Array<std::int64_t, chplx::Domain<1>> C(chplx::Range(0, 2));
 #line 63 "forall.chpl"
-        chplx::coforall(chplx::Range{0, 0}, [&](auto tid) {
+        chplx::Array<std::int64_t, chplx::Domain<1>> C(chplx::Range(0, 2));
 #line 64 "forall.chpl"
+        chplx::coforall(chplx::Range{0, 2}, [&](auto tid) {
+#line 65 "forall.chpl"
             C(tid) = tid;
         });
-#line 66 "forall.chpl"
-        chplx::forLoop(chplx::Range{0, 2}, [&](auto i) {
 #line 67 "forall.chpl"
+        chplx::forLoop(chplx::Range{0, 2}, [&](auto i) {
+#line 68 "forall.chpl"
             std::cout << C(i) << std::endl;
         });
     }

@@ -33,7 +33,7 @@ namespace cond {
 #line 14 "cond.chpl"
         std::int64_t b = 0;
 #line 16 "cond.chpl"
-        if (b == 0)
+        if (a == 0)
         {
 #line 17 "cond.chpl"
             std::cout << b << std::endl;

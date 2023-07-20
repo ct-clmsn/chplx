@@ -742,7 +742,13 @@ std::cout << "ELSE\t" << identifier_str << std::endl;
 
            auto rsym =
               symbolTable.findPrefix(symbolTable.symbolTableRef->id, identifier);
-           assert(rsym.has_value());
+
+           if(!rsym.has_value()) {
+              std::cerr << "Symbol:\t" << identifier
+                        << "\tin scope:\t" << symbolTable.symbolTableRef->id
+                        << "\t not found!" << std::endl;
+              assert(rsym.has_value());
+           }
 
            auto itr = rsym->first;
            for(; itr != rsym->second; itr++) {
@@ -1939,10 +1945,8 @@ std::cout << "POP BLOCK HERE2" << std::endl;
           auto lusym = symbolTable.find(sym->get().scopeId, sym->get().identifier);
           if(!lusym) {
              symbolTable.parentModuleId -= 1;
-//std::cout << "MODULE\t" << sym->get().identifier << '\t' << sym->get().kind.index() << std::endl;
              std::shared_ptr<module_kind> & fk =
                 std::get<std::shared_ptr<module_kind>>(sym->get().kind);
-//std::cout << "MODULE" << std::endl;
 
              if(fk->retKind.index() < 1) {
                 fk->retKind = nil_kind{};
