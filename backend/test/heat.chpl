@@ -25,12 +25,11 @@ config const nx: int = 1000000;
 config const nt: int = 100;
 config const threads: int = 1;
 
-config const NX : int = 1000000 + 1; // nx + 1;
-
 var data: [0..NX] real;
 var data2: [0..NX] real;
 
 proc update(d : []real, d2 : []real) {
+  const NX : int = nx + 1;
   forall i in 1..NX-1 do {
   //for i in 1..NX-1 do {
     d2[i] = d[i] + dt*k/(dx*dx)*(d[i+1] + d[i-1] - 2*d[i]);
@@ -40,6 +39,8 @@ proc update(d : []real, d2 : []real) {
 }
 
 //proc main() {
+
+  const NX : int = nx + 1;
 
   forall i in 0..NX do {
     data[i] = 1 + (i-1 + nx) % nx;
