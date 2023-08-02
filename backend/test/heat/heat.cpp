@@ -14,15 +14,19 @@ namespace heat {
 #line 27 "heat.chpl"
         auto NX = nx + 1;
 #line 28 "heat.chpl"
-        chplx::forall(chplx::Range{1, NX - 1}, [&](auto i) {
+        long temp = 0;
+        // auto irange = hpx::util::detail::make_counting_shape(temp,NX-1);
+        chplx::forall(chplx::Range(0,NX-1), [&](auto i) {
 #line 30 "heat.chpl"
+        auto idx = ((i-1)>0)?i-1:0;
+        auto idx_capped = (1 + i > NX-1)?NX-1:1+i;
             d2(i) = d(i) +
-                (((dt * k) / (dx * dx)) * ((d(1 + i) + d(1 - i)) - (2 * d(i))));
+                (((dt * k) / (dx * dx)) * ((d(idx_capped) + d(idx)) - (2 * d(i))));
         });
 #line 32 "heat.chpl"
-        d2(0) = d2(1 - NX);
+        d2(0) = d2(NX-1);
 #line 33 "heat.chpl"
-        d2(NX) = d2(1);
+        d2(NX-1) = d2(1);
     };
 
 #line 17 "heat.chpl"
@@ -38,7 +42,7 @@ namespace heat {
 #line 23 "heat.chpl"
     std::int64_t nt = 100;
 #line 24 "heat.chpl"
-    std::int64_t threads = 1;
+    std::int64_t threads = 20;
 
     void __thisModule::__main()
     {
@@ -46,19 +50,31 @@ namespace heat {
         auto NX = nx + 1;
 #line 40 "heat.chpl"
         chplx::Array<double, chplx::Domain<1>> data(chplx::Range(0, NX));
+        // std::vector<double> data(NX);
+        // for (long i=0;i<NX+1;i++){
+        //     data[i] = i;
+        // }
+
 #line 41 "heat.chpl"
         chplx::Array<double, chplx::Domain<1>> data2(chplx::Range(0, NX));
+        // std::vector<double> data2(NX);
+        // for(long i=0;i<NX+1;i++){
+        //     data2[i]=i;
+        // }
 #line 43 "heat.chpl"
-        chplx::forall(chplx::Range{0, NX}, [&](auto i) {
+        // auto irange = hpx::util::detail::make_counting_shape(NX);
+        chplx::forall(chplx::Range(0,NX), [&](auto i) {
 #line 44 "heat.chpl"
             data(i) = 1 + (((i - 1) + nx) % nx);
 #line 45 "heat.chpl"
             data2(i) = 0;
         });
 #line 52 "heat.chpl"
+long tp = 1;
+        auto irange2 = hpx::util::detail::make_counting_shape(tp,nt);
         hpx::chrono::high_resolution_timer t;
 #line 54 "heat.chpl"
-        chplx::forLoop(chplx::Range{1, nt}, [&](auto t) {
+        chplx::forall(chplx::Range(1,nt), [&](auto m) {
 #line 55 "heat.chpl"
             update(data, data2);
         });

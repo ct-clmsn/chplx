@@ -26,7 +26,7 @@ if(NOT WIN32
    AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang"
    AND NOT APPLE
 )
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -stdlib=libc++)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Ofast")
 endif()
 
 project(chplx_library VERSION ${CHPLX_LIBRARY_VERSION})

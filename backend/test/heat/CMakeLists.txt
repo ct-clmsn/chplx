@@ -28,9 +28,11 @@ if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND APPLE)
   target_compile_options(heat
     PUBLIC
     -nostdlib
-    -std=c++20
-    -O3
+    -std=c++23
+    -Ofast
+    -ffast-math
     -stdlib=libc++
+    -mllvm -global-isel
   )
   target_link_libraries(heat PRIVATE ${CORE_LIBPATH})
   target_link_libraries(heat

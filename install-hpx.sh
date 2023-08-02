@@ -16,6 +16,7 @@ cmake \
     -DHPX_WITH_UNITY_BUILD=ON \
     -DHPX_WITH_MALLOC=system \
     -DHPX_WITH_EXAMPLES=OFF \
-    -DHPX_WITH_TESTS=OFF
+    -DHPX_WITH_TESTS=OFF\
+    -DHPX_WITH_APEX=OFF
 ninja install
 cd "$old_dir_" || exit 1

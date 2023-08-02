@@ -11,9 +11,9 @@
 // (4) use --nt=YYY to set the number of time steps to YYY.
 // CHPL_RT_NUM_THREADS_PER_LOCALE=6 ./heat --nx=10_000_000
 
-//use Time;
+use Time;
 
-//extern proc getenv(name : c_string) : c_string;
+extern proc getenv(name : c_string) : c_string;
 config const ghosts: int = 1;
 config const k: real = 0.4;
 config const dt: real = 1.0;
@@ -21,7 +21,7 @@ config const dx: real = 1.0;
 
 config const nx: int = 1000000;
 config const nt: int = 100;
-config const threads: int = 1;
+config const threads: int = 20;
 
 proc update(d : []real, d2 : []real) {
   const NX : int = nx + 1;
@@ -45,26 +45,26 @@ proc update(d : []real, d2 : []real) {
     data2[i] = 0;
   }
 
-/*
+// /*
   var t: stopwatch;
   t.start();
-*/
-  inlinecxx("hpx::chrono::high_resolution_timer t;");
+// */
+  // inlinecxx("hpx::chrono::high_resolution_timer t;");
 
   for t in 1..nt do {
     update(data, data2);
 //    data <=> data2;
   }
 
-/*
+// /*
   t.stop();
-  if ( data.size < 20 ) {
-    writeln(data);
-  }
+  // if ( data.size < 20 ) {
+  //   writeln(data);
+  // }
   writeln("chapelng,",nx,",",nt,",",getenv('CHPL_RT_NUM_THREADS_PER_LOCALE'.c_str()):string,",",dt,",",dx,",",t.elapsed(),",0");
-*/
+// */
 
-  inlinecxx("const auto elapsed = t.elapsed();");
-  inlinecxx("std::cout << \"chapelng,\" << {} << \",\" << {} << \",\" << hpx::resource::get_num_threads() << \",\" << {} << \",\" << {} << \",\" << elapsed << \",0\";", nx, nt, dt, dx);
+  // inlinecxx("const auto elapsed = t.elapsed();");
+  // inlinecxx("std::cout << \"chapelng,\" << {} << \",\" << {} << \",\" << hpx::resource::get_num_threads() << \",\" << {} << \",\" << {} << \",\" << elapsed << \",0\";", nx, nt, dt, dx);
 
 //}
