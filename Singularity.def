@@ -10,7 +10,6 @@ backend /opt/chplx/backend
 cmake /opt/chplx/cmake
 CMakeLists.txt /opt/chplx
 docs_requirements.txt /opt/chplx
-examples /opt/chplx/examples
 frontend /opt/chplx/frontend
 library /opt/chplx/library
 LICENSE /opt/chplx/
