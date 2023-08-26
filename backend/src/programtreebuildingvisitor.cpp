@@ -7,7 +7,7 @@
  */
 #include "hpx/programtree.hpp"
 #include "hpx/programtreebuildingvisitor.hpp"
-#include "hpx/util.hpp"
+#include "hpx/utils.hpp"
 #include "chpl/uast/all-uast.h"
 
 #include <variant>

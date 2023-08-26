@@ -150,6 +150,10 @@ public:
     return array->dsiAccess(array->dsiGetBaseDomain()->dsiIndexOrder(idx));
   }
 
+  constexpr T &operator()(std::int64_t idx) noexcept {
+     return array->dsiAccess(idx);
+  }
+
   constexpr T &operator[](std::int64_t idx) noexcept {
     return array->dsiAccess(idx);
   }

@@ -19,7 +19,7 @@
 #include "hpx/symbolbuildingvisitor.hpp"
 #include "hpx/codegenvisitor.hpp"
 #include "hpx/cmakegen.hpp"
-#include "hpx/util.hpp"
+#include "hpx/utils.hpp"
 
 #include "ErrorGuard.h"
 

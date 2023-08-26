@@ -1,0 +1,172 @@
+Bootstrap: docker
+From: ubuntu:22.04
+Stage: spython-base
+
+%files
+#docs_requirements.txt /opt/chplx/docs_requirements.txt
+#./install-hpx.sh /opt/chplx
+#./install-fmt.sh /opt/chplx
+#backend /opt/chplx/backend
+#cmake /opt/chplx/cmake
+#CMakeLists.txt /opt/chplx
+#docs_requirements.txt /opt/chplx
+#frontend /opt/chplx/frontend
+#library /opt/chplx/library
+#LICENSE /opt/chplx/
+#README.md /opt/chplx
+#THANKS /opt/chplx
+#.clang-format /opt/chplx
+#./.cmake-format.py /opt/chplx
+#.git /opt/chplx/.git
+#.github /opt/chplx/.github
+#.gitignore /opt/chplx
+%post
+
+export DEBIAN_FRONTEND=noninteractive
+#cp -r /work/satacker/chplx/ /opt/chplx
+# Update and install libraries
+apt-get update -qq && apt-get install -y -qq --no-install-recommends wget \
+gnupg2 curl ca-certificates && \
+wget https://apt.llvm.org/llvm-snapshot.gpg.key --no-check-certificate && \
+apt-key add llvm-snapshot.gpg.key && \
+apt update && \
+echo "deb-src http://archive.ubuntu.com/ubuntu focal main restricted" >>/etc/apt/sources.list && \
+echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates main restricted" >>/etc/apt/sources.list && \
+echo "deb-src http://archive.ubuntu.com/ubuntu focal universe" >>/etc/apt/sources.list && \
+echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates universe" >>/etc/apt/sources.list && \
+echo "deb-src http://archive.ubuntu.com/ubuntu focal multiverse" >>/etc/apt/sources.list && \
+echo "deb-src http://archive.ubuntu.com/ubuntu focal-updates multiverse" >>/etc/apt/sources.list && \
+echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main" >>/etc/apt/sources.list && \
+echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal main" >>/etc/apt/sources.list && \
+echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >>/etc/apt/sources.list && \
+echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >>/etc/apt/sources.list && \
+echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" >>/etc/apt/sources.list && \
+echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" >>/etc/apt/sources.list && \
+rm -rf /var/lib/apt/lists/*
+
+apt-get update -qq && apt-get install -y -qq \
+apt-utils && \
+apt-get install -qq --no-install-recommends -y \
+clang-15 \
+clang-tools-15 \
+clang-15-doc \
+libclang-common-15-dev \
+libclang-cpp15-dev \
+libclang-15-dev \
+libclang1-15 \
+clang-format-15 \
+python3-clang-15 \
+clangd-15 \
+clang-tidy-15 \
+libc++-15-dev \
+libc++abi-15-dev \
+libllvm-15-ocaml-dev \
+libllvm15 \
+llvm-15 \
+llvm-15-dev \
+llvm-15-doc \
+llvm-15-examples \
+llvm-15-runtime \
+libedit-dev \
+libgmp10 \
+libgmp-dev \
+libc++1-15 \
+libc++abi1-15 \
+liblldb-15-dev \
+libomp-15-dev \
+libomp5-15 \
+lld-15 \
+zip curl \
+jq \
+kmod \
+libasio-dev \
+libhwloc-dev \
+libjemalloc-dev \
+libboost-atomic-dev \
+libboost-chrono-dev \
+libboost-date-time-dev \
+libboost-filesystem-dev \
+libboost-iostreams-dev \
+libboost-program-options-dev \
+libboost-regex-dev \
+libboost-system-dev \
+libboost-thread-dev \
+libgoogle-perftools-dev \
+mpi-default-dev \
+vc-dev \
+libgmp10 \
+libgmp-dev \
+doxygen \
+python3 \
+python3-pip \
+texlive \
+texlive-latex-extra \
+latexmk \
+tex-gyre \
+libjson-perl \
+ninja-build \
+codespell \
+git \
+xsltproc \
+rpm \
+pkg-config \
+graphviz \
+devscripts \
+zlib1g-dev \
+wget \
+python3-venv
+
+export CC=clang-15
+export CXX=clang++-15
+
+# Get cmake files (in separate RUN command to get cached)
+wget -q https://github.com/Kitware/CMake/releases/download/v3.27.4/cmake-3.27.4-linux-x86_64.tar.gz  -O cmake.tar.gz && \
+tar --strip-components=1 -C /usr/local -xf cmake.tar.gz && \
+rm cmake.tar.gz
+
+wget -q https://github.com/mozilla/grcov/releases/download/v0.7.1/grcov-linux-x86_64.tar.bz2 -O grcov.tar.bz2 && \
+echo "603196293bed54d7ec6fb6d6f85db27966c4512235c7bd6555e1082e765c5bd2 grcov.tar.bz2" | sha256sum --check --status && \
+tar -jxf grcov.tar.bz2 && \
+mv grcov /usr/bin && \
+rm grcov.tar.bz2
+
+wget https://perftools.pages.jsc.fz-juelich.de/cicd/otf2/tags/otf2-3.0.3/otf2-3.0.3.tar.gz
+tar xzf otf2-3.0.3.tar.gz
+cd otf2-3.0.3/
+./configure --prefix=$PWD/../opt CC=clang-15 CXX=clang++-15 && make -j && make install
+cd ..
+
+wget https://github.com/UO-OACISS/apex/archive/refs/tags/v2.6.3.tar.gz
+tar xzf v2.6.3.tar.gz
+cd apex-2.6.3
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../../opt -DCMAKE_C_COMPILER=clang-15 -DCMAKE_CXX_COMPILER=clang++-15 -DOTF2_INCLUDE_DIR=$PWD/../../opt/include -DOTF2_LIBRARY=$PWD/../../opt/lib/libotf2.a .. && make -j4 && make install
+cd ../..
+
+wget https://github.com/STEllAR-GROUP/hpx/archive/refs/tags/v1.9.1.tar.gz
+tar xzf v1.9.1.tar.gz
+cd hpx-1.9.1
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../../opt -DCMAKE_CXX_COMPILER=clang++-15  -DHPX_WITH_MALLOC=tcmalloc -DHPX_WITH_APEX=ON -DAPEX_WITH_OTF2=ON -DAPEX_ROOT=$PWD/../../apex-2.6.3 -DHPX_WITH_CXX_STANDARD=20 -DHPX_WITH_FETCH_ASIO=ON -DHPX_WITH_TESTS=OFF -DHPX_WITH_EXAMPLES=ON -DCMAKE_CXX_FLAGS=-stdlib=libc++ .. && make -j4 && make install
+cd ../../opt/bin
+
+export LD_LIBRARY_PATH=$PWD/../lib:$LD_LIBRARY_PATH
+export PATH=$PWD:$PATH
+export PKG_CONFIG_PATH=$PWD/../lib/pkgconfig:$PKG_CONFIG_PATH
+./apex_exec --apex:otf2 --apex:csv --apex:taskgraph --apex:scatter --apex:postprocess --apex:source --apex:cpuinfo --apex:meminfo --apex:status fibonacci
+cd ../..
+
+git clone https://github.com/ct-clmsn/chplx
+mkdir chplx/build
+cd chplx/build
+cmake -DCMAKE_CXX_COMPILER=clang++-15  -DHPX_DIR=$PWD/../../opt/lib/cmake/HPX -DLLVM_ROOT=/usr/lib/llvm-15/lib/cmake/llvm -DCLANG_ROOT=/usr/lib/llvm-15/lib/cmake/clang -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/../../opt -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_C_COMPILER=clang-15 ..
+make -j4
+cd backend
+./chplx -o heat -d -E -f ../../publications/fall2023/heat-chplx.chpl
+mkdir heat/build
+cd heat/build
+make -DChplx_DIR=$HOME/git/chplx_test/chplx/build/library/lib/cmake/Chplx -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_C_COMPILER=clang-15 -DHPX_DIR=$HOME/git/chplx_test/opt/lib/cmake/HPX -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_EXTENSIONS=OFF ..
+make
+./apex_exec --apex:otf2 --apex:csv --apex:taskgraph --apex:scatter --apex:postprocess --apex:source --apex:cpuinfo --apex:meminfo --apex:status ./heat

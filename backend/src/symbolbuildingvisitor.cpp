@@ -7,7 +7,7 @@
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include "hpx/symbolbuildingvisitor.hpp"
-#include "hpx/util.hpp"
+#include "hpx/utils.hpp"
 #include "chpl/uast/all-uast.h"
 
 #include <variant>

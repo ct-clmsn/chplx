@@ -6,7 +6,7 @@
  * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  */
 #include "hpx/cmakegen.hpp"
-#include "hpx/util.hpp"
+#include "hpx/utils.hpp"
 #include <fstream>
 #include <cassert>
 #include <iostream>
@@ -23,11 +23,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 project({1})
 add_executable({1} {1}.cpp {1}_driver.cpp)
-if(NOT APPLE)
-  set(CMAKE_CXX_STANDARD 20)
-endif()
+set(CMAKE_CXX_STANDARD 20)
+set(CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
 if(NOT WIN32 AND ${{CMAKE_CXX_COMPILER_ID}} STREQUAL "Clang" AND NOT APPLE)
-  set(CMAKE_CXX_FLAGS ${{CMAKE_CXX_FLAGS}} -stdlib=libc++)
+  set(CMAKE_CXX_FLAGS "${{CMAKE_CXX_FLAGS}} -std=c++20 -stdlib=libc++")
+endif()
+if(NOT Chplx_DIR)
+  message(FATAL_ERROR "Chplx_DIR variable undefined")
 endif()
 if(NOT Chplx_DIR)
   message(FATAL_ERROR "Chplx_DIR variable undefined")
