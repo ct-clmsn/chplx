@@ -141,7 +141,7 @@ tar xzf v2.6.3.tar.gz
 cd apex-2.6.3
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../../opt -DCMAKE_C_COMPILER=clang-15 -DCMAKE_CXX_COMPILER=clang++-15 -DOTF2_INCLUDE_DIR=$PWD/../../opt/include -DOTF2_LIBRARY=$PWD/../../opt/lib/libotf2.a .. && make -j4 && make install
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../../opt -DCMAKE_C_COMPILER=clang-15 -DCMAKE_CXX_COMPILER=clang++-15 -DOTF2_INCLUDE_DIR=$PWD/../../opt/include -DOTF2_LIBRARY=$PWD/../../opt/lib/libotf2.a .. && make -j && make install
 cd ../..
 
 wget https://github.com/STEllAR-GROUP/hpx/archive/refs/tags/v1.9.1.tar.gz
@@ -149,7 +149,7 @@ tar xzf v1.9.1.tar.gz
 cd hpx-1.9.1
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../../opt -DCMAKE_CXX_COMPILER=clang++-15  -DHPX_WITH_MALLOC=tcmalloc -DHPX_WITH_APEX=ON -DAPEX_WITH_OTF2=ON -DAPEX_ROOT=$PWD/../../apex-2.6.3 -DHPX_WITH_CXX_STANDARD=20 -DHPX_WITH_FETCH_ASIO=ON -DHPX_WITH_TESTS=OFF -DHPX_WITH_EXAMPLES=ON -DCMAKE_CXX_FLAGS=-stdlib=libc++ .. && make -j4 && make install
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../../opt -DCMAKE_CXX_COMPILER=clang++-15  -DHPX_WITH_MALLOC=tcmalloc -DHPX_WITH_APEX=ON -DAPEX_WITH_OTF2=ON -DAPEX_ROOT=$PWD/../../apex-2.6.3 -DHPX_WITH_CXX_STANDARD=20 -DHPX_WITH_FETCH_ASIO=ON -DHPX_WITH_TESTS=OFF -DHPX_WITH_EXAMPLES=ON -DCMAKE_CXX_FLAGS=-stdlib=libc++ .. && make -j && make install
 cd ../../opt/bin
 
 export LD_LIBRARY_PATH=$PWD/../lib:$LD_LIBRARY_PATH
@@ -158,15 +158,21 @@ export PKG_CONFIG_PATH=$PWD/../lib/pkgconfig:$PKG_CONFIG_PATH
 ./apex_exec --apex:otf2 --apex:csv --apex:taskgraph --apex:scatter --apex:postprocess --apex:source --apex:cpuinfo --apex:meminfo --apex:status fibonacci
 cd ../..
 
-git clone https://github.com/ct-clmsn/chplx
+git clone https://github.com/fmtlib/fmt.git
+mkdir fmt/build
+cd fmt/build
+cmake -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/../../opt .. && make -j && make install
+cd ../..
+
+git clone --branch paper_patches  https://github.com/ct-clmsn/chplx
 mkdir chplx/build
 cd chplx/build
 cmake -DCMAKE_CXX_COMPILER=clang++-15  -DHPX_DIR=$PWD/../../opt/lib/cmake/HPX -DLLVM_ROOT=/usr/lib/llvm-15/lib/cmake/llvm -DCLANG_ROOT=/usr/lib/llvm-15/lib/cmake/clang -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/../../opt -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_C_COMPILER=clang-15 ..
 make -j4
 cd backend
-./chplx -o heat -d -E -f ../../publications/fall2023/heat-chplx.chpl
+./chplx -o heat -d -E -f ../../publications/fall2023/heateqn.chpl
 mkdir heat/build
 cd heat/build
-make -DChplx_DIR=$HOME/git/chplx_test/chplx/build/library/lib/cmake/Chplx -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_C_COMPILER=clang-15 -DHPX_DIR=$HOME/git/chplx_test/opt/lib/cmake/HPX -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_EXTENSIONS=OFF ..
+cmake -DChplx_DIR=$PWD/../../../library/lib/cmake/Chplx -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_C_COMPILER=clang-15 -DHPX_DIR=$PWD/../../../../../opt/lib/cmake/HPX -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_EXTENSIONS=OFF ..
 make
-./apex_exec --apex:otf2 --apex:csv --apex:taskgraph --apex:scatter --apex:postprocess --apex:source --apex:cpuinfo --apex:meminfo --apex:status ./heat
+./apex_exec --apex:otf2 --apex:csv --apex:taskgraph --apex:scatter --apex:postprocess --apex:source --apex:cpuinfo --apex:meminfo --apex:status ./heateqn
