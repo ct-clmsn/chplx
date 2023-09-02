@@ -6,20 +6,35 @@
 
 #pragma once
 
+#include <chplx/detail/generate_annotation.hpp>
+
 #include <hpx/config.hpp>
 #include <hpx/execution.hpp>
+#include <hpx/modules/assertion.hpp>
 #include <hpx/parallel/task_group.hpp>
 
 namespace chplx {
 
-template <typename F, typename... Fs> void cobegin(F &&f, Fs &&...fs) {
+    template <typename F, typename... Fs>
+    void cobegin(hpx::source_location const& location, F&& f, Fs&&... fs)
+    {
+        auto exec = hpx::execution::par.executor();
+        hpx::experimental::task_group g;
 
-  auto exec = hpx::execution::par.executor();
-  hpx::experimental::task_group g;
+        auto annotation = detail::generate_annotation(location);
 
-  g.run(exec, std::forward<F>(f));
-  (g.run(exec, std::forward<Fs>(fs)), ...);
+        g.run(exec, hpx::annotated_function(std::forward<F>(f), annotation));
+        (g.run(exec, hpx::annotated_function(std::forward<Fs>(fs), annotation)),
+            ...);
 
-  g.wait();
-}
-} // namespace chplx
+        g.wait();
+    }
+
+    template <typename F, typename... Fs>
+        requires(!std::is_same_v<std::decay_t<F>, hpx::source_location>)
+    void cobegin(F&& f, Fs&&... fs)
+    {
+        cobegin(HPX_CURRENT_SOURCE_LOCATION(), std::forward<F>(f),
+            std::forward<Fs>(fs)...);
+    }
+}    // namespace chplx
