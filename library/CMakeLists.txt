@@ -40,7 +40,10 @@ find_package(fmt REQUIRED CONFIG)
 find_package(HPX REQUIRED CONFIG)
 
 # create library target
-set(chplx_library_detail_headers include/chplx/detail/iterator_generator.hpp)
+set(chplx_library_detail_headers
+    include/chplx/detail/generate_annotation.hpp
+    include/chplx/detail/iterator_generator.hpp
+)
 source_group("Header Files/chplx/detail" FILES ${chplx_library_detail_headers})
 
 set(chplx_library_domain_headers include/chplx/domains/base_rectangular.hpp
@@ -79,6 +82,11 @@ set(chplx_library_headers
 )
 source_group("Header Files/chplx" FILES ${chplx_library_headers})
 
+set(chplx_library_detail_sources
+    src/detail/generate_annotation.cpp
+)
+source_group("Source Files/detail" FILES ${chplx_library_detail_sources})
+
 set(chplx_library_domain_sources src/domains/dmap.cpp)
 source_group("Source Files/domains" FILES ${chplx_library_domain_sources})
 
@@ -95,7 +103,11 @@ if(MSVC)
   set(chplx_library_sources ${chplx_library_sources} src/setenv.c)
 endif()
 
-add_library(library STATIC ${chplx_library_sources} ${chplx_library_headers})
+add_library(library STATIC
+    ${chplx_library_sources}
+    ${chplx_library_detail_sources}
+    ${chplx_library_headers}
+)
 
 if(NOT WIN32
    AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang"
