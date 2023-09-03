@@ -77,7 +77,7 @@ namespace forall {
 #line 54 "forall.chpl"
         chplx::Array<std::int64_t, chplx::Domain<1>> B(chplx::Range(0, 2));
 #line 56 "forall.chpl"
-        chplx::coforall(HPX_CURRENT_SOURCE_LOCATION(),HPX_CURRENT_SOURCE_LOCATION(), chplx::Range{0, 2}, [&](auto tid) {
+        chplx::coforall(HPX_CURRENT_SOURCE_LOCATION(), chplx::Range{0, 2}, [&](auto tid) {
 #line 57 "forall.chpl"
             B(tid) = tid;
         });
@@ -89,7 +89,7 @@ namespace forall {
 #line 63 "forall.chpl"
         chplx::Array<std::int64_t, chplx::Domain<1>> C(chplx::Range(0, 2));
 #line 64 "forall.chpl"
-        chplx::coforall(HPX_CURRENT_SOURCE_LOCATION(),HPX_CURRENT_SOURCE_LOCATION(), chplx::Range{0, 2}, [&](auto tid) {
+        chplx::coforall(HPX_CURRENT_SOURCE_LOCATION(), chplx::Range{0, 2}, [&](auto tid) {
 #line 65 "forall.chpl"
             C(tid) = tid;
         });
