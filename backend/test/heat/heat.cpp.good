@@ -58,7 +58,7 @@ namespace heat {
 #line 52 "heat.chpl"
         hpx::chrono::high_resolution_timer t;
 #line 54 "heat.chpl"
-        chplx::forLoop(HPX_CURRENT_SOURCE_LOCATION(),chplx::Range{1, nt}, [&](auto t) {
+        chplx::forLoop(chplx::Range{1, nt}, [&](auto t) {
 #line 55 "heat.chpl"
             update(data, data2);
         });
