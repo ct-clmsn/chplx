@@ -13,7 +13,7 @@ namespace forall {
 #line 39 "forall.chpl"
         chplx::Array<double, chplx::Domain<1>> B(chplx::Range(0, 9));
 #line 40 "forall.chpl"
-        chplx::forLoop(HPX_CURRENT_SOURCE_LOCATION(),chplx::Range{0, 9}, [&](auto i) {
+        chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
 #line 41 "forall.chpl"
             B(i) = 1.000000;
         });
@@ -31,7 +31,7 @@ namespace forall {
 #line 10 "forall.chpl"
         chplx::Array<double, chplx::Domain<1>> A(chplx::Range(0, N));
 #line 12 "forall.chpl"
-        chplx::forLoop(HPX_CURRENT_SOURCE_LOCATION(),chplx::Range{0, 10}, [&](auto i) {
+        chplx::forLoop(chplx::Range{0, 10}, [&](auto i) {
 #line 13 "forall.chpl"
             std::cout << i << std::endl;
         });
@@ -41,7 +41,7 @@ namespace forall {
             std::cout << i << std::endl;
         });
 #line 20 "forall.chpl"
-        chplx::forLoop(HPX_CURRENT_SOURCE_LOCATION(),chplx::Range{0, N}, [&](auto i) {
+        chplx::forLoop(chplx::Range{0, N}, [&](auto i) {
 #line 21 "forall.chpl"
             std::cout << i << std::endl;
         });
@@ -51,7 +51,7 @@ namespace forall {
             std::cout << i << std::endl;
         });
 #line 28 "forall.chpl"
-        chplx::forLoop(HPX_CURRENT_SOURCE_LOCATION(),chplx::Range{0, N + 1}, [&](auto i) {
+        chplx::forLoop(chplx::Range{0, N + 1}, [&](auto i) {
 #line 29 "forall.chpl"
             A(i) = 1.000000;
 #line 30 "forall.chpl"
@@ -65,7 +65,7 @@ namespace forall {
             std::cout << i << std::endl;
         });
 #line 48 "forall.chpl"
-        chplx::forLoop(HPX_CURRENT_SOURCE_LOCATION(),chplx::Range{0, 9}, [&](auto i) {
+        chplx::forLoop(chplx::Range{0, 9}, [&](auto i) {
 #line 49 "forall.chpl"
             A(i) = i;
         });
@@ -82,7 +82,7 @@ namespace forall {
             B(tid) = tid;
         });
 #line 60 "forall.chpl"
-        chplx::forLoop(HPX_CURRENT_SOURCE_LOCATION(),chplx::Range{0, 2}, [&](auto i) {
+        chplx::forLoop(chplx::Range{0, 2}, [&](auto i) {
 #line 61 "forall.chpl"
             std::cout << B(i) << std::endl;
         });
@@ -94,7 +94,7 @@ namespace forall {
             C(tid) = tid;
         });
 #line 67 "forall.chpl"
-        chplx::forLoop(HPX_CURRENT_SOURCE_LOCATION(),chplx::Range{0, 2}, [&](auto i) {
+        chplx::forLoop(chplx::Range{0, 2}, [&](auto i) {
 #line 68 "forall.chpl"
             std::cout << C(i) << std::endl;
         });
