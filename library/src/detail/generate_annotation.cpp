@@ -16,9 +16,13 @@ namespace chplx::detail {
     std::string generate_annotation(hpx::source_location const& location)
     {
 #if defined(HPX_HAVE_THREAD_DESCRIPTION)
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        return {};
+#else
         std::filesystem::path p(location.file_name());
         return hpx::util::format("%s(%d): %s", p.filename(), location.line(),
             location.function_name());
+#endif
 #else
         return {};
 #endif
