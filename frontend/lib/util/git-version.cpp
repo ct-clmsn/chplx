@@ -1,3 +1,3 @@
 namespace chpl {
-  const char* GIT_SHA = "ab869c86";
+  const char* GIT_SHA = "xxxxxxxxxx";
 }
