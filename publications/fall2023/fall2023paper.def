@@ -161,10 +161,10 @@ cd ../..
 git clone https://github.com/fmtlib/fmt.git
 mkdir fmt/build
 cd fmt/build
-cmake -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/../../opt/chapel/bin .. && make -j && make install
+cmake -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PWD/../../opt .. && make -j && make install
 cd ../..
 
-export PATH=$PWD/opt/bin:$PATH
+export PATH=$PWD/opt/bin:$PWD/opt/chapel/bin:$PATH
 git clone --branch paper_patches  https://github.com/ct-clmsn/chplx
 mkdir chplx/build
 cd chplx/build
