@@ -31,8 +31,16 @@ set(CHPLX_FRONTEND_VERSION
 
 project(ChplFrontend VERSION ${CHPLX_FRONTEND_VERSION})
 
-find_package(LLVM REQUIRED CONFIG)
-find_package(Clang REQUIRED CONFIG)
+if(NOT $LLVM_ROOT)
+  find_package(LLVM REQUIRED CONFIG HINTS ${LLVM_ROOT})
+else()
+  find_package(LLVM REQUIRED CONFIG)
+endif()
+if(NOT $CLANG_ROOT)
+  find_package(Clang REQUIRED CONFIG HINTS ${CLANG_ROOT})
+else()
+  find_package(Clang REQUIRED CONFIG)
+endif()
 
 add_definitions(${LLVM_DEFINITIONS})
 llvm_map_components_to_libnames(llvm_libs support core irreader)
@@ -113,6 +121,7 @@ configure_file(
 
 # request C++17
 set(CMAKE_CXX_STANDARD 17)
+set(CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # request C11

@@ -340,8 +340,8 @@ struct BaseRectangularArray : BaseArray {
 
   auto dsiGetBaseDomain() const { return domain; }
 
-  T &dsiAccess(IndexType idx) { return data[idx]; }
-  T const &dsiAccess(IndexType idx) const { return data[idx]; }
+  constexpr inline T &dsiAccess(IndexType idx) { return data[idx]; }
+  constexpr inline T const &dsiAccess(IndexType idx) const { return data[idx]; }
 
   hpx::intrusive_ptr<defaultDomain> const domain{};
   std::vector<T> data{};

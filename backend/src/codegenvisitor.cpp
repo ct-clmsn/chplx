@@ -8,7 +8,7 @@
  */
 #include "hpx/codegenvisitor.hpp"
 #include "hpx/symboltypes.hpp"
-#include "hpx/util.hpp"
+#include "hpx/utils.hpp"
 
 #include "chpl/uast/all-uast.h"
 

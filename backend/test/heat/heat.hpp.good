@@ -13,24 +13,24 @@
 namespace heat {
     extern struct __thisModule* __this;
 
-#line 19 "heat.chpl"
+#line 17 "heat.chpl"
     extern std::int64_t ghosts;
-#line 20 "heat.chpl"
+#line 18 "heat.chpl"
     extern double k;
-#line 21 "heat.chpl"
+#line 19 "heat.chpl"
     extern double dt;
-#line 22 "heat.chpl"
+#line 20 "heat.chpl"
     extern double dx;
-#line 24 "heat.chpl"
+#line 22 "heat.chpl"
     extern std::int64_t nx;
-#line 25 "heat.chpl"
+#line 23 "heat.chpl"
     extern std::int64_t nt;
-#line 26 "heat.chpl"
+#line 24 "heat.chpl"
     extern std::int64_t threads;
 
     struct __thisModule
     {
-#line 33 "heat.chpl"
+#line 26 "heat.chpl"
         void update(chplx::Array<double, chplx::Domain<1>>& d,
             chplx::Array<double, chplx::Domain<1>>& d2);
 

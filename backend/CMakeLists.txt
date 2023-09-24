@@ -19,11 +19,10 @@ set(CHPLX_BACKEND_VERSION
     ${CHPLX_BACKEND_MAJOR_VERSION}.${CHPLX_BACKEND_MINOR_VERSION}.${CHPLX_BACKEND_PATCH_VERSION}.${CHPLX_BACKEND_BUILD_VERSION}
 )
 
-if(APPLE)
-  set(CMAKE_CXX_STANDARD 17)
-else()
-  set(CMAKE_CXX_STANDARD 20)
-endif()
+# request C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 project(chplx_backend VERSION ${CHPLX_BACKEND_VERSION})
 
@@ -42,13 +41,13 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 set(chplx_sources
     src/symboltypes.cpp src/symbolbuildingvisitor.cpp src/programtree.cpp
     src/programtreebuildingvisitor.cpp src/codegenvisitor.cpp src/cmakegen.cpp src/driver.cpp
-    src/util.cpp
+    src/utils.cpp
 )
 
 set(chplx_headers
     include/hpx/symboltypes.hpp include/hpx/symbolbuildingvisitor.hpp
     include/hpx/programtree.hpp include/hpx/programtreebuildingvisitor.hpp
-    include/hpx/codegenvisitor.hpp include/hpx/cmakegen.hpp include/hpx/util.hpp
+    include/hpx/codegenvisitor.hpp include/hpx/cmakegen.hpp include/hpx/utils.hpp
     include/ErrorGuard.h
 )
 
