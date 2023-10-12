@@ -74,20 +74,29 @@ namespace chplx {
     void forall(hpx::source_location const& location, Tuple<Ts...>& t, F&& f,
         Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        detail::forall(t, std::forward<F>(f), std::forward<Args>(args)...);
+#else
         detail::forall(t,
             hpx::annotated_function(
                 std::forward<F>(f), detail::generate_annotation(location)),
             std::forward<Args>(args)...);
+#endif
     }
 
     template <typename... Ts, typename F, typename... Args>
     void forall(hpx::source_location const& location, Tuple<Ts...> const& t,
         F&& f, Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        detail::forall(t, detail::generate_annotation(location),
+            std::forward<Args>(args)...);
+#else
         detail::forall(t,
             hpx::annotated_function(
                 std::forward<F>(f), detail::generate_annotation(location)),
             std::forward<Args>(args)...);
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -97,6 +106,17 @@ namespace chplx {
     void forall(hpx::source_location const& location,
         Range<T, BoundedType, Stridable> const& r, F&& f, Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(r),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -109,6 +129,7 @@ namespace chplx {
                 wrapped(std::forward<Arg>(value),
                     hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
             });
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -117,6 +138,17 @@ namespace chplx {
     void forall(hpx::source_location const& location,
         Domain<N, T, Stridable> const& d, F&& f, Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(d),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -129,6 +161,7 @@ namespace chplx {
                 wrapped(std::forward<Arg>(value),
                     hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
             });
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -137,6 +170,17 @@ namespace chplx {
     void forall(hpx::source_location const& location, AssocDomain<T> const& d,
         F&& f, Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(d, 0, d.size()),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -149,6 +193,7 @@ namespace chplx {
                 wrapped(std::forward<Arg>(value),
                     hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
             });
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -157,6 +202,17 @@ namespace chplx {
     void forall(hpx::source_location const& location,
         detail::ZipRange<Rs...> const& zr, F&& f, Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(zr),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -169,6 +225,7 @@ namespace chplx {
                 wrapped(std::forward<Arg>(value),
                     hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
             });
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -177,6 +234,18 @@ namespace chplx {
     void forall(hpx::source_location const& location, Array<T, Domain> const& a,
         F&& f, Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(a),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -189,6 +258,7 @@ namespace chplx {
                 wrapped(std::forward<Arg>(value),
                     hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
             });
+#endif
     }
 
     template <typename Target, typename F, typename... Args>

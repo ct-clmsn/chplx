@@ -34,7 +34,15 @@ namespace chplx {
         requires(!std::is_same_v<std::decay_t<F>, hpx::source_location>)
     void cobegin(F&& f, Fs&&... fs)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        auto exec = hpx::execution::par.executor();
+        hpx::experimental::task_group g;
+        g.run(exec, std::forward<F>(f));
+        (g.run(exec, std::forward<F>(fs)), ...);
+        g.wait();
+#else
         cobegin(HPX_CURRENT_SOURCE_LOCATION(), std::forward<F>(f),
             std::forward<Fs>(fs)...);
+#endif
     }
 }    // namespace chplx

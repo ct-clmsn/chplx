@@ -77,20 +77,28 @@ namespace chplx {
     void coforall(hpx::source_location const& location, Tuple<Ts...>& t, F&& f,
         Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        detail::coforall(t, std::forward<F>(f), std::forward<Args>(args)...);
+#else
         detail::coforall(t,
             hpx::annotated_function(
                 std::forward<F>(f), detail::generate_annotation(location)),
             std::forward<Args>(args)...);
+#endif
     }
 
     template <typename... Ts, typename F, typename... Args>
     void coforall(hpx::source_location const& location, Tuple<Ts...> const& t,
         F&& f, Args&&... args)
     {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        detail::coforall(t, std::forward<F>(f), std::forward<Args>(args)...);
+#else
         detail::coforall(t,
             hpx::annotated_function(
                 std::forward<F>(f), detail::generate_annotation(location)),
             std::forward<Args>(args)...);
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -103,6 +111,17 @@ namespace chplx {
         auto policy =
             hpx::parallel::util::adapt_sharing_mode(hpx::execution::par,
                 hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
+            policy.executor(),
+            [&](std::size_t idx, auto&&... fargs) {
+                return f(r.orderToIndex(idx),
+                    std::forward<decltype(args)>(fargs)...);
+            },
+            r.size(),
+            detail::task_intent<std::decay_t<Args>>::call(
+                std::forward<Args>(args))...));
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -115,6 +134,7 @@ namespace chplx {
             r.size(),
             detail::task_intent<std::decay_t<Args>>::call(
                 std::forward<Args>(args))...));
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -126,6 +146,18 @@ namespace chplx {
         auto policy =
             hpx::parallel::util::adapt_sharing_mode(hpx::execution::par,
                 hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
+            policy.executor(),
+            [&](std::size_t idx, auto&&... fargs) {
+                return f(d.orderToIndex(idx),
+                    std::forward<decltype(args)>(fargs)...);
+            },
+            d.size(),
+            detail::task_intent<std::decay_t<Args>>::call(
+                std::forward<Args>(args))...));
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -138,6 +170,7 @@ namespace chplx {
             d.size(),
             detail::task_intent<std::decay_t<Args>>::call(
                 std::forward<Args>(args))...));
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -149,6 +182,17 @@ namespace chplx {
         auto policy =
             hpx::parallel::util::adapt_sharing_mode(hpx::execution::par,
                 hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
+            policy.executor(),
+            [&](std::size_t idx, auto&&... fargs) {
+                return f(d.orderToIndex(idx),
+                    std::forward<decltype(args)>(fargs)...);
+            },
+            d.size(),
+            detail::task_intent<std::decay_t<Args>>::call(
+                std::forward<Args>(args))...));
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -161,6 +205,7 @@ namespace chplx {
             d.size(),
             detail::task_intent<std::decay_t<Args>>::call(
                 std::forward<Args>(args))...));
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -172,6 +217,18 @@ namespace chplx {
         auto policy =
             hpx::parallel::util::adapt_sharing_mode(hpx::execution::par,
                 hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
+            policy.executor(),
+            [&](std::size_t idx, auto&&... fargs) {
+                return f(zr.orderToIndex(idx),
+                    std::forward<decltype(args)>(fargs)...);
+            },
+            zr.size(),
+            detail::task_intent<std::decay_t<Args>>::call(
+                std::forward<Args>(args))...));
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -184,6 +241,7 @@ namespace chplx {
             zr.size(),
             detail::task_intent<std::decay_t<Args>>::call(
                 std::forward<Args>(args))...));
+#endif
     }
 
     //-----------------------------------------------------------------------------
@@ -195,6 +253,16 @@ namespace chplx {
         auto policy =
             hpx::parallel::util::adapt_sharing_mode(hpx::execution::par,
                 hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
+            policy.executor(),
+            [&](std::size_t idx, auto&&... fargs) {
+                return f(a[idx], std::forward<decltype(args)>(fargs)...);
+            },
+            a.size(),
+            detail::task_intent<std::decay_t<Args>>::call(
+                std::forward<Args>(args))...));
+#else
         auto wrapped =
             hpx::annotated_function(f, detail::generate_annotation(location));
 
@@ -206,6 +274,7 @@ namespace chplx {
             a.size(),
             detail::task_intent<std::decay_t<Args>>::call(
                 std::forward<Args>(args))...));
+#endif
     }
 
     template <typename Target, typename F, typename... Args>
