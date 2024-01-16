@@ -26,6 +26,7 @@ set(tests
     fnc
     forall
     tup
+    stream
 )
 
 foreach(test ${tests})
