@@ -1,19 +1,17 @@
-// test/studies/hpcc/RA/ra-randstream-hpcc06.chpl
-// test/studies/hpcc/common/probSize-hpcc06.chpl
-
-use CTypes;
 use Time;
+use Math;
+use CTypes;
 
 extern proc getenv(name : c_string) : c_string;
 
 proc computeProblemSize(numArrays : int, physicalMemoryBytes : int, memRatio : int, returnLog2 : bool) {
-    var totalMem : int = physicalMemoryBytes;
-    var memoryTarget : int = totalMem / memRatio;
+    var totalMem = physicalMemoryBytes;
+    var memoryTarget = totalMem / memRatio;
     var numBytesPerType : int = c_sizeof(int) : int;
-    var bytesPerIndex : int = numArrays * numBytesPerType;
+    var bytesPerIndex :int = numArrays * numBytesPerType;
     var numIndices : int = memoryTarget / bytesPerIndex;
 
-    var lgProblemSize : int = log2(numIndices);
+    var lgProblemSize : int = ceil(log2(numIndices:real)) : int;
 
     if (returnLog2) {
       numIndices = 2**lgProblemSize;
@@ -42,43 +40,31 @@ proc computeM2Values(m2 : [] int, count : int) {
 }
 
 proc getNthRandom(N : int, m2 : [] int, m2count :int) {
-   var period = 0x7fffffff/7 : int;
-
-   var n = N % period : int;
-
    var ran = 0x2;
-   if(n <= 0){
-      n = 1;
-   }
-   var i = log2(n);
+   var i :int = ceil(log2(N)) : int;
    var val = 0;
    var J = 0;
    for j in 0..i {
       J = i-j;
-      for k in 0..m2count {
-          if ((ran >> j) & 1) then val ^= m2(j);
+      for k in 1..m2count {
+          if ((ran >> (k-1)) & 1) then val ^= m2(k-1);
       }
       ran = val;
-      if ((n >> i) & 1) then getNextRandom(ran);
+      if ((N >> J) & 1) then getNextRandom(ran);
    }
-
    return ran;
 }
 
-proc RAStream(vals : [] int, vals_idx : int, numvals : int, start : int, m2 : [] int, m2count : int) {
-   var val = getNthRandom(start, m2, m2count);
-   var base = vals_idx * numvals;
-   var idx = 0;
+proc RAStream(vals : [] int, numvals : int, m2 : [] int, m2count : int) {
+   var val = getNthRandom(2, m2, m2count);
    for i in 0..numvals {
-      idx = base + i;
-      idx = idx % numvals;
       val = getNextRandom(val);
-      vals[idx] = val;
+      vals[i] = val;
    }
 }
 
 param randWidth = 64;
-param physicalMemory = 16437;
+param physicalMemory = 17179869184; //1024;
 var memRatio = 4;
 var numTables = 1;
 
@@ -87,33 +73,25 @@ computeM2Values(m2, randWidth);
 
 var N_U = 0;
 var n = 0;
-n = computeProblemSize(numTables, physicalMemory, memRatio, true);
-N_U = 2**(n+2);
+n = computeProblemSize(numTables, physicalMemory, memRatio, false);
+N_U = n+2;
 
-var z = 0;
-z = N_U * N_U;
+var z = N_U;
 var randval: [0..z] int;
 
-var m = 0;
-m = 2**(n);
-var indexMask = m - 1;
+var indexMask = z - 1;
+var T : [0..z] int;
 
-var T : [0..m] int;
-
-for i in 0..m {
+for i in 0..z {
   T[i] = i;
 }
 
 var timer : stopwatch;
 
 timer.start();
-forall block in 0..N_U {
-   RAStream(randval, block, N_U, 0, m2, randWidth);
-   for r in 0..N_U {
-      T ( (randval ( (block * N_U + r) % z ) & indexMask) % m ) ^= r;
-   }
+RAStream(randval, z, m2, randWidth);
+forall r in 0..z {
+   T ( randval ( r ) & indexMask ) ^= randval(r);
 }
 timer.stop();
-
 writeln(getenv('CHPL_RT_NUM_THREADS_PER_LOCALE'.c_str()):string,",", timer.elapsed());
-

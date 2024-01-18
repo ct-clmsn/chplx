@@ -1,4 +1,11 @@
-// test/studies/hpcc/RA/ra-randstream-hpcc06.chpl
+proc getNextRandom(x : int) : int {
+   var poly = 0;
+   inlinecxx("{} = 0x7;", poly);
+   var hirandbit = 0;
+   inlinecxx("{} = 0x1 << (64-1);", hirandbit);
+   inlinecxx("{} = ({} << 1) ^ ( ({} & {}) ? {} : 0);", x, x, x, hirandbit, poly);
+   return x;
+}
 
 proc computeProblemSize(numArrays : int, physicalMemoryBytes : int, memRatio : int, returnLog2 : bool) : int {
     var totalMem = physicalMemoryBytes;
@@ -19,19 +26,12 @@ proc computeProblemSize(numArrays : int, physicalMemoryBytes : int, memRatio : i
       inlinecxx("if({} * {} <= {})", numIndices, bytesPerIndex, memoryTarget);
         inlinecxx("{} += 1;", lgProblemSize);
     }
-    var retval : int = 0;
+
+   var retval : int = 0;
    inlinecxx("{} = {} ? {} : {};", retval, returnLog2, lgProblemSize, numIndices);
    return retval;
 }
 
-proc getNextRandom(x : int) : int {
-   var poly = 0;
-   inlinecxx("{} = 0x7;", poly);
-   var hirandbit = 0;
-   inlinecxx("{} = 0x1 << (64-1);", hirandbit);
-   inlinecxx("{} = ({} << 1) ^ ( ({} & {}) ? {} : 0);", x, x, x, hirandbit, poly);
-   return x;
-}
 
 proc computeM2Values(m2 : [] int, count : int) :bool {
    var nextval = 0;
@@ -46,76 +46,66 @@ proc computeM2Values(m2 : [] int, count : int) :bool {
 }
 
 proc getNthRandom(N : int, m2 : [] int, m2count : int) {
-   var period = 0x7fffffff/7 ;
-
-   var n = N % period ;
-
-   inlinecxx("if ({} <= {} )",n,0);
-      inlinecxx("{} = 1;", n);
-   var ran = 0x2;
+   var ran = 0;
+   inlinecxx("{} = 0x2;", ran);
    var i = 0;
-   inlinecxx("{} = std::log2(n);", i);
+   inlinecxx("{} = std::ceil(std::log2(static_cast<double>({})));", i, N);
    var val = 0;
    var J = 0;
    for j in 0..i {
       J = i-j;
-      for k in 0..m2count {
-         inlinecxx("if (({} >> {}) & 1) {} ^= {} [ {} ];", ran, k, val, m2, k); 
+      for k in 1..m2count {
+         inlinecxx("if (({} >> ({}-1)) & 1) {} ^= {} [ ({}-1) ];", ran, k, val, m2, k); 
       }
       ran = val;
-      inlinecxx("if(({} >> {}) & 1) {} = getNextRandom({});", n, J, ran, ran);
+      inlinecxx("if(({} >> {}) & 1) {} = getNextRandom({});", N, J, ran, ran);
    }
 
    return ran;
 }
 
-proc RAStream(vals : [] int, vals_idx : int, numvals : int, start : int, m2 : [] int, m2count : int) {
-   var val = getNthRandom(start, m2, m2count);
-   var base = vals_idx * numvals;
-   var idx = 0;
+proc RAStream(vals : [] int, numvals : int, m2 : [] int, m2count : int) {
+
+   var val = getNthRandom(2, m2, m2count);
    for i in 0..numvals {
-      idx = base + i;
-      idx = idx % numvals;
       val = getNextRandom(val);
-      vals[idx] = val;
+      vals[i] = val;
    }
 }
 
 param randWidth = 64;
-param physicalMemory = 16437;
-var memRatio = 4;
-var numTables = 1;
+var physicalMemory = 0;
+inlinecxx("{} = 17179869184l;", physicalMemory);
+param memRatio = 4;
+param numTables = 1;
 
 var m2 : [0..randWidth] int;
 var val = computeM2Values(m2, randWidth);
 
 var N_U = 0;
 var n = 1;
-n = computeProblemSize(numTables, physicalMemory, memRatio, true);
-inlinecxx("{} = std::pow(2, {}+2);", N_U, n);
+n = computeProblemSize(numTables, physicalMemory, memRatio, false);
+inlinecxx("{} = {}+2;", N_U, n);
 
-var z = 0;
-inlinecxx("{} = {} * {};", z, N_U, N_U);
+var z : int;
+z = N_U;
 var randval : [0..z] int;
 
-var m = 0;
-inlinecxx("{} = std::pow(2, {});", m, n);
-var indexMask = m - 1;
+var indexMask = z - 1;
 
-var T : [0..m] int;
+var T : [0..z] int;
 
-for i in 0..m {
+for i in 0..z {
   T[i] = i;
 }
 
 inlinecxx("hpx::chrono::high_resolution_timer gups;");
 
-forall block in 0..N_U {
-   RAStream(randval, block, N_U, 0, m2, randWidth);
-   for r in 0..N_U {
-      inlinecxx("{} [ ({} [ ({} * {} + {}) % {} ] & {}) % {} ] ^= {};", T, randval, block, N_U, r, z, indexMask, m, r);
-   }
+RAStream(randval, z, m2, randWidth);
+forall r in 0..z {
+   inlinecxx("{} [ {} [ {} ] & {} ] ^= {} [ {} ];", T, randval, r, indexMask, randval, r);
 }
 
 inlinecxx("auto elapsed = gups.elapsed();");
+
 inlinecxx("std::cout << hpx::resource::get_num_threads() << \",\" << elapsed << std::endl;");
