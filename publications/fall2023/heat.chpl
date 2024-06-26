@@ -21,7 +21,7 @@ config const dx: real = 1.0;
 
 config const nx: int = 1000000;
 config const nt: int = 100;
-config const threads: int = 20;
+//config const threads: int = 20;
 
 proc update(d : []real, d2 : []real) {
   const NX : int = nx + 1;
