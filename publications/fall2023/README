@@ -5,7 +5,11 @@ cmake -DChplx_DIR=<git_project_path>/chplx/build/library/lib/cmake/Chplx -DHPX_D
 
 # create the codes 
 
+"slow"
 ./chplx -o stream_triad -d -E -f ../../publications/fall2023/stream_cpp_triad.chpl
+
+"fast"
+./chplx --fast -o stream_triad -d -E -f ../../publications/fall2023/stream_cpp_triad.chpl
 
 
 #building chapel
