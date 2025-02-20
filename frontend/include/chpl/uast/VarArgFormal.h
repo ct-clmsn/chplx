@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -44,24 +44,36 @@ namespace uast {
   the number of which is denoted by the TypeQuery `?k`.
 */
 class VarArgFormal final : public VarLikeDecl {
+ friend class AstNode;
+
  private:
   int countChildNum_;
 
-  VarArgFormal(AstList children, int attributesChildNum, UniqueString name,
+  VarArgFormal(AstList children, int attributeGroupChildNum, UniqueString name,
                Formal::Intent intent,
                int8_t typeExpressionChildNum,
                int8_t countChildNum)
     : VarLikeDecl(asttags::VarArgFormal, std::move(children),
-                  attributesChildNum,
+                  attributeGroupChildNum,
                   Decl::DEFAULT_VISIBILITY,
                   Decl::DEFAULT_LINKAGE,
-                  // Use -1 to indicate so such child exists.
-                  /*linkageNameChildNum*/ -1,
+                  // Use NO_CHILD to indicate so such child exists.
+                  /*linkageNameChildNum*/ NO_CHILD,
                   name,
                   (Qualifier)((int)intent),
                   typeExpressionChildNum,
-                  /*initExpressionChildNum*/ -1),
+                  /*initExpressionChildNum*/ NO_CHILD),
       countChildNum_(countChildNum) {
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    varLikeDeclSerializeInner(ser);
+    ser.writeVInt(countChildNum_);
+  }
+
+  explicit VarArgFormal(Deserializer& des)
+    : VarLikeDecl(asttags::VarArgFormal, des) {
+    countChildNum_ = des.readVInt();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -81,7 +93,7 @@ class VarArgFormal final : public VarLikeDecl {
   ~VarArgFormal() override = default;
 
   static owned<VarArgFormal> build(Builder* builder, Location loc,
-                                   owned<Attributes> attributes,
+                                   owned<AttributeGroup> attributeGroup,
                                    UniqueString name,
                                    Formal::Intent intent,
                                    owned<AstNode> typeExpression,
@@ -107,7 +119,6 @@ class VarArgFormal final : public VarLikeDecl {
     auto ret = child(countChildNum_);
     return ret;
   }
-
 };
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -49,7 +49,11 @@ namespace uast {
 
  */
 class Serial final : public SimpleBlockLike {
+ friend class AstNode;
+
  private:
+  int8_t condChildNum_;
+
   Serial(AstList children, int8_t condChildNum, BlockStyle blockStyle,
          int bodyChildNum,
          int numBodyStmts)
@@ -57,6 +61,16 @@ class Serial final : public SimpleBlockLike {
                       bodyChildNum,
                       numBodyStmts),
       condChildNum_(condChildNum) {
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    simpleBlockLikeSerializeInner(ser);
+    ser.write(condChildNum_);
+  }
+
+  explicit Serial(Deserializer& des)
+    : SimpleBlockLike(asttags::Serial, des) {
+    condChildNum_ = des.read<int8_t>();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -77,8 +91,6 @@ class Serial final : public SimpleBlockLike {
   }
 
   std::string dumpChildLabelInner(int i) const override;
-
-  int8_t condChildNum_;
 
  public:
 
@@ -106,7 +118,6 @@ class Serial final : public SimpleBlockLike {
   const AstNode* condition() const {
     return condChildNum_ < 0 ? nullptr : child(condChildNum_);
   }
-
 };
 
 

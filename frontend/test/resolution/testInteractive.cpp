@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -20,6 +20,7 @@
 #include "test-resolution.h"
 
 #include "chpl/parsing/parsing-queries.h"
+#include "chpl/framework/compiler-configuration.h"
 #include "chpl/framework/query-impl.h"
 #include "chpl/resolution/resolution-queries.h"
 #include "chpl/resolution/scope-queries.h"
@@ -52,9 +53,10 @@ static const char* tagToString(const AstNode* ast) {
 }
 
 static const ResolvedExpression*
-resolvedExpressionForAst(Context* context, const AstNode* ast,
+resolvedExpressionForAstInteractive(ResolutionContext* rc, const AstNode* ast,
                          const ResolvedFunction* inFn,
                          bool scopeResolveOnly) {
+  Context* context = rc->context();
   if (!(ast->isLoop() || ast->isBlock())) {
     // compute the parent module or function
     int postorder = ast->id().postOrderId();
@@ -65,25 +67,26 @@ resolvedExpressionForAst(Context* context, const AstNode* ast,
         if (parentAst->isModule()) {
           if (scopeResolveOnly) {
             const auto& byId = scopeResolveModule(context, parentAst->id());
-            return &byId.byAst(ast);
+            return byId.byAstOrNull(ast);
           } else {
             const auto& byId = resolveModule(context, parentAst->id());
-            return &byId.byAst(ast);
+            return byId.byAstOrNull(ast);
           }
         } else if (auto parentFn = parentAst->toFunction()) {
           auto untyped = UntypedFnSignature::get(context, parentFn);
           // use inFn if it matches
           if (inFn && inFn->signature()->untyped() == untyped) {
-            return &inFn->resolutionById().byAst(ast);
+            return inFn->byAstOrNull(ast);
           } else {
             if (scopeResolveOnly) {
               auto rFn = scopeResolveFunction(context, parentFn->id());
-              return &rFn->resolutionById().byAst(ast);
+              return rFn->byAstOrNull(ast);
             } else {
-              auto typed = typedSignatureInitial(context, untyped);
-              if (!typed->needsInstantiation()) {
-                auto rFn = resolveFunction(context, typed, nullptr);
-                return &rFn->resolutionById().byAst(ast);
+              auto typed = typedSignatureInitial(rc, untyped);
+              if (typed != nullptr && !typed->needsInstantiation()) {
+                if (auto rFn = resolveFunction(rc, typed, nullptr)) {
+                  return rFn->byAstOrNull(ast);
+                }
               }
             }
           }
@@ -92,50 +95,61 @@ resolvedExpressionForAst(Context* context, const AstNode* ast,
     }
   }
 
-  if (inFn != nullptr && inFn->id() != ast->id() &&
-      inFn->id().contains(ast->id())) {
-    return &inFn->byAst(ast);
+  if (ast->id().postOrderId() < 0) {
+    // It's a symbol with a different path, e.g. a nested Function.
+    // Don't try to resolve it now in this
+    // traversal. Instead, resolve it separately.
+    return nullptr;
+  }
+
+  if (inFn != nullptr && inFn->id() != ast->id()) {
+    return inFn->byAstOrNull(ast);
   }
   return nullptr;
 }
 
 static void
-computeAndPrintStuff(Context* context,
+computeAndPrintStuff(ResolutionContext* rc,
                      const AstNode* ast,
                      const ResolvedFunction* inFn,
                      std::set<const ResolvedFunction*>& calledFns,
                      bool scopeResolveOnly,
-                     int maxIdWidth) {
+                     int maxIdWidth,
+                     bool quiet) {
+  Context* context = rc->context();
   // Scope resolve / resolve concrete functions before printing
   if (auto fn = ast->toFunction()) {
     if (scopeResolveOnly) {
       inFn = scopeResolveFunction(context, fn->id());
     } else {
       auto untyped = UntypedFnSignature::get(context, fn);
-      auto typed = typedSignatureInitial(context, untyped);
-      if (!typed->needsInstantiation()) {
-        inFn = resolveFunction(context, typed, nullptr);
+      auto typed = typedSignatureInitial(rc, untyped);
+      if (typed != nullptr && !typed->needsInstantiation()) {
+        inFn = resolveFunction(rc, typed, nullptr);
       }
     }
   }
 
   for (const AstNode* child : ast->children()) {
-    computeAndPrintStuff(context, child, inFn, calledFns,
-                         scopeResolveOnly, maxIdWidth);
-    if (child->isModule() || child->isFunction()) {
-      std::cout << "\n";
+    computeAndPrintStuff(rc, child, inFn, calledFns,
+                         scopeResolveOnly, maxIdWidth, quiet);
+    if (!quiet) {
+      if (child->isModule() || child->isFunction()) {
+        std::cout << "\n";
+      }
     }
   }
 
   int beforeCount = context->numQueriesRunThisRevision();
   const ResolvedExpression* r =
-    resolvedExpressionForAst(context, ast, inFn, scopeResolveOnly);
+    resolvedExpressionForAstInteractive(rc, ast, inFn, scopeResolveOnly);
   int afterCount = context->numQueriesRunThisRevision();
   if (r != nullptr) {
-    for (const TypedFnSignature* sig : r->mostSpecific()) {
-      if (sig != nullptr) {
+    for (const MostSpecificCandidate& candidate : r->mostSpecific()) {
+      if (candidate) {
+        auto sig = candidate.fn();
         if (sig->untyped()->idIsFunction()) {
-          auto fn = resolveFunction(context, sig, r->poiScope());
+          auto fn = resolveFunction(rc, sig, r->poiScope());
           calledFns.insert(fn);
         }
       }
@@ -144,36 +158,44 @@ computeAndPrintStuff(Context* context,
       auto sig = a.fn();
       if (sig != nullptr) {
         if (sig->untyped()->idIsFunction()) {
-          auto fn = resolveFunction(context, sig, r->poiScope());
+          if (a.action() == AssociatedAction::ITERATE) {
+            // sometimes, the associated action for iteration uses a different
+            // PoI to resolve the body of a given function. Rather than
+            // try figuring out that PoI, just skip it.
+            continue;
+          }
+
+          auto fn = resolveFunction(rc, sig, r->poiScope());
           calledFns.insert(fn);
         }
       }
     }
 
-    std::string idStr = ast->id().str();
-    std::string tagStr = tagToString(ast);
-    std::string nameStr = nameForAst(ast);
+    if (!quiet) {
+      std::string idStr = ast->id().str();
+      std::string tagStr = tagToString(ast);
+      std::string nameStr = nameForAst(ast);
 
-    // output the ID
-    std::cout << std::setw(maxIdWidth) << std::left << idStr;
-    // restore format to default
-    std::cout.copyfmt(std::ios(NULL));
+      // output the ID
+      std::cout << std::setw(maxIdWidth) << std::left << idStr;
+      // restore format to default
+      std::cout.copyfmt(std::ios(NULL));
 
-    // output the tag and name (if any name)
-    std::string tagNameStr = " " + tagStr;
-    if (!nameStr.empty()) {
-      tagNameStr += " " + nameStr;
+      // output the tag and name (if any name)
+      std::string tagNameStr = " " + tagStr;
+      if (!nameStr.empty()) {
+        tagNameStr += " " + nameStr;
+      }
+      std::cout << std::setw(16) << tagNameStr << std::setw(0);
+
+      // output the resolution result
+      r->stringify(std::cout, chpl::StringifyKind::CHPL_SYNTAX);
+
+      if (afterCount > beforeCount) {
+        std::cout << " (ran " << (afterCount - beforeCount) << " queries)";
+      }
+      std::cout << "\n";
     }
-    std::cout << std::setw(16) << tagNameStr << std::setw(0);
-
-    // output the resolution result
-    r->stringify(std::cout, chpl::StringifyKind::CHPL_SYNTAX);
-
-    if (afterCount > beforeCount) {
-      std::cout << " (ran " << (afterCount - beforeCount) << " queries)";
-    }
-    std::cout << "\n";
-
   }
 }
 
@@ -183,7 +205,8 @@ static void usage(int argc, char** argv) {
          "  --scope only performs scope resolution\n"
          "  --trace enables query tracing\n"
          "  --time <outputFile> outputs query timing information to outputFile\n"
-         "  --searchPath <path> adds to the module search path\n",
+         "  --searchPath <path> adds to the module search path\n"
+         "  --warn-unstable turns on unstable warnings\n",
          argv[0]);
 }
 
@@ -206,10 +229,13 @@ int main(int argc, char** argv) {
   bool trace = false;
   bool scopeResolveOnly = false;
   bool brief = false;
+  bool once = false;
+  bool quiet = false;
   std::string chpl_home;
   std::vector<std::string> cmdLinePaths;
   std::vector<std::string> files;
   bool enableStdLib = false;
+  bool warnUnstable = false;
   const char* timing = nullptr;
   for (int i = 1; i < argc; i++) {
     if (0 == strcmp(argv[i], "--std")) {
@@ -225,6 +251,10 @@ int main(int argc, char** argv) {
       trace = true;
     } else if (0 == strcmp(argv[i], "--scope")) {
       scopeResolveOnly = true;
+    } else if (0 == strcmp(argv[i], "--once")) {
+      once = true;
+    } else if (0 == strcmp(argv[i], "--quiet")) {
+      quiet = true;
     } else if (0 == strcmp(argv[i], "--time")) {
       if (i+1 >= argc) {
         usage(argc, argv);
@@ -234,24 +264,32 @@ int main(int argc, char** argv) {
       i++;
     } else if (0 == strcmp(argv[i], "--brief")) {
       brief = true;
+    } else if (0 == strcmp(argv[i], "--warn-unstable")) {
+      warnUnstable = true;
     } else {
       files.push_back(argv[i]);
     }
   }
 
-  if (enableStdLib) {
-    if (const char* chpl_home_env  = getenv("CHPL_HOME")) {
-      chpl_home = chpl_home_env;
-      printf("CHPL_HOME is set, so setting up search paths\n");
-    } else {
-      printf("--std only works when CHPL_HOME is set\n");
-      exit(1);
-    }
+  if (const char* chpl_home_env = getenv("CHPL_HOME")) {
+    chpl_home = chpl_home_env;
+    printf("# CHPL_HOME is set, so using it\n");
+  } else {
+    printf("# CHPL_HOME not set so running without one\n");
   }
 
-  Context context(chpl_home);
+  if (enableStdLib && chpl_home.empty()) {
+    printf("--std only works when CHPL_HOME is set\n");
+    exit(1);
+  }
+
+  Context::Configuration config;
+  config.chplHome = chpl_home;
+  Context context(config);
   Context* ctx = &context;
   context.setDetailedErrorOutput(!brief);
+  ResolutionContext rcval(ctx);
+  auto rc = &rcval;
 
   if (files.size() == 0) {
     usage(argc, argv);
@@ -263,11 +301,14 @@ int main(int argc, char** argv) {
 
     // Run this query first to make the other output more understandable
     ctx->setDebugTraceFlag(false);
+    setupSearchPaths(ctx, enableStdLib, cmdLinePaths, files);
     typeForBuiltin(ctx, UniqueString::get(ctx, "int"));
     ctx->setDebugTraceFlag(trace);
     if (timing) ctx->beginQueryTimingTrace(timing);
 
-    setupSearchPaths(ctx, enableStdLib, cmdLinePaths, files);
+    CompilerFlags flags;
+    flags.set(CompilerFlags::WARN_UNSTABLE, warnUnstable);
+    setCompilerFlags(ctx, std::move(flags));
 
     std::set<const ResolvedFunction*> calledFns;
 
@@ -276,17 +317,23 @@ int main(int argc, char** argv) {
 
       const ModuleVec& mods = parseToplevel(ctx, filepath);
       for (const auto mod : mods) {
-        mod->stringify(std::cout, chpl::StringifyKind::DEBUG_DETAIL);
-        printf("\n");
+        if (!quiet) {
+          mod->stringify(std::cout, chpl::StringifyKind::DEBUG_DETAIL);
+          printf("\n");
+        }
 
         int maxIdWidth = mod->computeMaxIdStringWidth();
-        computeAndPrintStuff(ctx, mod, nullptr, calledFns,
-                             scopeResolveOnly, maxIdWidth);
-        printf("\n");
+        computeAndPrintStuff(rc, mod, nullptr, calledFns,
+                             scopeResolveOnly, maxIdWidth, quiet);
+        if (!quiet) {
+          printf("\n");
+        }
       }
     }
 
-    printf("Instantiations:\n");
+    if (!quiet) {
+      printf("Instantiations:\n");
+    }
 
     std::set<const ResolvedFunction*> printed;
 
@@ -306,17 +353,22 @@ int main(int argc, char** argv) {
             auto ast = idToAst(ctx, sig->id());
             auto fn = ast->toFunction();
             auto uSig = UntypedFnSignature::get(ctx, fn);
-            auto initialType = typedSignatureInitial(ctx, uSig);
-            printf("Instantiation of ");
-            initialType->stringify(std::cout, chpl::StringifyKind::CHPL_SYNTAX);
-            printf("\n");
-            printf("Instantiation is ");
-            sig->stringify(std::cout, chpl::StringifyKind::CHPL_SYNTAX);
-            printf("\n");
-            int maxIdWidth = ast->computeMaxIdStringWidth();
-            computeAndPrintStuff(ctx, ast, calledFn, calledFns,
-                                 scopeResolveOnly, maxIdWidth);
-            printf("\n");
+            auto initialType = typedSignatureInitial(rc, uSig);
+            int maxIdWidth = 0;
+            if (!quiet) {
+              printf("Instantiation of ");
+              initialType->stringify(std::cout, chpl::StringifyKind::CHPL_SYNTAX);
+              printf("\n");
+              printf("Instantiation is ");
+              sig->stringify(std::cout, chpl::StringifyKind::CHPL_SYNTAX);
+              printf("\n");
+              maxIdWidth = ast->computeMaxIdStringWidth();
+            }
+            computeAndPrintStuff(rc, ast, calledFn, calledFns,
+                                 scopeResolveOnly, maxIdWidth, quiet);
+            if (!quiet) {
+              printf("\n");
+            }
           }
         }
       }
@@ -335,19 +387,25 @@ int main(int argc, char** argv) {
       gc = false;
     }
 
+    if (once) {
+      break;
+    }
+
     // ask the user if they want to run it again
     printf ("Would you like to incrementally parse again? [Y]: ");
     int ch = 0;
     do {
       ch = getc(stdin);
-    } while (ch != 0 && (ch == ' ' || ch == '\n'));
+    } while (ch != 0 && ch == ' ');
 
     if (ch == 'g' || ch == 'G') {
       gc = true;
-    } else if (!(ch == 'Y' || ch == 'y' || ch == '\n')) {
+    } else if (ch == 'Y' || ch == 'y' || ch == '\n') {
+      printf("\n");
+      continue;
+    } else {
       break;
     }
-    printf("\n");
   }
 
   return 0;

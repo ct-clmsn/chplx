@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# Copyright 2021-2024 Hewlett Packard Enterprise Development LP
 # Other additional copyright holders may be indicated within.
 #
 # The entirety of this work is licensed under the Apache License,
@@ -19,11 +19,8 @@
 add_library(tests-common OBJECT EXCLUDE_FROM_ALL
             test-common.cpp test-parsing.cpp test-resolution.cpp)
 target_link_libraries(tests-common ChplFrontend)
-set_target_properties(tests-common PROPERTIES FOLDER "Frontend/Tests")
 
-if(NOT TARGET tests)
-  add_custom_target(tests)
-endif()
+add_custom_target(tests)
 set(CHPL_TEST_INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 # define a function to simplify adding tests
@@ -34,20 +31,16 @@ function(comp_unit_test target)
                         LINK_DEPENDS_NO_SHARED true
                         RUNTIME_OUTPUT_DIRECTORY . )
   target_link_libraries(${target} ChplFrontend tests-common)
-  target_include_directories(${target} PUBLIC
-                             ${CHPL_MAIN_INCLUDE_DIR}
-                             ${CHPL_INCLUDE_DIR}
-                             ${CHPL_TEST_INCLUDE_DIR})
-  add_dependencies(${target} ChplFrontend)
+  target_include_directories(${target} PRIVATE ${CHPL_TEST_INCLUDE_DIR})
   add_test(NAME ${target} COMMAND ${target})
   set_tests_properties(${target} PROPERTIES
                        ENVIRONMENT "CHPL_HOME=${CHPL_HOME}")
   add_dependencies(tests ${target})
-
-  set_target_properties(${target} PROPERTIES FOLDER "Frontend/Tests")
 endfunction(comp_unit_test)
 
+add_subdirectory(clang)
 add_subdirectory(framework)
+add_subdirectory(libraries)
 add_subdirectory(parsing)
 add_subdirectory(resolution)
 add_subdirectory(uast)

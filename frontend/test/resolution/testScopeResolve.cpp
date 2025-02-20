@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -29,30 +29,6 @@
 #include "chpl/uast/Variable.h"
 
 // helper functions
-
-static const Variable* findVariable(const AstNode* ast, const char* name) {
-  if (auto v = ast->toVariable()) {
-    if (v->name() == name) {
-      return v;
-    }
-  }
-
-  for (auto child : ast->children()) {
-    auto got = findVariable(child, name);
-    if (got) return got;
-  }
-
-  return nullptr;
-}
-
-static const Variable* findVariable(const ModuleVec& vec, const char* name) {
-  for (auto mod : vec) {
-    auto got = findVariable(mod, name);
-    if (got) return got;
-  }
-
-  return nullptr;
-}
 
 static const ResolvedExpression&
 scopeResolveIt(Context* context, const AstNode* ast) {
@@ -474,7 +450,7 @@ static void test11() {
 }
 
 // multiple imports / uses of the same module don't block finding symbols
-// via the second visibility statment onwards.
+// via the second visibility statement onwards.
 static void test12() {
   printf("test12\n");
   Context ctx;
@@ -569,7 +545,7 @@ static void test13() {
   assert(guard.realizeErrors());
 }
 
-// There's specal handling for the rightmost field access. Make sure this
+// There's special handling for the rightmost field access. Make sure this
 // special handling properly handles super.
 static void test14() {
   printf("test14\n");
@@ -601,7 +577,7 @@ static void test14() {
 
 
 // Make sure that the dot-expression handling of "this" works in addition
-// to the idenifier-expression handling of "this". Technically this is
+// to the identifier-expression handling of "this". Technically this is
 // redundant, but our goal is to issue a warning, not fail to resolve in
 // this case.
 static void test15() {
@@ -666,7 +642,7 @@ static void test16() {
 
   const ResolvedExpression& reY = scopeResolveIt(context, y->initExpression());
   assert(reY.toId().isEmpty());
-  assert(guard.realizeErrors() == 1);
+  assert(guard.realizeErrors() >= 1);
 }
 
 // Makes sure a user can't use a module as a variable (like var x = M).
@@ -700,6 +676,661 @@ static void test17() {
   guard.realizeErrors();
 }
 
+// check that 'private use M' puts its contents in a shadow scope
+// further from a 'public use' (which isn't in a shadow scope)
+static void test18() {
+  printf("test18\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        var myvar: int;
+      }
+
+      module N {
+        var myvar: real;
+      }
+
+      module O {
+        public use M;
+        private use N;
+
+        var x = myvar;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+
+  const ResolvedExpression& reY = scopeResolveIt(context, x->initExpression());
+  assert(reY.toId().str() == "M@1");
+
+  // expect a warning for this code
+  assert(guard.numErrors() == 1);
+  assert(guard.error(0)->kind() == ErrorBase::WARNING);
+  guard.realizeErrors();
+}
+
+// check that 'private use M' puts M in a further shadow scope from contents
+static void test19() {
+  printf("test19\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        var M: int;
+      }
+
+      module O {
+        use M;
+
+        var x = M; // should refer to var M, not module M
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+
+  const ResolvedExpression& reY = scopeResolveIt(context, x->initExpression());
+  assert(reY.toId().str() == "M@1");
+}
+// check that 'public use M' does not bring in a symbol named M
+static void test20() {
+  printf("test20\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        var M: int;
+      }
+
+      module O {
+        public use M;
+
+        var x = M; // should refer to var M, not module M
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+
+  const ResolvedExpression& reY = scopeResolveIt(context, x->initExpression());
+  assert(reY.toId().str() == "M@1");
+}
+static void test21() {
+  printf("test21\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module Outer {
+        module M {
+          var myvar: int;
+        }
+      }
+
+      module O {
+        public use Outer.M;
+        use M; // should result in an error
+        var x = myvar;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+
+  for (auto mod : vec) {
+    scopeResolveModule(context, mod->id());
+  }
+  assert(guard.realizeErrors() == 1);
+}
+// but 'public use M as M' does bring in module named M
+static void test22() {
+  printf("test22\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        var myvar: int;
+      }
+
+      module O {
+        public use M as M;
+
+        var x = M.myvar;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+
+  const ResolvedExpression& reY = scopeResolveIt(context, x->initExpression());
+  assert(reY.toId().str() == "M@1");
+}
+
+// Testing errors issued: two conflicting things renamed to the same thing.
+static void test23() {
+  printf("test23\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        var a = "a";
+        var b = "b";
+      }
+
+      module O {
+        import M.{a as c, b as c};
+        var x = M.c;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+
+  const ResolvedExpression& reMc = scopeResolveIt(context, x->initExpression());
+  assert(reMc.toId().isEmpty());
+
+  assert(guard.numErrors() >= 1);
+  assert(guard.error(0)->type() == ErrorType::UseImportMultiplyDefined);
+  guard.realizeErrors();
+}
+
+// Testing warning issued: one variable imported as two different things.
+static void test24() {
+  printf("test24\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        var a = "a";
+      }
+
+      module O {
+        import M.{a as b, a as c};
+        var x = b;
+        var y = c;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+  const Variable* y = findVariable(vec, "y");
+  assert(x);
+  const Variable* a = findVariable(vec, "a");
+  assert(a);
+
+  const ResolvedExpression& reB = scopeResolveIt(context, x->initExpression());
+  assert(reB.toId() == a->id());
+
+  const ResolvedExpression& reC = scopeResolveIt(context, y->initExpression());
+  assert(reC.toId() == a->id());
+
+  assert(guard.numErrors() == 1);
+  assert(guard.error(0)->type() == ErrorType::UseImportMultiplyMentioned);
+  guard.clearErrors();
+}
+
+// Testing errors and warnings issued: a variable transitively renamed;
+// did the user mean `a as c` instead of `a as b, b as c`?
+static void test25() {
+  printf("test24\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        var a = "a";
+      }
+
+      module O {
+        import M.{a as b, b as c};
+        var x = c;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+
+  const ResolvedExpression& reC = scopeResolveIt(context, x->initExpression());
+  assert(reC.toId().isEmpty());
+
+  assert(guard.numErrors() >= 2);
+  assert(guard.error(0)->type() == ErrorType::UseImportUnknownSym);
+  assert(guard.error(1)->type() == ErrorType::UseImportTransitiveRename);
+  guard.realizeErrors();
+  guard.clearErrors();
+}
+
+// check a more nested module example with privacy
+static void test26() {
+  printf("test26\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        private var x : int;
+        module Sub {
+          use M;
+
+          var y = x; // access to 'x' should be OK
+        }
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+  const Variable* y = findVariable(vec, "y");
+  assert(y);
+
+  const ResolvedExpression& reY = scopeResolveIt(context, y->initExpression());
+  assert(reY.toId() == x->id());
+}
+// this version matches the privateToParent test
+static void test27() {
+  printf("test27\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        private var x : int;
+        module Sub {
+          proc main() {
+            use M;
+            var y = x; // access to 'x' should be OK
+          }
+        }
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+  const Variable* y = findVariable(vec, "y");
+  assert(y);
+
+  ID fnId = y->id().parentSymbolId(context);
+  auto fn = idToAst(context, fnId);
+  assert(fn && fn->isFunction());
+
+  const ResolvedFunction* rfn = scopeResolveFunction(context, fn->id());
+  const ResolvedExpression& reY = rfn->byAst(y->initExpression());
+  assert(reY.toId() == x->id());
+}
+// this version has two paths to 'x' and the public-only is processed first
+static void test28() {
+  printf("test28\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module Other {
+        public use M;
+      }
+      module M {
+        private var x : int;
+        module Sub {
+          use M;
+          proc main() {
+            use Other;
+
+            var y = x; // access to 'x' should be OK
+          }
+        }
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+  const Variable* y = findVariable(vec, "y");
+  assert(y);
+
+  ID fnId = y->id().parentSymbolId(context);
+  auto fn = idToAst(context, fnId);
+  assert(fn && fn->isFunction());
+
+  const ResolvedFunction* rfn = scopeResolveFunction(context, fn->id());
+  const ResolvedExpression& reY = rfn->byAst(y->initExpression());
+  assert(reY.toId() == x->id());
+}
+// this one tests if a 'private use' is visible within a submodule
+static void test29() {
+  printf("test29\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module Other {
+        var x;
+      }
+      module M {
+        private use Other;
+        module Sub {
+          proc main() {
+            use M;
+            var y = x; // access to 'x' should be OK
+          }
+        }
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+  const Variable* y = findVariable(vec, "y");
+  assert(y);
+
+  ID fnId = y->id().parentSymbolId(context);
+  auto fn = idToAst(context, fnId);
+  assert(fn && fn->isFunction());
+
+  const ResolvedFunction* rfn = scopeResolveFunction(context, fn->id());
+  const ResolvedExpression& reY = rfn->byAst(y->initExpression());
+  assert(reY.toId().isEmpty());
+}
+
+// this one is a regression test for filter/exclude flags and their storage.
+// Using just a single Flags bitfield in scope lookup is not enough, we
+// need a list, and this test exposes why.
+//
+// See also https://github.com/chapel-lang/chapel/issues/22217 for an explanation
+// of what used to go wrong.
+static void test30() {
+  printf("test30\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module TopLevel {
+          module XContainerUser {
+              public use TopLevel.XContainer; // Will search for public, to no avail.
+          }
+          module XContainer {
+              private var x: int;
+              record R {} // R is in the same scope as x so it won't set public
+
+              module MethodHaver {
+                  use TopLevel.XContainerUser;
+                  use TopLevel.XContainer;
+                  proc R.foo() {
+                      var y = x;
+                  }
+              }
+          }
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+  const Variable* y = findVariable(vec, "y");
+  assert(y);
+
+  ID fnId = y->id().parentSymbolId(context);
+  auto fn = idToAst(context, fnId);
+  assert(fn && fn->isFunction());
+
+  const ResolvedFunction* rfn = scopeResolveFunction(context, fn->id());
+  const ResolvedExpression& reY = rfn->byAst(y->initExpression());
+  assert(reY.toId() == x->id());
+}
+
+// It has been observed that the production compiler finds `x` in test30 even
+// when the second use statement is commented out. It shouldn't, because
+// parent lookup ought to stop at module boundaries.
+static void test30a() {
+  printf("test30a\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module TopLevel {
+          module XContainerUser {
+              public use TopLevel.XContainer; // Will search for public, to no avail.
+          }
+          module XContainer {
+              private var x: int;
+              record R {} // R is in the same scope as x so it won't set public
+
+              module MethodHaver {
+                  use TopLevel.XContainerUser;
+                  proc R.foo() {
+                      var y = x;
+                  }
+              }
+          }
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* y = findVariable(vec, "y");
+  assert(y);
+
+  ID fnId = y->id().parentSymbolId(context);
+  auto fn = idToAst(context, fnId);
+  assert(fn && fn->isFunction());
+
+  const ResolvedFunction* rfn = scopeResolveFunction(context, fn->id());
+  const ResolvedExpression& reY = rfn->byAst(y->initExpression());
+  assert(reY.toId().isEmpty());
+}
+
+// Production compiler excludes methods from search unless their receiver
+// somehow matches. In non-method contexts, Dyno mimics this by ignoring
+// all methods. So, a method on int should not get in the way of foo.
+//
+// At the time of writing, this is locked down in production by:
+// test/functions/kbrady/proc_scoping.chpl
+static void test31() {
+  printf("test31\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      proc foo(arg: int) {
+        proc int.arg {}
+        var x = arg;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+
+  const Variable* x = findVariable(vec, "x");
+  assert(x);
+
+  ID fnId = x->id().parentSymbolId(context);
+  auto fn = idToAst(context, fnId);
+  assert(fn && fn->isFunction());
+
+  const ResolvedFunction* rfn = scopeResolveFunction(context, fn->id());
+  const ResolvedExpression& reX = rfn->byAst(x->initExpression());
+  assert(reX.toId() == fn->toFunction()->formal(0)->id());
+}
+
+static void test32a() {
+  printf("test32\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        proc int.method() {}
+      }
+
+      module O {
+        use M only method;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+  assert(vec.size() == 2);
+  const Module* moduleO = vec[1];
+  auto moduleResolutionResults = scopeResolveModule(context, moduleO->id());
+
+  assert(guard.realizeErrors() == 0);
+}
+
+static void test32b() {
+  printf("test32\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module M {
+        proc int.method() {}
+      }
+
+      module O {
+        import M.{method};
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+  assert(vec.size() == 2);
+  const Module* moduleO = vec[1];
+  auto moduleResolutionResults = scopeResolveModule(context, moduleO->id());
+  assert(guard.realizeErrors() == 0);
+}
+
+static void test33() {
+  printf("test33\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "input.chpl");
+  std::string contents = R""""(
+      module Program {
+        module Sub {
+          module SubSub {
+            var x = true;
+            x;
+            SubSub.x;
+          }
+          SubSub.x;
+          Sub.SubSub.x;
+        }
+        Sub.SubSub.x;
+        Program.Sub.SubSub.x;
+      }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+  assert(vec.size() == 1);
+  const Module* Program = vec[0];
+  assert(Program && Program->numStmts() == 3);
+  const Module* Sub = Program->stmt(0)->toModule();
+  assert(Sub && Sub->numStmts() == 3);
+  const Module* SubSub = Sub->stmt(0)->toModule();
+  assert(SubSub && SubSub->numStmts() == 3);
+
+  const Variable* x = SubSub->stmt(0)->toVariable();
+  assert(x);
+
+  const AstNode* tSubSub1 = SubSub->stmt(1);
+  assert(tSubSub1);
+  const AstNode* tSubSub2 = SubSub->stmt(2);
+  assert(tSubSub2);
+  const AstNode* tSub1 = Sub->stmt(1);
+  assert(tSub1);
+  const AstNode* tSub2 = Sub->stmt(2);
+  assert(tSub2);
+  const AstNode* tProg1 = Program->stmt(1);
+  assert(tProg1);
+  const AstNode* tProg2 = Program->stmt(2);
+  assert(tProg2);
+
+  auto rProgram = scopeResolveModule(context, Program->id());
+  auto rSub = scopeResolveModule(context, Sub->id());
+  auto rSubSub = scopeResolveModule(context, SubSub->id());
+  assert(guard.realizeErrors() == 0);
+
+  assert(rProgram.byAst(tProg1).toId() == x->id());
+  assert(rProgram.byAst(tProg2).toId() == x->id());
+  assert(rSub.byAst(tSub1).toId() == x->id());
+  assert(rSub.byAst(tSub2).toId() == x->id());
+  assert(rSubSub.byAst(tSubSub1).toId() == x->id());
+  assert(rSubSub.byAst(tSubSub2).toId() == x->id());
+}
+
+
 int main() {
   test1();
   test2();
@@ -718,6 +1349,24 @@ int main() {
   test15();
   test16();
   test17();
+  test18();
+  test19();
+  test20();
+  test21();
+  test22();
+  test23();
+  test24();
+  test25();
+  test26();
+  test27();
+  test28();
+  test29();
+  test30();
+  test30a();
+  test31();
+  test32a();
+  test32b();
+  test33();
 
   return 0;
 }

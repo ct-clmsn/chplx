@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -42,21 +42,32 @@ namespace uast {
 
  */
 class BracketLoop final : public IndexableLoop {
+ friend class AstNode;
+
  private:
   BracketLoop(AstList children, int8_t indexChildNum,
               int8_t iterandChildNum,
               int8_t withClauseChildNum,
               BlockStyle blockStyle,
               int loopBodyChildNum,
-              bool isExpressionLevel)
+              bool isExpressionLevel,
+              int attributeGroupChildNum)
     : IndexableLoop(asttags::BracketLoop, std::move(children),
                     indexChildNum,
                     iterandChildNum,
                     withClauseChildNum,
                     blockStyle,
                     loopBodyChildNum,
-                    isExpressionLevel) {
+                    isExpressionLevel,
+                    attributeGroupChildNum) {
   }
+
+  void serializeInner(Serializer& ser) const override {
+    indexableLoopSerializeInner(ser);
+  }
+
+  explicit BracketLoop(Deserializer& des)
+    : IndexableLoop(asttags::BracketLoop, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     return indexableLoopContentsMatchInner(other->toIndexableLoop());
@@ -78,13 +89,13 @@ class BracketLoop final : public IndexableLoop {
                                   owned<WithClause> withClause,
                                   BlockStyle blockStyle,
                                   owned<Block> body,
-                                  bool isExpressionLevel);
+                                  bool isExpressionLevel,
+                                  owned<AttributeGroup> attributeGroup = nullptr);
 
   /**
    * Check if this bracket loop is actually an array type
    */
   bool isMaybeArrayType() const;
-
 };
 
 

@@ -6,6 +6,7 @@
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 cmake_minimum_required(VERSION 3.19)
+cmake_policy(SET CMP0175 OLD)
 
 set(CHPLX_BACKEND_MAJOR_VERSION 1)
 set(CHPLX_BACKEND_MINOR_VERSION 30)
@@ -19,11 +20,6 @@ set(CHPLX_BACKEND_VERSION
     ${CHPLX_BACKEND_MAJOR_VERSION}.${CHPLX_BACKEND_MINOR_VERSION}.${CHPLX_BACKEND_PATCH_VERSION}.${CHPLX_BACKEND_BUILD_VERSION}
 )
 
-# request C++17
-set(CMAKE_CXX_STANDARD 17)
-set(CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 project(chplx_backend VERSION ${CHPLX_BACKEND_VERSION})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -31,7 +27,18 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 find_package(LLVM REQUIRED CONFIG)
 find_package(Clang REQUIRED CONFIG)
-find_package(fmt REQUIRED CONFIG)
+
+if(CHPLX_WITH_FETCH_FMT)
+  include(FetchContent)
+  FetchContent_Declare(fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG master
+    GIT_PROGRESS TRUE
+  )
+  FetchContent_MakeAvailable(fmt)
+else()
+  find_package(fmt REQUIRED CONFIG)
+endif()
 
 link_directories(${LD_LIBRARY_PATH})
 

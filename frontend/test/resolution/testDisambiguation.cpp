@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -97,16 +97,16 @@ static void checkCalledIndex(Context* context,
   } else {
     int i = 1;
     for (auto fn : stuff.fns) {
-      if (s.only() && s.only()->id() == fn->id()) {
+      if (s.only() && s.only().fn()->id() == fn->id()) {
         foundOnlyIdx = i;
       } else {
-        if (s.bestRef() && s.bestRef()->id() == fn->id()) {
+        if (s.bestRef() && s.bestRef().fn()->id() == fn->id()) {
           foundBestRef = i;
         }
-        if (s.bestConstRef() && s.bestConstRef()->id() == fn->id()) {
+        if (s.bestConstRef() && s.bestConstRef().fn()->id() == fn->id()) {
           foundBestConstRef = i;
         }
-        if (s.bestValue() && s.bestValue()->id() == fn->id()) {
+        if (s.bestValue() && s.bestValue().fn()->id() == fn->id()) {
           foundBestValue = i;
         }
       }
@@ -124,8 +124,7 @@ static void checkCalledIndex(Context* context,
 }
 
 static void test1() {
-  Context ctx;
-  Context* context = &ctx;
+  auto context = buildStdContext();
 
   checkCalledIndex(context,
       R""""(
@@ -165,8 +164,7 @@ static void test1() {
 }
 
 static void test2() {
-  Context ctx;
-  Context* context = &ctx;
+  auto context = buildStdContext();
 
   checkCalledIndex(context,
       R""""(
@@ -211,8 +209,7 @@ static void test2() {
 }
 
 static void test3() {
-  Context ctx;
-  Context* context = &ctx;
+  auto context = buildStdContext();
 
   checkCalledIndex(context,
       R""""(
@@ -265,6 +262,114 @@ static void test3() {
         f(x);
       )"""",
     1);
+
+  // updated disambiguation based on visibility of proc
+  checkCalledIndex(context,
+      R""""(
+        proc f(arg: int) { }                     // 1
+        {
+          proc f(arg) { }                        // 2
+
+          var x = 1;
+          f(x);
+        }
+      )"""",
+    2);
+}
+
+// updated disambiguation based on width of argument
+static void test4() {
+  auto context = buildStdContext();
+
+  std::string program =
+    R""""(
+      proc f(arg: int(8)) { }                   // 1
+      proc f(arg: uint(64)) { }                 // 2
+      var x: int(64);
+      f(x);
+    )"""";
+
+  auto name = std::string("test4.chpl");
+
+  printf("%s\n", name.c_str());
+
+  auto path = UniqueString::get(context, name);
+
+  setFileText(context, path, program);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+  assert(vec.size() == 1);
+  const Module* m = vec[0]->toModule();
+  assert(m);
+
+  // gather the Function and FnCalls
+  GatherStuff stuff;
+  m->traverse(stuff);
+
+  assert(stuff.fns.size() > 1); // > 1 needed for disambiguation
+  assert(stuff.fnCalls.size() == 4); // we have 3 calls defining types prior to
+                                      // the call to f that we care about
+
+  const ResolutionResultByPostorderID& rr = resolveModule(context, m->id());
+  auto fnCall = stuff.fnCalls[3];
+  assert(fnCall->calledExpression()->toIdentifier()->name().compare("f") == 0);
+  const ResolvedExpression& re = rr.byAst(fnCall);
+  const MostSpecificCandidates& s = re.mostSpecific();
+
+  // disambiguation tests should either have a best candidate or be ambiguous.
+  assert (!s.isEmpty());
+
+  int foundOnlyIdx = 0;
+  int i = 1;
+  for (auto fn : stuff.fns) {
+    if (s.only() && s.only().fn()->id() == fn->id()) {
+      foundOnlyIdx = i;
+    }
+    i++;
+  }
+  // should pick the uint(64) overload
+  assert(foundOnlyIdx == 2);
+}
+
+static void test5() {
+  auto context = buildStdContext();
+  ErrorGuard guard(context);
+
+  std::string program = R"""(
+    proc foo(arg) where arg.type == int {
+      return 42;
+    }
+
+    proc foo(arg) {
+      return "hello";
+    }
+
+    var x = foo(42);
+    )""";
+
+  auto qt = resolveQualifiedTypeOfX(context, program);
+  assert(qt.type()->isIntType());
+}
+
+static void test6() {
+  auto context = buildStdContext();
+  ErrorGuard guard(context);
+
+  std::string program = R"""(
+    proc helper(param a : int(64), param b : int(64)) param {
+      return true;
+    }
+
+    proc helper(param a : uint(64), param b : uint(64)) param {
+      return false;
+    }
+
+    param val : uint = 1;
+    var x = if helper(val, 0) then 5 else "42";
+  )""";
+
+  auto qt = resolveQualifiedTypeOfX(context, program);
+  assert(qt.type()->isStringType());
 }
 
 int main() {
@@ -272,6 +377,9 @@ int main() {
   test1();
   test2();
   test3();
+  test4();
+  test5();
+  test6();
 
   return 0;
 }

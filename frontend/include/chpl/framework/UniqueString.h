@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -26,8 +26,11 @@
 #define CHPL_QUERIES_UNIQUE_STRING_H
 
 #include "chpl/framework/UniqueString-detail.h"
+#include "chpl/framework/serialize-functions.h"
 #include "chpl/framework/stringify-functions.h"
 #include "chpl/util/hash.h"
+
+#include "llvm/ADT/StringRef.h"
 
 #include <cstring>
 #include <string>
@@ -112,6 +115,13 @@ class UniqueString final {
   }
 
   /**
+    Get or create a unique string for an LLVM StringRef.
+   */
+  static inline UniqueString get(Context* context, llvm::StringRef s) {
+    return UniqueString::get(context, s.data(), s.size());
+  }
+
+  /**
     Return the null-terminated string.
     The returned pointer may refer to invalid memory if the UniqueString
     goes out of scope.
@@ -143,8 +153,19 @@ class UniqueString final {
     return std::string(c_str(), length());
   }
 
+  /**
+    Returns a reference to the string as an llvm::StringRef
+   */
+  llvm::StringRef stringRef() {
+    return llvm::StringRef(c_str(), length());
+  }
+
 
   void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
+
+  void serialize(Serializer& ser) const;
+
+  static UniqueString deserialize(Deserializer& des);
 
   bool isEmpty() const {
     return s.isEmpty();
@@ -188,6 +209,51 @@ class UniqueString final {
     return this->startsWith(prefix.c_str());
   }
 
+  /**
+    Checks to see if the string ends with another string.
+    \rst
+    .. note::
+
+      will not handle prefix strings with embedded ``'\0'`` bytes
+    \endrst
+  */
+  bool endsWith(const char* suffix) const {
+    auto suffixLength = strlen(suffix);
+    if (suffixLength > this->length()) return false;
+    auto offset = this->length() - suffixLength;
+    bool ret = (0 == strncmp(this->c_str() + offset, suffix, suffixLength));
+    return ret;
+  }
+
+  /**
+    Checks to see if the string ends with another string.
+    \rst
+    .. note::
+
+      will not handle prefix strings with embedded ``'\0'`` bytes
+    \endrst
+   */
+  bool endsWith(const UniqueString suffix) const {
+    return this->endsWith(suffix.c_str());
+  }
+
+  /**
+    Checks to see if the string ends with another string.
+    \rst
+    .. note::
+
+      will not handle prefix strings with embedded ``'\0'`` bytes
+    \endrst
+   */
+  bool endsWith(const std::string& suffix) const {
+    return this->endsWith(suffix.c_str());
+  }
+
+  /** allow 'if (myString)' to check for nonempty */
+  explicit operator bool() const {
+    return !isEmpty();
+  }
+
   inline bool operator==(const UniqueString other) const {
     return this->s.i.v == other.s.i.v;
   }
@@ -203,11 +269,41 @@ class UniqueString final {
     (void)s;                    // mark field as used for linter
     return 0 == this->compare(other);
   }
+
+  /**
+    Checks to see if the string contents match a C++ std::string.
+    \rst
+    .. note::
+
+      will only compare up to the first null byte.
+    \endrst
+   */
+  inline bool operator==(const std::string& other) const {
+    (void)s;                    // mark field as used for linter
+    return 0 == this->compare(other.c_str());
+  }
+
   inline bool operator!=(const UniqueString other) const {
     return !(*this == other);
   }
   inline bool operator!=(const char* other) const {
     return 0 != this->compare(other);
+  }
+  inline bool operator!=(const std::string& other) const {
+    return !(*this == other);
+  }
+
+  inline bool operator<(const UniqueString other) const {
+    return this->compare(other) < 0;
+  }
+  inline bool operator<=(const UniqueString other) const {
+    return this->compare(other) <= 0;
+  }
+   inline bool operator>(const UniqueString other) const {
+    return this->compare(other) > 0;
+  }
+  inline bool operator>=(const UniqueString other) const {
+    return this->compare(other) >= 0;
   }
 
   /**
@@ -215,19 +311,11 @@ class UniqueString final {
      * -1 if this string is less than the passed string
      * 0 if they are the same
      * 1 if this string is greater
-
-    \rst
-    .. note::
-
-      will only compare up to the first null byte.
-    \endrst
    */
-  int compare(const UniqueString other) const {
-    return *this == other ? 0 : compare(other.c_str());
-  }
-  int compare(const char* other) const {
-    return strcmp(this->c_str(), other);
-  }
+  int compare(const UniqueString other) const;
+
+  int compare(const char* other) const;
+
   size_t hash() const {
     std::hash<size_t> hasher;
     return hasher((size_t) s.i.v);

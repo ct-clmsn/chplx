@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2020-2024 Hewlett Packard Enterprise Development LP
  * Copyright 2004-2019 Cray Inc.
  * Other additional copyright holders may be indicated within.
  *
@@ -54,7 +54,7 @@
 #include <cstdio>
 
 namespace chpl {
-static int  processIdentifier(yyscan_t scanner, bool queried);
+static int  processIdentifier(yyscan_t scanner, char specialInitialChar);
 static int  processToken(yyscan_t scanner, int t);
 static int  processStringLiteral(yyscan_t scanner, const char* q, int type);
 static int  processTripleStringLiteral(yyscan_t scanner, const char* q, int type);
@@ -83,6 +83,7 @@ letter           [_a-zA-Z]
 
 ident            {letter}({letter}|{digit}|"$")*
 queriedIdent     \?{ident}
+atIdent          \@{ident}
 
 binaryLiteral    0[bB]{bit}(_|{bit})*
 octalLiteral     0[oO]{octDigit}(_|{octDigit})*
@@ -131,7 +132,6 @@ const            return processToken(yyscanner, TCONST);
 continue         return processToken(yyscanner, TCONTINUE);
 defer            return processToken(yyscanner, TDEFER);
 delete           return processToken(yyscanner, TDELETE);
-deprecated       return processToken(yyscanner, TDEPRECATED);
 dmapped          return processToken(yyscanner, TDMAPPED);
 do               return processToken(yyscanner, TDO);
 domain           return processToken(yyscanner, TDOMAIN);
@@ -195,7 +195,6 @@ scan             return processToken(yyscanner, TSCAN);
 select           return processToken(yyscanner, TSELECT);
 serial           return processToken(yyscanner, TSERIAL);
 shared           return processToken(yyscanner, TSHARED);
-single           return processToken(yyscanner, TSINGLE);
 sparse           return processToken(yyscanner, TSPARSE);
 string           return processToken(yyscanner, TSTRING);
 subdomain        return processToken(yyscanner, TSUBDOMAIN);
@@ -211,7 +210,6 @@ type             return processToken(yyscanner, TTYPE);
 uint             return processToken(yyscanner, TUINT);
 union            return processToken(yyscanner, TUNION);
 unmanaged        return processToken(yyscanner, TUNMANAGED);
-"@unstable"      return processToken(yyscanner, TUNSTABLE);
 use              return processToken(yyscanner, TUSE);
 var              return processToken(yyscanner, TVAR);
 void             return processToken(yyscanner, TVOID);
@@ -222,7 +220,7 @@ with             return processToken(yyscanner, TWITH);
 yield            return processToken(yyscanner, TYIELD);
 zip              return processToken(yyscanner, TZIP);
 
-"_"              return processToken(yyscanner, TUNDERSCORE);
+"@"              return processToken(yyscanner, TATMARK);
 
 "="              return processToken(yyscanner, TASSIGN);
 "+="             return processToken(yyscanner, TASSIGNPLUS);
@@ -241,6 +239,7 @@ zip              return processToken(yyscanner, TZIP);
 "reduce="        return processToken(yyscanner, TASSIGNREDUCE);
 
 "init="          return processToken(yyscanner, TINITEQUALS);
+"init"           return processToken(yyscanner, TINIT);
 
 "=>"             return processToken(yyscanner, TALIAS);
 
@@ -306,8 +305,9 @@ zip              return processToken(yyscanner, TZIP);
 {intLiteral}i    return processToken(yyscanner, IMAGLITERAL);
 {floatLiteral}i  return processToken(yyscanner, IMAGLITERAL);
 
-{ident}          return processIdentifier(yyscanner, false);
-{queriedIdent}   return processIdentifier(yyscanner, true);
+{ident}          return processIdentifier(yyscanner, '\0');
+{queriedIdent}   return processIdentifier(yyscanner, '?');
+{atIdent}        return processIdentifier(yyscanner, '@');
 
 "\"\"\""         return processTripleStringLiteral(yyscanner, "\"", STRINGLITERAL);
 "'''"            return processTripleStringLiteral(yyscanner, "'", STRINGLITERAL);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -75,6 +75,7 @@ std::string Function::dumpChildLabelInner(int i) const {
 const char* Function::returnIntentToString(ReturnIntent intent) {
   switch (intent) {
     case Function::DEFAULT_RETURN_INTENT: return "";
+    case Function::OUT:                   return "out";
     case Function::CONST:                 return "const";
     case Function::CONST_REF:             return "const ref";
     case Function::REF:                   return "ref";
@@ -96,9 +97,20 @@ const char* Function::kindToString(Kind kind) {
   return "<unknown>";
 }
 
+const char* Function::iteratorKindToString(IteratorKind kind) {
+  switch (kind) {
+    case Function::SERIAL:     return "serial";
+    case Function::STANDALONE: return "standalone";
+    case Function::LEADER:     return "leader";
+    case Function::FOLLOWER:   return "follower";
+  }
+
+  return "<unknown>";
+}
+
 
 owned<Function> Function::build(Builder* builder, Location loc,
-                                owned<Attributes> attributes,
+                                owned<AttributeGroup> attributeGroup,
                                 Decl::Visibility vis,
                                 Function::Linkage linkage,
                                 owned<AstNode> linkageNameExpr,
@@ -118,20 +130,20 @@ owned<Function> Function::build(Builder* builder, Location loc,
                                 owned<Block> body) {
   AstList lst;
 
-  int attributesChildNum = -1;
-  int linkageNameExprChildNum = -1;
-  int formalsChildNum = -1;
-  int thisFormalChildNum = -1;
+  int attributeGroupChildNum = NO_CHILD;
+  int linkageNameExprChildNum = NO_CHILD;
+  int formalsChildNum = NO_CHILD;
+  int thisFormalChildNum = NO_CHILD;
   int numFormals = 0;
-  int returnTypeChildNum = -1;
-  int whereChildNum = -1;
-  int lifetimeChildNum = -1;
+  int returnTypeChildNum = NO_CHILD;
+  int whereChildNum = NO_CHILD;
+  int lifetimeChildNum = NO_CHILD;
   int numLifetimeParts = 0;
-  int bodyChildNum = -1;
+  int bodyChildNum = NO_CHILD;
 
-  if (attributes.get() != nullptr) {
-    attributesChildNum = lst.size();
-    lst.push_back(std::move(attributes));
+  if (attributeGroup.get() != nullptr) {
+    attributeGroupChildNum = lst.size();
+    lst.push_back(std::move(attributeGroup));
   }
 
   if (linkageNameExpr.get() != nullptr) {
@@ -140,7 +152,7 @@ owned<Function> Function::build(Builder* builder, Location loc,
   }
 
   if (receiver.get() == nullptr && formals.size() == 0) {
-    // leave formalsChildNum == -1
+    // leave formalsChildNum == NO_CHILD
   } else {
     formalsChildNum = lst.size();
     if (receiver.get() != nullptr) {
@@ -176,7 +188,7 @@ owned<Function> Function::build(Builder* builder, Location loc,
     lst.push_back(std::move(body));
   }
 
-  Function* ret = new Function(std::move(lst), attributesChildNum, vis,
+  Function* ret = new Function(std::move(lst), attributeGroupChildNum, vis,
                                linkage,
                                name,
                                inline_,

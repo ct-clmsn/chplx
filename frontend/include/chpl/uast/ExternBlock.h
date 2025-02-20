@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -46,6 +46,8 @@ namespace uast {
 
  */
 class ExternBlock final : public AstNode {
+ friend class AstNode;
+
  private:
   std::string code_;
 
@@ -53,6 +55,15 @@ class ExternBlock final : public AstNode {
     : AstNode(asttags::ExternBlock),
       code_(std::move(code)) {
     CHPL_ASSERT(numChildren() == 0);
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    ser.write(code_);
+  }
+
+  explicit ExternBlock(Deserializer& des)
+    : AstNode(asttags::ExternBlock, des) {
+    code_ = des.read<std::string>();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -75,7 +86,6 @@ class ExternBlock final : public AstNode {
   const std::string& code() const {
     return code_;
   }
-
 };
 
 

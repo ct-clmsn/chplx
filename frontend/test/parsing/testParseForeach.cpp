@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -33,13 +33,14 @@
 #include <iostream>
 
 static void test0(Parser* parser) {
-  auto parseResult = parser->parseString("test0.chpl",
+  ErrorGuard guard(parser->context());
+  auto parseResult = parseStringAndReportErrors(parser, "test0.chpl",
       "/* comment 1 */\n"
       "foreach x in foo do\n"
       "  /* comment 2 */\n"
       "  foo();\n"
       "/* comment 3 */\n");
-  assert(!parseResult.numErrors());
+  assert(!guard.realizeErrors());
   auto mod = parseResult.singleModule();
   assert(mod);
   assert(mod->numStmts() == 3);
@@ -60,7 +61,8 @@ static void test0(Parser* parser) {
 }
 
 static void test1(Parser* parser) {
-  auto parseResult = parser->parseString("test1.chpl",
+  ErrorGuard guard(parser->context());
+  auto parseResult = parseStringAndReportErrors(parser, "test1.chpl",
       "/* comment 1 */\n"
       "foreach x in foo with (ref thing) {\n"
       "  /* comment 2 */\n"
@@ -68,7 +70,7 @@ static void test1(Parser* parser) {
       "  /* comment 3 */\n"
       "}\n"
       "/* comment 4 */\n");
-  assert(!parseResult.numErrors());
+  assert(!guard.realizeErrors());
   auto mod = parseResult.singleModule();
   assert(mod);
   assert(mod->numStmts() == 3);
@@ -97,13 +99,14 @@ static void test1(Parser* parser) {
 }
 
 static void test2(Parser* parser) {
-  auto parseResult = parser->parseString("test2.chpl",
+  ErrorGuard guard(parser->context());
+  auto parseResult = parseStringAndReportErrors(parser, "test2.chpl",
       "/* comment 1 */\n"
       "foreach x in zip(a, b) {\n"
       "  foo();\n"
       "}\n"
       "/* comment 4 */\n");
-  assert(!parseResult.numErrors());
+  assert(!guard.realizeErrors());
   auto mod = parseResult.singleModule();
   assert(mod);
   assert(mod->numStmts() == 3);
@@ -126,14 +129,15 @@ static void test2(Parser* parser) {
 }
 
 static void test3(Parser* parser) {
-  auto parseResult = parser->parseString("test3.chpl",
+  ErrorGuard guard(parser->context());
+  auto parseResult = parseStringAndReportErrors(parser, "test3.chpl",
       "/* comment 1 */\n"
       "foreach x in zip(a, b, foo()) with (const ref thing1, in thing2=d) {\n"
       "  writeln(thing1);\n"
       "  thing2 = thing3;\n"
       "}\n"
       "/* comment 4 */\n");
-  assert(!parseResult.numErrors());
+  assert(!guard.realizeErrors());
   auto mod = parseResult.singleModule();
   assert(mod);
   assert(mod->numStmts() == 3);
@@ -172,13 +176,14 @@ static void test3(Parser* parser) {
 }
 
 static void test4(Parser* parser) {
-  auto parseResult = parser->parseString("test4.chpl",
+  ErrorGuard guard(parser->context());
+  auto parseResult = parseStringAndReportErrors(parser, "test4.chpl",
       "/* comment 1 */\n"
       "foreach foo() do\n"
       "  /* comment 2 */\n"
       "  bar();\n"
       "/* comment 3 */\n");
-  assert(!parseResult.numErrors());
+  assert(!guard.realizeErrors());
   auto mod = parseResult.singleModule();
   assert(mod);
   assert(mod->numStmts() == 3);
@@ -198,13 +203,14 @@ static void test4(Parser* parser) {
 }
 
 static void test5(Parser* parser) {
-  auto parseResult = parser->parseString("test5.chpl",
+  ErrorGuard guard(parser->context());
+  auto parseResult = parseStringAndReportErrors(parser, "test5.chpl",
       "/* comment 1 */\n"
       "foreach zip(a, b) with (var r=thing1) do {\n"
       "  writeln(r);\n"
       "}\n"
       "/* comment 4 */\n");
-  assert(!parseResult.numErrors());
+  assert(!guard.realizeErrors());
   auto mod = parseResult.singleModule();
   assert(mod);
   assert(mod->numStmts() == 3);
@@ -233,6 +239,22 @@ static void test5(Parser* parser) {
   assert(foreach->stmt(0)->isFnCall());
 }
 
+static void test6(Parser* parser) {
+  ErrorGuard guard(parser->context());
+  auto parseResult = parseStringAndReportErrors(parser, "test6.chpl",
+      "foreach i in 1..10 with (re A) { }\n"
+      "foreach i in 1..10 with () { }\n"
+      "foreach i in 1..10 with ref A { }\n");
+  auto numErrors = 5;
+  assert(guard.errors().size() == (size_t) numErrors);
+  assert("invalid intent expression in 'with' clause" == guard.error(1)->message());
+  assert("'with' clause cannot be empty" == guard.error(2)->message());
+  assert("missing parentheses around 'with' clause intents" == guard.error(4)->message());
+  // The other errors are from the parser as "near ...".
+  // It would be really nice to not have those be emitted at all.
+  assert(guard.realizeErrors() == numErrors);
+}
+
 int main() {
   Context context;
   Context* ctx = &context;
@@ -246,6 +268,7 @@ int main() {
   test3(p);
   test4(p);
   test5(p);
+  test6(p);
 
   return 0;
 }

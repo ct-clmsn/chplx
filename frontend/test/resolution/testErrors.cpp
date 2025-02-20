@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "test-resolution.h"
 #include "chpl/parsing/parsing-queries.h"
 #include "chpl/framework/query-impl.h"
 #include "chpl/resolution/resolution-queries.h"
@@ -30,56 +31,11 @@
 #undef NDEBUG
 #endif
 
-#include <cassert>
 
 using namespace chpl;
 using namespace parsing;
 using namespace resolution;
 using namespace uast;
-
-static const ResolvedExpression*
-resolvedExpressionForAst(Context* context, const AstNode* ast,
-                         const ResolvedFunction* inFn,
-                         bool scopeResolveOnly) {
-  if (!(ast->isLoop() || ast->isBlock())) {
-    // compute the parent module or function
-    int postorder = ast->id().postOrderId();
-    if (postorder >= 0) {
-      ID parentId = ast->id().parentSymbolId(context);
-      auto parentAst = idToAst(context, parentId);
-      if (parentAst != nullptr) {
-        if (parentAst->isModule()) {
-          if (scopeResolveOnly) {
-            const auto& byId = scopeResolveModule(context, parentAst->id());
-            return &byId.byAst(ast);
-          } else {
-            const auto& byId = resolveModule(context, parentAst->id());
-            return &byId.byAst(ast);
-          }
-        } else if (auto parentFn = parentAst->toFunction()) {
-          auto untyped = UntypedFnSignature::get(context, parentFn);
-          // use inFn if it matches
-          if (inFn && inFn->signature()->untyped() == untyped) {
-            return &inFn->resolutionById().byAst(ast);
-          } else {
-            if (scopeResolveOnly) {
-              auto rFn = scopeResolveFunction(context, parentFn->id());
-              return &rFn->resolutionById().byAst(ast);
-            } else {
-              auto typed = typedSignatureInitial(context, untyped);
-              if (!typed->needsInstantiation()) {
-                auto rFn = resolveFunction(context, typed, nullptr);
-                return &rFn->resolutionById().byAst(ast);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return nullptr;
-}
 
 static void
 computeAndPrintStuff(Context* context,
@@ -87,16 +43,18 @@ computeAndPrintStuff(Context* context,
                      const ResolvedFunction* inFn,
                      std::set<const ResolvedFunction*>& calledFns,
                      bool scopeResolveOnly) {
-
+  ResolutionContext rcval(context);
+  auto rc = &rcval;
   // Scope resolve / resolve concrete functions before printing
   if (auto fn = ast->toFunction()) {
     if (scopeResolveOnly) {
       inFn = scopeResolveFunction(context, fn->id());
     } else {
       auto untyped = UntypedFnSignature::get(context, fn);
-      auto typed = typedSignatureInitial(context, untyped);
+
+      auto typed = typedSignatureInitial(rc, untyped);
       if (!typed->needsInstantiation()) {
-        inFn = resolveFunction(context, typed, nullptr);
+        inFn = resolveFunction(rc, typed, nullptr);
       }
     }
   }
@@ -108,10 +66,11 @@ computeAndPrintStuff(Context* context,
   const ResolvedExpression* r =
     resolvedExpressionForAst(context, ast, inFn, scopeResolveOnly);
   if (r != nullptr) {
-    for (const TypedFnSignature* sig : r->mostSpecific()) {
-      if (sig != nullptr) {
+    for (const MostSpecificCandidate& candidate : r->mostSpecific()) {
+      if (candidate) {
+        auto sig = candidate.fn();
         if (sig->untyped()->idIsFunction()) {
-          auto fn = resolveFunction(context, sig, r->poiScope());
+          auto fn = resolveFunction(rc, sig, r->poiScope());
           calledFns.insert(fn);
         }
       }
@@ -146,7 +105,9 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-  Context context(chpl_home);
+  Context::Configuration config;
+  config.chplHome = chpl_home;
+  Context context(config);
   Context* ctx = &context;
   context.setDetailedErrorOutput(!brief);
 

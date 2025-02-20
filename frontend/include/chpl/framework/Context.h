@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 
-#ifndef CHPL_QUERIES_CONTEXT_H
-#define CHPL_QUERIES_CONTEXT_H
+#ifndef CHPL_FRAMEWORK_CONTEXT_H
+#define CHPL_FRAMEWORK_CONTEXT_H
 
 #include "chpl/framework/Context-detail.h"
 #include "chpl/framework/ID.h"
@@ -40,10 +40,19 @@
 
 #include "llvm/ADT/DenseMap.h"
 
+#ifdef HAVE_LLVM
+#include "llvm/IR/LLVMContext.h"
+#endif
+
+namespace llvm {
+  class LLVMContext;
+}
+
 namespace chpl {
   class Context;
 
   class ErrorBase;
+  class IdOrLocation;
 
 namespace uast {
   class AstNode;
@@ -83,6 +92,154 @@ class Context {
     virtual void report(Context* context, const ErrorBase* err) = 0;
   };
 
+  /** This struct stores configuration information to use when
+      constructing a Context. */
+  struct Configuration {
+    /** Used for determining Chapel environment variables */
+    std::string chplHome;
+
+    std::unordered_map<std::string, std::string> chplEnvOverrides;
+
+    /** Temporary directory in which to store files.
+        If it is "", it will be set to something like /tmp/chpl-1234/.
+        It will be deleted when the context is deleted, unless
+        keepTmpDir is true.
+     */
+    std::string tmpDir;
+
+    /** If 'true', the tmpDir will not be deleted. */
+    bool keepTmpDir = false;
+
+    /** Tool name (for use when creating the tmpDir in /tmp if needed) */
+    std::string toolName = "chpl";
+
+    /**
+      If 'true', some comments will be included in the uAST.
+
+      Note that, even when this is set, some comments are not included (for
+      example, comments between actual arguments in a function call
+     */
+    bool includeComments = true;
+
+    /**
+      Disable breakpoint in Context::report.
+     */
+    bool disableErrorBreakpoints = false;
+
+    void swap(Configuration& other);
+  };
+
+  class RunResultBase {
+   private:
+    std::vector<owned<ErrorBase>> errors_;
+
+   public:
+    ~RunResultBase();
+
+    RunResultBase();
+    // Should not be called due to copy elision, but it's not guaranteed..
+    RunResultBase(const RunResultBase& other);
+
+    /** The errors that occurred while running. */
+    std::vector<owned<ErrorBase>>& errors() { return errors_; };
+    const std::vector<owned<ErrorBase>>& errors() const { return errors_; };
+    /**
+      Checks if any syntax errors or errors occurred while running.
+      Warnings do not cause this method to return false.
+    */
+    bool ranWithoutErrors() const;
+  };
+
+  template <typename T>
+  class RunResult : public RunResultBase {
+   private:
+    T result_;
+
+   public:
+    /** The result of the execution. */
+    T& result() { return result_; }
+  };
+
+  class ErrorCollectionEntry {
+   private:
+    std::vector<owned<ErrorBase>>* storeInto_;
+    const querydetail::QueryMapResultBase* collectingQuery_;
+
+    ErrorCollectionEntry(std::vector<owned<ErrorBase>>* storeInto,
+                         const querydetail::QueryMapResultBase* collectingQuery) :
+      storeInto_(storeInto), collectingQuery_(collectingQuery) {}
+
+   public:
+    /**
+      When a parent query starts tracking errors, the tracking entry contains
+      this parent query and the vector. Errors occurring within child
+      queries are stored into the vector, and not reporter to the user.
+     */
+    static ErrorCollectionEntry
+    createForTrackingQuery(std::vector<owned<ErrorBase>>*,
+                           const querydetail::QueryMapResultBase*);
+
+    /**
+      When recomputing queries (to determine if a cached result should be used),
+      a parent query may not be running that expects to receive an error
+      list back, because computations are done bottom-up. Thus, simply
+      track the query that enabled error collection, but do not store the
+      errors anywhere. They will be added to a vector, if necessary, when
+      the saved query result is used when the parent query is re-run.
+     */
+    static ErrorCollectionEntry
+    createForRecomputing(const querydetail::QueryMapResultBase*);
+
+    const querydetail::QueryMapResultBase* collectingQuery() const { return collectingQuery_; }
+    void storeError(owned<ErrorBase> toStore) const;
+  };
+
+  class RecomputeMarker {
+   friend class Context;
+
+   private:
+    Context* context_;
+    bool oldValue_;
+
+    RecomputeMarker(Context* context, bool isRecomputing) :
+      context_(context), oldValue_(isRecomputing) {
+        if (context) std::swap(context_->isRecomputing, oldValue_);
+    }
+
+   public:
+    RecomputeMarker() : RecomputeMarker(nullptr, false) {}
+
+    RecomputeMarker(RecomputeMarker&& other) {
+      *this = std::move(other);
+    }
+
+    RecomputeMarker& operator=(RecomputeMarker&& other) {
+      this->context_ = other.context_;
+      this->oldValue_ = other.oldValue_;
+      other.context_ = nullptr;
+      return *this;
+    }
+
+    void restore() {
+      if (context_) {
+        std::swap(context_->isRecomputing, oldValue_);
+      }
+      context_ = nullptr;
+    }
+
+    bool isCleared() {
+      return context_ == nullptr;
+    }
+
+    ~RecomputeMarker() {
+      restore();
+    }
+  };
+
+  RecomputeMarker markRecomputing(bool isRecomputing) {
+    return RecomputeMarker(this, isRecomputing);
+  }
+
  private:
 
   // The implementation of the default error handler.
@@ -95,20 +252,14 @@ class Context {
     }
   };
 
+  // --------- begin all Context fields ---------
+
+  // The current Configuration
+  Configuration config_;
+
   // The current error handler.
   owned<ErrorHandler> handler_
     = toOwned<ErrorHandler>(new DefaultErrorHandler());
-
-  // Report an error to the current handler.
-  void reportError(Context* context, const ErrorBase* err) {
-    handler_->report(context, err);
-  }
-
-  // The CHPL_HOME variable
-  const std::string chplHome_;
-
-  // Variables to explicitly set before getting chplenv
-  const std::unordered_map<std::string, std::string> chplEnvOverrides;
 
   // State for printchplenv data
   bool computedChplEnv = false;
@@ -159,15 +310,55 @@ class Context {
   // tracks the nesting of queries, displayed during query tracing
   int queryTraceDepth = 0;
 
+  // tracks whether or not we are re-running a previously-executed query.
+  //
+  // When a query is being initially executed, its dependencies are evaluated
+  // in the order they're discovered. However, when it's re-executed, the
+  // dependencies are evaluated in a bottom-up order. Certain features
+  // of the query framework behave differently depending on whether a query
+  // is being executed "regularly" or "bottom-up" (most notably, a re-executed
+  // dependency is not used to modify the dependency graph).
+  bool isRecomputing = false;
+
+  // If this vector is non-empty, the back element is a collection into
+  // which to store emitted errors, instead of reporting them to the
+  // error handler. Errors reported to the collection stack are
+  // re-reported to the error handler if they are encountered again, even
+  // if they occurred in a cached query.
+  std::vector<ErrorCollectionEntry> errorCollectionStack;
+
   // list of query names to ignore when tracing
-  const std::vector<std::string>
+  std::vector<std::string>
   queryTraceIgnoreQueries = {"idToTagQuery", "idToParentId"};
 
   // list of colors to use for open/close braces depending on query depth
-  const std::vector<TermColorName>
-  queryDepthColor  = {BLUE, BRIGHT_YELLOW, MAGENTA};
+  std::vector<TermColorName> queryDepthColor = {BLUE, BRIGHT_YELLOW, MAGENTA};
 
   owned<std::ostream> queryTimingTraceOutput = nullptr;
+
+  std::string tmpDir_;
+  bool tmpDirExists_ = false;
+  bool tmpDirAnchorCreated_ = false;
+
+  // The following are only used for UniqueString garbage collection
+  querydetail::RevisionNumber lastPrepareToGCRevisionNumber = 0;
+  querydetail::RevisionNumber gcCounter = 1;
+
+#ifdef HAVE_LLVM
+  owned<llvm::LLVMContext> llvmContext_ = nullptr;
+#else
+  // use a dummy pointer to make sure to have the same memory layout
+  owned<unsigned char> llvmContext_ = nullptr;
+#endif
+
+  // --------- end all Context fields ---------
+
+  void setupGlobalStrings();
+
+  void swap(Context& other);
+
+  // Report an error to the current handler.
+  void reportError(Context* context, const ErrorBase* err);
 
   // return an ANSI color code for this query depth, if supported by terminal
   void setQueryDepthColor(int depth, std::ostream& os) {
@@ -181,11 +372,12 @@ class Context {
     }
   }
 
+  void clearTerminalColor(std::ostream& os) {
+    if (currentTerminalSupportsColor_) {
+      os << getClearColorFormat();
+    }
+  }
 
-
-  // The following are only used for UniqueString garbage collection
-  querydetail::RevisionNumber lastPrepareToGCRevisionNumber = 0;
-  querydetail::RevisionNumber gcCounter = 1;
 
   char* setupStringMetadata(char* buf, size_t len);
   const char* getOrCreateUniqueStringWithAllocation(char* buf,
@@ -195,6 +387,9 @@ class Context {
 
   bool shouldMarkUnownedPointer(const void* ptr);
   bool shouldMarkOwnedPointer(const void* ptr);
+
+  void emitHiddenErrorsFor(const querydetail::QueryMapResultBase* result);
+  void storeErrorsFor(const querydetail::QueryMapResultBase* result);
 
   // saves the dependency in the parent query, which is assumed
   // to be at queryStack.back().
@@ -218,7 +413,7 @@ class Context {
   getResult(querydetail::QueryMap<ResultType, ArgTs...>* queryMap,
             const std::tuple<ArgTs...>& tupleOfArgs);
 
-  void haltForRecursiveQuery(const querydetail::QueryMapResultBase* r);
+  void emitErrorForRecursiveQuery(const querydetail::QueryMapResultBase* r);
 
   template<typename ResultType,
            typename... ArgTs>
@@ -269,6 +464,10 @@ class Context {
 
   void doNotCollectUniqueCString(const char *s);
 
+  void gatherRecursionTrace(const querydetail::QueryMapResultBase* root,
+                            const querydetail::QueryMapResultBase* result,
+                            std::vector<TraceElement>& trace) const;
+
   // Future Work: make the context thread-safe
 
   // Future Work: allow moving some AST to a different context
@@ -293,17 +492,59 @@ class Context {
   static void defaultReportError(Context* context, const ErrorBase* err);
 
   /**
-    Create a new AST Context. Optionally, specify the value of the
-    CHPL_HOME environment variable, which is used for determining
-    chapel environment variables.
+    Create a new Context without specifying chplHome or any
+    other Configuration settings.
    */
-  Context(std::string chplHome = "",
-          std::unordered_map<std::string, std::string> chplEnvOverrides = {});
+  Context();
+
+  /**
+    Create a new Context while specifying a Configuration.
+    */
+  Context(Configuration config);
+
+  /**
+    Create a new Context by consuming the contents of another Context
+    context while changing Configuration. The passed Context will no
+    longer be usable. Assumes that any queries that have run so far
+    do not depend on the Configuration settings that have changed.
+
+    This function is useful during compiler start up. */
+  Context(Context& consumeContext, Configuration newConfig);
+
   ~Context();
 
+  /** Return the Configuration used by this Context */
+  const Configuration& configuration() const { return config_; }
+
+  /** Return the configured CHPL_HOME directory */
   const std::string& chplHome() const;
 
+  /** Return a temporary directory that can be used by this process.
+      It is typically a subdirectory of '/tmp' that will be removed
+      when the Context is destroyed.
+      If it does not exist yet, create it.
+   */
+  const std::string& tmpDir();
+
+  /** Returns 'true' if this Context is configured to save the temporary
+      directory (with keepTmpDir=true). */
+  bool shouldSaveTmpDirFiles() const;
+
+  /** Return a path to a file within tmpDir that is not modified after
+      it is created, to serve as a source for normalizing modification times */
+  std::string tmpDirAnchorFile();
+
+  /** Delete the temporary directory if needed. This function
+      can be called during program exit. */
+  void cleanupTmpDirIfNeeded();
+
+  /** Change whether or not this Context is configured for detailed
+      error/warning output (vs brief output). */
   void setDetailedErrorOutput(bool useDetailed);
+
+  /** Normalize a path for output in an error message by replacing
+      any prefix with the value of CHPL_HOME with the string $CHPL_HOME */
+  UniqueString adjustPathForErrorMsg(UniqueString path);
 
   /**
     Run printchplenv, or return a cached result of doing so. To get output,
@@ -331,6 +572,24 @@ class Context {
   ErrorHandler* errorHandler() {
     return this->handler_.get();
   }
+
+  /**
+    Execute a function or lambda using the context, and track whether or not
+    errors occurred while doing so. Errors emitted from inside the function are
+    not shown to the user.
+   */
+  template <typename F>
+  auto runAndTrackErrors(F&& f) -> RunResult<decltype(f(this))> {
+    RunResult<decltype(f(this))> result;
+    auto collectionRoot = queryStack.empty() ? nullptr : queryStack.back();
+    errorCollectionStack.push_back(
+        ErrorCollectionEntry::createForTrackingQuery(&result.errors(), collectionRoot));
+    result.result() = f(this);
+    errorCollectionStack.pop_back();
+    return result;
+  }
+
+  optional<std::vector<TraceElement>> recoverFromSelfRecursion() const;
 
   /**
     Get or create a unique string and return it as a C string. If the passed
@@ -450,7 +709,7 @@ class Context {
    markPointer can be used to mark a pointer, where
    it is considered owned if the type is owned.
 
-   This overload just calls markPointer.
+   This overload just calls markUnownedPointer.
    */
   template<typename T>
   void markPointer(const T* ptr) {
@@ -464,7 +723,7 @@ class Context {
      called for this ID).
 
     Returns the path by setting 'pathOut'.
-    Returns the parent symbol path (relevant for 'module include'
+    Returns the parent symbol path (relevant for 'module include')
     by setting 'parentSymbolPathOut'.
    */
   bool filePathForId(ID id,
@@ -472,10 +731,48 @@ class Context {
                      UniqueString& parentSymbolPathOut);
 
   /**
+    Return 'true' if the filePathForId was found
+    (which can only happen because setFilePathForModuleID was already
+     called for this ID).
+
+    Returns the path by setting 'pathOut'.
+   */
+  bool filePathForId(ID id, UniqueString& pathOut);
+
+  /**
     Sets the file path for the given module ID. This
     is suitable to call from a parse query.
    */
   void setFilePathForModuleId(ID moduleID, UniqueString path);
+
+  /**
+    Return 'true' if the given file path can be handled by a library file
+    (experimental).
+
+    Returns the library's path by setting 'pathOut'.
+   */
+  bool pathIsInLibrary(UniqueString filePath, UniqueString& pathOut);
+
+  /**
+    Return 'true' if the given module ID is supported by a library file.
+
+    Returns the library's path by setting 'pathOut'.
+   */
+  bool moduleIsInLibrary(ID moduleId, UniqueString& pathOut);
+
+  /**
+    Register a module ID and file path to be supported by a library file.
+   */
+  void registerLibraryForModule(ID moduleId,
+                                UniqueString filePath,
+                                UniqueString libPath);
+
+#ifdef HAVE_LLVM
+  /**
+    Get the LLVMContext associated with this Context
+   */
+  llvm::LLVMContext& llvmContext();
+#endif
 
   /**
     This function increments the current revision number stored
@@ -510,16 +807,15 @@ class Context {
 
     If no query is currently running, it just reports the error.
 
-    Returns the passed-in error for convenience.
    */
-  const ErrorBase* report(const ErrorBase* error);
+  void report(owned<ErrorBase> error);
 
   /**
     Note an error for the currently running query.
     This is a convenience overload.
     This version takes in a Location and a printf-style format string.
    */
-  const ErrorBase* error(Location loc, const char* fmt, ...)
+  void error(Location loc, const char* fmt, ...)
   #ifndef DOXYGEN
     // docs generator has trouble with the attribute applied to 'build'
     // so the above ifndef works around the issue.
@@ -533,7 +829,7 @@ class Context {
     This version takes in an ID and a printf-style format string.
     The ID is used to compute a Location using parsing::locateId.
    */
-  const ErrorBase* error(ID id, const char* fmt, ...)
+  void error(ID id, const char* fmt, ...)
   #ifndef DOXYGEN
     // docs generator has trouble with the attribute applied to 'build'
     // so the above ifndef works around the issue.
@@ -544,10 +840,24 @@ class Context {
   /**
     Note an error for the currently running query.
     This is a convenience overload.
+    This version takes in an IdOrLocation and a printf-style format string.
+   */
+  void error(const IdOrLocation& loc, const char* fmt, ...)
+  #ifndef DOXYGEN
+    // docs generator has trouble with the attribute applied to 'build'
+    // so the above ifndef works around the issue.
+    __attribute__ ((format (printf, 3, 4)))
+  #endif
+  ;
+
+
+  /**
+    Note an error for the currently running query.
+    This is a convenience overload.
     This version takes in an AST node and a printf-style format string.
     The AST node is used to compute a Location by using a parsing::locateAst.
    */
-  const ErrorBase* error(const uast::AstNode* ast, const char* fmt, ...)
+  void error(const uast::AstNode* ast, const char* fmt, ...)
   #ifndef DOXYGEN
     // docs generator has trouble with the attribute applied to 'build'
     // so the above ifndef works around the issue.
@@ -563,13 +873,54 @@ class Context {
     The AST node is used to compute a Location by using a parsing::locateAst.
     The TypedFnSignature is used to print out instantiation information.
    */
-  const ErrorBase* error(const resolution::TypedFnSignature* inFn,
+  void error(const resolution::TypedFnSignature* inFn,
              const uast::AstNode* ast,
              const char* fmt, ...)
   #ifndef DOXYGEN
     // docs generator has trouble with the attribute applied to 'build'
     // so the above ifndef works around the issue.
     __attribute__ ((format (printf, 4, 5)))
+  #endif
+  ;
+
+  /**
+    Note an warning for the currently running query.
+    This is a convenience overload.
+    This version takes in a Location and a printf-style format string.
+   */
+  void warning(Location loc, const char* fmt, ...)
+  #ifndef DOXYGEN
+    // docs generator has trouble with the attribute applied to 'build'
+    // so the above ifndef works around the issue.
+    __attribute__ ((format (printf, 3, 4)))
+  #endif
+  ;
+
+  /**
+    Note an warning for the currently running query.
+    This is a convenience overload.
+    This version takes in an ID and a printf-style format string.
+    The ID is used to compute a Location using parsing::locateId.
+   */
+  void warning(ID id, const char* fmt, ...)
+  #ifndef DOXYGEN
+    // docs generator has trouble with the attribute applied to 'build'
+    // so the above ifndef works around the issue.
+    __attribute__ ((format (printf, 3, 4)))
+  #endif
+  ;
+
+  /**
+    Note an warning for the currently running query.
+    This is a convenience overload.
+    This version takes in an AST node and a printf-style format string.
+    The AST node is used to compute a Location by using a parsing::locateAst.
+   */
+  void warning(const uast::AstNode* ast, const char* fmt, ...)
+  #ifndef DOXYGEN
+    // docs generator has trouble with the attribute applied to 'build'
+    // so the above ifndef works around the issue.
+    __attribute__ ((format (printf, 3, 4)))
   #endif
   ;
 
@@ -585,7 +936,9 @@ class Context {
   */
   void setBreakOnHash(const size_t hashVal);
 
-  /** Enables/disables timing each query execution */
+  /** Enables/disables timing each query execution.
+      This does not output anything to stdout / a file / etc.
+      To see the results, call queryTimingReport. */
   void setQueryTimingFlag(bool enable) {
     enableQueryTiming = enable;
   }
@@ -640,6 +993,15 @@ class Context {
        const ResultType& (*queryFunction)(Context* context, ArgTs...),
        const std::tuple<ArgTs...>& tupleOfArgs);
 
+  template<typename ResultType,
+           typename... ArgTs>
+  const typename querydetail::QueryMap<ResultType, ArgTs...>::MapType*
+  querySavedResults(
+       const ResultType& (*queryFunction)(Context* context, ArgTs...));
+
+  bool isResultUpToDate(const querydetail::QueryMapResultBase& resultEntry) const {
+    return resultEntry.lastChanged == this->currentRevisionNumber;
+  }
 
   // the following functions are called by the macros defined in QueryImpl.h
   // and should not be called directly
@@ -701,37 +1063,57 @@ class Context {
    */
   void queryTimingReport(std::ostream& os);
 
+  void finishQueryStopwatch(querydetail::QueryMapBase* base,
+                            size_t depth,
+                            const std::string& args,
+                            querydetail::QueryTimingDuration elapsed);
+
+  template<typename... ArgTs>
+  struct ReportOnExit {
+    using Stopwatch = querydetail::QueryTimingStopwatch<ReportOnExit>;
+    Context* context = nullptr;
+    querydetail::QueryMapBase* base = nullptr;
+    const std::tuple<ArgTs...>* tupleOfArgs = nullptr;
+    bool enableQueryTiming = false;
+    size_t depth = 0;
+    bool enableQueryTimingTrace = false;
+
+    ReportOnExit(const ReportOnExit& rhs) = delete;
+    ReportOnExit(ReportOnExit&& rhs) = default;
+    ReportOnExit& operator=(const ReportOnExit& rhs) = delete;
+    ReportOnExit& operator=(ReportOnExit&& rhs) = default;
+
+    bool enabled() { return enableQueryTiming || enableQueryTimingTrace; }
+
+    void operator()(Stopwatch& stopwatch) {
+      // Return if the map is empty (to allow for default-construction).
+      if (base == nullptr) return;
+      bool enabled = enableQueryTiming || enableQueryTimingTrace;
+      if (enabled) {
+        auto elapsed = stopwatch.elapsed();
+        std::ostringstream oss;
+        if (tupleOfArgs) querydetail::queryArgsPrint(oss, *tupleOfArgs);
+        context->finishQueryStopwatch(base, depth, oss.str(), elapsed);
+      }
+    };
+  };
+
   // Used in the in QUERY_BEGIN_TIMING macro. Creates a stopwatch that starts
   // timing if we are enabled. And then on scope exit we conditionally stop the
   // timing and add it to the total or log it.
   // Semi-public method because we only expect it to be used in the macro
-  auto makeQueryTimingStopwatch(querydetail::QueryMapBase* base) {
-    size_t depth = queryStack.size();
-    bool enabled = enableQueryTiming || enableQueryTimingTrace;
-
-    return querydetail::makeQueryTimingStopwatch(
-        enabled,
-        // This lambda gets called when the stopwatch object (which lives on the
-        // stack of the query function) is destructed
-        [this, base, depth, enabled](auto& stopwatch) {
-          querydetail::QueryTimingDuration elapsed;
-          if (enabled) {
-            elapsed = stopwatch.elapsed();
-          }
-          if (enableQueryTiming) {
-            base->timings.query.update(elapsed);
-          }
-          if (enableQueryTimingTrace) {
-            auto ticks = elapsed.count();
-            auto os = queryTimingTraceOutput.get();
-            CHPL_ASSERT(os != nullptr);
-            *os << depth << ' ' << base->queryName << ' ' << ticks << '\n';
-          }
-        });
+  template<typename... ArgTs>
+  auto makeQueryTimingStopwatch(querydetail::QueryMapBase* base,
+                           const std::tuple<ArgTs...>& tupleOfArgs) {
+    ReportOnExit<ArgTs...> s {
+      this, base, &tupleOfArgs, enableQueryTiming, queryStack.size(),
+      enableQueryTimingTrace
+    };
+    return querydetail::makeQueryTimingStopwatch(s.enabled(), std::move(s));
   }
-
   /// \endcond
 };
+
 
 } // end namespace chpl
 

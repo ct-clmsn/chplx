@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -30,22 +30,14 @@ namespace types {
 
 bool QualifiedType::isParamTrue() const {
   if (kind_ == Kind::PARAM && param_ != nullptr) {
-    if (auto bp = param_->toBoolParam()) {
-      if (bp->value() == true) {
-        return true;
-      }
-    }
+    return param_->isNonZero();
   }
 
   return false;
 }
 bool QualifiedType::isParamFalse() const {
   if (kind_ == Kind::PARAM && param_ != nullptr) {
-    if (auto bp = param_->toBoolParam()) {
-      if (bp->value() == false) {
-        return true;
-      }
-    }
+    return param_->isZero();
   }
 
   return false;
@@ -60,6 +52,12 @@ bool QualifiedType::isParamKnownTuple() const {
   return false;
 }
 
+bool QualifiedType::needsSplitInitTypeInfo(Context* context) const {
+  return (isParam() && !hasParamPtr()) ||
+    isUnknownKindOrType() ||
+    resolution::getTypeGenericity(context, type()) == Type::GENERIC;
+}
+
 bool QualifiedType::update(QualifiedType& keep, QualifiedType& addin) {
   return defaultUpdate(keep, addin);
 }
@@ -70,29 +68,7 @@ void QualifiedType::mark(Context* context) const {
 }
 
 const char* QualifiedType::kindToString(QualifiedType::Kind kind) {
-  switch (kind) {
-    case QualifiedType::UNKNOWN:            return "unknown";
-    case QualifiedType::DEFAULT_INTENT:     return "default intent";
-    case QualifiedType::CONST_INTENT:       return "const intent";
-    case QualifiedType::VAR:                return "var";
-    case QualifiedType::CONST_VAR:          return "const";
-    case QualifiedType::CONST_REF:          return "const ref";
-    case QualifiedType::REF:                return "ref";
-    case QualifiedType::IN:                 return "in";
-    case QualifiedType::CONST_IN:           return "const in";
-    case QualifiedType::OUT:                return "out";
-    case QualifiedType::INOUT:              return "inout";
-    case QualifiedType::PARAM:              return "param";
-    case QualifiedType::TYPE:               return "type";
-    case QualifiedType::INDEX:              return "index";
-    case QualifiedType::TYPE_QUERY:         return "type query";
-    case QualifiedType::FUNCTION:           return "function";
-    case QualifiedType::PARENLESS_FUNCTION: return "parenless function";
-    case QualifiedType::MODULE:             return "module";
-  }
-
-  CHPL_ASSERT(false && "should not be reachable");
-  return "unknown";
+  return uast::qualifierToString(kind);
 }
 
 void QualifiedType::stringify(std::ostream& ss,

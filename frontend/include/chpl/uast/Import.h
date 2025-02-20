@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -44,7 +44,11 @@ namespace uast {
   and 'Bar as A'.
 */
 class Import final : public AstNode {
+ friend class AstNode;
+
  private:
+  Decl::Visibility visibility_;
+
   Import(AstList children, Decl::Visibility visibility)
     : AstNode(asttags::Import, std::move(children)),
       visibility_(visibility) {
@@ -59,6 +63,15 @@ class Import final : public AstNode {
     #endif
   }
 
+  void serializeInner(Serializer& ser) const override {
+    ser.write(visibility_);
+  }
+
+  explicit Import(Deserializer& des)
+    : AstNode(asttags::Import, des) {
+    visibility_ = des.read<Decl::Visibility>();
+  }
+
   bool contentsMatchInner(const AstNode* other) const override {
     const Import* rhs = other->toImport();
     return this->visibility_ == rhs->visibility_;
@@ -66,8 +79,6 @@ class Import final : public AstNode {
 
   void markUniqueStringsInner(Context* context) const override {
   }
-
-  Decl::Visibility visibility_;
 
  public:
 
@@ -108,7 +119,6 @@ class Import final : public AstNode {
     CHPL_ASSERT(ret->isVisibilityClause());
     return (const VisibilityClause*)ret;
   }
-
 };
 
 

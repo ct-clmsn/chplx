@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -44,6 +44,8 @@ namespace uast {
   that takes two ints and returns an int.
 */
 class FunctionSignature final : public AstNode {
+ friend class AstNode;
+
  public:
   using ReturnIntent = Function::ReturnIntent;
   using Kind = Function::Kind;
@@ -76,15 +78,38 @@ class FunctionSignature final : public AstNode {
       throws_(throws),
       isParenless_(isParenless) {
 
-    CHPL_ASSERT(-1 <= formalsChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= formalsChildNum_ &&
                  formalsChildNum_ < (ssize_t)children_.size());
-    CHPL_ASSERT(-1 <= thisFormalChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= thisFormalChildNum_ &&
                  thisFormalChildNum_ < (ssize_t)children_.size());
     CHPL_ASSERT(0 <= numFormals_ &&
                 numFormals_ <= (ssize_t)children_.size());
-    CHPL_ASSERT(-1 <= returnTypeChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= returnTypeChildNum_ &&
                  returnTypeChildNum_ < (ssize_t)children_.size());
   }
+
+  void serializeInner(Serializer& ser) const override {
+    ser.write(kind_);
+    ser.write(returnIntent_);
+    ser.writeVInt(formalsChildNum_);
+    ser.writeVInt(thisFormalChildNum_);
+    ser.writeVInt(numFormals_);
+    ser.writeVInt(returnTypeChildNum_);
+    ser.write(throws_);
+    ser.write(isParenless_);
+  }
+
+  explicit FunctionSignature(Deserializer& des)
+    : AstNode(asttags::FunctionSignature, des) {
+      kind_ = des.read<Kind>();
+      returnIntent_ = des.read<ReturnIntent>();
+      formalsChildNum_ = des.readVInt();
+      thisFormalChildNum_ = des.readVInt();
+      numFormals_= des.readVInt();
+      returnTypeChildNum_ = des.readVInt();
+      throws_ = des.read<bool>();
+      isParenless_ = des.read<bool>();
+    }
 
   bool contentsMatchInner(const AstNode* other) const override {
     auto lhs = this;
@@ -125,8 +150,8 @@ class FunctionSignature final : public AstNode {
     Return a way to iterate over the formals, including the method
     receiver, if present, as the first formal.
   */
-  AstListIteratorPair<AstNode> formals() const {
-    return childRange<AstNode>(formalsChildNum_, numFormals_);
+  AstListIteratorPair<Decl> formals() const {
+    return childRange<Decl>(formalsChildNum_, numFormals_);
   }
 
   /**
@@ -162,8 +187,8 @@ class FunctionSignature final : public AstNode {
     const AstNode* ret = this->child(returnTypeChildNum_);
     return ret;
   }
-
 };
+
 
 } // end namespace uast
 } // end namespace chpl

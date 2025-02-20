@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -42,8 +42,8 @@ owned<Catch> Catch::build(Builder* builder, Location loc,
   CHPL_ASSERT(body.get() != nullptr);
 
   AstList lst;
-  int8_t errorChildNum = -1;
-  int8_t bodyChildNum = -1;
+  int8_t errorChildNum = NO_CHILD;
+  int8_t bodyChildNum = NO_CHILD;
 
   if (error.get() != nullptr) {
     errorChildNum = lst.size();

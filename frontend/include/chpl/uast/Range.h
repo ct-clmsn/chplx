@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -40,6 +40,8 @@ namespace uast {
 
  */
 class Range final : public AstNode {
+ friend class AstNode;
+
  public:
   enum OpKind {
     DEFAULT,
@@ -47,6 +49,10 @@ class Range final : public AstNode {
   };
 
  private:
+  OpKind opKind_;
+  int8_t lowerBoundChildNum_;
+  int8_t upperBoundChildNum_;
+
   Range(AstList children, OpKind opKind,
         int8_t lowerBoundChildNum,
         int8_t upperBoundChildNum)
@@ -57,6 +63,19 @@ class Range final : public AstNode {
     if (opKind_ == OPEN_HIGH) {
       CHPL_ASSERT(upperBoundChildNum_ >= 0);
     }
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    ser.write(opKind_);
+    ser.write(lowerBoundChildNum_);
+    ser.write(upperBoundChildNum_);
+  }
+
+  explicit Range(Deserializer& des)
+    : AstNode(asttags::Range, des) {
+    opKind_ = des.read<OpKind>();
+    lowerBoundChildNum_ = des.read<int8_t>();
+    upperBoundChildNum_ = des.read<int8_t>();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -71,10 +90,6 @@ class Range final : public AstNode {
 
   void dumpFieldsInner(const DumpSettings& s) const override;
   std::string dumpChildLabelInner(int i) const override;
-
-  OpKind opKind_;
-  int8_t lowerBoundChildNum_;
-  int8_t upperBoundChildNum_;
 
  public:
   ~Range() override = default;
@@ -120,6 +135,9 @@ class Range final : public AstNode {
 
 
 } // end namespace uast
+
+DECLARE_SERDE_ENUM(uast::Range::OpKind, uint8_t);
+
 } // end namespace chpl
 
 #endif

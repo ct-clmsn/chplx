@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -36,6 +36,8 @@ namespace uast {
 
  */
 class OpCall final : public Call {
+ friend class AstNode;
+
  private:
   // which operator
   UniqueString op_;
@@ -44,6 +46,16 @@ class OpCall final : public Call {
     : Call(asttags::OpCall, std::move(children),
            /* hasCalledExpression */ false),
       op_(op) {
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    callSerializeInner(ser);
+    ser.write(op_);
+  }
+
+  explicit OpCall(Deserializer& des)
+    : Call(asttags::OpCall, des) {
+    op_ = des.read<UniqueString>();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {

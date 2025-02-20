@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -23,14 +23,12 @@
 
 #include <cstdlib>
 #include <sys/types.h>
-#ifndef _MSC_VER
 #include <sys/wait.h>
 #include <unistd.h>
-#endif
+
 
 using namespace chpl;
 
-#ifndef _MSC_VER
 /*
   Signal handler for when the child process aborts
   Helps ensure that we detect an appropriate signal in test4
@@ -39,7 +37,6 @@ static void handler(int sig)
 {
   assert(sig == SIGCHLD);
 }
-#endif
 
 // test that we can see initial values for globals and edit them
 static void test1() {
@@ -80,7 +77,6 @@ static void test3() {
 
 // test that fatal assertions cause halting behavior when set
 static void test4() {
-#ifndef _MSC_VER
   // verify the state from test3
   assert(assertionsAreOn());
   assert(assertionsAreFatal());
@@ -99,7 +95,6 @@ static void test4() {
     // expect return code 0 since child process aborted, fork returns 0 immediately
     assert(code == 0);
   }
-#endif
 }
 
 int main(int argc, char** argv) {

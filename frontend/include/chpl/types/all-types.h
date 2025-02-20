@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -21,18 +21,30 @@
 #define CHPL_TYPES_ALL_TYPES_H
 
 #include "chpl/types/AnyType.h"
+#include "chpl/types/ArrayType.h"
 #include "chpl/types/BoolType.h"
 #include "chpl/types/BuiltinType.h"
 #include "chpl/types/CStringType.h"
 #include "chpl/types/ClassType.h"
 #include "chpl/types/ComplexType.h"
 #include "chpl/types/CompositeType.h"
+#include "chpl/types/CPtrType.h"
+#include "chpl/types/DomainType.h"
 #include "chpl/types/EnumType.h"
 #include "chpl/types/ErroneousType.h"
+#include "chpl/types/ExternType.h"
+#include "chpl/types/FnIteratorType.h"
+#include "chpl/types/HeapBufferType.h"
 #include "chpl/types/ImagType.h"
 #include "chpl/types/IntType.h"
+#include "chpl/types/IteratorType.h"
+#include "chpl/types/LoopExprIteratorType.h"
+#include "chpl/types/NilType.h"
+#include "chpl/types/NothingType.h"
 #include "chpl/types/Param.h"
 #include "chpl/types/PrimitiveType.h"
+#include "chpl/types/PtrType.h"
+#include "chpl/types/PromotionIteratorType.h"
 #include "chpl/types/QualifiedType.h"
 #include "chpl/types/RealType.h"
 #include "chpl/types/RecordType.h"

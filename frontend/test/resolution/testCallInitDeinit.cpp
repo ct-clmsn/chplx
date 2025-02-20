@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -109,8 +109,7 @@ static void testActions(const char* test,
                         bool expectErrors=false) {
   printf("### %s\n\n", test);
 
-  Context ctx;
-  Context* context = &ctx;
+  Context* context = buildStdContext();
   ErrorGuard guard(context);
 
   std::string testname = test;
@@ -316,7 +315,7 @@ static void test3a() {
     {
       {AssociatedAction::DEFAULT_INIT, "x",        ""},
       {AssociatedAction::DEFAULT_INIT, "y",        ""},
-      {AssociatedAction::ASSIGN,       "M.test@7", ""},
+      // assignment x=y is resolved but not as an associated action
       {AssociatedAction::DEINIT,       "M.test@8", "y"},
       {AssociatedAction::DEINIT,       "M.test@8", "x"}
     });
@@ -543,6 +542,35 @@ static void test5c() {
     {
       {AssociatedAction::INIT_OTHER,   "x",        ""},
       {AssociatedAction::DEINIT,       "M.test@5", "x"},
+    });
+}
+
+static void test5d() {
+  testActions("test5d",
+    R""""(
+      module M {
+        record R { type T; var field : T; }
+        proc R.init(type T, field = 0) {
+          this.T = T;
+          this.field = field;
+        }
+        proc R.init=(other: ?) {
+          this.T = other.type;
+          this.field = other;
+        }
+        proc R.deinit() { }
+        proc test() {
+          var i = 4;
+          var x:R(?) = i;
+          var y:R(?) = 42.0;
+        }
+      }
+    )"""",
+    {
+      {AssociatedAction::INIT_OTHER,   "x",        ""},
+      {AssociatedAction::INIT_OTHER,   "y",        ""},
+      {AssociatedAction::DEINIT,       "M.test@12", "y"},
+      {AssociatedAction::DEINIT,       "M.test@12", "x"},
     });
 }
 
@@ -1514,6 +1542,279 @@ static void test18b() {
     });
 }
 
+static void test19() {
+  testActions("test19",
+      R"""(
+      record G {
+        type T;
+        var y : T;
+      }
+
+      record R {
+        type T;
+        var x : G(T);
+      }
+
+      proc R.init(type T) {
+        this.T=T;
+      }
+
+      proc test() {
+        var r : R(int);
+      }
+      )""", {
+        {AssociatedAction::DEFAULT_INIT, "r",          ""},
+        {AssociatedAction::DEINIT,       "test19.test@4",   "r"}
+      } );
+}
+
+// Returning a non-nilable 'new' local variable
+static void test20a() {
+  testActions("test20a",
+    R""""(
+      module M {
+        class C {}
+        proc C.init() {}
+        operator C.=(ref lhs: C, rhs: C) { }
+        proc C.deinit() { }
+
+        proc foo() {
+          var x : owned C = new C();
+          return x;
+        }
+      }
+    )"""",
+    {
+      {AssociatedAction::NEW_INIT, "M.foo@5",          ""},
+      {AssociatedAction::DEINIT,   "M.foo@9",          "x"},
+    });
+}
+
+// Generic instantiation version
+// TODO: Uncomment once we support init of generic types. May need to update
+// expected associated actions as well.
+/* static void test20b() { */
+/*   testActions("test20b", */
+/*     R""""( */
+/*       module M { */
+/*         class C { */
+/*           var x; */
+/*         } */
+/*         proc C.init(x) {this.x = x;} */
+/*         operator C.=(ref lhs: C(?), rhs: C(?)) { } */
+/*         proc C.deinit() { } */
+
+/*         proc foo() { */
+/*           var x : owned C = new C(3); */
+/*           return x; */
+/*         } */
+/*       } */
+/*     )"""", */
+/*     { */
+/*       {AssociatedAction::NEW_INIT,   "M.foo@6",    ""}, */
+/*       {AssociatedAction::INIT_OTHER, "x",          ""}, */
+/*       {AssociatedAction::DEINIT,     "M.foo@10",   "x"}, */
+/*     }); */
+/* } */
+
+// Nilable version
+static void test20c() {
+  testActions("test20c",
+    R""""(
+      module M {
+        class C {}
+        proc C.init() {}
+        operator C.=(ref lhs: C, rhs: C) { }
+        proc C.deinit() { }
+
+        proc foo() {
+          var x : owned C? = new C();
+          return x;
+        }
+      }
+    )"""",
+    {
+      {AssociatedAction::NEW_INIT,   "M.foo@6",    ""},
+      {AssociatedAction::DEINIT,     "M.foo@10",   "x"},
+    });
+}
+
+static void test21() {
+  // Make sure primitive/builtin types don't trigger dead-variable tracking
+  testActions("test21",
+      R"""(
+      module M {
+        proc take(arg: int) {
+          return 5;
+        }
+        proc take2(arg: int) {
+          return 5;
+        }
+
+        proc test() {
+          var cond = true;
+          var arg : int;
+
+          var ret : int;
+          if cond then ret = take(arg);
+          else ret = take2(arg);
+        }
+      }
+      )""", {} );
+}
+
+static void test22() {
+  // Make sure that call-init-deinit doesn't try to process an initialization
+  // by mistakenly passing 'R' to 'helper' instead of passing the forwarded
+  // value 'R.c'
+  testActions("test22",
+      R"""(
+      module M {
+        // call-init-deinit wants this to transmute R.c into the reciever of C.helper
+
+        class C {
+          var x : int;
+
+          proc helper() {
+            return x;
+          }
+        }
+
+        record R {
+          var c = new unmanaged C(5);
+
+          forwarding c;
+
+          proc wrapper() {
+            return this.helper();
+          }
+        }
+
+        proc test() {
+          var r : R;
+          var x = r.wrapper();
+        }
+      }
+      )""", {
+        {AssociatedAction::DEFAULT_INIT, "r",          ""},
+        {AssociatedAction::DEINIT,       "M.test@6",   "r"}
+      });
+}
+
+static void test23a() {
+  // Ensure the copy-elided in formal doesn't error for its final use.
+  testActions("test23a",
+      R"""(
+      module M {
+        record Foo {}
+
+        proc doSomething(in x) {
+          return doSomethingElse(x);
+        }
+
+        proc doSomethingElse(in x) {
+          return 1;
+        }
+
+        proc test() {
+          var f : Foo;
+          var x = doSomething(f);
+        }
+      }
+      )""", {
+        {AssociatedAction::DEFAULT_INIT, "f",          ""}
+      });
+}
+
+static void test23b() {
+  // Ensure the copy-elided in formal doesn't error for multiple uses in the
+  // same call.
+  testActions("test23b",
+      R"""(
+      module M {
+        record Foo {}
+
+        proc doSomething(in x) {
+          return doSomethingElse(x, x);
+        }
+
+        proc doSomethingElse(in x, in y) {
+          return 1;
+        }
+
+        proc test() {
+          var f : Foo;
+          var x = doSomething(f);
+        }
+      }
+      )""", {
+        {AssociatedAction::DEFAULT_INIT, "f",          ""}
+      });
+}
+
+static void test23c() {
+  // Ensure the copy-elided in formal doesn't error for uses across multiple
+  // calls in the same statement.
+  testActions("test23c",
+      R"""(
+      module M {
+        // necessary to resolve + operator
+        operator +(a: int, b: int) do return __primitive("+", a, b);
+
+        record Foo {}
+
+        proc doSomething(in x) {
+          return doSomethingElse(x) + doSomethingElse(x);
+        }
+
+        proc doSomethingElse(in x) {
+          return 1;
+        }
+
+        proc test() {
+          var f : Foo;
+          var x = doSomething(f);
+        }
+      }
+      )""", {
+        {AssociatedAction::DEFAULT_INIT, "f",          ""}
+      });
+}
+
+static void test23d() {
+  // Ensure the copy-elided in formal doesn't error when used in nested function
+  // calls.
+  testActions("test23d",
+      R"""(
+      module M {
+        record Foo {}
+
+        proc returnConstRef(const ref x) {
+          return x;
+        }
+
+        proc returnIn(in x) {
+          return x;
+        }
+
+        proc doSomething(in x) {
+          return doSomethingElse(returnConstRef(returnIn(x)));
+        }
+
+        proc doSomethingElse(in x) {
+          return 1;
+        }
+
+        proc test() {
+          var f : Foo;
+          var x = doSomething(f);
+        }
+      }
+      )""", {
+        {AssociatedAction::DEFAULT_INIT, "f",          ""}
+      });
+}
+
 // calling function with 'out' intent formal
 
 // calling functions with 'inout' intent formal
@@ -1541,6 +1842,7 @@ int main() {
   test5a();
   test5b();
   test5c();
+  test5d();
 
   test6a();
   test6b();
@@ -1593,6 +1895,21 @@ int main() {
 
   test18a();
   test18b();
+
+  test19();
+
+  test20a();
+  /* test20b(); */
+  test20c();
+
+  test21();
+
+  test22();
+
+  test23a();
+  test23b();
+  test23c();
+  test23d();
 
   return 0;
 }

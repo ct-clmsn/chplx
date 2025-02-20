@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -43,23 +43,37 @@ namespace uast {
 
  */
 class For final : public IndexableLoop {
+ friend class AstNode;
+
  private:
   For(AstList children,  int8_t indexChildNum,
       int8_t iterandChildNum,
       BlockStyle blockStyle,
       int loopBodyChildNum,
       bool isExpressionLevel,
-      bool isParam)
+      bool isParam,
+      int attributeGroupChildNum)
     : IndexableLoop(asttags::For, std::move(children),
                     indexChildNum,
                     iterandChildNum,
-                    /*withClauseChildNum*/ -1,
+                    /*withClauseChildNum*/ NO_CHILD,
                     blockStyle,
                     loopBodyChildNum,
-                    isExpressionLevel),
+                    isExpressionLevel,
+                    attributeGroupChildNum),
       isParam_(isParam) {
 
     CHPL_ASSERT(withClause() == nullptr);
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    indexableLoopSerializeInner(ser);
+    ser.write(isParam_);
+  }
+
+  explicit For(Deserializer& des)
+    : IndexableLoop(asttags::For, des) {
+    isParam_ = des.read<bool>();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -95,7 +109,8 @@ class For final : public IndexableLoop {
                           BlockStyle blockStyle,
                           owned<Block> body,
                           bool isExpressionLevel,
-                          bool isParam);
+                          bool isParam,
+                          owned<AttributeGroup> attributeGroup = nullptr);
 
   /**
     Returns true if this for loop is param.
@@ -103,7 +118,6 @@ class For final : public IndexableLoop {
   bool isParam() const {
     return isParam_;
   }
-
 };
 
 

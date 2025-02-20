@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -49,13 +49,19 @@ namespace uast {
   rather than a TypeQuery.
  */
 class TypeQuery final : public NamedDecl {
+ friend class AstNode;
 
  private:
   TypeQuery(UniqueString name)
-    : NamedDecl(asttags::TypeQuery, DEFAULT_VISIBILITY, DEFAULT_LINKAGE,
-                /* attributesChildNum */ -1, name) {
+    : NamedDecl(asttags::TypeQuery, DEFAULT_VISIBILITY, DEFAULT_LINKAGE, name) {
     CHPL_ASSERT(!name.isEmpty() && name.c_str()[0] != '?');
   }
+
+  void serializeInner(Serializer& ser) const override {
+    namedDeclSerializeInner(ser);
+  }
+
+  explicit TypeQuery(Deserializer& des) : NamedDecl(asttags::TypeQuery, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     const TypeQuery* lhs = this;

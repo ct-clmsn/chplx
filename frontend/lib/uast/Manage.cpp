@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -37,9 +37,9 @@ owned<Manage> Manage::build(Builder* builder, Location loc,
                             AstList managers,
                             BlockStyle blockStyle,
                             AstList stmts) {
-  int managerExprChildNum = -1;
+  int managerExprChildNum = NO_CHILD;
   const int numManagerExprs = managers.size();
-  int bodyChildNum = -1;
+  int bodyChildNum = NO_CHILD;
   const int numBodyStmts = stmts.size();
   AstList children;
 

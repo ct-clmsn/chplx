@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -55,8 +55,8 @@ owned<Range> Range::build(Builder* builder, Location loc,
                           owned<AstNode> lowerBound,
                           owned<AstNode> upperBound) {
   AstList lst;
-  int8_t lowerBoundChildNum = -1;
-  int8_t upperBoundChildNum = -1;
+  int8_t lowerBoundChildNum = NO_CHILD;
+  int8_t upperBoundChildNum = NO_CHILD;
 
   if (lowerBound.get() != nullptr) {
     lowerBoundChildNum = lst.size();

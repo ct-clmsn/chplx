@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -20,9 +20,12 @@
 #ifndef CHPL_RESOLUTION_RESOLUTION_TYPES_H
 #define CHPL_RESOLUTION_RESOLUTION_TYPES_H
 
+#include "chpl/framework/query-impl.h"
 #include "chpl/framework/UniqueString.h"
+#include "chpl/resolution/ResolutionContext.h"
 #include "chpl/resolution/scope-types.h"
 #include "chpl/types/CompositeType.h"
+#include "chpl/types/EnumType.h"
 #include "chpl/types/QualifiedType.h"
 #include "chpl/types/Type.h"
 #include "chpl/uast/AstNode.h"
@@ -30,15 +33,42 @@
 #include "chpl/uast/For.h"
 #include "chpl/uast/Function.h"
 #include "chpl/util/bitmap.h"
+#include "chpl/util/hash.h"
 #include "chpl/util/memory.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 namespace chpl {
 namespace resolution {
 
-typedef enum {
+using SubstitutionsMap = types::CompositeType::SubstitutionsMap;
+
+/**
+
+  In some situations, we may decide not to resolve a call. This could
+  happen if we believe it to already be ill-formed (e.g., why would we resolve
+  f(x) if x is ill-typed?
+
+  This enum contains reasons why we might want that to do that.
+ */
+enum SkipCallResolutionReason {
+  NONE = 0,
+
+  /* an unknown param (e.g. param int, without a value) */
+  UNKNOWN_PARAM,
+  /* a type that is a generic type unless there are substitutions */
+  GENERIC_TYPE,
+  /* a value of generic type */
+  GENERIC_VALUE,
+  /* UnknownType, ErroneousType */
+  UNKNOWN_ACT, ERRONEOUS_ACT,
+  /* other reason to skip */
+  OTHER_REASON,
+};
+
+enum struct DefaultsPolicy {
   /** Do not use default values when determining field type. */
   IGNORE_DEFAULTS,
   /** Use default values when determining field type. */
@@ -48,7 +78,7 @@ typedef enum {
      for all other fields. This policy is useful when determining the
      genericity of individual fields. */
   USE_DEFAULTS_OTHER_FIELDS
-} DefaultsPolicy;
+};
 
 /**
   An untyped function signature. This is really just the part of a function
@@ -61,34 +91,48 @@ typedef enum {
  */
 class UntypedFnSignature {
  public:
+  enum DefaultKind {
+    /** Formals that have default values, like `in x = 10` */
+    DK_DEFAULT,
+    /** Formals that do not have default values, like `ref x` */
+    DK_NO_DEFAULT,
+    /** Formals that might have a default value. This comes up when working
+        with generic initializers; whether an initializer's formal has
+        a default depends on if its type has a default value. But if
+        the type is unknown -- as in a generic initializer's type signature --
+        then we don't know if the formal has a default. */
+    DK_MAYBE_DEFAULT,
+  };
+
   struct FormalDetail {
     UniqueString name;
-    bool hasDefaultValue = false;
+    DefaultKind defaultKind = DK_NO_DEFAULT;
     const uast::Decl* decl = nullptr;
     bool isVarArgs = false;
 
     FormalDetail(UniqueString name,
-                 bool hasDefaultValue,
+                 DefaultKind defaultKind,
                  const uast::Decl* decl,
                  bool isVarArgs = false)
       : name(name),
-        hasDefaultValue(hasDefaultValue),
+        defaultKind(defaultKind),
         decl(decl),
         isVarArgs(isVarArgs)
-    { }
+    {
+      CHPL_ASSERT(name != USTR("this") || defaultKind == DK_NO_DEFAULT);
+    }
 
     bool operator==(const FormalDetail& other) const {
       return name == other.name &&
-             hasDefaultValue == other.hasDefaultValue &&
+             defaultKind == other.defaultKind &&
              decl == other.decl &&
              isVarArgs == other.isVarArgs;
     }
     bool operator!=(const FormalDetail& other) const {
       return !(*this == other);
     }
-
     size_t hash() const {
-      return chpl::hash(name, hasDefaultValue, decl, isVarArgs);
+      return chpl::hash(name, defaultKind, decl, isVarArgs);
     }
 
     void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const {
@@ -114,6 +158,7 @@ class UntypedFnSignature {
   bool isMethod_; // in that case, formals[0] is the receiver
   bool isTypeConstructor_;
   bool isCompilerGenerated_;
+  bool throws_;
   uast::asttags::AstTag idTag_; // concrete tag for ID
   uast::Function::Kind kind_;
   std::vector<FormalDetail> formals_;
@@ -121,29 +166,38 @@ class UntypedFnSignature {
   // this will not be present for compiler-generated functions
   const uast::AstNode* whereClause_;
 
+  // The ID that this compiler-generated function is based on
+  ID compilerGeneratedOrigin_;
+
   UntypedFnSignature(ID id,
                      UniqueString name,
                      bool isMethod,
                      bool isTypeConstructor,
                      bool isCompilerGenerated,
+                     bool throws,
                      uast::asttags::AstTag idTag,
                      uast::Function::Kind kind,
                      std::vector<FormalDetail> formals,
-                     const uast::AstNode* whereClause)
+                     const uast::AstNode* whereClause,
+                     ID compilerGeneratedOrigin = ID())
     : id_(id),
       name_(name),
       isMethod_(isMethod),
       isTypeConstructor_(isTypeConstructor),
       isCompilerGenerated_(isCompilerGenerated),
+      throws_(throws),
       idTag_(idTag),
       kind_(kind),
       formals_(std::move(formals)),
-      whereClause_(whereClause) {
+      whereClause_(whereClause),
+      compilerGeneratedOrigin_(compilerGeneratedOrigin) {
     CHPL_ASSERT(idTag == uast::asttags::Function ||
            idTag == uast::asttags::Class    ||
            idTag == uast::asttags::Record   ||
+           idTag == uast::asttags::Tuple    ||
            idTag == uast::asttags::Union    ||
-           idTag == uast::asttags::Variable);
+           idTag == uast::asttags::Variable ||
+           idTag == uast::asttags::Enum);
   }
 
   static const owned<UntypedFnSignature>&
@@ -152,10 +206,12 @@ class UntypedFnSignature {
                         bool isMethod,
                         bool isTypeConstructor,
                         bool isCompilerGenerated,
+                        bool throws,
                         uast::asttags::AstTag idTag,
                         uast::Function::Kind kind,
                         std::vector<FormalDetail> formals,
-                        const uast::AstNode* whereClause);
+                        const uast::AstNode* whereClause,
+                        ID compilerGeneratedOrigin = ID());
 
  public:
   /** Get the unique UntypedFnSignature containing these components */
@@ -164,10 +220,12 @@ class UntypedFnSignature {
                                        bool isMethod,
                                        bool isTypeConstructor,
                                        bool isCompilerGenerated,
+                                       bool throws,
                                        uast::asttags::AstTag idTag,
                                        uast::Function::Kind kind,
                                        std::vector<FormalDetail> formals,
-                                       const uast::AstNode* whereClause);
+                                       const uast::AstNode* whereClause,
+                                       ID compilerGeneratedOrigin = ID());
 
   /** Get the unique UntypedFnSignature representing a Function's
       signature from a Function uAST pointer. */
@@ -184,14 +242,17 @@ class UntypedFnSignature {
            isMethod_ == other.isMethod_ &&
            isTypeConstructor_ == other.isTypeConstructor_ &&
            isCompilerGenerated_ == other.isCompilerGenerated_ &&
+           throws_ == other.throws_ &&
            idTag_ == other.idTag_ &&
            kind_ == other.kind_ &&
            formals_ == other.formals_ &&
-           whereClause_ == other.whereClause_;
+           whereClause_ == other.whereClause_ &&
+           compilerGeneratedOrigin_ == other.compilerGeneratedOrigin_;
   }
   bool operator!=(const UntypedFnSignature& other) const {
     return !(*this == other);
   }
+
   static bool update(owned<UntypedFnSignature>& keep,
                      owned<UntypedFnSignature>& addin) {
     return defaultUpdateOwned(keep, addin);
@@ -204,6 +265,7 @@ class UntypedFnSignature {
       context->markPointer(elt.decl);
     }
     context->markPointer(whereClause_);
+    compilerGeneratedOrigin_.mark(context);
   }
 
 
@@ -226,6 +288,10 @@ class UntypedFnSignature {
   /** Returns true if this compiler generated */
   bool isCompilerGenerated() const {
     return isCompilerGenerated_;
+  }
+
+  ID compilerGeneratedOrigin() const {
+    return compilerGeneratedOrigin_;
   }
 
   /** Returns true if id() refers to a Function */
@@ -263,6 +329,16 @@ class UntypedFnSignature {
     return isMethod_;
   }
 
+  /** Returns true if this is an iterator */
+  bool isIterator() const {
+    return kind_ == uast::Function::ITER;
+  }
+
+  /** Returns true if this function throws */
+  bool throws() const {
+    return throws_;
+  }
+
   /** Returns the number of formals */
   int numFormals() const {
     return formals_.size();
@@ -273,10 +349,10 @@ class UntypedFnSignature {
     return formals_[i].name;
   }
 
-  /** Return whether the i'th formal has a default value. */
-  bool formalHasDefault(int i) const {
+  /** Return whether the i'th formal might have a default value. */
+  bool formalMightHaveDefault(int i) const {
     CHPL_ASSERT(0 <= i && (size_t) i < formals_.size());
-    return formals_[i].hasDefaultValue;
+    return formals_[i].defaultKind != DK_NO_DEFAULT;
   }
 
   /** Returns the Decl for the i'th formal / field.
@@ -305,15 +381,98 @@ class UntypedFnSignature {
   /// \endcond DO_NOT_DOCUMENT
 };
 
-/** CallInfoActual */
+/**
+  This type stores the outer variables used by a function. For each mention
+  of an outer variable, it keeps track of the outer variable's ID and type.
+*/
+class OuterVariables {
+ public:
+  using QualifiedType = types::QualifiedType;
+  using TargetAndType = std::pair<const ID, QualifiedType>;
+ private:
+  std::map<ID, QualifiedType> targetIdToType_;
+  std::map<ID, ID> mentionIdToTargetId_;
+
+ public:
+  OuterVariables() = default;
+ ~OuterVariables() = default;
+
+  bool operator==(const OuterVariables& rhs) const {
+    return targetIdToType_ == rhs.targetIdToType_ &&
+           mentionIdToTargetId_ == rhs.mentionIdToTargetId_;
+  }
+
+  bool operator!=(const OuterVariables& rhs) const {
+    return !(*this == rhs);
+  }
+
+  void swap(OuterVariables& rhs) {
+    std::swap (targetIdToType_, rhs.targetIdToType_);
+    std::swap (mentionIdToTargetId_, rhs.mentionIdToTargetId_);
+  }
+
+  void mark(Context* context) const {
+    for (auto& p : targetIdToType_) {
+      p.first.mark(context);
+      p.second.mark(context);
+    }
+    for (auto& p : mentionIdToTargetId_) {
+      p.first.mark(context);
+      p.second.mark(context);
+    }
+  }
+
+  static inline bool update(owned<OuterVariables>& keep,
+                            owned<OuterVariables>& addin) {
+    return defaultUpdateOwned(keep, addin);
+  }
+
+  size_t hash() const {
+    return chpl::hash(targetIdToType_, mentionIdToTargetId_);
+  }
+
+  void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const {
+    for (auto& p : targetIdToType_) {
+      p.first.stringify(ss, stringKind);
+      ss << " : ";
+      p.second.stringify(ss, stringKind);
+    }
+  }
+
+  /** Mutating method used to build up state. If either the mention or
+      target IDs are empty then nothing happens. */
+  void add(const ID& mention, const ID& target, const QualifiedType& qt) {
+    if (!mention || !target) return;
+    auto p1 = std::make_pair(mention, target);
+    if (!mentionIdToTargetId_.insert(std::move(p1)).second) return;
+    auto p2 = std::make_pair(target, qt);
+    targetIdToType_.insert(std::move(p2));
+  }
+
+  /** For a given mention, return the target ID and type if it exists. */
+  const TargetAndType* targetAndTypeOrNull(const ID& mention) const {
+    auto it = mentionIdToTargetId_.find(mention);
+    if (it == mentionIdToTargetId_.end()) return nullptr;
+    return &*targetIdToType_.find(it->second);
+  }
+
+  bool isEmpty() const {
+    return mentionIdToTargetId_.empty();
+  }
+};
+
 class CallInfoActual {
  private:
   types::QualifiedType type_;
   UniqueString byName_;
 
  public:
+  explicit CallInfoActual(types::QualifiedType type)
+    : type_(std::move(type)) {
+  }
   CallInfoActual(types::QualifiedType type, UniqueString byName)
-      : type_(std::move(type)), byName_(byName) {}
+    : type_(std::move(type)), byName_(byName) {
+  }
 
   /** return the qualified type */
   const types::QualifiedType& type() const { return type_; }
@@ -328,6 +487,10 @@ class CallInfoActual {
   }
   bool operator!=(const CallInfoActual& other) const {
     return !(*this == other);
+  }
+  void mark(Context* context) const {
+    type_.mark(context);
+    byName_.mark(context);
   }
   size_t hash() const {
     return chpl::hash(type_, byName_);
@@ -385,12 +548,26 @@ class CallInfo {
     isOpCall_ = uast::isOpName(name);
   }
 
+  /** Construct a CallInfo with no arguments, for calling a regular function
+      by name. Does not handle methods. */
+  static CallInfo createSimple(UniqueString calledFnName);
+
+  /** Construct a CallInfo with one argument, for calling a regular function
+      by name. Does not handle methods. */
+  static CallInfo createSimple(UniqueString calledFnName,
+                               types::QualifiedType arg1type);
+  /** Construct a CallInfo with two arguments,
+      for calling a regular function by name. Does not handle methods. */
+  static CallInfo createSimple(UniqueString calledFnName,
+                               types::QualifiedType arg1type,
+                               types::QualifiedType arg2type);
+
   /** Construct a CallInfo with unknown types for the actuals
       that can be used for FormalActualMap but not much else.
       Assumes that the calledExpression is an identifier
       and that it is a function name (vs a method invocation).
       */
-  static CallInfo createSimple(const uast::FnCall* call);
+  static CallInfo createUnknown(const uast::FnCall* call);
 
   /** Construct a CallInfo from a Call and optionally
       raise errors that occur when doing so.
@@ -402,12 +579,28 @@ class CallInfo {
 
       If actualAsts is provided and not 'nullptr', it will be updated
       to contain the uAST pointers for each actual.
+
+      If moduleScopeId is provided and not 'nullptr', it will be updated
+      with the ID of the scope that should be searched for candidates.
+      That is, if the call expression is 'M.f(...)' for a module 'M', then
+      'moduleScopeId' will be set to the ID of the module 'M'.
    */
   static CallInfo create(Context* context,
                          const uast::Call* call,
                          const ResolutionResultByPostorderID& byPostorder,
                          bool raiseErrors = true,
-                         std::vector<const uast::AstNode*>* actualAsts=nullptr);
+                         std::vector<const uast::AstNode*>* actualAsts=nullptr,
+                         ID* moduleScopeId=nullptr,
+                         UniqueString rename = UniqueString());
+
+  /** Construct a CallInfo by adding a method receiver argument to
+      the passed CallInfo. */
+  static CallInfo createWithReceiver(const CallInfo& ci,
+                                     types::QualifiedType receiverType,
+                                     UniqueString rename=UniqueString());
+
+  /** Copy and rename a CallInfo. */
+  static CallInfo copyAndRename(const CallInfo& ci, UniqueString rename);
 
   /** Prepare actuals for a call for later use in creating a CallInfo.
       This is a helper function for CallInfo::create that is sometimes
@@ -428,7 +621,7 @@ class CallInfo {
 
 
   /** return the name of the called thing */
-  UniqueString name() const { return name_; }
+  const UniqueString name() const { return name_; }
 
   /** return the type of the called thing */
   types::QualifiedType calledType() const { return calledType_; }
@@ -471,6 +664,13 @@ class CallInfo {
   bool operator!=(const CallInfo& other) const {
     return !(*this == other);
   }
+  void mark(Context* context) const {
+    name_.mark(context);
+    calledType_.mark(context);
+    for (auto& actual : actuals_) {
+      actual.mark(context);
+    }
+  }
   size_t hash() const {
     return chpl::hash(name_, calledType_, isMethodCall_, isOpCall_,
                       hasQuestionArg_, isParenless_,
@@ -484,12 +684,19 @@ class CallInfo {
   /// \endcond DO_NOT_DOCUMENT
 };
 
+using PoiCallIdFnIds = std::set<std::pair<ID, ID>>;
+using PoiRecursiveCalls = std::set<std::pair<const TypedFnSignature*,
+                                             const PoiScope*>>;
 
 /**
   Contains information about symbols available from point-of-instantiation
   in order to implement caching of instantiations.
  */
 class PoiInfo {
+ public:
+  using Trace = std::tuple<const TypedFnSignature*,
+                           PoiCallIdFnIds,
+                           PoiRecursiveCalls>;
  private:
   // is this PoiInfo for a function that has been resolved, or
   // for a function we are about to resolve?
@@ -506,12 +713,21 @@ class PoiInfo {
   // Tracking how calls using POI were resolved.
   // This is a set of pairs of (Call ID, Function ID).
   // This includes POI calls from functions called in this Function,
-  // transitively
-  std::set<std::pair<ID, ID>> poiFnIdsUsed_;
+  // transitively, unless they are recursive (being resolved)
+  // in which case they go into recursiveFnsUsed_.
+  PoiCallIdFnIds poiFnIdsUsed_;
+
+  // Tracking recursive calls not analyzed
+  // (because queries cannot be recursive).
+  // This PoiInfo should be considered to include the
+  // PoiInfo from resolving each signature+poi scope in this list.
+  PoiRecursiveCalls recursiveFnsUsed_;
 
  public:
-  // default construct a PoiInfo
-  PoiInfo() { }
+  PoiInfo() = default;
+  PoiInfo(const PoiInfo& rhs) = default;
+  PoiInfo(PoiInfo&& rhs) = default;
+  PoiInfo& operator=(PoiInfo&& rhs) = default;
 
   // construct a PoiInfo for a not-yet-resolved instantiation
   PoiInfo(const PoiScope* poiScope)
@@ -531,11 +747,16 @@ class PoiInfo {
   /** set resolved */
   void setResolved(bool resolved) { resolved_ = resolved; }
 
-  // TODO callers copy and store this elsewhere, do we return as is? change the
-  // getter to poiFnIdsUsedAsSet? make callers do std::set(poiFnIdsUsed.begin(),
-  // poiFnIdsUsed.end()) ?
-  const std::set<std::pair<ID, ID>> &poiFnIdsUsed() const {
+  const PoiCallIdFnIds& poiFnIdsUsed() const {
     return poiFnIdsUsed_;
+  }
+
+  const PoiRecursiveCalls& recursiveFnsUsed() const {
+    return recursiveFnsUsed_;
+  }
+
+  PoiInfo::Trace createTraceFor(const TypedFnSignature* sig) const {
+    return { sig, poiFnIdsUsed_, recursiveFnsUsed_ };
   }
 
   void addIds(ID a, ID b) {
@@ -547,17 +768,23 @@ class PoiInfo {
   static bool updateEquals(const PoiInfo& a, const PoiInfo& b) {
     return a.resolved_ == b.resolved_ &&
            a.poiScope_ == b.poiScope_ &&
-           a.poiFnIdsUsed_ == b.poiFnIdsUsed_;
+           a.poiFnIdsUsed_ == b.poiFnIdsUsed_ &&
+           a.recursiveFnsUsed_ == b.recursiveFnsUsed_;
   }
 
   void swap(PoiInfo& other) {
     std::swap(resolved_, other.resolved_);
     std::swap(poiScope_, other.poiScope_);
     poiFnIdsUsed_.swap(other.poiFnIdsUsed_);
+    recursiveFnsUsed_.swap(other.recursiveFnsUsed_);
   }
 
   // accumulate PoiInfo from a call into this PoiInfo
   void accumulate(const PoiInfo& addPoiInfo);
+
+  // accumulate PoiInfo from a recursive call into this PoiInfo
+  void accumulateRecursive(const TypedFnSignature* signature,
+                           const PoiScope* poiScope);
 
   // return true if 'this' represents a resolved function that can
   // be reused given the PoiInfo for a not-yet-resolved function in 'check'.
@@ -588,11 +815,16 @@ class PoiInfo {
   bool operator!=(const PoiInfo& other) const {
     return !(*this == other);
   }
+
   void mark(Context* context) const {
     context->markPointer(poiScope_);
     for (auto const &elt : poiFnIdsUsed_) {
       elt.first.mark(context);
       elt.second.mark(context);
+    }
+    for (auto const &elt : recursiveFnsUsed_) {
+      context->markPointer(elt.first);
+      context->markPointer(elt.second);
     }
   }
 
@@ -651,6 +883,10 @@ class TypedFnSignature {
   // Which formal arguments were substituted when instantiating?
   Bitmap formalsInstantiated_;
 
+  // What are the the types of outer variables used to construct this?
+  // TODO: Can probably flatten into a vector.
+  OuterVariables outerVariables_;
+
   TypedFnSignature(const UntypedFnSignature* untypedSignature,
                    std::vector<types::QualifiedType> formalTypes,
                    WhereClauseResult whereClauseResult,
@@ -658,7 +894,8 @@ class TypedFnSignature {
                    bool isRefinementOnly,
                    const TypedFnSignature* instantiatedFrom,
                    const TypedFnSignature* parentFn,
-                   Bitmap formalsInstantiated)
+                   Bitmap formalsInstantiated,
+                   OuterVariables outerVariables)
     : untypedSignature_(untypedSignature),
       formalTypes_(std::move(formalTypes)),
       whereClauseResult_(whereClauseResult),
@@ -666,7 +903,8 @@ class TypedFnSignature {
       isRefinementOnly_(isRefinementOnly),
       instantiatedFrom_(instantiatedFrom),
       parentFn_(parentFn),
-      formalsInstantiated_(std::move(formalsInstantiated)) { }
+      formalsInstantiated_(std::move(formalsInstantiated)),
+      outerVariables_(std::move(outerVariables)) { }
 
   static const owned<TypedFnSignature>&
   getTypedFnSignature(Context* context,
@@ -677,7 +915,13 @@ class TypedFnSignature {
                       bool isRefinementOnly,
                       const TypedFnSignature* instantiatedFrom,
                       const TypedFnSignature* parentFn,
-                      Bitmap formalsInstantiated);
+                      Bitmap formalsInstantiated,
+                      OuterVariables outerVariables);
+
+  /** If this is an iterator, set 'found' to a string representing its
+      'iterKind', or "" if it is a serial iterator. Returns 'true' only
+      if this is an iterator and a valid 'iterKind' formal was found. */
+  bool fetchIterKindStr(Context* context, UniqueString& outIterKindStr) const;
 
  public:
   /** Get the unique TypedFnSignature containing these components */
@@ -689,7 +933,8 @@ class TypedFnSignature {
                               bool needsInstantiation,
                               const TypedFnSignature* instantiatedFrom,
                               const TypedFnSignature* parentFn,
-                              Bitmap formalsInstantiated);
+                              Bitmap formalsInstantiated,
+                              OuterVariables outerVariables);
 
   /** Get the unique TypedFnSignature containing these components
       for a refinement where some types are inferred (e.g. generic 'out'
@@ -700,7 +945,6 @@ class TypedFnSignature {
                               std::vector<types::QualifiedType> formalTypes,
                               const TypedFnSignature* inferredFrom);
 
-
   bool operator==(const TypedFnSignature& other) const {
     return untypedSignature_ == other.untypedSignature_ &&
            formalTypes_ == other.formalTypes_ &&
@@ -709,11 +953,13 @@ class TypedFnSignature {
            isRefinementOnly_ == other.isRefinementOnly_ &&
            instantiatedFrom_ == other.instantiatedFrom_ &&
            parentFn_ == other.parentFn_ &&
-           formalsInstantiated_ == other.formalsInstantiated_;
+           formalsInstantiated_ == other.formalsInstantiated_ &&
+           outerVariables_ == other.outerVariables_;
   }
   bool operator!=(const TypedFnSignature& other) const {
     return !(*this == other);
   }
+
   static bool update(owned<TypedFnSignature>& keep,
                      owned<TypedFnSignature>& addin) {
     return defaultUpdateOwned(keep, addin);
@@ -726,6 +972,7 @@ class TypedFnSignature {
     context->markPointer(instantiatedFrom_);
     context->markPointer(parentFn_);
     (void) formalsInstantiated_; // nothing to mark
+    outerVariables_.mark(context);
   }
 
   void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
@@ -741,6 +988,10 @@ class TypedFnSignature {
     return untypedSignature_;
   }
 
+  bool isCompilerGenerated() const {
+    return untyped()->isCompilerGenerated();
+  }
+
   /** Returns the result of evaluating the where clause */
   WhereClauseResult whereClauseResult() const {
     return whereClauseResult_;
@@ -749,6 +1000,24 @@ class TypedFnSignature {
   /** Returns if any of the formals are generic or unknown */
   bool needsInstantiation() const {
     return needsInstantiation_;
+  }
+
+  bool isMethod() const { return untyped()->isMethod(); }
+
+  bool isInit() const {
+    return untyped()->name() == USTR("init") && isMethod();
+  }
+
+  bool isInitEquals() const {
+    return untyped()->name() == USTR("init=") && isMethod();
+  }
+
+  bool isInitializer() const {
+    return isInit() || isInitEquals();
+  }
+
+  bool isDeinit() const {
+    return untyped()->name() == USTR("deinit") && isMethod();
   }
 
   /** If this TypedFnSignature represents the result of additional
@@ -804,6 +1073,20 @@ class TypedFnSignature {
     return sig->parentFn_;
   }
 
+  bool isNestedFunction() const {
+    return parentFn() != nullptr;
+  }
+
+  /** Return the outer variables that were used to type this signature. */
+  const OuterVariables& outerVariables() const {
+    return outerVariables_;
+  }
+
+  /** Returns true if this signature uses any outer variables. */
+  bool usesOuterVariables() const {
+    return !outerVariables_.isEmpty();
+  }
+
   /** Returns the number of formals */
   int numFormals() const {
     int ret = formalTypes_.size();
@@ -820,9 +1103,602 @@ class TypedFnSignature {
     return formalTypes_[i];
   }
 
+  bool isIterator() const {
+    return untypedSignature_->isIterator();
+  }
+
+  /** Returns 'true' if this signature is for a standalone parallel iterator. */
+  bool isParallelStandaloneIterator(Context* context) const {
+    UniqueString str;
+    return fetchIterKindStr(context, str) && str == USTR("standalone");
+  }
+
+  /** Returns 'true' if this signature is for a parallel leader iterator. */
+  bool isParallelLeaderIterator(Context* context) const {
+    UniqueString str;
+    return fetchIterKindStr(context, str) && str == USTR("leader");
+  }
+
+  /** Returns 'true' if this signature is for a parallel follower iterator. */
+  bool isParallelFollowerIterator(Context* context) const {
+    UniqueString str;
+    return fetchIterKindStr(context, str) && str == USTR("follower");
+  }
+
+  /** Returns 'true' if this signature is for a parallel iterator. */
+  bool isParallelIterator(Context* context) const {
+    return isParallelStandaloneIterator(context) ||
+           isParallelLeaderIterator(context) ||
+           isParallelFollowerIterator(context);
+  }
+
+  /** Returns 'true' if this signature is for a serial iterator. */
+  bool isSerialIterator(Context* context) const {
+    UniqueString str;
+    return fetchIterKindStr(context, str) && str.isEmpty();
+  }
+
   /// \cond DO_NOT_DOCUMENT
   DECLARE_DUMP;
   /// \endcond DO_NOT_DOCUMENT
+};
+
+// Container for resolution candidates and (if applicable) their corresponding
+// forwarding-to types.
+struct CandidatesAndForwardingInfo {
+ private:
+  std::vector<const TypedFnSignature*> candidates;
+  // Note we have a (small) storage footprint for forwardingInfo even in the
+  // relatively common case where it is unused; could potentially use something
+  // lighter than this struct for candidates without forwarding info.
+  std::vector<types::QualifiedType> forwardingInfo;
+
+ public:
+  using const_iterator = std::vector<const TypedFnSignature*>::const_iterator;
+
+  // Add a candidate without forwarding info.
+  void addCandidate(const TypedFnSignature* candidate) {
+    candidates.push_back(candidate);
+  }
+
+  // Compute and fill in forwarding info for a range of newly-added candidates.
+  void helpComputeForwardingTo(const CallInfo& fci, size_t start) {
+    CHPL_ASSERT(forwardingInfo.size() <= start);
+    forwardingInfo.resize(start);
+    types::QualifiedType forwardingReceiverActualType = fci.calledType();
+    for (size_t i = start; i < candidates.size(); i++) {
+      forwardingInfo.push_back(forwardingReceiverActualType);
+    }
+  }
+
+  // Move the contents of another container into this one, clearing out the
+  // other.
+  void takeFromOther(CandidatesAndForwardingInfo& other) {
+    candidates.insert(candidates.end(),
+                      std::make_move_iterator(other.candidates.begin()),
+                      std::make_move_iterator(other.candidates.end()));
+    forwardingInfo.insert(forwardingInfo.end(),
+                          std::make_move_iterator(other.forwardingInfo.begin()),
+                          std::make_move_iterator(other.forwardingInfo.end()));
+    other.candidates.clear();
+    other.forwardingInfo.clear();
+  }
+
+  // Get the candidate at the provided index with no bounds checking.
+  inline const TypedFnSignature* get(size_t i) const { return candidates[i]; }
+
+  // Get the forwarding info at the provided index.
+  // Fails if there isn't forwarding info saved for each candidate.
+  inline const types::QualifiedType& getForwardingInfo(size_t i) const {
+    CHPL_ASSERT(candidates.size() == forwardingInfo.size());
+    return forwardingInfo[i];
+  }
+
+  // Check if any candidates are present
+  inline bool empty() const { return candidates.empty(); }
+
+  // Get the number of candidates
+  inline size_t size() const { return candidates.size(); }
+
+  // Return true if this container stores any forwarding info
+  inline bool hasForwardingInfo() const { return !forwardingInfo.empty(); }
+
+  // Iterator over contained candidates
+  const_iterator begin() const { return candidates.begin(); }
+  const_iterator end() const { return candidates.end(); }
+
+  /* Query system supporting functions */
+
+  static bool update(CandidatesAndForwardingInfo& keep,
+                     CandidatesAndForwardingInfo& addin) {
+    return defaultUpdate(keep, addin);
+  }
+  size_t hash() const { return chpl::hash(candidates, forwardingInfo); }
+  void mark(Context* context) const {
+    chpl::mark<decltype(candidates)>{}(context, candidates);
+    chpl::mark<decltype(forwardingInfo)>{}(context, forwardingInfo);
+  }
+  bool operator==(const CandidatesAndForwardingInfo& other) const {
+    return candidates == other.candidates &&
+           forwardingInfo == other.forwardingInfo;
+  }
+  void swap(CandidatesAndForwardingInfo& other) {
+    std::swap(candidates, other.candidates);
+    std::swap(forwardingInfo, other.forwardingInfo);
+  }
+  void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
+};
+
+/**
+  An enum that represents the reason why a function candidate was filtered out
+  during call resolution.
+ */
+enum CandidateFailureReason {
+  /* Cannot pass an actual to one of the candidate's formals. */
+  FAIL_CANNOT_PASS,
+  /* Not a valid formal-actual mapping for this candidate. */
+  FAIL_FORMAL_ACTUAL_MISMATCH,
+  /* Special case of formal/actual mismatch when we tried to call a parallel iterator without a tag. */
+  FAIL_FORMAL_ACTUAL_MISMATCH_ITERATOR_API,
+  /* The wrong number of varargs were given to the function. */
+  FAIL_VARARG_MISMATCH,
+  /* The where clause returned 'false'. */
+  FAIL_WHERE_CLAUSE,
+  /* A parenful call to a parenless function or vice versa. */
+  FAIL_PARENLESS_MISMATCH,
+  /* Some other, generic reason. */
+  FAIL_CANDIDATE_OTHER,
+};
+
+/**
+  An enum that represents the reason why an actual couldn't be passed
+  to a formal.
+ */
+enum PassingFailureReason {
+  /* Incompatible nilability (e.g. nilable to non-nilable formal) */
+  FAIL_INCOMPATIBLE_NILABILITY,
+  /* Incompatible management (e.g. borrowed to owned formal) */
+  FAIL_INCOMPATIBLE_MGMT,
+  /* Incompatible manager (e.g. owned to shared formal) */
+  FAIL_INCOMPATIBLE_MGR,
+  /* The actual is not a subtype of the formal, but had to be. */
+  FAIL_EXPECTED_SUBTYPE,
+  /* Tuple size doesn't match */
+  FAIL_INCOMPATIBLE_TUPLE_SIZE,
+  /* Tuple star-ness doesn't match */
+  FAIL_INCOMPATIBLE_TUPLE_STAR,
+  /* A conversion was needed but is not possible. */
+  FAIL_CANNOT_CONVERT,
+  /* An instantiation was needed but is not possible. */
+  FAIL_CANNOT_INSTANTIATE,
+  /* We had a generic formal, but the actual did not instantiate it; actual
+     might be generic. */
+  FAIL_DID_NOT_INSTANTIATE,
+  /* A type was used as an argument to a value, or the other way around. */
+  FAIL_TYPE_VS_NONTYPE,
+  /* A param value was expected, but a non-param value was given. */
+  FAIL_NOT_PARAM,
+  /* One param value was expected, another was given. */
+  FAIL_MISMATCHED_PARAM,
+  /* An unestablished actual type was given to the function. */
+  FAIL_UNKNOWN_ACTUAL_TYPE,
+  /* An unestablished formal type in the function. */
+  FAIL_UNKNOWN_FORMAL_TYPE,
+  /* A generic type was given as an argument to a non-type formal. */
+  FAIL_GENERIC_TO_NONTYPE,
+  /* A type was expected to be the exact match of the formal, but wasn't. */
+  FAIL_NOT_EXACT_MATCH,
+  /* Some other, generic reason. */
+  FAIL_FORMAL_OTHER,
+};
+
+/**
+  Represents either a function that was accepted during call resolution, or
+  the reason why that function was rejected.
+ */
+class ApplicabilityResult {
+ private:
+  /**
+    Set unless the result was a success; empty otherwise. The ID to use to
+    refer to the function candidate that didn't match during call resolution.
+   */
+  ID idForErr_;
+  /**
+    When available, the typed function signature of the candidate that
+    didn't match during call resolution. Set to nullptr if the candidate
+    was accepted / the ApplicationResult was a success.
+   */
+  const TypedFnSignature* initialForErr_;
+  /**
+    If the ApplicabilityResult is a success, the function candidate that
+    was accepted by call resolution.
+   */
+  const TypedFnSignature* candidate_;
+  /**
+    If the ApplicabilityResult is a failure, the reason why the candidate
+    was rejected. Set to FAIL_CANDIDATE_OTHER on success as a placeholder.
+   */
+  CandidateFailureReason candidateReason_;
+  /**
+    If the ApplicabilityResult is a failure because we couldn't pass an actual
+    to a formal, the reason why passing didn't work. Set to FAIL_FORMAL_OTHER
+    on success as a placeholder.
+   */
+  PassingFailureReason formalReason_;
+  /**
+    If the ApplicabilityResult is a failure because we couldn't pass an actual
+    to a formal, the index of the formal that we couldn't pass to. Set to -1
+    on success as a placeholder.
+   */
+  int formalIdx_;
+
+  ApplicabilityResult(ID idForErr,
+                      const TypedFnSignature* initialForErr,
+                      const TypedFnSignature* candidate,
+                      CandidateFailureReason candidateReason,
+                      PassingFailureReason formalReason,
+                      int formalIdx) :
+    idForErr_(std::move(idForErr)), initialForErr_(initialForErr), candidate_(candidate),
+    candidateReason_(candidateReason), formalReason_(formalReason),
+    formalIdx_(formalIdx) {
+    CHPL_ASSERT(!candidate_ || (formalIdx_ == -1 &&
+                                candidateReason_ == FAIL_CANDIDATE_OTHER &&
+                                formalReason_ == FAIL_FORMAL_OTHER));
+  }
+
+ public:
+  ApplicabilityResult()
+    : ApplicabilityResult(ID(), nullptr, nullptr, FAIL_CANDIDATE_OTHER, FAIL_FORMAL_OTHER, -1) {}
+
+  static ApplicabilityResult success(const TypedFnSignature* candidate) {
+    return ApplicabilityResult(ID(), nullptr, candidate, FAIL_CANDIDATE_OTHER, FAIL_FORMAL_OTHER, -1);
+  }
+
+  static ApplicabilityResult failure(const TypedFnSignature* initialForErr,
+                                     PassingFailureReason reason,
+                                     int formalIdx) {
+    return ApplicabilityResult(initialForErr->id(), initialForErr, nullptr, FAIL_CANNOT_PASS, reason, formalIdx);
+  }
+
+  static ApplicabilityResult failure(ID idForErr, CandidateFailureReason reason) {
+    return ApplicabilityResult(std::move(idForErr), nullptr, nullptr, reason, FAIL_FORMAL_OTHER, -1);
+  }
+
+  static bool update(ApplicabilityResult& keep, ApplicabilityResult& addin) {
+    bool update = false;
+    update |= defaultUpdateBasic(keep.idForErr_, addin.idForErr_);
+    update |= defaultUpdateBasic(keep.initialForErr_, addin.initialForErr_);
+    update |= defaultUpdateBasic(keep.candidate_, addin.candidate_);
+    update |= defaultUpdateBasic(keep.candidateReason_, addin.candidateReason_);
+    update |= defaultUpdateBasic(keep.formalReason_, addin.formalReason_);
+    update |= defaultUpdateBasic(keep.formalIdx_, addin.formalIdx_);
+    return update;
+  }
+
+  bool operator ==(const ApplicabilityResult& other) const {
+    return idForErr_ == other.idForErr_ &&
+           initialForErr_ == other.initialForErr_ &&
+           candidate_ == other.candidate_ &&
+           candidateReason_ == other.candidateReason_ &&
+           formalReason_ == other.formalReason_ &&
+           formalIdx_ == other.formalIdx_;
+  }
+
+  bool operator !=(const ApplicabilityResult& other) const {
+    return !(*this==other);
+  }
+
+  void mark(Context* context) const {
+    idForErr_.mark(context);
+    context->markPointer(initialForErr_);
+    context->markPointer(candidate_);
+    (void) candidateReason_; // nothing to mark
+    (void) formalReason_; // nothing to mark
+    (void) formalIdx_; // nothing to mark
+  }
+
+  size_t hash() const {
+    return chpl::hash(idForErr_, initialForErr_, candidate_, candidateReason_, formalReason_, formalIdx_);
+  }
+
+  inline const ID& idForErr() const { return idForErr_; }
+
+  inline const TypedFnSignature* initialForErr() const { return initialForErr_; }
+
+  inline const TypedFnSignature* candidate() const { return candidate_; }
+
+  inline bool success() const { return candidate_ != nullptr; }
+
+  inline CandidateFailureReason reason() const { return candidateReason_; }
+
+  inline PassingFailureReason formalReason() const { return formalReason_; }
+
+  inline int formalIdx() const { return formalIdx_; }
+};
+
+/** FormalActual holds information on a function formal and its binding (if any) */
+class FormalActual {
+ friend class FormalActualMap;
+ private:
+  types::QualifiedType formalType_;
+  types::QualifiedType actualType_;
+  const uast::Decl* formal_ = nullptr;
+  int formalIdx_ = -1;
+  int actualIdx_ = -1;
+  bool hasActual_ = false; // == false means uses formal default value
+  bool formalInstantiated_ = false;
+  bool hasDefault_ = false;
+  bool isVarArgEntry_ = false;
+
+ public:
+  bool operator==(const FormalActual& other) const {
+    return formalType_ == other.formalType_ &&
+           actualType_ == other.actualType_ &&
+           formal_ == other.formal_ &&
+           formalIdx_ == other.formalIdx_ &&
+           actualIdx_ == other.actualIdx_ &&
+           hasActual_ == other.hasActual_ &&
+           formalInstantiated_ == other.formalInstantiated_ &&
+           hasDefault_ == other.hasDefault_ &&
+           isVarArgEntry_ == other.isVarArgEntry_;
+  }
+  bool operator!=(const FormalActual& other) const {
+    return !(*this == other);
+  }
+
+  void mark(Context* context) const {
+    formalType_.mark(context);
+    actualType_.mark(context);
+    context->markPointer(formal_);
+    (void) formalIdx_; // nothing to mark
+    (void) actualIdx_; // nothing to mark
+    (void) hasActual_; // nothing to mark
+    (void) formalInstantiated_; // nothing to mark
+    (void) hasDefault_; // nothing to mark
+    (void) isVarArgEntry_; // nothing to mark
+  }
+
+  size_t hash() const {
+    return chpl::hash(formalType_, actualType_, formal_, formalIdx_, actualIdx_,
+                      hasActual_, formalInstantiated_, hasDefault_, isVarArgEntry_);
+  }
+
+  const types::QualifiedType& formalType() const { return formalType_; }
+  const types::QualifiedType& actualType() const { return actualType_; }
+  const uast::Decl* formal() const { return formal_; }
+  int formalIdx() const { return formalIdx_; }
+  int actualIdx() const { return actualIdx_; }
+  bool hasActual() const { return hasActual_; }
+  bool formalInstantiated() const { return formalInstantiated_; }
+  bool hasDefault() const { return hasDefault_; }
+  bool isVarArgEntry() const { return isVarArgEntry_; }
+};
+
+/** FormalActualMap maps formals to actuals */
+class FormalActualMap {
+ private:
+  std::vector<FormalActual> byFormalIdx_;
+  std::vector<int> actualIdxToFormalIdx_;
+  bool mappingIsValid_ = false;
+  int failingActualIdx_ = -1;
+  int failingFormalIdx_ = -1;
+
+  // A standalone iterator will have an extra formal for the iterKind.
+  // If we call foo() and fail to get a formal-actual mapping, but only
+  // because we're missing the iterKind, we should still come back to it.
+  bool missingIteratorActuals_ = false;
+
+ public:
+
+  using FormalActualIterable = Iterable<std::vector<FormalActual>>;
+
+  FormalActualMap(const UntypedFnSignature* sig, const CallInfo& call) {
+    mappingIsValid_ = computeAlignment(sig, nullptr, call);
+  }
+  FormalActualMap(const TypedFnSignature* sig, const CallInfo& call) {
+    mappingIsValid_ = computeAlignment(sig->untyped(), sig, call);
+  }
+
+  bool operator==(const FormalActualMap& other) const {
+    return byFormalIdx_ == other.byFormalIdx_ &&
+           actualIdxToFormalIdx_ == other.actualIdxToFormalIdx_ &&
+           mappingIsValid_ == other.mappingIsValid_ &&
+           failingActualIdx_ == other.failingActualIdx_ &&
+           failingFormalIdx_ == other.failingFormalIdx_ &&
+           missingIteratorActuals_ == other.missingIteratorActuals_;
+  }
+
+  bool operator!=(const FormalActualMap& other) const {
+    return !(*this == other);
+  }
+
+  void mark(Context* context) const {
+    for (auto const &elt : byFormalIdx_) {
+      elt.mark(context);
+    }
+    (void) actualIdxToFormalIdx_; // nothing to mark
+    (void) mappingIsValid_; // nothing to mark
+    (void) failingActualIdx_; // nothing to mark
+    (void) failingFormalIdx_; // nothing to mark
+    (void) missingIteratorActuals_; // nothing to mark
+  }
+
+  size_t hash() const {
+    return chpl::hash(byFormalIdx_, actualIdxToFormalIdx_, mappingIsValid_,
+                      failingActualIdx_, failingFormalIdx_,
+                      missingIteratorActuals_);
+  }
+
+  /** check if mapping is valid */
+  bool isValid() const { return mappingIsValid_; }
+
+  /** Check why the mapping was invalid. */
+  CandidateFailureReason reason() const {
+    CHPL_ASSERT(!mappingIsValid_);
+    if (missingIteratorActuals_) {
+      return FAIL_FORMAL_ACTUAL_MISMATCH_ITERATOR_API;
+    }
+    return FAIL_FORMAL_ACTUAL_MISMATCH;
+  }
+
+  /** get the FormalActuals in the order of the formal arguments */
+  FormalActualIterable byFormals() const {
+    return FormalActualIterable(byFormalIdx_);
+  }
+
+  /** get the FormalActual for a particular formal index */
+  const FormalActual& byFormalIdx(int formalIdx) const {
+    CHPL_ASSERT(0 <= formalIdx && (size_t) formalIdx < byFormalIdx_.size());
+    return byFormalIdx_[formalIdx];
+  }
+
+  /** get the FormalActual for a particular actual index,
+      and returns nullptr if none was found. */
+  const FormalActual* byActualIdx(int actualIdx) const {
+    if (actualIdx < 0 || (size_t) actualIdx >= actualIdxToFormalIdx_.size())
+      return nullptr;
+    int formalIdx = actualIdxToFormalIdx_[actualIdx];
+    if (formalIdx < 0 || (size_t) formalIdx >= byFormalIdx_.size())
+      return nullptr;
+    return &byFormalIdx_[formalIdx];
+  }
+
+ private:
+  bool computeAlignment(const UntypedFnSignature* untyped,
+                        const TypedFnSignature* typed, const CallInfo& call);
+};
+
+
+/**
+  Stores a function candidate. This information includes both the
+  TypedFnSignature* representing the candidate, as well as information
+  about this candidate's applicability. In particular, we store whether or
+  not this candidate requires a const ref coercion, which is allowed by
+  the spec, but is not allowed in practice due to the aliasing rules of C.
+  */
+class MostSpecificCandidate {
+ private:
+  friend class MostSpecificCandidates;
+
+  const TypedFnSignature* fn_;
+  owned<FormalActualMap> faMap_;
+  owned<SubstitutionsMap> promotedFormals_;
+  int constRefCoercionFormal_;
+  int constRefCoercionActual_;
+
+  MostSpecificCandidate(const TypedFnSignature* fn,
+                        FormalActualMap faMap,
+                        SubstitutionsMap promotedFormals,
+                        int constRefCoercionFormal,
+                        int constRefCoercionActual)
+    : fn_(fn), faMap_(new FormalActualMap(std::move(faMap))),
+      promotedFormals_(new SubstitutionsMap(std::move(promotedFormals))),
+      constRefCoercionFormal_(constRefCoercionFormal),
+      constRefCoercionActual_(constRefCoercionActual) {}
+
+ public:
+  MostSpecificCandidate()
+    : fn_(nullptr), faMap_(), promotedFormals_(),
+      constRefCoercionFormal_(-1),
+      constRefCoercionActual_(-1) {}
+
+  MostSpecificCandidate& operator=(MostSpecificCandidate&& other) = default;
+  MostSpecificCandidate& operator=(const MostSpecificCandidate& other) {
+    fn_ = other.fn_;
+    if (other.faMap_) {
+      faMap_ = toOwned(new FormalActualMap(*other.faMap_));
+    }
+    if (other.promotedFormals_) {
+      promotedFormals_ = toOwned(new SubstitutionsMap(*other.promotedFormals_));
+    }
+    constRefCoercionFormal_ = other.constRefCoercionFormal_;
+    constRefCoercionActual_ = other.constRefCoercionActual_;
+    return *this;
+  }
+
+  MostSpecificCandidate(MostSpecificCandidate&& other) = default;
+  MostSpecificCandidate(const MostSpecificCandidate& other) { *this = other; }
+
+  static MostSpecificCandidate fromTypedFnSignature(Context* context,
+                                        const TypedFnSignature* fn,
+                                        const FormalActualMap& faMap,
+                                        const SubstitutionsMap& promotedFormals);
+
+  static MostSpecificCandidate fromTypedFnSignature(Context* context,
+                                        const TypedFnSignature* fn,
+                                        const CallInfo& info,
+                                        const SubstitutionsMap& promotedFormals);
+
+  const TypedFnSignature* fn() const { return fn_; }
+
+  const FormalActualMap& formalActualMap() const { return *faMap_; }
+
+  const SubstitutionsMap& promotedFormals() const { return *promotedFormals_; }
+
+  int constRefCoercionFormal() const { return constRefCoercionFormal_; }
+
+  int constRefCoercionActual() const { return constRefCoercionActual_; }
+
+  bool hasConstRefCoercion() const { return constRefCoercionFormal_ != -1; }
+
+  operator bool() const {
+    CHPL_ASSERT(fn_ || (constRefCoercionFormal_ == -1 && constRefCoercionActual_ == -1));
+    return fn_ != nullptr;
+  }
+
+  bool operator==(const MostSpecificCandidate& other) const {
+    bool faMapsEqual = faMap_ == other.faMap_;
+    if (!faMapsEqual && faMap_ && other.faMap_) {
+      // Try a deep comparison to avoid unnecessary cache invalidation when
+      // bumping generations. The pointers may differ, but the contained
+      // maps can be equivalent.
+      faMapsEqual = *faMap_ == *other.faMap_;
+    }
+
+    bool promotedFormalsEqual = promotedFormals_ == other.promotedFormals_;
+    if (!promotedFormalsEqual && promotedFormals_ && other.promotedFormals_) {
+      // See above comment.
+      promotedFormalsEqual = *promotedFormals_ == *other.promotedFormals_;
+    }
+
+    return fn_ == other.fn_ &&
+           faMapsEqual &&
+           constRefCoercionFormal_ == other.constRefCoercionFormal_ &&
+           constRefCoercionActual_ == other.constRefCoercionActual_;
+  }
+
+  bool operator!=(const MostSpecificCandidate& other) const {
+    return !(*this == other);
+  }
+
+  void mark(Context* context) const {
+    context->markPointer(fn_);
+    if (faMap_) faMap_->mark(context);
+    if (promotedFormals_) {
+      chpl::mark<SubstitutionsMap>{}(context, *promotedFormals_);
+    }
+    (void) constRefCoercionFormal_; // nothing to mark
+    (void) constRefCoercionActual_; // nothing to mark
+  }
+
+  size_t hash() const {
+    return chpl::hash(fn_, faMap_, promotedFormals_, constRefCoercionFormal_, constRefCoercionActual_);
+  }
+
+  static bool update(MostSpecificCandidate& keep,
+                     MostSpecificCandidate& addin) {
+    return defaultUpdate(keep, addin);
+  }
+
+  void swap(MostSpecificCandidate& other) {
+    std::swap(fn_, other.fn_);
+    std::swap(faMap_, other.faMap_);
+    std::swap(promotedFormals_, other.promotedFormals_);
+    std::swap(constRefCoercionFormal_, other.constRefCoercionFormal_);
+    std::swap(constRefCoercionActual_, other.constRefCoercionActual_);
+  }
+
+  void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
 };
 
 /**
@@ -842,7 +1718,7 @@ class MostSpecificCandidates {
   } Intent;
 
  private:
-  const TypedFnSignature* candidates[NUM_INTENTS] = {nullptr};
+  MostSpecificCandidate candidates[NUM_INTENTS] = {MostSpecificCandidate()};
   bool emptyDueToAmbiguity = false;
 
  public:
@@ -857,10 +1733,10 @@ class MostSpecificCandidates {
     Otherwise, default-initializes a MostSpecificCandidates with no candidates
     that is not empty due to ambiguity.
    */
-  static MostSpecificCandidates getOnly(const TypedFnSignature* fn) {
+  static MostSpecificCandidates getOnly(MostSpecificCandidate c) {
     MostSpecificCandidates ret;
-    if (fn != nullptr)
-      ret.setBestOnly(fn);
+    if (c.fn() != nullptr)
+      ret.setBestOnly(std::move(c));
     return ret;
   }
 
@@ -886,59 +1762,62 @@ class MostSpecificCandidates {
     Adjust each candidate signature by inferring generic 'out' intent formals
     if there are any.
    */
-  void inferOutFormals(Context* context, const PoiScope* instantiationPoiScope);
+  void inferOutFormals(ResolutionContext* rc,
+                       const PoiScope* instantiationPoiScope);
 
-  const TypedFnSignature* const* begin() const {
+  MostSpecificCandidate const* begin() const {
     return &candidates[0];
   }
-  const TypedFnSignature* const* end() const {
+  MostSpecificCandidate const* end() const {
     return &candidates[NUM_INTENTS];
   }
 
-  void setBestRef(const TypedFnSignature* sig) {
-    candidates[REF] = sig;
+  void setBestRef(MostSpecificCandidate c) {
+    candidates[REF] = std::move(c);
   }
-  void setBestConstRef(const TypedFnSignature* sig) {
-    candidates[CONST_REF] = sig;
+  void setBestConstRef(MostSpecificCandidate c) {
+    candidates[CONST_REF] = std::move(c);
   }
-  void setBestValue(const TypedFnSignature* sig) {
-    candidates[VALUE] = sig;
-  }
-
-  void setBestOnly(const TypedFnSignature* sig) {
-    candidates[ONLY] = sig;
+  void setBestValue(MostSpecificCandidate c) {
+    candidates[VALUE] = std::move(c);
   }
 
-  const TypedFnSignature* bestRef() const {
+  void setBestOnly(MostSpecificCandidate c) {
+    candidates[ONLY] = std::move(c);
+  }
+
+  const MostSpecificCandidate& bestRef() const {
     return candidates[REF];
   }
-  const TypedFnSignature* bestConstRef() const {
+  const MostSpecificCandidate& bestConstRef() const {
     return candidates[CONST_REF];
   }
-  const TypedFnSignature* bestValue() const {
+  const MostSpecificCandidate& bestValue() const {
     return candidates[VALUE];
   }
 
   /**
     If there is exactly one candidate, return that candidate.
-    Otherwise, return nullptr.
+    Otherwise, return an empty candidate.
    */
-  const TypedFnSignature* only() const {
-    const TypedFnSignature* ret = nullptr;
+  const MostSpecificCandidate& only() const {
+    static MostSpecificCandidate empty;
+
+    const MostSpecificCandidate* ret = nullptr;
     int nPresent = 0;
-    for (const TypedFnSignature* sig : *this) {
-      if (sig != nullptr) {
-        ret = sig;
+    for (const MostSpecificCandidate& sig : *this) {
+      if (sig.fn() != nullptr) {
+        ret = &sig;
         nPresent++;
       }
     }
     if (nPresent != 1) {
-      return nullptr;
+      return empty;
     }
 
     // if there is only one candidate, it should be in slot ONLY
-    CHPL_ASSERT(candidates[ONLY] == ret);
-    return ret;
+    CHPL_ASSERT(candidates[ONLY] == *ret);
+    return *ret;
   }
 
   /**
@@ -946,8 +1825,8 @@ class MostSpecificCandidates {
    */
   int numBest() const {
     int ret = 0;
-    for (const TypedFnSignature* sig : *this) {
-      if (sig != nullptr) {
+    for (const MostSpecificCandidate& sig : *this) {
+      if (sig.fn() != nullptr) {
         ret++;
       }
     }
@@ -969,6 +1848,14 @@ class MostSpecificCandidates {
     CHPL_ASSERT(!emptyDueToAmbiguity || isEmpty());
 
     return emptyDueToAmbiguity;
+  }
+
+  /**
+    Returns 'true' if any candidate was found, including
+    if there was no best candidate due to ambiguity.
+   */
+  bool foundCandidates() const {
+    return isAmbiguous() || !isEmpty();
   }
 
   bool operator==(const MostSpecificCandidates& other) const {
@@ -996,9 +1883,16 @@ class MostSpecificCandidates {
     return defaultUpdate(keep, addin);
   }
   void mark(Context* context) const {
-    for (const TypedFnSignature* sig : candidates) {
-      context->markPointer(sig);
+    for (const MostSpecificCandidate& sig : candidates) {
+      sig.mark(context);
     }
+  }
+  size_t hash() const {
+    size_t hash = 0;
+    for (const MostSpecificCandidate& sig : candidates) {
+      hash = chpl::hash(hash, sig);
+    }
+    return chpl::hash(hash, emptyDueToAmbiguity);
   }
 
   void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
@@ -1015,22 +1909,46 @@ class CallResolutionResult {
   MostSpecificCandidates mostSpecific_;
   // what is the type of the call expression?
   types::QualifiedType exprType_;
+  // if the called expression is an iterator, what is the yielded type?
+  types::QualifiedType yieldedType_;
   // if any of the candidates were instantiated, what point-of-instantiation
   // scopes were used when resolving their signature or body?
   PoiInfo poiInfo_;
+  // whether the resolution result was handled using some compiler-level logic,
+  // which does not correspond to a TypedSignature or AST.
+  bool speciallyHandled_ = false;
+  bool rejectedPossibleIteratorCandidates_ = false;
 
  public:
-  // for simple cases where mostSpecific and poiInfo are irrelevant
-  CallResolutionResult(types::QualifiedType exprType)
-    : exprType_(std::move(exprType)) {
+  CallResolutionResult() {}
+
+  // for simple cases where mostSpecific and poiInfo are irrelevant.
+  // Since the result was handled using some compiler-level logic (hence no
+  // 'mostSpecific'), the result is marked as specially handled.
+  CallResolutionResult(types::QualifiedType exprType,
+                       types::QualifiedType yieldedType = types::QualifiedType())
+    : exprType_(std::move(exprType)),
+      yieldedType_(std::move(yieldedType)),
+      speciallyHandled_(true) {
   }
 
   CallResolutionResult(MostSpecificCandidates mostSpecific,
+                       bool rejectedPossibleIteratorCandidates,
                        types::QualifiedType exprType,
-                       PoiInfo poiInfo)
+                       types::QualifiedType yieldedType,
+                       PoiInfo poiInfo,
+                       bool speciallyHandled = false)
     : mostSpecific_(std::move(mostSpecific)),
       exprType_(std::move(exprType)),
-      poiInfo_(std::move(poiInfo)) {
+      yieldedType_(std::move(yieldedType)),
+      poiInfo_(std::move(poiInfo)),
+      speciallyHandled_(speciallyHandled),
+      rejectedPossibleIteratorCandidates_(rejectedPossibleIteratorCandidates)
+  {
+  }
+
+  static CallResolutionResult getEmpty() {
+    return CallResolutionResult();
   }
 
   /** get the most specific candidates for return-intent overloading */
@@ -1039,21 +1957,54 @@ class CallResolutionResult {
   /** type of the call expression */
   const types::QualifiedType& exprType() const { return exprType_; }
 
+  /** type of the yielded expression, if the call expression is an iterator */
+  const types::QualifiedType& yieldedType() const { return yieldedType_; }
+
   /** point-of-instantiation scopes used when resolving signature or body */
   const PoiInfo& poiInfo() const { return poiInfo_; }
+
+  /** whether the resolution result was handled using some compiler-level logic */
+  bool speciallyHandled() const { return speciallyHandled_; }
+
+  /** whether we rejected candidates because they expected a tag or followThis.
+      This might indicate that we need to re-resolve with tag to find parallel
+      iterators. */
+  bool rejectedPossibleIteratorCandidates() const {
+    return rejectedPossibleIteratorCandidates_;
+  }
 
   bool operator==(const CallResolutionResult& other) const {
     return mostSpecific_ == other.mostSpecific_ &&
            exprType_ == other.exprType_ &&
-           PoiInfo::updateEquals(poiInfo_, other.poiInfo_);
+           yieldedType_ == other.yieldedType_ &&
+           PoiInfo::updateEquals(poiInfo_, other.poiInfo_) &&
+           speciallyHandled_ == other.speciallyHandled_ &&
+           rejectedPossibleIteratorCandidates_ == other.rejectedPossibleIteratorCandidates_;
   }
   bool operator!=(const CallResolutionResult& other) const {
     return !(*this == other);
   }
+
+  void mark(Context* context) const {
+    mostSpecific_.mark(context);
+    exprType_.mark(context);
+    yieldedType_.mark(context);
+    poiInfo_.mark(context);
+  }
+
+  size_t hash() const {
+    return chpl::hash(mostSpecific_, exprType_, yieldedType_, poiInfo_,
+                      speciallyHandled_, rejectedPossibleIteratorCandidates_);
+  }
+
   void swap(CallResolutionResult& other) {
     mostSpecific_.swap(other.mostSpecific_);
     exprType_.swap(other.exprType_);
+    yieldedType_.swap(other.yieldedType_);
     poiInfo_.swap(other.poiInfo_);
+    std::swap(speciallyHandled_, other.speciallyHandled_);
+    std::swap(rejectedPossibleIteratorCandidates_,
+              other.rejectedPossibleIteratorCandidates_);
   }
 
   void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
@@ -1063,25 +2014,263 @@ class CallResolutionResult {
   /// \endcond DO_NOT_DOCUMENT
 };
 
-class ResolvedParamLoop;
+/* The result of resolving a 'these' call. This contains more information
+   than a general call resolution result, because we can encode what threw off
+   the iteration (e.g., lack of a follower iterator)
+
+   In the case of failure due to zippering (e.g., we're iterating over a
+   loop expression, but the Nth zippered iterand doesn't have the appropriate
+   iterator), this type contains a 'zipperedFailure_' field, which contains
+   the result of trying to iterate the Nth iterand, and a 'zipperedFailureIndex_'
+   which is the index of the failed iterand.
+*/
+struct TheseResolutionResult {
+ public:
+  enum FailureReason {
+    /* We didn't fail, finding an iterator. */
+    THESE_SUCCESS = 0,
+    /* We didn't attempt to resolve this iterator, possibly because it's
+       not supported in this context. */
+    THESE_NOT_ATTEMPTED,
+    /* We tried to resolve a standalone iterator on a loop expression, but
+       loop expressions don't have standalone iterators. */
+    THESE_FAIL_NO_LOOP_EXPR_STANDALONE,
+    /* We tried to resolve a standalone iterator on a promoted expression, but
+       promoted expressions don't have standalone iterators. */
+    THESE_FAIL_NO_PROMO_STANDALONE,
+    /* We tried to resolve a parallel iterator but we're iterating over a serial
+       loop expression. */
+    THESE_FAIL_SERIAL_LOOP_EXPR,
+    /* We couldn't find the given iterator's definition. */
+    THESE_FAIL_NO_ITERATOR_WITH_TAG,
+    /* We found a leader and a follower, but the leader's yield type doesn't match
+       the follower's 'followThis'. */
+    THESE_FAIL_LEADER_FOLLOWER_MISMATCH,
+    /* We tried to resolve a zippered-like iterator (zippered loop expression,
+       promoted expressions) and one of the iterables that makes it up failed
+       to resolve. In this case, the zipperedFailure_ and zipperedFailureIndex_
+       fields are set. */
+    THESE_FAIL_ZIPPERED_ARG_FAILED,
+    /* Mismatch between the claimed promotion type and the type yielded by the
+       iterator. */
+    THESE_FAIL_PROMOTION_TYPE_YIELD_MISMATCH,
+  };
+
+ private:
+  // The reason that we couldn't resolve the 'these' iterator in this case.
+  FailureReason reason_;
+  // If a call was attempted, the result of the call. Stored as a pointer
+  // to avoid the additional memory overhead of storing an empty CallResolutionResult.
+  std::unique_ptr<CallResolutionResult> callResult_;
+  // If the failure was due to one the zippered arguments failing to resolve,
+  // the failure that threw off the zippered argument.
+  std::unique_ptr<TheseResolutionResult> zipperedFailure_ = nullptr;
+  // If the failure was due to one of the zippered arguments failing to resolve,
+  // the index of the failed argument.
+  int zipperedFailureIndex_ = -1;
+  // The type of the iterand that we were trying to resolve.
+  types::QualifiedType iterandType_;
+
+  TheseResolutionResult(FailureReason reason,
+                        std::unique_ptr<CallResolutionResult> callResult,
+                        std::unique_ptr<TheseResolutionResult> zipperedResult,
+                        int zipperedResultIndex,
+                        types::QualifiedType iterandType)
+    : reason_(reason),
+      callResult_(std::move(callResult)),
+      zipperedFailure_(std::move(zipperedResult)),
+      zipperedFailureIndex_(zipperedResultIndex),
+      iterandType_(std::move(iterandType)) {}
+
+ public:
+  TheseResolutionResult() : reason_(THESE_NOT_ATTEMPTED) {}
+  TheseResolutionResult(TheseResolutionResult&& other) = default;
+  TheseResolutionResult& operator=(TheseResolutionResult&& other) = default;
+
+  // Needed because we copy error messages, which can contain 'TheseResolutionResults'.
+  TheseResolutionResult(const TheseResolutionResult& other)
+    : reason_(other.reason_),
+      iterandType_(other.iterandType_) {
+    if (other.zipperedFailure_) {
+      zipperedFailure_ = toOwned(new TheseResolutionResult(*other.zipperedFailure_));
+    }
+    if (other.callResult_) {
+      callResult_ = toOwned(new CallResolutionResult(*other.callResult_));
+    }
+  }
+
+  /** Construct a TheseResolutionResult for a successful call to 'these' on
+      a given iterand type. */
+  static TheseResolutionResult success(CallResolutionResult callResult,
+                                       types::QualifiedType iterandType) {
+    CHPL_ASSERT(!callResult.exprType().isUnknownOrErroneous());
+    auto callResultPtr =
+      toOwned(new CallResolutionResult(std::move(callResult)));
+    return TheseResolutionResult(THESE_SUCCESS, std::move(callResultPtr),
+                                 nullptr, -1, std::move(iterandType));
+  }
+
+  /** Construct a successful TheseResolutionResult without any underlying call. */
+  static TheseResolutionResult success(types::QualifiedType iterandType) {
+    return TheseResolutionResult(THESE_SUCCESS, nullptr,
+                                 nullptr, -1, std::move(iterandType));
+  }
+
+  /** Construct a TheseResolutionResult failed call to 'these' on a given
+      iterand type, with 'reason' as the reason for failure. */
+  static TheseResolutionResult failure(FailureReason reason,
+                                       types::QualifiedType iterandType) {
+    return TheseResolutionResult(reason, nullptr, nullptr, -1,
+                                 std::move(iterandType));
+  }
+
+  /** Same as the previous overload, but include the failed call resolution result. */
+  static TheseResolutionResult failure(FailureReason reason,
+                                       types::QualifiedType iterandType,
+                                       CallResolutionResult callResult) {
+    auto callResultPtr =
+      toOwned(new CallResolutionResult(std::move(callResult)));
+    return TheseResolutionResult(reason, std::move(callResultPtr),
+                                 nullptr, -1, std::move(iterandType));
+  }
+
+  /** Construct a TheseResolutionResult for a failed call to 'these' on a given
+      iterand type, caused by failing to resolve 'these' for a zippered argument
+      at a given index. */
+  static TheseResolutionResult failure(std::unique_ptr<TheseResolutionResult>
+                                       zipperedFailure, int zipperedResultIndex,
+                                       types::QualifiedType iterandType) {
+    return TheseResolutionResult(THESE_FAIL_ZIPPERED_ARG_FAILED, nullptr,
+                                 std::move(zipperedFailure),
+                                 zipperedResultIndex,
+                                 std::move(iterandType));
+  }
+
+  /** Checks whether the resolution was successful. */
+  operator bool() const { return reason_ == THESE_SUCCESS; }
+
+  bool operator==(const TheseResolutionResult& other) const {
+    bool callResultEqual = this->callResult_ == other.callResult_;
+    if (!callResultEqual && this->callResult_ && other.callResult_) {
+      callResultEqual = *this->callResult_ == *other.callResult_;
+    }
+
+    bool zipperedFailureEqual = this->zipperedFailure_ == other.zipperedFailure_;
+    if (!zipperedFailureEqual && this->zipperedFailure_ && other.zipperedFailure_) {
+      zipperedFailureEqual = *this->zipperedFailure_ == *other.zipperedFailure_;
+    }
+
+    return reason_ == other.reason_ &&
+           callResultEqual &&
+           zipperedFailureEqual &&
+           zipperedFailureIndex_ == other.zipperedFailureIndex_ &&
+           iterandType_ == other.iterandType_;
+  }
+
+  bool operator!=(const TheseResolutionResult& other) const {
+    return !(*this == other);
+  }
+
+  void mark(Context* context) const {
+    (void) reason_; // nothing to mark
+    if (callResult_) callResult_->mark(context);
+    if (zipperedFailure_) zipperedFailure_->mark(context);
+    iterandType_.mark(context);
+  }
+
+  size_t hash() const {
+    return chpl::hash(reason_, callResult_, zipperedFailure_,
+                      zipperedFailureIndex_, iterandType_);
+  }
+
+  /** Returns the reason for failure. */
+  FailureReason reason() const { return reason_; }
+
+  /** Returns the result of resolving a 'these' call, if it was attempted. */
+  const CallResolutionResult* callResult() const { return callResult_.get(); }
+
+  /** Returns the result of resolving a 'these' call on a zippered argument,
+      if it was attempted. */
+  const TheseResolutionResult* zipperedFailure() const { return zipperedFailure_.get(); }
+
+  /** Returns the index of the failed zippered argument, if the failure was due
+      to a zippered argument failing to resolve. Otherwise, returns -1. */
+  int zipperedFailureIndex() const { return zipperedFailureIndex_; }
+
+  /** Returns the type of the iterand that we were trying to resolve. */
+  const types::QualifiedType& iterandType() const { return iterandType_; }
+
+  /** Returns the type of resolving the 'these' call. */
+  types::QualifiedType exprType() const {
+    if (callResult_) return callResult_->exprType();
+    return types::QualifiedType();
+  }
+
+  /** Returns the yield type from resolving the 'these' call. */
+  types::QualifiedType yieldedType() const {
+    if (callResult_) return callResult_->yieldedType();
+    return types::QualifiedType();
+  }
+};
 
 /**
 
-  This type represents an associated action (for use within a
-  ResolvedExpression)
+  When resolving calls like f(), we need three scopes to search.
+  * The 'call scope', which becomes relevant if we're resolving a generic function.
+    When we resolve a generic function, and come across other calls,
+    this 'call scope' becomes the 'poi scope' for resolving those dependent calls.
+  * The 'lookup scope', which is used to restrict where we search for candidates.
+    For instance, when resolving `M.f()`, we don't want to look for `f` in
+    the current scope, only in the scope of `M`. The call scope is not
+    always the same as the 'lookup scope' because while resolving `M.f`,
+    we still want to use the 'call scope' for POI.
+  * The 'POI scope', which is used when resolving calls in generic functions
+    as described in the first bullet.
 
+  This data structure bundles all three scopes for convenient threading through
+  the call resolution process.
+ */
+class CallScopeInfo {
+ private:
+  const Scope* callScope_;
+  const Scope* lookupScope_;
+  const PoiScope* poiScope_;
+
+  CallScopeInfo(const Scope* callScope, const Scope* lookupScope, const PoiScope* poiScope)
+    : callScope_(callScope), lookupScope_(lookupScope), poiScope_(poiScope) {
+  }
+
+ public:
+  static CallScopeInfo forNormalCall(const Scope* scope, const PoiScope* poiScope);
+  static CallScopeInfo forQualifiedCall(Context* context, const ID& moduleId,
+                                        const Scope* scope, const PoiScope* poiScope);
+  static CallScopeInfo forIteratorOverloadSearch(const Scope* callScope,
+                                                 const Scope* lookupScope,
+                                                 const PoiScope* poiScope);
+
+  const Scope* callScope() const { return callScope_; }
+  const Scope* lookupScope() const { return lookupScope_; }
+  const PoiScope* poiScope() const { return poiScope_; }
+};
+
+/**
+  This type represents an associated action (for use within a
+  ResolvedExpression).
  */
 class AssociatedAction {
  public:
   enum Action {
-    ASSIGN,       // = from the same type
-    ASSIGN_OTHER, // = from other type
+    ASSIGN,       // same type or different type assign
     COPY_INIT,    // init= from same type
     INIT_OTHER,   // init= from other type
     DEFAULT_INIT,
     DEINIT,
     ITERATE,      // aka "these"
     NEW_INIT,
+    REDUCE_SCAN,  // resolution of "generate" for a reduce/scan operation.
+    INFER_TYPE,
+    COMPARE,      // == , e.g., for select-statements
+    RUNTIME_TYPE, // create runtime type
   };
 
  private:
@@ -1103,8 +2292,10 @@ class AssociatedAction {
   }
   /** Returns which action this represents */
   Action action() const { return action_; }
+
   /** Return which function is called to help with the action */
   const TypedFnSignature* fn() const { return fn_; }
+
   /** Return the ID is associated with the action */
   const ID& id() const { return id_; }
 
@@ -1118,6 +2309,8 @@ class AssociatedAction {
   static const char* kindToString(Action a);
 };
 
+class ResolvedParamLoop;
+
 /**
   This type represents a resolved expression.
 */
@@ -1128,6 +2321,8 @@ class ResolvedExpression {
   // For simple (non-function Identifier) cases,
   // the ID of a NamedDecl it refers to
   ID toId_;
+  // Is this a reference to a compiler-created primitive?
+  bool isBuiltin_ = false;
 
   // For a function call, what is the most specific candidate,
   // or when using return intent overloading, what are the most specific
@@ -1157,6 +2352,9 @@ class ResolvedExpression {
    * refers to */
   ID toId() const { return toId_; }
 
+  /** check whether this resolution result refers to a compiler builtin like `bool`. */
+  bool isBuiltin() const { return isBuiltin_; }
+
   /** For a function call, what is the most specific candidate, or when using
    * return intent overloading, what are the most specific candidates? The
    * choice between these needs to happen later than the main function
@@ -1166,6 +2364,10 @@ class ResolvedExpression {
 
   const PoiScope* poiScope() const { return poiScope_; }
 
+  bool hasAssociatedActions() const {
+    return !associatedActions_.empty();
+  }
+
   const AssociatedActions& associatedActions() const {
     return associatedActions_;
   }
@@ -1173,6 +2375,9 @@ class ResolvedExpression {
   const ResolvedParamLoop* paramLoop() const {
     return paramLoop_;
   }
+
+  /** set the isPrimitive flag */
+  void setIsBuiltin(bool isBuiltin) { isBuiltin_ = isBuiltin; }
 
   /** set the toId */
   void setToId(ID toId) { toId_ = toId; }
@@ -1200,6 +2405,7 @@ class ResolvedExpression {
   bool operator==(const ResolvedExpression& other) const {
     return type_ == other.type_ &&
            toId_ == other.toId_ &&
+           isBuiltin_ == other.isBuiltin_ &&
            mostSpecific_ == other.mostSpecific_ &&
            poiScope_ == other.poiScope_ &&
            associatedActions_ == other.associatedActions_ &&
@@ -1211,6 +2417,7 @@ class ResolvedExpression {
   void swap(ResolvedExpression& other) {
     type_.swap(other.type_);
     toId_.swap(other.toId_);
+    std::swap(isBuiltin_, other.isBuiltin_);
     mostSpecific_.swap(other.mostSpecific_);
     std::swap(poiScope_, other.poiScope_);
     std::swap(associatedActions_, other.associatedActions_);
@@ -1224,7 +2431,7 @@ class ResolvedExpression {
     toId_.mark(context);
     mostSpecific_.mark(context);
     context->markPointer(poiScope_);
-    for (auto a : associatedActions_) {
+    for (const auto& a : associatedActions_) {
       a.mark(context);
     }
     context->markPointer(paramLoop_);
@@ -1246,9 +2453,10 @@ class ResolvedExpression {
 class ResolutionResultByPostorderID {
  private:
   ID symbolId;
-  // TODO: replace this with a hashtable or at least
-  // something that doesn't have to start at 0
-  std::vector<ResolvedExpression> vec;
+  // This map is generally accessed with operator[] to default-construct a new
+  // ResolvedExpression if none exists for an ID. at() is used instead only
+  // when const-ness is required.
+  std::unordered_map<int, ResolvedExpression> map;
 
  public:
   /** prepare to resolve the contents of the passed symbol */
@@ -1260,42 +2468,35 @@ class ResolutionResultByPostorderID {
   /** prepare to resolve the body of a For loop */
   void setupForParamLoop(const uast::For* loop, ResolutionResultByPostorderID& parent);
 
-  ResolvedExpression& byIdExpanding(const ID& id) {
-    auto postorder = id.postOrderId();
-    CHPL_ASSERT(id.symbolPath() == symbolId.symbolPath());
-    CHPL_ASSERT(0 <= postorder);
-    if ((size_t) postorder < vec.size()) {
-      // OK
-    } else {
-      vec.resize(postorder+1);
-    }
-    return vec[postorder];
-  }
-  ResolvedExpression& byAstExpanding(const uast::AstNode* ast) {
-    return byIdExpanding(ast->id());
-  }
-
+  /* ID query functions */
   bool hasId(const ID& id) const {
     auto postorder = id.postOrderId();
     if (id.symbolPath() == symbolId.symbolPath() &&
-        0 <= postorder && (size_t) postorder < vec.size())
+        0 <= postorder && (map.count(postorder) > 0))
       return true;
 
     return false;
   }
-  bool hasAst(const uast::AstNode* ast) const {
-    return ast != nullptr && hasId(ast->id());
-  }
-
   ResolvedExpression& byId(const ID& id) {
-    CHPL_ASSERT(hasId(id));
     auto postorder = id.postOrderId();
-    return vec[postorder];
+    return map[postorder];
   }
   const ResolvedExpression& byId(const ID& id) const {
     CHPL_ASSERT(hasId(id));
     auto postorder = id.postOrderId();
-    return vec[postorder];
+    return map.at(postorder);
+  }
+  const ResolvedExpression* byIdOrNull(const ID& id) const {
+    if (hasId(id)) {
+      auto postorder = id.postOrderId();
+      return &map.at(postorder);
+    }
+    return nullptr;
+  }
+
+  /* AST query functions */
+  bool hasAst(const uast::AstNode* ast) const {
+    return ast != nullptr && hasId(ast->id());
   }
   ResolvedExpression& byAst(const uast::AstNode* ast) {
     return byId(ast->id());
@@ -1303,52 +2504,56 @@ class ResolutionResultByPostorderID {
   const ResolvedExpression& byAst(const uast::AstNode* ast) const {
     return byId(ast->id());
   }
-  ResolvedExpression* byIdOrNull(const ID& id) {
-    if (hasId(id)) {
-      auto postorder = id.postOrderId();
-      return &vec[postorder];
-    }
-    return nullptr;
-  }
-  const ResolvedExpression* byIdOrNull(const ID& id) const {
-    if (hasId(id)) {
-      auto postorder = id.postOrderId();
-      return &vec[postorder];
-    }
-    return nullptr;
-  }
-  ResolvedExpression* byAstOrNull(const uast::AstNode* ast) {
-    return byIdOrNull(ast->id());
-  }
   const ResolvedExpression* byAstOrNull(const uast::AstNode* ast) const {
     return byIdOrNull(ast->id());
   }
 
   bool operator==(const ResolutionResultByPostorderID& other) const {
     return symbolId == other.symbolId &&
-           vec == other.vec;
+           map == other.map;
   }
   bool operator!=(const ResolutionResultByPostorderID& other) const {
     return !(*this == other);
   }
   void swap(ResolutionResultByPostorderID& other) {
     symbolId.swap(other.symbolId);
-    vec.swap(other.vec);
+    map.swap(other.map);
   }
   static bool update(ResolutionResultByPostorderID& keep,
                      ResolutionResultByPostorderID& addin);
   void mark(Context* context) const {
     symbolId.mark(context);
-    for (auto const &elt : vec) {
-      elt.mark(context);
+    for (auto const &elt : map) {
+      // mark ResolvedExpressions
+      elt.second.mark(context);
     }
   }
+
+  void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
+
+  /// \cond DO_NOT_DOCUMENT
+  DECLARE_DUMP;
+  /// \endcond DO_NOT_DOCUMENT
 };
 
 /**
   This type represents a resolved function.
+
+  When a function 'F' is resolved, any child functions that were resolved
+  as a result of resolving the body of F will be stored in this type as
+  well. For a generic child 'NF' of F, this does not mean that _all_
+  instantiations of NF will be stored here (only instantiations made
+  for interior calls issued within F).
 */
 class ResolvedFunction {
+ public:
+  using PoiTrace = PoiInfo::Trace;
+  using Child = owned<ResolvedFunction>;
+  using ChildPtr = const ResolvedFunction*;
+  using PoiTraceToChildMap = std::unordered_map<PoiTrace, Child>;
+  using SigAndInfo = std::tuple<const TypedFnSignature*, PoiInfo>;
+  using SigAndInfoToChildPtrMap = std::unordered_map<SigAndInfo, ChildPtr>;
+
  private:
   const TypedFnSignature* signature_ = nullptr;
 
@@ -1364,16 +2569,32 @@ class ResolvedFunction {
   // the return type computed for this function
   types::QualifiedType returnType_;
 
+  // These two maps attempt to mimick what is done to cache generic
+  // instantiations in the queries 'resolveFunctionByInfo' and
+  // 'resolveFunctionByPois'. The maps take the place of the query cache
+  // (since it cannot be used to store the results of resolving a nested
+  // function).
+  PoiTraceToChildMap poiTraceToChild_;
+  SigAndInfoToChildPtrMap sigAndInfoToChildPtr_;
+
  public:
   ResolvedFunction(const TypedFnSignature *signature,
                    uast::Function::ReturnIntent returnIntent,
                    ResolutionResultByPostorderID resolutionById,
                    PoiInfo poiInfo,
-                   types::QualifiedType returnType)
-      : signature_(signature), returnIntent_(returnIntent),
+                   types::QualifiedType returnType,
+                   PoiTraceToChildMap poiTraceToChild,
+                   SigAndInfoToChildPtrMap sigAndInfoToChildPtr)
+      : signature_(signature),
+        returnIntent_(returnIntent),
         resolutionById_(std::move(resolutionById)),
         poiInfo_(std::move(poiInfo)),
-        returnType_(std::move(returnType)) {}
+        returnType_(std::move(returnType)),
+        poiTraceToChild_(std::move(poiTraceToChild)),
+        sigAndInfoToChildPtr_(std::move(sigAndInfoToChildPtr)) {}
+ ~ResolvedFunction() = default;
+  ResolvedFunction(const ResolvedFunction& rhs) = delete;
+  ResolvedFunction(ResolvedFunction&& rhs) = default;
 
   /** The type signature */
   const TypedFnSignature* signature() const { return signature_; }
@@ -1399,17 +2620,22 @@ class ResolvedFunction {
            returnIntent_ == other.returnIntent_ &&
            resolutionById_ == other.resolutionById_ &&
            PoiInfo::updateEquals(poiInfo_, other.poiInfo_) &&
-           returnType_ == other.returnType_;
+           returnType_ == other.returnType_ &&
+           poiTraceToChild_ == other.poiTraceToChild_ &&
+           sigAndInfoToChildPtr_ == other.sigAndInfoToChildPtr_;
   }
   bool operator!=(const ResolvedFunction& other) const {
     return !(*this == other);
   }
+
   void swap(ResolvedFunction& other) {
     std::swap(signature_, other.signature_);
     std::swap(returnIntent_, other.returnIntent_);
     resolutionById_.swap(other.resolutionById_);
     poiInfo_.swap(other.poiInfo_);
     returnType_.swap(other.returnType_);
+    std::swap(poiTraceToChild_, other.poiTraceToChild_);
+    std::swap(sigAndInfoToChildPtr_, other.sigAndInfoToChildPtr_);
   }
   static bool update(owned<ResolvedFunction>& keep,
                      owned<ResolvedFunction>& addin) {
@@ -1420,6 +2646,28 @@ class ResolvedFunction {
     resolutionById_.mark(context);
     poiInfo_.mark(context);
     returnType_.mark(context);
+    for (auto& p : poiTraceToChild_) {
+      chpl::mark<decltype(p.first)>{}(context, p.first);
+      context->markPointer(p.second);
+    }
+    for (auto& p : sigAndInfoToChildPtr_) {
+      chpl::mark<decltype(p.first)>{}(context, p.first);
+      context->markPointer(p.second);
+    }
+  }
+  size_t hash() const {
+    // Skip 'resolutionById_' since it can be quite large.
+    std::ignore = resolutionById_;
+    size_t ret = chpl::hash(signature_, returnIntent_, poiInfo_, returnType_);
+    for (auto& p : poiTraceToChild_) {
+      ret = hash_combine(ret, chpl::hash(p.first));
+      ret = hash_combine(ret, chpl::hash(p.second));
+    }
+    for (auto& p : sigAndInfoToChildPtr_) {
+      ret = hash_combine(ret, chpl::hash(p.first));
+      ret = hash_combine(ret, chpl::hash(p.second));
+    }
+    return ret;
   }
 
   const ResolvedExpression& byId(const ID& id) const {
@@ -1428,93 +2676,20 @@ class ResolvedFunction {
   const ResolvedExpression& byAst(const uast::AstNode* ast) const {
     return resolutionById_.byAst(ast);
   }
+  const ResolvedExpression* byAstOrNull(const uast::AstNode* ast) const {
+    return resolutionById_.byAstOrNull(ast);
+  }
 
   const ID& id() const {
     return signature_->id();
   }
 };
 
-class FormalActualMap;
-
-
-/** FormalActual holds information on a function formal and its binding (if any) */
-class FormalActual {
- friend class FormalActualMap;
- private:
-  types::QualifiedType formalType_;
-  types::QualifiedType actualType_;
-  const uast::Decl* formal_ = nullptr;
-  int formalIdx_ = -1;
-  int actualIdx_ = -1;
-  bool hasActual_ = false; // == false means uses formal default value
-  bool formalInstantiated_ = false;
-  bool hasDefault_ = false;
-  bool isVarArgEntry_ = false;
-
- public:
-  const types::QualifiedType& formalType() const { return formalType_; }
-  const types::QualifiedType& actualType() const { return actualType_; }
-  const uast::Decl* formal() const { return formal_; }
-  int formalIdx() const { return formalIdx_; }
-  int actualIdx() const { return actualIdx_; }
-  bool hasActual() const { return hasActual_; }
-  bool formalInstantiated() const { return formalInstantiated_; }
-  bool hasDefault() const { return hasDefault_; }
-  bool isVarArgEntry() const { return isVarArgEntry_; }
-};
-
-/** FormalActualMap maps formals to actuals */
-class FormalActualMap {
- private:
-  std::vector<FormalActual> byFormalIdx_;
-  std::vector<int> actualIdxToFormalIdx_;
-  bool mappingIsValid_ = false;
-  int failingActualIdx_ = -1;
-  int failingFormalIdx_ = -1;
-
- public:
-
-  using FormalActualIterable = Iterable<std::vector<FormalActual>>;
-
-  FormalActualMap(const UntypedFnSignature* sig, const CallInfo& call) {
-    mappingIsValid_ = computeAlignment(sig, nullptr, call);
-  }
-  FormalActualMap(const TypedFnSignature* sig, const CallInfo& call) {
-    mappingIsValid_ = computeAlignment(sig->untyped(), sig, call);
-  }
-
-  /** check if mapping is valid */
-  bool isValid() const { return mappingIsValid_; }
-
-  /** get the FormalActuals in the order of the formal arguments */
-  FormalActualIterable byFormals() const {
-    return FormalActualIterable(byFormalIdx_);
-  }
-
-  /** get the FormalActual for a particular formal index */
-  const FormalActual& byFormalIdx(int formalIdx) const {
-    CHPL_ASSERT(0 <= formalIdx && (size_t) formalIdx < byFormalIdx_.size());
-    return byFormalIdx_[formalIdx];
-  }
-
-  /** get the FormalActual for a particular actual index,
-      and returns nullptr if none was found. */
-  const FormalActual* byActualIdx(int actualIdx) const {
-    if (actualIdx < 0 || (size_t) actualIdx >= actualIdxToFormalIdx_.size())
-      return nullptr;
-    int formalIdx = actualIdxToFormalIdx_[actualIdx];
-    if (formalIdx < 0 || (size_t) formalIdx >= byFormalIdx_.size())
-      return nullptr;
-    return &byFormalIdx_[formalIdx];
-  }
-
- private:
-  bool computeAlignment(const UntypedFnSignature* untyped,
-                        const TypedFnSignature* typed, const CallInfo& call);
-};
-
 /** ResolvedFields represents the fully resolved fields for a
-    class/record/union/tuple type. */
+    class/record/union/tuple type.
+
+    It also stores the result of computing the types of 'forwarding' statements.
+ */
 class ResolvedFields {
   struct FieldDetail {
     UniqueString name;
@@ -1546,18 +2721,34 @@ class ResolvedFields {
       declId.mark(context);
       type.mark(context);
     }
-
-    /*
-    void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const {
-      name.stringify(ss, stringKind);
-      //TODO: determine the proper way to do this
-      //decl.stringify(ss, stringKind);
-      type.stringify(ss, stringKind);
-    }*/
+  };
+  struct ForwardingDetail {
+    ID forwardingStmt;
+    types::QualifiedType receiverType;
+    ForwardingDetail(ID forwardingStmt, types::QualifiedType receiverType)
+     : forwardingStmt(std::move(forwardingStmt)),
+       receiverType(std::move(receiverType)) {
+    }
+    bool operator==(const ForwardingDetail& other) const {
+      return forwardingStmt == other.forwardingStmt &&
+             receiverType == other.receiverType;
+    }
+    bool operator!=(const ForwardingDetail& other) const {
+      return !(*this == other);
+    }
+    void swap(ForwardingDetail& other) {
+      forwardingStmt.swap(other.forwardingStmt);
+      receiverType.swap(other.receiverType);
+    }
+    void mark(Context* context) const {
+      forwardingStmt.mark(context);
+      receiverType.mark(context);
+    }
   };
 
   const types::CompositeType* type_ = nullptr;
   std::vector<FieldDetail> fields_;
+  std::vector<ForwardingDetail> forwarding_;
 
   // Summary information that is computed after the field types are known
   bool isGeneric_ = false;
@@ -1577,7 +2768,19 @@ class ResolvedFields {
     fields_.push_back(FieldDetail(name, hasDefaultValue, declId, type));
   }
 
-  void finalizeFields(Context* context);
+  void addForwarding(ID forwardingId, types::QualifiedType receiverType) {
+    forwarding_.push_back(ForwardingDetail(forwardingId, receiverType));
+  }
+
+  void addForwarding(const ResolvedFields& other) {
+    for (int i = 0; i < other.numForwards(); i++) {
+      addForwarding(other.forwardingStmt(i), other.forwardingToType(i));
+    }
+  }
+
+  void validateFieldGenericity(Context* context, const types::CompositeType* fieldsOfType) const;
+
+  void finalizeFields(Context* context, bool syntaxOnly);
 
   /** Returns true if this is a generic type */
   bool isGeneric() const { return isGeneric_; }
@@ -1589,30 +2792,51 @@ class ResolvedFields {
     return isGeneric_ && allGenericFieldsHaveDefaultValues_;
   }
 
+  /** Returns the number of fields represented here */
   int numFields() const {
     return fields_.size();
   }
 
+  /** Returns the field name for the i'th field */
   UniqueString fieldName(int i) const {
     CHPL_ASSERT(0 <= i && (size_t) i < fields_.size());
     return fields_[i].name;
   }
+  /** Returns 'true' if the i'th field has a default value */
   bool fieldHasDefaultValue(int i) const {
     CHPL_ASSERT(0 <= i && (size_t) i < fields_.size());
     return fields_[i].hasDefaultValue;
   }
+  /** Returns the i'th field's declaration ID */
   ID fieldDeclId(int i) const {
     CHPL_ASSERT(0 <= i && (size_t) i < fields_.size());
     return fields_[i].declId;
   }
+  /** Returns the type of the i'th field */
   types::QualifiedType fieldType(int i) const {
     CHPL_ASSERT(0 <= i && (size_t) i < fields_.size());
     return fields_[i].type;
   }
 
+  /** Returns the number of 'forwarding' statements */
+  int numForwards() const {
+    return forwarding_.size();
+  }
+  /** Returns the ID of the i'th 'forwarding' statement */
+  const ID& forwardingStmt(int i) const {
+    assert(0 <= i && (size_t) i < forwarding_.size());
+    return forwarding_[i].forwardingStmt;
+  }
+  /** Returns the type that the i'th 'forwarding' statement forwards to */
+  const types::QualifiedType& forwardingToType(int i) const {
+    assert(0 <= i && (size_t) i < forwarding_.size());
+    return forwarding_[i].receiverType;
+  }
+
   bool operator==(const ResolvedFields& other) const {
     return type_ == other.type_ &&
            fields_ == other.fields_ &&
+           forwarding_ == other.forwarding_ &&
            isGeneric_ == other.isGeneric_ &&
            allGenericFieldsHaveDefaultValues_ ==
              other.allGenericFieldsHaveDefaultValues_;
@@ -1623,6 +2847,7 @@ class ResolvedFields {
   void swap(ResolvedFields& other) {
     std::swap(type_, other.type_);
     fields_.swap(other.fields_);
+    forwarding_.swap(other.forwarding_);
     std::swap(isGeneric_, other.isGeneric_);
     std::swap(allGenericFieldsHaveDefaultValues_,
               other.allGenericFieldsHaveDefaultValues_);
@@ -1633,6 +2858,9 @@ class ResolvedFields {
   }
   void mark(Context* context) const {
     for (auto const &elt : fields_) {
+      elt.mark(context);
+    }
+    for (auto const &elt : forwarding_) {
       elt.mark(context);
     }
     context->markPointer(type_);
@@ -1663,7 +2891,7 @@ class ResolvedParamLoop {
     }
 
     void mark(Context* context) const {
-      for (auto postorder : loopBodies_) {
+      for (const auto& postorder : loopBodies_) {
         postorder.mark(context);
       }
       context->markPointer(loop_);
@@ -1685,8 +2913,201 @@ class ResolvedParamLoop {
     }
 };
 
-/** See the documentation for types::CompositeType::SubstitutionsMap. */
-using SubstitutionsMap = types::CompositeType::SubstitutionsMap;
+// Represents result info on either a type's copyability or assignability, from
+// ref and/or from const.
+struct CopyableAssignableInfo {
+ private:
+  bool fromConst_ = false;
+  bool fromRef_ = false;
+
+  CopyableAssignableInfo(bool fromConst, bool fromRef)
+      : fromConst_(fromConst), fromRef_(fromRef) {
+    assert(!fromConst || fromRef);
+  }
+
+ public:
+  CopyableAssignableInfo() {}
+
+  bool isFromConst() const { return fromConst_; }
+  bool isFromRef() const { return fromRef_; }
+
+  static CopyableAssignableInfo fromConst() {
+    return CopyableAssignableInfo(true, true);
+  }
+
+  static CopyableAssignableInfo fromRef() {
+    return CopyableAssignableInfo(false, true);
+  }
+
+  static CopyableAssignableInfo fromNone() {
+    return CopyableAssignableInfo(false, false);
+  }
+
+  // Set this to the "minimum" copyability between this and other.
+  void intersectWith(const CopyableAssignableInfo& other) {
+    fromConst_ &= other.fromConst_;
+    fromRef_ &= other.fromRef_;
+  }
+
+  bool operator==(const CopyableAssignableInfo& other) const {
+    return fromConst_ == other.fromConst_ &&
+           fromRef_ == other.fromRef_;
+  }
+  bool operator!=(const CopyableAssignableInfo& other) const {
+    return !(*this == other);
+  }
+  void swap(CopyableAssignableInfo& other) {
+    std::swap(fromConst_, other.fromConst_);
+    std::swap(fromRef_, other.fromRef_);
+  }
+  static bool update(CopyableAssignableInfo& keep,
+                     CopyableAssignableInfo& addin) {
+    return defaultUpdate(keep, addin);
+  }
+  void mark(Context* context) const {
+  }
+};
+
+/* SimpleMethodLookupHelper helps lookupInScope to find matches
+   due to the method receiver during scope resolution.
+   This version is temporary and long-term, TypedMethodLookupHelper
+   should be used instead. */
+class SimpleMethodLookupHelper final : public MethodLookupHelper {
+ public:
+  using ReceiverScopesVec = llvm::SmallVector<const Scope*, 3>;
+ private:
+  ID receiverTypeId_;
+  ReceiverScopesVec scopes_;
+ public:
+  SimpleMethodLookupHelper() { }
+
+  SimpleMethodLookupHelper(ID receiverTypeId,
+                           ReceiverScopesVec scopes)
+    : receiverTypeId_(receiverTypeId), scopes_(scopes) {
+  }
+
+  bool isEmpty() const {
+    return receiverTypeId_.isEmpty();
+  }
+  llvm::ArrayRef<const Scope*> receiverScopes() const override;
+  bool isReceiverApplicable(Context* context, const ID& methodId) const override;
+
+  bool operator==(const SimpleMethodLookupHelper &other) const {
+    return receiverTypeId_ == other.receiverTypeId_ &&
+           scopes_ == other.scopes_;
+  }
+  bool operator!=(const SimpleMethodLookupHelper& other) const {
+    return !(*this == other);
+  }
+
+  void swap(SimpleMethodLookupHelper& other) {
+    receiverTypeId_.swap(other.receiverTypeId_);
+    scopes_.swap(other.scopes_);
+  }
+
+  static bool update(SimpleMethodLookupHelper& keep,
+                     SimpleMethodLookupHelper& addin) {
+    return defaultUpdate(keep, addin);
+  }
+
+  void mark(Context* context) const {
+    receiverTypeId_.mark(context);
+    for (auto p : scopes_) {
+      context->markPointer(p);
+    }
+  }
+
+  void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
+
+  /// \cond DO_NOT_DOCUMENT
+  DECLARE_DUMP;
+  /// \endcond DO_NOT_DOCUMENT
+};
+
+class ReceiverScopeSimpleHelper final : public ReceiverScopeHelper {
+ public:
+  ReceiverScopeSimpleHelper() { }
+  const SimpleMethodLookupHelper*
+  methodLookupForTypeId(Context* context, const ID& typeId) const;
+  const SimpleMethodLookupHelper*
+  methodLookupForMethodId(Context* context, const ID& methodId) const override;
+};
+
+class TypedMethodLookupHelper final : public MethodLookupHelper {
+ public:
+  using ReceiverScopesVec = llvm::SmallVector<const Scope*, 3>;
+ private:
+  types::QualifiedType receiverType_;
+  ReceiverScopesVec scopes_;
+ public:
+  TypedMethodLookupHelper() { }
+
+  TypedMethodLookupHelper(types::QualifiedType receiverType,
+                          ReceiverScopesVec scopes)
+    : receiverType_(std::move(receiverType)),
+      scopes_(std::move(scopes)) {
+  }
+
+  bool isEmpty() const {
+    return receiverType_.type() == nullptr;
+  }
+
+  llvm::ArrayRef<const Scope*> receiverScopes() const override;
+  bool isReceiverApplicable(Context* context, const ID& methodId) const override;
+
+  bool operator==(const TypedMethodLookupHelper &other) const {
+    return receiverType_ == other.receiverType_ &&
+           scopes_ == other.scopes_;
+  }
+  bool operator!=(const TypedMethodLookupHelper& other) const {
+    return !(*this == other);
+  }
+
+  void swap(TypedMethodLookupHelper& other) {
+    receiverType_.swap(other.receiverType_);
+    scopes_.swap(other.scopes_);
+  }
+
+  static bool update(TypedMethodLookupHelper& keep,
+                     TypedMethodLookupHelper& addin) {
+    return defaultUpdate(keep, addin);
+  }
+
+  void mark(Context* context) const {
+    receiverType_.mark(context);
+    for (auto p : scopes_) {
+      context->markPointer(p);
+    }
+  }
+
+  void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
+
+  /// \cond DO_NOT_DOCUMENT
+  DECLARE_DUMP;
+  /// \endcond DO_NOT_DOCUMENT
+};
+
+struct ReceiverScopeTypedHelper final : public ReceiverScopeHelper {
+ private:
+  // TODO: these should be a map, to support nested functions
+  ID resolvingMethodId_;
+  types::QualifiedType resolvingMethodReceiverType_;
+ public:
+  ReceiverScopeTypedHelper() { }
+
+  ReceiverScopeTypedHelper(ID resolvingMethodId,
+                           types::QualifiedType resolvingMethodReceiverType)
+    : resolvingMethodId_(std::move(resolvingMethodId)),
+      resolvingMethodReceiverType_(std::move(resolvingMethodReceiverType))
+  {
+  }
+
+  const TypedMethodLookupHelper*
+  methodLookupForType(Context* context, types::QualifiedType type) const;
+
+  const TypedMethodLookupHelper*
+  methodLookupForMethodId(Context* context, const ID& methodId) const override;
+};
 
 
 } // end namespace resolution
@@ -1744,51 +3165,36 @@ template<> struct stringify<resolution::TypedFnSignature::WhereClauseResult>
 
 namespace std {
 
-template<> struct hash<chpl::resolution::DefaultsPolicy>
-{
-  size_t operator()(const chpl::resolution::DefaultsPolicy& key) const {
-    return key;
+// Stamp out a bunch of 'std::hash' specializations with simple bodies.
+// The first arg is the type (without the namespace, and the second arg
+// is the expression to return.
+#define CHPL_DEFINE_STD_HASH_(T__, expr__) \
+  template<> struct hash<chpl::resolution::T__> { \
+    size_t operator()(const chpl::resolution::T__& key) const { \
+      return (expr__); \
+    } \
   }
-};
 
-template<> struct hash<chpl::resolution::UntypedFnSignature::FormalDetail>
-{
-  size_t operator()(const chpl::resolution::UntypedFnSignature::FormalDetail& key) const {
-    return key.hash();
-  }
-};
-
-template<> struct hash<chpl::resolution::CallInfoActual>
-{
-  size_t operator()(const chpl::resolution::CallInfoActual& key) const {
-    return key.hash();
-  }
-};
-
-template<> struct hash<chpl::resolution::CallInfo>
-{
-  size_t operator()(const chpl::resolution::CallInfo& key) const {
-    return key.hash();
-  }
-};
-
-template<> struct hash<chpl::resolution::PoiInfo>
-{
-  size_t operator()(const chpl::resolution::PoiInfo& key) const {
-    return key.hash();
-  }
-};
-
-template<> struct hash<chpl::resolution::TypedFnSignature::WhereClauseResult>
-{
-  size_t operator()(const chpl::resolution::TypedFnSignature::WhereClauseResult& key) const {
-    return key;
-  }
-};
-
-
+CHPL_DEFINE_STD_HASH_(DefaultsPolicy, ((size_t) key));
+CHPL_DEFINE_STD_HASH_(UntypedFnSignature::FormalDetail, (key.hash()));
+CHPL_DEFINE_STD_HASH_(CallInfoActual, (key.hash()));
+CHPL_DEFINE_STD_HASH_(CallInfo, (key.hash()));
+CHPL_DEFINE_STD_HASH_(CandidatesAndForwardingInfo, (key.hash()));
+CHPL_DEFINE_STD_HASH_(PoiInfo, (key.hash()));
+CHPL_DEFINE_STD_HASH_(TypedFnSignature::WhereClauseResult, ((size_t) key));
+CHPL_DEFINE_STD_HASH_(CandidateFailureReason, ((size_t) key));
+CHPL_DEFINE_STD_HASH_(PassingFailureReason, ((size_t) key));
+CHPL_DEFINE_STD_HASH_(FormalActual, (key.hash()));
+CHPL_DEFINE_STD_HASH_(FormalActualMap, (key.hash()));
+CHPL_DEFINE_STD_HASH_(OuterVariables, (key.hash()));
+CHPL_DEFINE_STD_HASH_(ApplicabilityResult, (key.hash()));
+CHPL_DEFINE_STD_HASH_(ResolvedFunction, (key.hash()));
+CHPL_DEFINE_STD_HASH_(MostSpecificCandidate, (key.hash()));
+CHPL_DEFINE_STD_HASH_(MostSpecificCandidates, (key.hash()));
+CHPL_DEFINE_STD_HASH_(CallResolutionResult, (key.hash()));
+CHPL_DEFINE_STD_HASH_(TheseResolutionResult, (key.hash()));
+#undef CHPL_DEFINE_STD_HASH_
 
 } // end namespace std
-
 
 #endif

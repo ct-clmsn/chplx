@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -32,9 +32,19 @@ namespace uast {
   That is, it is a "real" number. Examples include ``0.0``, and `3e24`.
  */
 class RealLiteral final : public NumericLiteral<double, types::RealParam> {
+ friend class AstNode;
+
  private:
   RealLiteral(const types::RealParam* value, UniqueString text)
     : NumericLiteral(asttags::RealLiteral, value, text)
+  { }
+
+  void serializeInner(Serializer& ser) const override {
+    numericLiteralSerializeInner(ser);
+  }
+
+  explicit RealLiteral(Deserializer& des)
+    : NumericLiteral(asttags::RealLiteral, des)
   { }
 
   // contentsMatchInner / markUniqueStringsInner are in NumericLiteral

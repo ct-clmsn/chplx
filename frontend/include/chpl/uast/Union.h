@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -43,25 +43,37 @@ namespace uast {
   The union itself (myUnion) is represented by a Union AST node.
  */
 class Union final : public AggregateDecl {
+ friend class AstNode;
+
  private:
-  Union(AstList children, int attributesChildNum, Decl::Visibility vis,
+  Union(AstList children, int attributeGroupChildNum, Decl::Visibility vis,
         Decl::Linkage linkage,
         int linkageNameChildNum,
         UniqueString name,
+        int inheritExprChildNum,
+        int numInheritExprs,
         int elementsChildNum,
         int numElements)
     : AggregateDecl(asttags::Union, std::move(children),
-                    attributesChildNum,
+                    attributeGroupChildNum,
                     vis,
                     linkage,
                     linkageNameChildNum,
                     name,
+                    inheritExprChildNum,
+                    numInheritExprs,
                     elementsChildNum,
                     numElements) {
 
     // Cannot export unions right now, this should be a parse error.
     CHPL_ASSERT(linkage != Decl::EXPORT);
   }
+
+  void serializeInner(Serializer& ser) const override {
+    aggregateDeclSerializeInner(ser);
+  }
+
+  explicit Union(Deserializer& des) : AggregateDecl(asttags::Union, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     const Union* lhs = this;
@@ -77,11 +89,12 @@ class Union final : public AggregateDecl {
   ~Union() override = default;
 
   static owned<Union> build(Builder* builder, Location loc,
-                            owned<Attributes> attributes,
+                            owned<AttributeGroup> attributeGroup,
                             Decl::Visibility vis,
                             Decl::Linkage linkage,
                             owned<AstNode> linkageName,
                             UniqueString name,
+                            AstList interfaceExprs,
                             AstList contents);
 };
 

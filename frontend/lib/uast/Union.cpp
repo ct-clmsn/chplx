@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -26,21 +26,24 @@ namespace uast {
 
 
 owned<Union> Union::build(Builder* builder, Location loc,
-                          owned<Attributes> attributes,
+                          owned<AttributeGroup> attributeGroup,
                           Decl::Visibility vis,
                           Decl::Linkage linkage,
                           owned<AstNode> linkageName,
                           UniqueString name,
+                          AstList interfaceExprs,
                           AstList contents) {
   AstList lst;
-  int attributesChildNum = -1;
-  int elementsChildNum = -1;
+  int attributeGroupChildNum = NO_CHILD;
+  int elementsChildNum = NO_CHILD;
+  int interfaceExprChildNum = NO_CHILD;
+  int numInterfaceExprs = 0;
   int numElements = contents.size();
-  int linkageNameChildNum = -1;
+  int linkageNameChildNum = NO_CHILD;
 
-  if (attributes.get()) {
-    attributesChildNum = lst.size();
-    lst.push_back(std::move(attributes));
+  if (attributeGroup.get()) {
+    attributeGroupChildNum = lst.size();
+    lst.push_back(std::move(attributeGroup));
   }
 
   if (linkageName.get()) {
@@ -48,15 +51,25 @@ owned<Union> Union::build(Builder* builder, Location loc,
     lst.push_back(std::move(linkageName));
   }
 
+  numInterfaceExprs = interfaceExprs.size();
+  if (numInterfaceExprs > 0) {
+    interfaceExprChildNum = lst.size();
+    for (auto& interfaceExpr : interfaceExprs) {
+      lst.push_back(std::move(interfaceExpr));
+    }
+  }
+
   elementsChildNum = lst.size();
   for (auto& ast : contents) {
     lst.push_back(std::move(ast));
   }
 
-  Union* ret = new Union(std::move(lst), attributesChildNum, vis,
+  Union* ret = new Union(std::move(lst), attributeGroupChildNum, vis,
                          linkage,
                          linkageNameChildNum,
                          name,
+                         interfaceExprChildNum,
+                         numInterfaceExprs,
                          elementsChildNum,
                          numElements);
   builder->noteLocation(ret, loc);

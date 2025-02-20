@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -43,11 +43,22 @@ namespace uast {
 
 */
 class Label final : public AstNode {
+ friend class AstNode;
+
  private:
   Label(AstList children, UniqueString name)
     : AstNode(asttags::Label, std::move(children)),
       name_(name) {
     CHPL_ASSERT(numChildren() == 1);
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    ser.write(name_);
+  }
+
+  explicit Label(Deserializer& des)
+    : AstNode(asttags::Label, des) {
+    name_ = des.read<UniqueString>();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -96,7 +107,6 @@ class Label final : public AstNode {
   UniqueString name() const {
     return name_;
   }
-
 };
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2020-2024 Hewlett Packard Enterprise Development LP
  * Copyright 2004-2019 Cray Inc.
  * Other additional copyright holders may be indicated within.
  *
@@ -20,7 +20,7 @@
 
 #include <string>
 
-extern char* yychpl_get_text(yyscan_t scanner);
+extern const char* yychpl_get_text(yyscan_t scanner);
 
 namespace {
 enum ErrorKind {

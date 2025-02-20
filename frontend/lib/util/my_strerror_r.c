@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -24,10 +24,6 @@
 #include <string.h>
 
 #include "my_strerror_r.h"
-
-#if defined(_MSC_VER)
-#define strerror_r(errno,buf,len) strerror_s(buf,len,errno)
-#endif
 
 int my_strerror_r(int errnum, char* strerrbuf, size_t buflen) {
   return strerror_r(errnum, strerrbuf, buflen);

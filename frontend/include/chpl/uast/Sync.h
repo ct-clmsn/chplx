@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -51,6 +51,8 @@ namespace uast {
  */
 
 class Sync final : public SimpleBlockLike {
+ friend class AstNode;
+
  private:
   Sync(AstList stmts, BlockStyle blockStyle, int bodyChildNum,
        int numBodyStmts)
@@ -59,6 +61,12 @@ class Sync final : public SimpleBlockLike {
                       numBodyStmts) {
     CHPL_ASSERT(bodyChildNum_ >= 0);
   }
+
+  void serializeInner(Serializer& ser) const override {
+    simpleBlockLikeSerializeInner(ser);
+  }
+
+  explicit Sync(Deserializer& des) : SimpleBlockLike(asttags::Sync, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     return simpleBlockLikeContentsMatchInner(other);

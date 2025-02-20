@@ -18,9 +18,6 @@ set(CHPLX_VERSION
     ${CHPLX_MAJOR_VERSION}.${CHPLX_MINOR_VERSION}.${CHPLX_PATCH_VERSION}.${CHPLX_BUILD_VERSION}
 )
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS_INIT "-std=c++20")
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE
       "Debug"
@@ -33,11 +30,11 @@ endif()
 
 project(chplx VERSION ${CHPLX_VERSION})
 
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_definitions(
-  $<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>
-)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 include(CHPLX_Utils)
@@ -73,6 +70,22 @@ chplx_option(
   OFF
   CATEGORY "Debugging"
   ADVANCED
+)
+
+set(
+  CHPLX_WITH_FETCH_FMT
+  ON
+  CACHE
+  BOOL
+  "Fetch FMT"
+)
+
+set(
+  CHPLX_WITH_FETCH_HPX
+  ON
+  CACHE
+  BOOL
+  "Fetch HPX"
 )
 
 add_chplx_pseudo_target(tests)

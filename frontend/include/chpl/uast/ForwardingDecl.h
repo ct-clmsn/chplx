@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -55,18 +55,26 @@ namespace uast {
 */
 
 class ForwardingDecl final : public Decl {
+ friend class AstNode;
 
-
-private:
+ private:
   ForwardingDecl(AstList children, Decl::Visibility visibility,
-                 int attributesChildNum)
-    : Decl(asttags::ForwardingDecl, std::move(children), attributesChildNum,
+                 int attributeGroupChildNum)
+    : Decl(asttags::ForwardingDecl, std::move(children), attributeGroupChildNum,
                 visibility,
                 Decl::DEFAULT_LINKAGE,
-                /*linkageNameChildNum*/ -1
+                /*linkageNameChildNum*/ NO_CHILD
                 ) {
 
     CHPL_ASSERT(children_.size() >= 0 && children_.size() <= 2);
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    declSerializeInner(ser);
+  }
+
+  explicit ForwardingDecl(Deserializer& des)
+    : Decl(asttags::ForwardingDecl, des) {
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -80,7 +88,7 @@ private:
   }
 
   int exprChildNum() const {
-    return this->attributesChildNum() + 1;
+    return this->attributeGroupChildNum() + 1;
   }
 
  public:
@@ -88,11 +96,11 @@ private:
 
 
   static owned<ForwardingDecl> build(Builder* builder, Location loc,
-                                     owned<Attributes> attributes,
+                                     owned<AttributeGroup> attributeGroup,
                                      owned<AstNode> expr);
 
   static owned<ForwardingDecl> build(Builder* builder, Location loc,
-                                     owned<Attributes> attributes,
+                                     owned<AttributeGroup> attributeGroup,
                                      owned<AstNode> expr,
                                      Decl::Visibility visibility);
 

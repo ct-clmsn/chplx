@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -43,22 +43,33 @@ namespace uast {
   The record itself (myRecord) is represented by a Record AST node.
  */
 class Record final : public AggregateDecl {
+ friend class AstNode;
+
  private:
-  Record(AstList children, int attributesChildNum, Decl::Visibility vis,
+  Record(AstList children, int attributeGroupChildNum, Decl::Visibility vis,
          Decl::Linkage linkage,
          int linkageNameChildNum,
          UniqueString name,
+         int inheritExprChildNum,
+         int numInheritExprs,
          int elementsChildNum,
          int numElements)
     : AggregateDecl(asttags::Record, std::move(children),
-                    attributesChildNum,
+                    attributeGroupChildNum,
                     vis,
                     linkage,
                     linkageNameChildNum,
                     name,
+                    inheritExprChildNum,
+                    numInheritExprs,
                     elementsChildNum,
-                    numElements) {
+                    numElements) {}
+
+  void serializeInner(Serializer& ser) const override {
+    aggregateDeclSerializeInner(ser);
   }
+
+  explicit Record(Deserializer& des) : AggregateDecl(asttags::Record, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     const Record* lhs = this;
@@ -70,15 +81,18 @@ class Record final : public AggregateDecl {
     aggregateDeclMarkUniqueStringsInner(context);
   }
 
+  std::string dumpChildLabelInner(int i) const override;
+
  public:
   ~Record() override = default;
 
   static owned<Record> build(Builder* builder, Location loc,
-                             owned<Attributes> attributes,
+                             owned<AttributeGroup> attributeGroup,
                              Decl::Visibility vis,
                              Decl::Linkage linkage,
                              owned<AstNode> linkageName,
                              UniqueString name,
+                             AstList inheritExprs,
                              AstList contents);
 };
 

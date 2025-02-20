@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -33,16 +33,32 @@ namespace uast {
   This abstract class represents some sort of loop.
  */
 class Loop: public AstNode {
+ friend class AstNode;
+
  protected:
+  BlockStyle blockStyle_;
+  int loopBodyChildNum_;
+
   Loop(asttags::AstTag tag, AstList children, BlockStyle blockStyle,
-       int loopBodyChildNum)
-    : AstNode(tag, std::move(children)),
+       int loopBodyChildNum, int attributeGroupChildNum)
+    : AstNode(tag, std::move(children), attributeGroupChildNum),
       blockStyle_(blockStyle),
       loopBodyChildNum_(loopBodyChildNum) {
 
     CHPL_ASSERT(0 <= loopBodyChildNum_ &&
            loopBodyChildNum_ < (int) children_.size());
     CHPL_ASSERT(children_[loopBodyChildNum_]->isBlock());
+  }
+
+  void loopSerializeInner(Serializer& ser) const {
+    ser.write(blockStyle_);
+    ser.writeVInt(loopBodyChildNum_);
+  }
+
+  Loop(AstTag tag, Deserializer& des)
+    : AstNode(tag, des) {
+    blockStyle_ = des.read<BlockStyle>();
+    loopBodyChildNum_ = des.readVInt();
   }
 
   bool loopContentsMatchInner(const Loop* other) const {
@@ -62,9 +78,6 @@ class Loop: public AstNode {
   }
 
   virtual std::string dumpChildLabelInner(int i) const override;
-
-  BlockStyle blockStyle_;
-  int loopBodyChildNum_;
 
  public:
   virtual ~Loop() override = 0; // this is an abstract base class

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -43,6 +43,8 @@ namespace uast {
 
  */
 class PrimCall final : public Call {
+ friend class AstNode;
+
  private:
   // which primitive
   PrimitiveTag prim_;
@@ -51,6 +53,16 @@ class PrimCall final : public Call {
     : Call(asttags::PrimCall, std::move(children),
            /* hasCalledExpression */ false),
       prim_(prim) {
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    callSerializeInner(ser);
+    ser.write(prim_);
+  }
+
+  explicit PrimCall(Deserializer& des)
+    : Call(asttags::PrimCall, des) {
+    prim_ = des.read<PrimitiveTag>();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {

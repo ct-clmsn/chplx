@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -42,6 +42,15 @@ class CommentID {
 
   /** Return the index of the comment id */
   int index() const { return index_; }
+
+  void serialize(Serializer& ser) const {
+    ser.writeVInt(index_);
+  }
+
+  static CommentID deserialize(Deserializer& des) {
+    int val = des.readVInt();
+    return CommentID(val);
+  }
 };
 
 } // end namespace chpl

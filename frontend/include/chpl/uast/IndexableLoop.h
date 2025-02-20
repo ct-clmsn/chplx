@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -33,22 +33,46 @@ namespace uast {
   This abstract class represents an indexable loop.
  */
 class IndexableLoop : public Loop {
+ friend class AstNode;
+
  protected:
+  int8_t indexChildNum_;
+  int8_t iterandChildNum_;
+  int8_t withClauseChildNum_;
+  bool isExpressionLevel_;
+
   IndexableLoop(AstTag tag, AstList children,
                 int8_t indexChildNum,
                 int8_t iterandChildNum,
                 int8_t withClauseChildNum,
                 BlockStyle blockStyle,
                 int loopBodyChildNum,
-                bool isExpressionLevel)
+                bool isExpressionLevel,
+                int attributeGroupChildNum)
     : Loop(tag, std::move(children), blockStyle,
-           loopBodyChildNum),
+           loopBodyChildNum, attributeGroupChildNum),
       indexChildNum_(indexChildNum),
       iterandChildNum_(iterandChildNum),
       withClauseChildNum_(withClauseChildNum),
       isExpressionLevel_(isExpressionLevel) {
 
     CHPL_ASSERT(iterandChildNum >= 0);
+  }
+
+  void indexableLoopSerializeInner(Serializer& ser) const {
+    loopSerializeInner(ser);
+    ser.write(indexChildNum_);
+    ser.write(iterandChildNum_);
+    ser.write(withClauseChildNum_);
+    ser.write(isExpressionLevel_);
+  }
+
+  explicit IndexableLoop(AstTag tag, Deserializer& des)
+    : Loop(tag, des) {
+    indexChildNum_ = des.read<int8_t>();
+    iterandChildNum_ = des.read<int8_t>();
+    withClauseChildNum_ = des.read<int8_t>();
+    isExpressionLevel_ = des.read<bool>();
   }
 
   bool indexableLoopContentsMatchInner(const IndexableLoop* other) const {
@@ -79,11 +103,6 @@ class IndexableLoop : public Loop {
 
   virtual void dumpFieldsInner(const DumpSettings& s) const override;
   virtual std::string dumpChildLabelInner(int i) const override;
-
-  int8_t indexChildNum_;
-  int8_t iterandChildNum_;
-  int8_t withClauseChildNum_;
-  bool isExpressionLevel_;
 
  public:
   virtual ~IndexableLoop() override = 0; // this is an abstract base class
@@ -125,7 +144,6 @@ class IndexableLoop : public Loop {
   bool isExpressionLevel() const {
     return isExpressionLevel_;
   }
-
 };
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -20,13 +20,86 @@
 #include "test-common.h"
 
 #include "chpl/parsing/parsing-queries.h"
+#include "chpl/resolution/scope-queries.h"
+#include "chpl/uast/post-parse-checks.h"
 
 using namespace chpl;
 
 const uast::BuilderResult&
 parseAndReportErrors(Context* context, UniqueString path) {
-  auto& ret = parsing::parseFileToBuilderResult(context, path, {});
-  for (auto e : ret.errors()) context->report(e);
+  auto& ret = parsing::parseFileToBuilderResultAndCheck(context, path, {});
   return ret;
 }
+const uast::BuilderResult&
+parseAndReportErrors(Context* context, const char* path) {
+  return parseAndReportErrors(context, UniqueString::get(context, path));
+}
 
+uast::BuilderResult
+parseStringAndReportErrors(parsing::Parser* parser, const char* filename,
+                           const char* content) {
+  auto path = UniqueString::get(parser->context(), filename);
+  auto result = parser->parseString(filename, content);
+  uast::checkBuilderResult(parser->context(), path, result);
+  return result;
+}
+
+struct NamedCollector {
+  std::vector<const uast::AstNode*> nodes;
+  std::string name_;
+  public:
+    NamedCollector(std::string name) : name_(name) { }
+
+    bool enter(const uast::AstNode* node) {
+      return true;
+    }
+    void exit(const uast::AstNode* node) { }
+
+    bool enter(const uast::NamedDecl* node) {
+      if (node->name() == name_) {
+        nodes.push_back(node);
+      }
+      return true;
+    }
+    void exit(const uast::NamedDecl* node) {
+    }
+
+    const uast::AstNode* only() {
+      if (nodes.size() == 1) {
+        return nodes.front();
+      } else {
+        return nullptr;
+      }
+    }
+};
+
+const uast::AstNode* findOnlyNamed(const uast::Module* mod, std::string name) {
+  NamedCollector col(name);
+  mod->traverse(col);
+  return col.only();
+}
+
+static std::unique_ptr<Context> _reusedContext;
+
+chpl::Context* buildStdContext() {
+  if (_reusedContext.get() == nullptr) {
+    std::string chpl_home;
+    if (const char* chpl_home_env = getenv("CHPL_HOME")) {
+      chpl_home = chpl_home_env;
+    } else {
+      printf("CHPL_HOME must be set");
+      exit(1);
+    }
+    Context::Configuration config;
+    config.chplHome = chpl_home;
+    Context* context = new Context(config);
+
+    _reusedContext.reset(context);
+  } else {
+    _reusedContext->advanceToNextRevision(false);
+  }
+
+  parsing::setupModuleSearchPaths(_reusedContext.get(), false, false, {}, {});
+
+  return _reusedContext.get();
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -20,7 +20,7 @@
 #ifndef CHPL_UAST_DECL_H
 #define CHPL_UAST_DECL_H
 
-#include "chpl/uast/Attributes.h"
+#include "chpl/uast/AttributeGroup.h"
 #include "chpl/uast/AstNode.h"
 
 namespace chpl {
@@ -33,6 +33,8 @@ namespace uast {
   however these declarations might be contained in MultiDecl or TupleDecl.
  */
 class Decl : public AstNode {
+ friend class AstNode;
+
  public:
   enum Visibility {
     DEFAULT_VISIBILITY,
@@ -47,67 +49,68 @@ class Decl : public AstNode {
   };
 
  private:
-
-  // Use -1 to indicate that there is no such child.
-  int attributesChildNum_;
   Visibility visibility_;
   Linkage linkage_;
   int linkageNameChildNum_;
+  int destinationChildNum_;
 
  protected:
-  Decl(AstTag tag, int attributesChildNum, Visibility visibility,
+  Decl(AstTag tag, Visibility visibility,
        Linkage linkage)
     : AstNode(tag),
-      attributesChildNum_(attributesChildNum),
       visibility_(visibility),
       linkage_(linkage),
-      linkageNameChildNum_(-1) {
+      linkageNameChildNum_(NO_CHILD),
+      destinationChildNum_(NO_CHILD) {
   }
 
-  Decl(AstTag tag, AstList children, int attributesChildNum,
+  Decl(AstTag tag, AstList children, int attributeGroupChildNum,
        Visibility visibility,
        Linkage linkage,
        int linkageNameChildNum)
-    : AstNode(tag, std::move(children)),
-      attributesChildNum_(attributesChildNum),
+    : AstNode(tag, std::move(children), attributeGroupChildNum),
       visibility_(visibility),
       linkage_(linkage),
-      linkageNameChildNum_(linkageNameChildNum) {
+      linkageNameChildNum_(linkageNameChildNum),
+      destinationChildNum_(NO_CHILD) {
 
 
     if (linkageNameChildNum_ >= 0) {
       CHPL_ASSERT(linkage_ != DEFAULT_LINKAGE);
     }
 
-    CHPL_ASSERT(-1 <= attributesChildNum_ &&
-                 attributesChildNum_ < (ssize_t)children_.size());
-
-    if (attributesChildNum_ >= 0) {
-      CHPL_ASSERT(child(attributesChildNum_)->isAttributes());
-    }
-
-    CHPL_ASSERT(-1 <= linkageNameChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= linkageNameChildNum_ &&
                  linkageNameChildNum_ < (ssize_t)children_.size());
-    CHPL_ASSERT(-1 <= linkageNameChildNum_ &&
-                 linkageNameChildNum_ < (ssize_t)children_.size());
+    CHPL_ASSERT(NO_CHILD <= destinationChildNum_ &&
+                 destinationChildNum_ < (ssize_t)children_.size());
+  }
+
+  void declSerializeInner(Serializer& ser) const {
+    ser.write(visibility_);
+    ser.write(linkage_);
+    ser.writeVInt(linkageNameChildNum_);
+    ser.writeVInt(destinationChildNum_);
+  }
+
+  Decl(AstTag tag, Deserializer& des)
+    : AstNode(tag, des) {
+      visibility_ = des.read<Decl::Visibility>();
+      linkage_ = des.read<Decl::Linkage>();
+      linkageNameChildNum_ = des.readVInt();
+      destinationChildNum_ = des.readVInt();
   }
 
   bool declContentsMatchInner(const Decl* other) const {
     return this->visibility_ == other->visibility_ &&
            this->linkage_ == other->linkage_ &&
            this->linkageNameChildNum_ == other->linkageNameChildNum_ &&
-           this->attributesChildNum_ == other->attributesChildNum_;
+           this->destinationChildNum_ == other->destinationChildNum_;
   }
 
-  void declMarkUniqueStringsInner(Context* context) const {
-  }
+  void declMarkUniqueStringsInner(Context* context) const { }
 
   void dumpFieldsInner(const DumpSettings& s) const override;
   std::string dumpChildLabelInner(int i) const override;
-
-  int attributesChildNum() const {
-    return attributesChildNum_;
-  }
 
  public:
   virtual ~Decl() = 0; // this is an abstract base class
@@ -143,14 +146,22 @@ class Decl : public AstNode {
   }
 
   /**
-    Return the attributes associated with this declaration, or nullptr
-    if none exist.
+    Returns the destination expression, like 'loc' from 'on loc var x = 1'.
   */
-  const Attributes* attributes() const {
-    if (attributesChildNum_ < 0) return nullptr;
-    auto ret = child(attributesChildNum_);
-    CHPL_ASSERT(ret->isAttributes());
-    return (const Attributes*)ret;
+  const AstNode* destination() const {
+    if (destinationChildNum_ < 0) return nullptr;
+    return child(destinationChildNum_);
+  }
+
+  /**
+    See also AstNode::attachAttributeGroup. Add a destination node
+    (like 'loc' in 'on loc var x = 1') to this AST after it was initially
+    built.
+   */
+  void attachDestination(owned<AstNode> destination) {
+    CHPL_ASSERT(destinationChildNum_ == NO_CHILD);
+    destinationChildNum_ = children_.size();
+    children_.push_back(std::move(destination));
   }
 
   /**
@@ -165,7 +176,12 @@ class Decl : public AstNode {
 };
 
 
+
 } // end namespace uast
+
+DECLARE_SERDE_ENUM(uast::Decl::Visibility, uint8_t);
+DECLARE_SERDE_ENUM(uast::Decl::Linkage, uint8_t);
+
 } // end namespace chpl
 
 namespace std {

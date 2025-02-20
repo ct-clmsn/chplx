@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -32,9 +32,20 @@ namespace uast {
   This class represents a boolean literal.
  */
 class BoolLiteral final : public Literal {
+ friend class AstNode;
+
  private:
   explicit BoolLiteral(const types::BoolParam* value)
     : Literal(asttags::BoolLiteral, value) {
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    literalSerializeInner(ser);
+  }
+
+  explicit BoolLiteral(Deserializer& des)
+    : Literal(asttags::BoolLiteral, des) {
+    assert(value_->isBoolParam());
   }
 
   bool contentsMatchInner(const AstNode* other) const override {

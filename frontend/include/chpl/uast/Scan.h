@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -41,6 +41,8 @@ namespace uast {
   The scan expression is '+ scan A'.
 */
 class Scan final : public Call {
+ friend class AstNode;
+
  private:
   static const int opChildNum_ = 0;
   static const int iterandChildNum_ = 1;
@@ -49,6 +51,13 @@ class Scan final : public Call {
     : Call(asttags::Scan, std::move(children), false) {
     CHPL_ASSERT(numChildren() == 2);
   }
+
+  void serializeInner(Serializer& ser) const override {
+    callSerializeInner(ser);
+  }
+
+  explicit Scan(Deserializer& des)
+    : Call(asttags::Scan, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     const Scan* rhs = other->toScan();
@@ -84,7 +93,6 @@ class Scan final : public Call {
   const AstNode* iterand() const {
     return this->child(iterandChildNum_);
   }
-
 };
 
 

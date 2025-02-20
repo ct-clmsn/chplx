@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -20,9 +20,39 @@
 #ifndef CHPL_UTIL_MEMORY_H
 #define CHPL_UTIL_MEMORY_H
 
+#include "llvm/Config/llvm-config.h"
+
 #include <memory>
+#if LLVM_VERSION_MAJOR >= 16
+#include <optional>
+#else
+#include "llvm/ADT/Optional.h"
+#endif
 
 namespace chpl {
+
+/**
+ optional<T> is just a synonym for 'std::optional<T>'.
+
+ It allows for easy migration in the event that we switch
+ underlying optional types.
+ */
+template<typename T>
+#if LLVM_VERSION_MAJOR >= 16
+using optional = std::optional<T>;
+#else
+using optional = llvm::Optional<T>;
+#endif
+
+
+/**
+  This is the "empty" value for the above optional<T> type.
+ */
+#if LLVM_VERSION_MAJOR >= 16
+static const auto empty = std::nullopt;
+#else
+static const auto empty = llvm::None;
+#endif
 
 /**
  owned<T> is just a synonym for 'std::unique_ptr<T>'.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -31,10 +31,19 @@ namespace uast {
   This class represents some missing AST due to an error.
  */
 class ErroneousExpression final : public AstNode {
+ friend class AstNode;
+
  private:
   ErroneousExpression()
     : AstNode(asttags::ErroneousExpression) {
   }
+
+  void serializeInner(Serializer& ser) const override { }
+
+  explicit ErroneousExpression(Deserializer& des)
+    : AstNode(asttags::ErroneousExpression, des) { }
+
+ private:
   bool contentsMatchInner(const AstNode* other) const override {
     return true;
   }

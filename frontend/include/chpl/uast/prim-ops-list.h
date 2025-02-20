@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -39,6 +39,15 @@
 
 PRIMITIVE_G(UNKNOWN, "")
 
+PRIMITIVE_R(INNERMOST_CONTEXT, "innermost context")
+PRIMITIVE_R(OUTER_CONTEXT, "outer context")
+PRIMITIVE_R(HOIST_TO_CONTEXT, "hoist to context")
+
+PRIMITIVE_R(CREATE_THUNK, "create thunk")
+PRIMITIVE_R(THUNK_RESULT, "thunk result")
+PRIMITIVE_R(FORCE_THUNK, "force thunk")
+PRIMITIVE_R(THUNK_RESULT_TYPE, "thunk result type")
+
 PRIMITIVE_R(ACTUALS_LIST, "actuals list")
 PRIMITIVE_G(NOOP, "noop")
 PRIMITIVE_G(MOVE, "move")
@@ -49,6 +58,9 @@ PRIMITIVE_R(INIT_FIELD, "init field")
 PRIMITIVE_R(INIT_VAR, "init var")
 PRIMITIVE_R(INIT_VAR_SPLIT_DECL, "init var split decl")
 PRIMITIVE_R(INIT_VAR_SPLIT_INIT, "init var split init")
+PRIMITIVE_R(SPLIT_INIT_UPDATE_TYPE, "split init update type")
+PRIMITIVE_R(INIT_REF_DECL, "init ref decl")
+PRIMITIVE_R(INIT_DONE, "init done")
 
 PRIMITIVE_G(REF_TO_STRING, "ref to string")
 PRIMITIVE_G(RETURN, "return")
@@ -68,6 +80,7 @@ PRIMITIVE_G(SUBTRACT, "-")
 PRIMITIVE_G(MULT, "*")
 PRIMITIVE_G(DIV, "/")
 PRIMITIVE_G(MOD, "%")
+PRIMITIVE_G(FMA, "fma")
 PRIMITIVE_G(LSH, "<<")
 PRIMITIVE_G(RSH, ">>")
 PRIMITIVE_G(EQUAL, "==")
@@ -102,6 +115,9 @@ PRIMITIVE_R(REDUCE_ASSIGN, "reduce=")
 PRIMITIVE_G(MIN, "_min")
 PRIMITIVE_G(MAX, "_max")
 
+PRIMITIVE_G(ABS, "abs")
+PRIMITIVE_G(SQRT, "sqrt")
+
 PRIMITIVE_G(SETCID, "setcid")
 PRIMITIVE_G(TESTCID, "testcid")
 PRIMITIVE_G(GETCID, "getcid")
@@ -114,6 +130,7 @@ PRIMITIVE_G(CHECK_NIL, "_check_nil")
 PRIMITIVE_R(IF_VAR, "if var")
 
 PRIMITIVE_R(NEW, "new")
+PRIMITIVE_R(NEW_WITH_ALLOCATOR, "new with allocator")
 
 PRIMITIVE_G(GET_REAL, "complex_get_real")
 PRIMITIVE_G(GET_IMAG, "complex_get_imag")
@@ -121,6 +138,12 @@ PRIMITIVE_G(GET_IMAG, "complex_get_imag")
 PRIMITIVE_R(QUERY, "query")
 PRIMITIVE_R(QUERY_PARAM_FIELD, "query param field")
 PRIMITIVE_R(QUERY_TYPE_FIELD, "query type field")
+
+PRIMITIVE_R(STATIC_DOMAIN_TYPE, "static domain type")
+
+PRIMITIVE_R(STATIC_FUNCTION_VAR, "static function var")
+PRIMITIVE_R(STATIC_FUNCTION_VAR_VALIDATE_TYPE, "static function validate type")
+PRIMITIVE_R(STATIC_FUNCTION_VAR_WRAPPER, "static function var wrapper")
 
 PRIMITIVE_G(ADDR_OF, "addr of")
 PRIMITIVE_G(DEREF, "deref")
@@ -135,7 +158,6 @@ PRIMITIVE_G(GET_DYNAMIC_END_COUNT, "get dynamic end count")
 PRIMITIVE_G(SET_DYNAMIC_END_COUNT, "set dynamic end count")
 
 PRIMITIVE_G(GPU_KERNEL_LAUNCH, "gpu kernel launch")
-PRIMITIVE_G(GPU_KERNEL_LAUNCH_FLAT, "gpu kernel launch flat")
 PRIMITIVE_G(GPU_THREADIDX_X, "gpu threadIdx x")
 PRIMITIVE_G(GPU_THREADIDX_Y, "gpu threadIdx y")
 PRIMITIVE_G(GPU_THREADIDX_Z, "gpu threadIdx z")
@@ -151,7 +173,19 @@ PRIMITIVE_G(GPU_GRIDDIM_Z, "gpu gridDim z")
 PRIMITIVE_G(GPU_ALLOC_SHARED, "gpu allocShared")
 PRIMITIVE_G(GPU_SYNC_THREADS, "gpu syncThreads")
 PRIMITIVE_R(GPU_SET_BLOCKSIZE, "gpu set blockSize")
+PRIMITIVE_R(GPU_SET_ITERS_PER_THREAD, "gpu set itersPerThread")
 PRIMITIVE_G(ASSERT_ON_GPU, "chpl_assert_on_gpu")
+PRIMITIVE_R(ASSERT_GPU_ELIGIBLE, "assert gpu eligible")
+PRIMITIVE_R(GPU_ELIGIBLE, "gpu eligible")
+PRIMITIVE_G(GPU_INIT_KERNEL_CFG, "gpu init kernel cfg")
+PRIMITIVE_G(GPU_INIT_KERNEL_CFG_3D, "gpu init kernel cfg 3d")
+PRIMITIVE_G(GPU_DEINIT_KERNEL_CFG, "gpu deinit kernel cfg")
+PRIMITIVE_G(GPU_ARG, "gpu arg")
+PRIMITIVE_G(GPU_BLOCK_REDUCE, "gpu block reduce")
+PRIMITIVE_G(GPU_REDUCE_WRAPPER, "gpu reduce wrapper")
+PRIMITIVE_G(GPU_PID_OFFLOAD, "gpu pid offload")
+PRIMITIVE_R(GPU_ATTRIBUTE_BLOCK, "gpu attribute block")
+PRIMITIVE_R(GPU_PRIMITIVE_BLOCK, "gpu primitive block")
 
 PRIMITIVE_G(GET_SERIAL, "task_get_serial")
 PRIMITIVE_G(SET_SERIAL, "task_set_serial")
@@ -199,6 +233,8 @@ PRIMITIVE_G(ARRAY_SET_FIRST, "array_set_first")
 PRIMITIVE_R(MAYBE_LOCAL_THIS, "may be local access")
 PRIMITIVE_R(MAYBE_LOCAL_ARR_ELEM, "may be local array element")
 PRIMITIVE_R(MAYBE_AGGREGATE_ASSIGN, "may be aggregated assignment")
+
+PRIMITIVE_R(PROTO_SLICE_ASSIGN, "assign proto slices")
 
 PRIMITIVE_R(ERROR, "error")
 PRIMITIVE_R(WARNING, "warning")
@@ -249,8 +285,8 @@ PRIMITIVE_G(PRIVATE_BROADCAST, "_private_broadcast")
 
 PRIMITIVE_G(INT_ERROR, "_internal_error")
 
-PRIMITIVE_R(CAPTURE_FN_FOR_CHPL, "capture fn for chpl")
-PRIMITIVE_R(CAPTURE_FN_FOR_C, "capture fn for C")
+PRIMITIVE_R(CAPTURE_FN, "capture fn")
+PRIMITIVE_R(CAPTURE_FN_TO_CLASS, "capture fn to class")
 PRIMITIVE_R(CREATE_FN_TYPE, "create fn type")
 
 PRIMITIVE_G(STRING_COMPARE, "string_compare")
@@ -266,6 +302,7 @@ PRIMITIVE_G(STRING_COPY, "string_copy")
 PRIMITIVE_G(STRING_SELECT, "string_select")
 
 PRIMITIVE_G(CAST_TO_VOID_STAR, "cast_to_void_star")
+PRIMITIVE_G(CAST_TO_TYPE, "cast_to_type")
 
 PRIMITIVE_G(SLEEP, "sleep")
 PRIMITIVE_G(REAL_TO_INT, "real2int")
@@ -274,6 +311,7 @@ PRIMITIVE_G(CHPL_EXIT_ANY, "chpl_exit_any")
 
 PRIMITIVE_G(RT_ERROR, "chpl_error")
 PRIMITIVE_G(RT_WARNING, "chpl_warning")
+PRIMITIVE_G(RT_GPU_HALT, "chpl_gpu_halt")
 
 PRIMITIVE_G(NEW_PRIV_CLASS, "chpl_newPrivatizedClass")
 
@@ -292,6 +330,7 @@ PRIMITIVE_G(GET_SVEC_MEMBER_VALUE, "get svec member value")
 
 PRIMITIVE_G(VIRTUAL_METHOD_CALL, "virtual method call")
 
+PRIMITIVE_R(SIMPLE_TYPE_NAME, "simple type name")
 PRIMITIVE_R(NUM_FIELDS, "num fields")
 PRIMITIVE_R(FIELD_NUM_TO_NAME, "field num to name")
 PRIMITIVE_R(FIELD_NAME_TO_NUM, "field name to num")
@@ -306,6 +345,7 @@ PRIMITIVE_R(IS_CLASS_TYPE, "is class type")
 PRIMITIVE_R(IS_NILABLE_CLASS_TYPE, "is nilable class type")
 PRIMITIVE_R(IS_NON_NILABLE_CLASS_TYPE, "is non nilable class type")
 PRIMITIVE_R(IS_RECORD_TYPE, "is record type")
+PRIMITIVE_R(IS_FCF_TYPE, "is fcf type")
 PRIMITIVE_R(IS_UNION_TYPE, "is union type")
 PRIMITIVE_R(IS_EXTERN_UNION_TYPE, "is extern union type")
 PRIMITIVE_R(IS_ATOMIC_TYPE, "is atomic type")
@@ -334,6 +374,8 @@ PRIMITIVE_R(METHOD_CALL_RESOLVES, "method call resolves")
 PRIMITIVE_R(CALL_AND_FN_RESOLVES, "call and fn resolves")
 PRIMITIVE_R(METHOD_CALL_AND_FN_RESOLVES, "method call and fn resolves")
 PRIMITIVE_R(RESOLVES, "resolves")
+
+PRIMITIVE_R(IMPLEMENTS_INTERFACE, "implements interface")
 
 PRIMITIVE_G(START_RMEM_FENCE, "chpl_rmem_consist_acquire")
 PRIMITIVE_G(FINISH_RMEM_FENCE, "chpl_rmem_consist_release")
@@ -380,3 +422,14 @@ PRIMITIVE_R(VERSION_UPDATE, "version update")
 PRIMITIVE_R(VERSION_SHA, "version sha")
 
 PRIMITIVE_R(REF_DESERIALIZE, "deserialize for ref fields")
+
+PRIMITIVE_R(UINT32_AS_REAL32, "uint32 as real32")
+PRIMITIVE_R(UINT64_AS_REAL64, "uint64 as real64")
+PRIMITIVE_R(REAL32_AS_UINT32, "real32 as uint32")
+PRIMITIVE_R(REAL64_AS_UINT64, "real64 as uint64")
+
+PRIMITIVE_G(BREAKPOINT, "breakpoint")
+
+PRIMITIVE_G(CONST_ARG_HASH, "hash const arguments")
+PRIMITIVE_G(CHECK_CONST_ARG_HASH, "check hashes of const arguments")
+PRIMITIVE_R(TASK_PRIVATE_SVAR_CAPTURE, "task private svar capture")

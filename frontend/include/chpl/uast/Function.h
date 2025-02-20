@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -48,6 +48,8 @@ namespace uast {
   each of these is a Function.
  */
 class Function final : public NamedDecl {
+ friend class AstNode;
+
  public:
   enum Kind {
     PROC,
@@ -56,9 +58,17 @@ class Function final : public NamedDecl {
     LAMBDA
   };
 
+  enum IteratorKind {
+    SERIAL,
+    STANDALONE,
+    LEADER,
+    FOLLOWER,
+  };
+
   enum ReturnIntent {
     // Use Qualifier here for consistent enum values.
     DEFAULT_RETURN_INTENT   = (int) Qualifier::DEFAULT_INTENT,
+    OUT                     = (int) Qualifier::OUT,
     CONST                   = (int) Qualifier::CONST_VAR,
     CONST_REF               = (int) Qualifier::CONST_REF,
     REF                     = (int) Qualifier::REF,
@@ -91,7 +101,7 @@ class Function final : public NamedDecl {
   int bodyChildNum_;
 
   Function(AstList children,
-           int attributesChildNum,
+           int attributeGroupChildNum,
            Decl::Visibility vis,
            Decl::Linkage linkage,
            UniqueString name,
@@ -112,7 +122,7 @@ class Function final : public NamedDecl {
            int numLifetimeParts,
            int bodyChildNum)
     : NamedDecl(asttags::Function, std::move(children),
-                attributesChildNum,
+                attributeGroupChildNum,
                 vis,
                 linkage,
                 linkageNameChildNum,
@@ -133,17 +143,17 @@ class Function final : public NamedDecl {
       numLifetimeParts_(numLifetimeParts),
       bodyChildNum_(bodyChildNum) {
 
-    CHPL_ASSERT(-1 <= formalsChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= formalsChildNum_ &&
                  formalsChildNum_ < (ssize_t)children_.size());
-    CHPL_ASSERT(-1 <= thisFormalChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= thisFormalChildNum_ &&
                  thisFormalChildNum_ < (ssize_t)children_.size());
     CHPL_ASSERT(0 <= numFormals_ &&
                 numFormals_ <= (ssize_t)children_.size());
-    CHPL_ASSERT(-1 <= returnTypeChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= returnTypeChildNum_ &&
                  returnTypeChildNum_ < (ssize_t)children_.size());
-    CHPL_ASSERT(-1 <= whereChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= whereChildNum_ &&
                  whereChildNum_ < (ssize_t)children_.size());
-    CHPL_ASSERT(-1 <= lifetimeChildNum_ &&
+    CHPL_ASSERT(NO_CHILD <= lifetimeChildNum_ &&
                  lifetimeChildNum_ < (ssize_t)children_.size());
     CHPL_ASSERT(0 <= numLifetimeParts_ &&
                 numLifetimeParts_ <= (ssize_t)children_.size());
@@ -152,7 +162,7 @@ class Function final : public NamedDecl {
       CHPL_ASSERT(bodyChildNum_ < (ssize_t)children_.size());
       CHPL_ASSERT(children_[bodyChildNum_]->isBlock());
     } else {
-      CHPL_ASSERT(bodyChildNum_ == -1);
+      CHPL_ASSERT(bodyChildNum_ == NO_CHILD);
     }
 
     #ifndef NDEBUG
@@ -163,6 +173,46 @@ class Function final : public NamedDecl {
         CHPL_ASSERT(isAcceptableDecl);
       }
     #endif
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    namedDeclSerializeInner(ser);
+    ser.write(inline_);
+    ser.write(override_);
+    ser.write(kind_);
+    ser.write(returnIntent_);
+    ser.write(throws_);
+    ser.write(primaryMethod_);
+    ser.write(parenless_);
+
+    ser.writeVInt(formalsChildNum_);
+    ser.writeVInt(thisFormalChildNum_);
+    ser.writeVInt(numFormals_);
+    ser.writeVInt(returnTypeChildNum_);
+    ser.writeVInt(whereChildNum_);
+    ser.writeVInt(lifetimeChildNum_);
+    ser.writeVInt(numLifetimeParts_);
+    ser.writeVInt(bodyChildNum_);
+  }
+
+  explicit Function(Deserializer& des)
+    : NamedDecl(asttags::Function, des) {
+    inline_        = des.read<bool>();
+    override_      = des.read<bool>();
+    kind_          = des.read<Kind>();
+    returnIntent_  = des.read<ReturnIntent>();
+    throws_        = des.read<bool>();
+    primaryMethod_ = des.read<bool>();
+    parenless_     = des.read<bool>();
+
+    formalsChildNum_    = des.readVInt();
+    thisFormalChildNum_ = des.readVInt();
+    numFormals_         = des.readVInt();
+    returnTypeChildNum_ = des.readVInt();
+    whereChildNum_      = des.readVInt();
+    lifetimeChildNum_   = des.readVInt();
+    numLifetimeParts_   = des.readVInt();
+    bodyChildNum_       = des.readVInt();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -197,7 +247,7 @@ class Function final : public NamedDecl {
   ~Function() override = default;
 
   static owned<Function> build(Builder* builder, Location loc,
-                               owned<Attributes> attributes,
+                               owned<AttributeGroup> attributeGroup,
                                Decl::Visibility vis,
                                Decl::Linkage linkage,
                                owned<AstNode> linkageName,
@@ -225,7 +275,7 @@ class Function final : public NamedDecl {
   bool isParenless() const { return parenless_; }
 
   bool isAnonymous() const {
-    auto ret = (kind() == LAMBDA || name() == "proc");
+    bool ret = name().isEmpty() || kind() == LAMBDA;
     return ret;
   }
 
@@ -385,9 +435,14 @@ class Function final : public NamedDecl {
   static const char* returnIntentToString(ReturnIntent intent);
 
   static const char* kindToString(Kind kind);
+
+  static const char* iteratorKindToString(IteratorKind kind);
 };
 
 } // end namespace uast
+
+DECLARE_SERDE_ENUM(uast::Function::Kind, uint8_t);
+DECLARE_SERDE_ENUM(uast::Function::ReturnIntent, uint8_t);
 
 
 /// \cond DO_NOT_DOCUMENT
@@ -413,6 +468,28 @@ template<> struct stringify<uast::Function::ReturnIntent> {
   }
 };
 
+template<> struct update<uast::Function::IteratorKind> {
+  bool operator()(uast::Function::IteratorKind& keep,
+                  uast::Function::IteratorKind& addin) const {
+    return defaultUpdateBasic(keep, addin);
+  }
+};
+
+template<> struct mark<uast::Function::IteratorKind> {
+  void operator()(Context* context,
+                  const uast::Function::IteratorKind& keep) const {
+    // nothing to do for enum
+  }
+};
+
+template<> struct stringify<uast::Function::IteratorKind> {
+  void operator()(std::ostream& streamOut,
+                  StringifyKind stringKind,
+                  const uast::Function::IteratorKind& stringMe) const {
+    streamOut << uast::Function::iteratorKindToString(stringMe);
+  }
+};
+
 template<> struct stringify<uast::Function::Kind> {
   void operator()(std::ostream& streamOut,
                   StringifyKind stringKind,
@@ -435,6 +512,12 @@ namespace std {
   template<> struct hash<chpl::uast::Function::Kind> {
     inline size_t operator()(const chpl::uast::Function::Kind& key) const {
       return (size_t) key;
+    }
+  };
+
+  template<> struct hash<chpl::uast::Function::IteratorKind> {
+    inline size_t operator()(const chpl::uast::Function::IteratorKind& k) const{
+      return (size_t) k;
     }
   };
 } // end namespace std

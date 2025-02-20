@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -33,12 +33,14 @@ namespace uast {
   This includes things like fields, formals, or variables.
  */
 class VarLikeDecl : public NamedDecl {
+ friend class AstNode;
+
  protected:
   Qualifier storageKind_;
   int8_t typeExpressionChildNum_;
   int8_t initExpressionChildNum_;
 
-  VarLikeDecl(AstTag tag, AstList children, int attributesChildNum,
+  VarLikeDecl(AstTag tag, AstList children, int attributeGroupChildNum,
               Decl::Visibility vis,
               Decl::Linkage linkage,
               int linkageNameChildNum,
@@ -46,7 +48,7 @@ class VarLikeDecl : public NamedDecl {
               Qualifier storageKind,
               int8_t typeExpressionChildNum,
               int8_t initExpressionChildNum)
-    : NamedDecl(tag, std::move(children), attributesChildNum, vis,
+    : NamedDecl(tag, std::move(children), attributeGroupChildNum, vis,
                 linkage,
                 linkageNameChildNum,
                 name),
@@ -62,6 +64,20 @@ class VarLikeDecl : public NamedDecl {
     if (initExpressionChildNum >= 0) {
       CHPL_ASSERT(initExpressionChildNum <= 3);
     }
+  }
+
+  void varLikeDeclSerializeInner(Serializer& ser) const {
+    namedDeclSerializeInner(ser);
+    ser.write(storageKind_);
+    ser.write(typeExpressionChildNum_);
+    ser.write(initExpressionChildNum_);
+  }
+
+  VarLikeDecl(AstTag tag, Deserializer& des)
+    : NamedDecl(tag, des) {
+    storageKind_ = des.read<Qualifier>();
+    typeExpressionChildNum_ = des.read<int8_t>();
+    initExpressionChildNum_ = des.read<int8_t>();
   }
 
   bool varLikeDeclContentsMatchInner(const AstNode* other) const {
@@ -121,6 +137,7 @@ class VarLikeDecl : public NamedDecl {
 
 
 } // end namespace uast
+
 } // end namespace chpl
 
 #endif

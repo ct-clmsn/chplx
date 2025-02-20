@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+#include "chpl/uast/all-uast.h"
 #include "chpl/uast/AstNode.h"
 
 
@@ -38,6 +39,10 @@ void AstNode::dumpFieldsInner(const DumpSettings& s) const {
 }
 
 std::string AstNode::dumpChildLabelInner(int i) const {
+  if (i == attributeGroupChildNum_) {
+    return "attributeGroup";
+  }
+
   return "";
 }
 
@@ -77,7 +82,8 @@ bool AstNode::mayContainStatements(AstTag tag) {
     case asttags::AnonFormal:
     case asttags::As:
     case asttags::Array:
-    case asttags::Attributes:
+    case asttags::Attribute:
+    case asttags::AttributeGroup:
     case asttags::Break:
     case asttags::Comment:
     case asttags::Continue:
@@ -91,6 +97,7 @@ bool AstNode::mayContainStatements(AstTag tag) {
     case asttags::Identifier:
     case asttags::Import:
     case asttags::Include:
+    case asttags::Init:
     case asttags::Let:
     case asttags::New:
     case asttags::Range:
@@ -201,7 +208,8 @@ bool AstNode::isInherentlyStatement() const {
     case asttags::AnonFormal:
     case asttags::As:
     case asttags::Array:
-    case asttags::Attributes:
+    case asttags::Attribute:
+    case asttags::AttributeGroup:
     case asttags::Break:
     case asttags::Comment:
     case asttags::Continue:
@@ -215,6 +223,7 @@ bool AstNode::isInherentlyStatement() const {
     case asttags::Identifier:
     case asttags::Import:
     case asttags::Include:
+    case asttags::Init:
     case asttags::Let:
     case asttags::New:
     case asttags::Range:
@@ -334,6 +343,8 @@ bool AstNode::shallowMatch(const AstNode* other) const {
     return false;
   if (lhs->id().symbolPath() != rhs->id().symbolPath())
     return false;
+  if (lhs->attributeGroupChildNum() != rhs->attributeGroupChildNum())
+    return false;
   if (!lhs->contentsMatchInner(rhs))
     return false;
 
@@ -349,7 +360,8 @@ bool AstNode::completeMatch(const AstNode* other) const {
     return false;
   }
 
-  // check the numeric elements of the id and the number of children
+  // check the numeric elements of the id and the number of children and
+  // the attributeGroupChildNum
   if (lhs->id().postOrderId() != rhs->id().postOrderId() ||
       lhs->id().numContainedChildren() != rhs->id().numContainedChildren() ||
       lhs->children_.size() != rhs->children_.size()) {
@@ -362,6 +374,13 @@ bool AstNode::completeMatch(const AstNode* other) const {
   for (size_t i = 0; i < nChildren; i++) {
     const AstNode* lhsChild = lhs->children_[i].get();
     const AstNode* rhsChild = rhs->children_[i].get();
+
+    // TODO: This should only be possible while we're implementing
+    // serialization...
+    if (lhsChild == nullptr || rhsChild == nullptr) {
+      return false;
+    }
+
     bool childMatch = lhsChild->completeMatch(rhsChild);
     if (!childMatch) {
       allMatch = false;
@@ -519,10 +538,184 @@ void AstNode::stringify(std::ostream& ss,
         // compute the maximum id width so it's a nice column
         int maxIdLen = computeMaxIdStringWidth();
         s.idWidth = maxIdLen;
-        dumpHelper(s, this, 0, /*parent*/ nullptr, /*parentIdx*/-1);
+        dumpHelper(s, this, 0, /*parent*/ nullptr, /*parentIdx*/NO_CHILD);
       }
       break;
   }
+}
+
+void AstNode::serialize(Serializer& ser) const {
+  ser.beginAst(this);
+  ser.write(tag_);
+  ser.writeVInt(attributeGroupChildNum_);
+  // id_ not serialized; it is recomputed after reading
+  serializeInner(ser);
+  serializeChildren(ser);
+  ser.endAst(this);
+}
+
+AstNode::AstNode(AstTag tag, Deserializer& des)
+  : tag_(tag) {
+  // Note: Assumes that the tag was already deserialized in order to invoke
+  // the correct class' deserializer.
+  attributeGroupChildNum_ = des.readVInt();
+  // id_ not deserialized; it is recomputed after reading
+}
+
+void AstNode::serializeChildren(Serializer& ser) const {
+  // count the number of children ignoring comments
+  uint64_t count = 0;
+  for (const AstNode* child : children()) {
+    if (!child->isComment()) {
+      count++;
+    }
+  }
+
+  // write the count
+  ser.writeVU64(count);
+
+  // store the children ignoring comments
+  for (const AstNode* child : children()) {
+    if (!child->isComment()) {
+      child->serialize(ser);
+    }
+  }
+}
+
+void AstNode::deserializeChildren(Deserializer& des) {
+  uint64_t len = des.readVU64();
+  // note: this check assumes 1 byte per child node, and it's
+  // true that each child node will be at least one byte.
+  if (des.checkStringLengthAvailable(len)) {
+    children_.resize(len);
+    for (uint64_t i = 0; i < len; i++) {
+      children_[i] = deserializeWithoutIds(des);
+    }
+  }
+}
+
+owned<AstNode> AstNode::deserializeWithoutIds(Deserializer& des) {
+  uint64_t pos = des.position();
+
+  AstTag tag = des.read<AstTag>();
+
+  // Deserialize using the specific type constructor
+  // which will call AstNode::AstNode(AstTag tag, Deserializer& des) above
+  // to deserialize AstNode's fields (but not the children)
+  // and then deserialize the subclass fields through its constructor.
+  // Then, register the deserialized Ast with the Deserializer
+  // Finally, deserialize the children with deserializeChildren.
+
+  switch (tag) {
+    #define CASE_LEAF(NAME) \
+      case asttags::NAME: \
+      { \
+        auto ret = toOwned(new NAME(des)); \
+        des.registerAst(ret.get(), pos); \
+        ret->deserializeChildren(des); \
+        return ret; \
+      }
+
+    #define CASE_NODE(NAME) \
+      case asttags::NAME: \
+      { \
+        auto ret = toOwned(new NAME(des)); \
+        des.registerAst(ret.get(), pos); \
+        ret->deserializeChildren(des); \
+        return ret; \
+      }
+
+    #define CASE_OTHER(NAME) \
+      case asttags::NAME: \
+      { \
+        assert(false && "this code should never be run"); \
+        break; \
+      }
+
+    #define AST_NODE(NAME) CASE_NODE(NAME)
+    #define AST_LEAF(NAME) CASE_LEAF(NAME)
+    #define AST_BEGIN_SUBCLASSES(NAME) CASE_OTHER(START_##NAME)
+    #define AST_END_SUBCLASSES(NAME) CASE_OTHER(END_##NAME)
+
+    // Apply the above macros to uast-classes-list.h
+    // to fill in the cases
+    #include "chpl/uast/uast-classes-list.h"
+    // and also for NUM_AST_TAGS
+    CASE_OTHER(NUM_AST_TAGS)
+    CASE_OTHER(AST_TAG_UNKNOWN)
+
+    // clear the macros
+    #undef AST_NODE
+    #undef AST_LEAF
+    #undef AST_BEGIN_SUBCLASSES
+    #undef AST_END_SUBCLASSES
+    #undef CASE_LEAF
+    #undef CASE_NODE
+    #undef CASE_OTHER
+  }
+
+  assert(false && "this code should never be run"); \
+
+  owned<AstNode> ret = nullptr;
+  return ret;
+}
+
+owned<AstNode> AstNode::copy() const {
+  switch (this->tag()) {
+    #define CASE_LEAF(NAME) \
+      case asttags::NAME: \
+      { \
+        const NAME* casted = (const NAME*) this; \
+        auto ret = toOwned(new NAME(*casted)); \
+        ret->setID(ID()); \
+        return ret; \
+        break; \
+      }
+
+    #define CASE_NODE(NAME) \
+      case asttags::NAME: \
+      { \
+        const NAME* casted = (const NAME*) this; \
+        auto ret = toOwned(new NAME(*casted)); \
+        ret->setID(ID()); \
+        for (auto& child : ret->children_) { \
+          child = child->copy(); \
+        } \
+        return ret; \
+        break; \
+      }
+
+    #define CASE_OTHER(NAME) \
+      case asttags::NAME: \
+      { \
+        CHPL_ASSERT(false && "this code should never be run"); \
+        break; \
+      }
+
+    #define AST_NODE(NAME) CASE_NODE(NAME)
+    #define AST_LEAF(NAME) CASE_LEAF(NAME)
+    #define AST_BEGIN_SUBCLASSES(NAME) CASE_OTHER(START_##NAME)
+    #define AST_END_SUBCLASSES(NAME) CASE_OTHER(END_##NAME)
+
+    // Apply the above macros to uast-classes-list.h
+    // to fill in the cases
+    #include "chpl/uast/uast-classes-list.h"
+    // and also for NUM_AST_TAGS
+    CASE_OTHER(NUM_AST_TAGS)
+    CASE_OTHER(AST_TAG_UNKNOWN)
+
+    // clear the macros
+    #undef AST_NODE
+    #undef AST_LEAF
+    #undef AST_BEGIN_SUBCLASSES
+    #undef AST_END_SUBCLASSES
+    #undef CASE_LEAF
+    #undef CASE_NODE
+    #undef CASE_OTHER
+  }
+
+  owned<AstNode> ret;
+  return ret;
 }
 
 IMPLEMENT_DUMP(AstNode);

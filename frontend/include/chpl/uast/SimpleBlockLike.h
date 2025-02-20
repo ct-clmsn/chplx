@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -46,7 +46,13 @@ namespace uast {
   This is because the conditional may have an else block.
  */
 class SimpleBlockLike : public AstNode {
+ friend class AstNode;
+
  protected:
+  BlockStyle blockStyle_;
+  int bodyChildNum_;
+  int numBodyStmts_;
+
   SimpleBlockLike(AstTag tag, AstList children, BlockStyle blockStyle,
                   int bodyChildNum,
                   int numBodyStmts)
@@ -55,6 +61,19 @@ class SimpleBlockLike : public AstNode {
       bodyChildNum_(bodyChildNum),
       numBodyStmts_(numBodyStmts) {
 
+  }
+
+  void simpleBlockLikeSerializeInner(Serializer& ser) const {
+    ser.write(blockStyle_);
+    ser.writeVInt(bodyChildNum_);
+    ser.writeVInt(numBodyStmts_);
+  }
+
+  SimpleBlockLike(AstTag tag, Deserializer& des)
+    : AstNode(tag, des) {
+    blockStyle_ = des.read<BlockStyle>();
+    bodyChildNum_ = des.readVInt();
+    numBodyStmts_ = des.readVInt();
   }
 
   bool simpleBlockLikeContentsMatchInner(const AstNode* other) const {
@@ -75,10 +94,6 @@ class SimpleBlockLike : public AstNode {
 
   void simpleBlockLikeMarkUniqueStringsInner(Context* context) const {
   }
-
-  BlockStyle blockStyle_;
-  int bodyChildNum_;
-  int numBodyStmts_;
 
  public:
   virtual ~SimpleBlockLike() override = 0; // this is an abstract base class
@@ -114,7 +129,6 @@ class SimpleBlockLike : public AstNode {
   BlockStyle blockStyle() const {
     return blockStyle_;
   }
-
 };
 
 

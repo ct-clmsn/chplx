@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -51,6 +51,7 @@ class QualifiedType final {
   static const Kind UNKNOWN = uast::Qualifier::UNKNOWN;
   static const Kind DEFAULT_INTENT = uast::Qualifier::DEFAULT_INTENT;
   static const Kind CONST_INTENT = uast::Qualifier::CONST_INTENT;
+  static const Kind REF_MAYBE_CONST = uast::Qualifier::REF_MAYBE_CONST;
   static const Kind VAR = uast::Qualifier::VAR;
   static const Kind CONST_VAR = uast::Qualifier::CONST_VAR;
   static const Kind CONST_REF = uast::Qualifier::CONST_REF;
@@ -66,6 +67,7 @@ class QualifiedType final {
   static const Kind FUNCTION = uast::Qualifier::FUNCTION;
   static const Kind PARENLESS_FUNCTION = uast::Qualifier::PARENLESS_FUNCTION;
   static const Kind MODULE = uast::Qualifier::MODULE;
+  static const Kind INIT_RECEIVER = uast::Qualifier::INIT_RECEIVER;
 
   static const char* kindToString(Kind k);
 
@@ -132,6 +134,10 @@ class QualifiedType final {
     if (genericParam || kind_ == TYPE_QUERY)
       return Type::GENERIC;
 
+    // params with know values (hasParamPtr()) can't be generic.
+    if (kind_ == PARAM)
+      return Type::CONCRETE;
+
     return typeGenericity();
   }
 
@@ -152,13 +158,18 @@ class QualifiedType final {
     return isUnknown() || (genericity() != Type::CONCRETE);
   }
 
+  bool isUnknownOrErroneous() const {
+    return isUnknown() || isErroneousType();
+  }
+
   /** Returns true if kind is TYPE */
   bool isType() const { return kind_ == Kind::TYPE; }
 
   /** Returns true if kind is PARAM */
   bool isParam() const { return kind_ == Kind::PARAM; }
 
-  /** Returns 'true' if storing a BoolParam 'true';
+  /** Returns 'true' if storing a BoolParam 'true'
+      or a numeric param storing nonzero;
       'false' otherwise
    */
   bool isParamTrue() const;
@@ -179,24 +190,25 @@ class QualifiedType final {
     In particular, returns true for all kinds other than REF and VALUE.
    */
   bool isConst() const {
-    return kind_ == Kind::CONST_INTENT ||
-           kind_ == Kind::CONST_VAR ||
-           kind_ == Kind::CONST_REF ||
-           kind_ == Kind::CONST_IN ||
-           kind_ == Kind::PARAM ||
-           kind_ == Kind::TYPE ||
-           kind_ == Kind::FUNCTION ||
-           kind_ == Kind::MODULE;
+    return uast::isConstQualifier(kind_);
   }
   /** Returns true if the type refers to something immutable
       (that cannot be modified by any task / other reference to it). */
   bool isImmutable() const {
-    return kind_ == Kind::CONST_VAR ||
-           kind_ == Kind::CONST_IN ||
-           kind_ == Kind::PARAM ||
-           kind_ == Kind::TYPE ||
-           kind_ == Kind::FUNCTION ||
-           kind_ == Kind::MODULE;
+    return uast::isImmutableQualifier(kind_);
+  }
+  /**
+    Returns true if the value is a reference, whether constant or mutable.
+   */
+  bool isRef() const {
+    return uast::isRefQualifier(kind_);
+  }
+  /**
+    Returns true if the value is an in-intent formal, whether constant or
+    mutable.
+   */
+  bool isIn() const {
+    return uast::isInQualifier(kind_);
   }
 
   /**
@@ -204,10 +216,13 @@ class QualifiedType final {
     (unknown, default intent, or const intent) and false otherwise.
    */
   bool isNonConcreteIntent() const {
-    return (kind_ == Kind::UNKNOWN ||
-            kind_ == Kind::DEFAULT_INTENT ||
-            kind_ == Kind::CONST_INTENT);
+    return uast::isGenericQualifier(kind_);
   }
+
+  /**
+    Returns true if the type might need to get more info from split-init.
+  */
+  bool needsSplitInitTypeInfo(Context* context) const;
 
   bool operator==(const QualifiedType& other) const {
     return kind_ == other.kind_ &&
@@ -217,6 +232,7 @@ class QualifiedType final {
   bool operator!=(const QualifiedType& other) const {
     return !(*this == other);
   }
+
   void swap(QualifiedType& other) {
     std::swap(this->kind_, other.kind_);
     std::swap(this->type_, other.type_);
@@ -255,6 +271,13 @@ struct stringify<types::QualifiedType::Kind> {
 
 // docs are turned off for this as a workaround for breathe errors
 /// \cond DO_NOT_DOCUMENT
+
+template <>
+struct mark<types::QualifiedType::Kind> {
+  void operator()(Context* context, types::QualifiedType::Kind t) {
+    // No need to mark enums
+  }
+};
 
 
 /// \endcond

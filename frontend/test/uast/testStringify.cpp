@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -49,7 +49,9 @@ using namespace parsing;
 #define TEST_USER_STRING(funcDef, val)                           \
 {                                                                \
   std::ostringstream ss;                                         \
-  auto parseResult = parser->parseString("test3.chpl", funcDef); \
+  auto parseResult = parseStringAndReportErrors(parser,          \
+                                                "test3.chpl",    \
+                                                funcDef);        \
   auto mod = parseResult.singleModule();                         \
   auto funcDecl = mod->stmt(0)->toFunction();                    \
   assert(funcDecl);                                              \
@@ -62,7 +64,9 @@ using namespace parsing;
 #define TEST_CHPL_SYNTAX(src, val)                           \
 {                                                            \
   std::ostringstream ss;                                     \
-  auto parseResult = parser->parseString("test5.chpl", src); \
+  auto parseResult = parseStringAndReportErrors(parser,      \
+                                                "test5.chpl",\
+                                                src);        \
   auto mod = parseResult.singleModule();                     \
   assert(mod);                                               \
   printChapelSyntax(ss, mod);                                \
@@ -91,6 +95,7 @@ static void stringifyNode(const AstNode* node, chpl::StringifyKind kind) {
 
 
 static void test1(Parser* parser) {
+  ErrorGuard guard(parser->context());
   // the one test to rule them all
   std::string testCode;
   testCode = R""""(
@@ -307,7 +312,6 @@ static void test1(Parser* parser) {
    }
    type t;
    var Array:[1..1] t;
-   forwarding Array[1]!;
    const A: [1..10] int = [i in 1..10] if (i < 3) then 100 else i;
    writeln(A);
    var Cs = [i in nums] if i then new C[i] else nil: owned C?;
@@ -343,15 +347,16 @@ static void test1(Parser* parser) {
   XNew(ij) = (X(ij+north) + X(ij+south) + X(ij+east) + X(ij+west)) / 4.0;
   proc multiDimension(): [1..3, 2..8] string {}
   )"""";
-  auto parseResult = parser->parseString("Test1.chpl",
+  auto parseResult = parseStringAndReportErrors(parser, "Test1.chpl",
                                          testCode.c_str());
-  for (int i = 0; i < parseResult.numErrors(); i++) {
-    const ErrorBase* err = parseResult.error(i);
+  for (auto& error : guard.errors()) {
+    const ErrorBase* err = error.get();
     // ignore implicit module warning
     assert(err->kind() != ErrorBase::SYNTAX);
     std::cout << err->message().c_str() << std::endl;
     assert(err->kind() != ErrorBase::ERROR);
   }
+  guard.clearErrors();
   auto mod = parseResult.singleModule();
   assert(mod);
   stringifyNode(mod, CHPL_SYNTAX);
@@ -412,9 +417,9 @@ static void test3(Parser* parser) {
   TEST_USER_STRING("proc ref C.setClt2(rhs: borrowed C) {\n}\n",
                    "ref C.setClt2(rhs: borrowed C)")
   TEST_USER_STRING("proc main(args: [] string) {\n}", "main(args: [] string)")
-  TEST_USER_STRING("proc MYPROC(FORMAL: single int) { }",
-                   "MYPROC(FORMAL: single int)")
-  TEST_USER_STRING("inline operator ==(a: _nilType, b: _nilType) param return true;",
+  TEST_USER_STRING("proc MYPROC(FORMAL: sync int) { }",
+                   "MYPROC(FORMAL: sync int)")
+  TEST_USER_STRING("inline operator ==(a: _nilType, b: _nilType) param do return true;",
                    "==(a: _nilType, b: _nilType)")
   TEST_USER_STRING("private proc param R.prm2(arg) param : string { }",
                    "private param R.prm2(arg)")
@@ -439,11 +444,18 @@ static void test3(Parser* parser) {
                    "multiDimension(arg2: 3*(4*complex))")
   TEST_USER_STRING("proc multiDimension(): [1..3, 2..8] string {}",
                    "multiDimension()")
-
+  TEST_USER_STRING("proc cPtrConstProc(x: c_ptrConst(int)) {}",
+                   "cPtrConstProc(x: c_ptrConst(int))")
+  TEST_USER_STRING("proc cPtrProc(x: c_ptrConst(int)) {}",
+                   "cPtrProc(x: c_ptrConst(int))")
+  TEST_USER_STRING("proc cPtrVoidProc(x: c_ptr(void)) {}",
+                   "cPtrVoidProc(x: c_ptr(void))")
+  TEST_USER_STRING("operator ==(a: c_ptrConst(uint), b: c_ptrConst(uint)) {}",
+                   "==(a: c_ptrConst(uint), b: c_ptrConst(uint))")
 }
 
 static void test4(Parser* parser) {
-  auto parseResult = parser->parseString("test4.chpl",
+  auto parseResult = parseStringAndReportErrors(parser, "test4.chpl",
                                           "class C {\n"
                                           "proc ref setClt(rhs: borrowed C) {\n}\n}\n");
   auto mod = parseResult.singleModule();
@@ -518,7 +530,13 @@ static void testDecl(Parser* parser) {
                    "var domain1: domain(keyType, parSafe = true);")
   TEST_CHPL_SYNTAX("var lSrcVals: [myLocaleSpace] [0..#bufferSize] elemType;",
                    "var lSrcVals: [myLocaleSpace] [0..#bufferSize] elemType;")
+  TEST_CHPL_SYNTAX("var x:c_ptrConst(int);", "var x: c_ptrConst(int);")
+  TEST_CHPL_SYNTAX("var x:c_ptr(uint);", "var x: c_ptr(uint);")
+  TEST_CHPL_SYNTAX("var x:  c_ptrConst(c_ptrConst(int));",
+                   "var x: c_ptrConst(c_ptrConst(int));")
+  TEST_CHPL_SYNTAX("var x:  c_ptr(void); ", "var x: c_ptr(void);")
 }
+
 
 //TODO: Write many more specific tests for the format of different node types
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -34,14 +34,26 @@ namespace uast {
   are the actuals.
  */
 class Call : public AstNode {
+ friend class AstNode;
+
  protected:
   bool hasCalledExpression_;
+
   Call(AstTag tag)
     : AstNode(tag), hasCalledExpression_(false) {
   }
   Call(AstTag tag, AstList children, bool hasCalledExpression)
     : AstNode(tag, std::move(children)),
       hasCalledExpression_(hasCalledExpression) {
+  }
+
+  void callSerializeInner(Serializer& ser) const {
+    ser.write(hasCalledExpression_);
+  }
+
+  explicit Call(AstTag tag, Deserializer& des)
+    : AstNode(tag, des) {
+    hasCalledExpression_ = des.read<bool>();
   }
 
   bool callContentsMatchInner(const Call* other) const {

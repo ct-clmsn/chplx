@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -43,7 +43,7 @@ namespace uast {
   \endrst
 
   Each of the lines above is represented by a MultiDecl containing a
-  list of VariableDecls.  Note that the initial value and/or type is inferred
+  list of Variables.  Note that the initial value and/or type is inferred
   from later declarations.
 
   Since the MultiDecl does not itself have a name, it is not
@@ -51,21 +51,30 @@ namespace uast {
 
  */
 class MultiDecl final : public Decl {
+ friend class AstNode;
+
  private:
-  MultiDecl(AstList children, int attributesChildNum, Decl::Visibility vis,
+  MultiDecl(AstList children, int attributeGroupChildNum, Decl::Visibility vis,
             Decl::Linkage linkage)
-    : Decl(asttags::MultiDecl, std::move(children), attributesChildNum,
+    : Decl(asttags::MultiDecl, std::move(children), attributeGroupChildNum,
            vis,
            linkage,
-           /*linkageNameChildNum*/ -1) {
+           /*linkageNameChildNum*/ NO_CHILD) {
 
     CHPL_ASSERT(isAcceptableMultiDecl());
   }
 
+  void serializeInner(Serializer& ser) const override {
+    declSerializeInner(ser);
+  }
+
+  explicit MultiDecl(Deserializer& des)
+    : Decl(asttags::MultiDecl, des) { }
+
   bool isAcceptableMultiDecl();
 
   int declOrCommentChildNum() const {
-    return attributes() ? 1 : 0;
+    return attributeGroup() ? 1 : 0;
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -82,13 +91,13 @@ class MultiDecl final : public Decl {
   ~MultiDecl() override = default;
 
   static owned<MultiDecl> build(Builder* builder, Location loc,
-                                owned<Attributes> attributes,
+                                owned<AttributeGroup> attributeGroup,
                                 Decl::Visibility vis,
                                 Decl::Linkage linkage,
                                 AstList varDecls);
 
   /**
-    Return a way to iterate over the contained VariableDecls and Comments.
+    Return a way to iterate over the contained Decls and Comments.
    */
   AstListIteratorPair<AstNode> declOrComments() const {
     auto begin = numDeclOrComments()
@@ -99,14 +108,17 @@ class MultiDecl final : public Decl {
   }
 
   /**
-   Return the number of VariableDecls and Comments contained.
+   Return the number of Decls and Comments contained.
    */
   int numDeclOrComments() const {
-    return attributes() ? numChildren() - 1 : numChildren();
+    int numNonChildren = 0;
+    if (attributeGroup()) numNonChildren++;
+    if (destination()) numNonChildren++;
+    return numChildren() - numNonChildren;
   }
 
   /**
-   Return the i'th contained VariableDecl or Comment.
+   Return the i'th contained Decl or Comment.
    */
   const AstNode* declOrComment(int i) const {
     CHPL_ASSERT(i >= 0 && i < numDeclOrComments());
@@ -125,7 +137,6 @@ class MultiDecl final : public Decl {
     auto end = begin + numDeclOrComments();
     return AstListNoCommentsIteratorPair<Decl>(begin, end);
   }
-
 };
 
 

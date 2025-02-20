@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -89,10 +89,155 @@ static void test2() {
   assert(field->id() == results->resolutionById().byAst(ret).toId());
 }
 
+static void test3() {
+  printf("test3\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "test3.chpl");
+  std::string contents = R""""(
+    class Outer {
+        var outerField: int;
+        record Inner {
+            proc innerMethod() {
+                return outerField;
+            }
+        }
+
+        var inner: Inner;
+        proc outerMethod() {
+            return inner.innerMethod();
+        }
+    }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+  assert(vec.size() == 1);
+
+  const Module* m = vec[0]->toModule();
+  assert(m);
+  assert(m->numStmts() == 1);
+
+  const AggregateDecl* outerAd = m->stmt(0)->toAggregateDecl();
+  const AggregateDecl* innerId = outerAd->declOrComment(1)->toAggregateDecl();
+  const Function* innerMethod = innerId->declOrComment(0)->toFunction();
+
+  scopeResolveFunction(context, innerMethod->id());
+  assert(guard.numErrors() == 1);
+  auto firstError = guard.error(0).get();
+  assert(firstError->type() == ErrorType::NestedClassFieldRef);
+  guard.realizeErrors();
+}
+
+static void test4() {
+  printf("test4\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  auto path = UniqueString::get(context, "test4.chpl");
+  std::string contents = R""""(
+    class Outer {
+        var outerField: int;
+        record Inner {
+            proc innerMethod() {
+                return new Outer();
+            }
+        }
+
+        var inner: Inner;
+        proc outerMethod() {
+            return inner.innerMethod();
+        }
+    }
+   )"""";
+  setFileText(context, path, contents);
+
+  const ModuleVec& vec = parseToplevel(context, path);
+  assert(vec.size() == 1);
+
+  const Module* m = vec[0]->toModule();
+  assert(m);
+  assert(m->numStmts() == 1);
+
+  const AggregateDecl* outerAd = m->stmt(0)->toAggregateDecl();
+  const AggregateDecl* innerId = outerAd->declOrComment(1)->toAggregateDecl();
+  const Function* innerMethod = innerId->declOrComment(0)->toFunction();
+
+  scopeResolveFunction(context, innerMethod->id());
+}
+
+// Test no ambiguity for field access on record var that is a field of same name
+static void test5() {
+  printf("test5\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  // Simple case
+  {
+    context->advanceToNextRevision(false);
+    auto qt = resolveTypeOfXInit(context,
+                                 R"""(
+      record Bar {
+        var table : int;
+      }
+
+      record Foo {
+        var table: Bar;
+
+        proc doSomething() {
+          return table.table;
+        }
+      }
+
+      var myFoo = new Foo();
+      var x = myFoo.doSomething();
+     )""");
+
+    assert(qt.kind() == QualifiedType::CONST_VAR);
+    assert(qt.type()->isIntType());
+  }
+
+  // With inheritance
+  {
+    context->advanceToNextRevision(false);
+    auto qt = resolveTypeOfXInit(context,
+                                 R"""(
+      class Parent {
+        var table : int;
+      }
+      class Child : Parent {
+      }
+
+      record Foo {
+        var table: unmanaged Child;
+
+        proc init() {
+          table = new unmanaged Child();
+        }
+
+        proc doSomething() {
+          return table.table;
+        }
+      }
+
+      var myFoo = new Foo();
+      var x = myFoo.doSomething();
+     )""");
+
+    assert(qt.kind() == QualifiedType::CONST_VAR);
+    assert(qt.type()->isIntType());
+  }
+}
 
 int main() {
   test1();
   test2();
+  test3();
+  test4();
+  test5();
 
   return 0;
 }

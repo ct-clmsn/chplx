@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -46,6 +46,8 @@ namespace uast {
   ref intent.
  */
 class TaskVar final : public VarLikeDecl {
+ friend class AstNode;
+
  public:
   enum Intent {
     // Use Qualifier here for consistent enum values.
@@ -58,20 +60,26 @@ class TaskVar final : public VarLikeDecl {
   };
 
  private:
-  TaskVar(AstList children, int attributesChildNum, UniqueString name,
+  TaskVar(AstList children, int attributeGroupChildNum, UniqueString name,
           TaskVar::Intent intent,
           int8_t typeExpressionChildNum,
           int8_t initExpressionChildNum)
       : VarLikeDecl(asttags::TaskVar, std::move(children),
-                    attributesChildNum,
+                    attributeGroupChildNum,
                     Decl::DEFAULT_VISIBILITY,
                     Decl::DEFAULT_LINKAGE,
-                    /*linkageNameChildNum*/ -1,
+                    /*linkageNameChildNum*/ NO_CHILD,
                     name,
                     (Qualifier)((int)intent),
                     typeExpressionChildNum,
                     initExpressionChildNum) {
   }
+
+  void serializeInner(Serializer& ser) const override {
+    varLikeDeclSerializeInner(ser);
+  }
+
+  explicit TaskVar(Deserializer& des) : VarLikeDecl(asttags::TaskVar, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     const TaskVar* lhs = this;
@@ -88,7 +96,7 @@ class TaskVar final : public VarLikeDecl {
   ~TaskVar() override = default;
 
   static owned<TaskVar> build(Builder* builder, Location loc,
-                              owned<Attributes> attributes,
+                              owned<AttributeGroup> attributeGroup,
                               UniqueString name,
                               TaskVar::Intent intent,
                               owned<AstNode> typeExpression,
@@ -98,11 +106,15 @@ class TaskVar final : public VarLikeDecl {
     Returns the intent of this task variable.
   */
   Intent intent() const { return (Intent)((int)storageKind()); }
-
 };
+
+// DECLARE_SERDE_ENUM(uast::TaskVar::Intent, uint8_t);
 
 
 } // end namespace uast
+
+
+
 } // end namespace chpl
 
 #endif

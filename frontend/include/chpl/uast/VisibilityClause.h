@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -44,6 +44,8 @@ namespace uast {
   \endrst
  */
 class VisibilityClause final : public AstNode {
+ friend class AstNode;
+
  public:
 
   /**
@@ -65,6 +67,13 @@ class VisibilityClause final : public AstNode {
   };
 
  private:
+  // These always exist and their position never changes.
+  static const int8_t symbolChildNum_ = 0;
+  static const int8_t limitationChildNum_ = 1;
+
+  LimitationKind limitationKind_;
+  int numLimitations_;
+
   VisibilityClause(AstList children,  LimitationKind limitationKind,
                    int numLimitations)
     : AstNode(asttags::VisibilityClause, std::move(children)),
@@ -79,6 +88,17 @@ class VisibilityClause final : public AstNode {
     }
   }
 
+  void serializeInner(Serializer& ser) const override {
+    ser.write(limitationKind_);
+    ser.writeVInt(numLimitations_);
+  }
+
+  explicit VisibilityClause(Deserializer& des)
+    : AstNode(asttags::VisibilityClause, des) {
+    limitationKind_ = des.read<LimitationKind>();
+    numLimitations_ = des.readVInt();
+  }
+
   // No need to check 'symbolChildNum_' or 'limitationChildNum_'.
   bool contentsMatchInner(const AstNode* other) const override {
     const VisibilityClause* rhs = other->toVisibilityClause();
@@ -91,13 +111,6 @@ class VisibilityClause final : public AstNode {
 
   void dumpFieldsInner(const DumpSettings& s) const override;
   std::string dumpChildLabelInner(int i) const override;
-
-  // These always exist and their position never changes.
-  static const int8_t symbolChildNum_ = 0;
-  static const int8_t limitationChildNum_ = 1;
-
-  LimitationKind limitationKind_;
-  int numLimitations_;
 
  public:
   ~VisibilityClause() override = default;
@@ -203,6 +216,8 @@ struct mark<uast::VisibilityClause::LimitationKind> {
     // No need to mark enums
   }
 };
+
+DECLARE_SERDE_ENUM(uast::VisibilityClause::LimitationKind, uint8_t);
 
 /// \endcond
 

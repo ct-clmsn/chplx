@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -63,6 +63,8 @@ namespace uast {
   They also do not carry an initialization expression.
 */
 class AnonFormal final : public AstNode {
+ friend class AstNode;
+
  public:
   using Intent = Formal::Intent;
 
@@ -77,6 +79,17 @@ class AnonFormal final : public AstNode {
       typeExpressionChildNum_(typeExpressionChildNum) {
   }
 
+  void serializeInner(Serializer& ser) const override {
+    ser.write(intent_);
+    ser.write(typeExpressionChildNum_);
+  }
+
+  explicit AnonFormal(Deserializer& des)
+    : AstNode(asttags::AnonFormal, des) {
+    intent_ = des.read<Formal::Intent>();
+    typeExpressionChildNum_ = des.read<int8_t>();
+  }
+
   bool contentsMatchInner(const AstNode* other) const override {
     const AnonFormal* lhs = this;
     const AnonFormal* rhs = (const AnonFormal*) other;
@@ -84,7 +97,7 @@ class AnonFormal final : public AstNode {
            lhs->typeExpressionChildNum_ == rhs->typeExpressionChildNum_;
   }
 
-  void markUniqueStringsInner(Context* context) const override {}
+  void markUniqueStringsInner(Context* context) const override { }
 
   void dumpInner(const DumpSettings& s) const;
 
@@ -119,6 +132,11 @@ class AnonFormal final : public AstNode {
 
 
 } // end namespace uast
+
+
+DECLARE_SERDE_ENUM(uast::Formal::Intent, uint8_t);
+
+
 } // end namespace chpl
 
 #endif

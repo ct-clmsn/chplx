@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -46,6 +46,8 @@ namespace uast {
   The interface body contains one required function named '=='.
 */
 class Interface final : public NamedDecl {
+ friend class AstNode;
+
  private:
   int interfaceFormalsChildNum_;
   int numInterfaceFormals_;
@@ -54,7 +56,7 @@ class Interface final : public NamedDecl {
                      // isn't the body always the last thing here?
   bool isFormalListExplicit_;
 
-  Interface(AstList children, int attributesChildNum,
+  Interface(AstList children, int attributeGroupChildNum,
             Visibility visibility,
             UniqueString name,
             int interfaceFormalsChildNum,
@@ -63,7 +65,7 @@ class Interface final : public NamedDecl {
             int numBodyStmts,
             bool isFormalListExplicit)
       : NamedDecl(asttags::Interface, std::move(children),
-                  attributesChildNum,
+                  attributeGroupChildNum,
                   visibility,
                   Decl::DEFAULT_LINKAGE,
                   /*linkageNameChildNum*/ AstNode::NO_CHILD,
@@ -75,6 +77,24 @@ class Interface final : public NamedDecl {
         isFormalListExplicit_(isFormalListExplicit) {
     // TODO: Some assertions here...
   }
+
+  void serializeInner(Serializer& ser) const override {
+    namedDeclSerializeInner(ser);
+    ser.writeVInt(interfaceFormalsChildNum_);
+    ser.writeVInt(numInterfaceFormals_);
+    ser.writeVInt(bodyChildNum_);
+    ser.writeVInt(numBodyStmts_);
+    ser.write(isFormalListExplicit_);
+  }
+
+  explicit Interface(Deserializer& des)
+    : NamedDecl(asttags::Interface, des) {
+      interfaceFormalsChildNum_ = des.readVInt();
+      numInterfaceFormals_ = des.readVInt();
+      bodyChildNum_ = des.readVInt();
+      numBodyStmts_ = des.readVInt();
+      isFormalListExplicit_ = des.read<bool>();
+    }
 
   bool contentsMatchInner(const AstNode* other) const override {
     const Interface* lhs = this;
@@ -181,7 +201,7 @@ class Interface final : public NamedDecl {
   }
 
   static owned<Interface> build(Builder* builder, Location loc,
-                                owned<Attributes> attributes,
+                                owned<AttributeGroup> attributeGroup,
                                 Decl::Visibility visibility,
                                 UniqueString name,
                                 bool isFormalListExplicit,

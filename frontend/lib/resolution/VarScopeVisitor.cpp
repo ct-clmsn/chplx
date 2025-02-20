@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -46,7 +46,8 @@ bool VarFrame::addToInitedVars(ID varId) {
 void
 VarScopeVisitor::process(const uast::AstNode* symbol,
                          ResolutionResultByPostorderID& byPostorder) {
-  MutatingResolvedVisitor<VarScopeVisitor> rv(context,
+  ResolutionContext rcval(context);
+  MutatingResolvedVisitor<VarScopeVisitor> rv(&rcval,
                                               symbol,
                                               *this,
                                               byPostorder);
@@ -70,6 +71,19 @@ VarScopeVisitor::process(const uast::AstNode* symbol,
 
       exitScope(body, rv);
     }
+  } else if (auto mod = symbol->toModule()) {
+    // Process module initialization code, similarly to a function body
+
+    enterScope(mod, rv);
+
+    for (auto child : mod->children()) {
+      // Skip functions and nested modules as they are handled elsewhere
+      if (!(child->isFunction() || child->isModule())) {
+        child->traverse(rv);
+      }
+    }
+
+    exitScope(mod, rv);
   } else {
     symbol->traverse(rv);
   }
@@ -104,7 +118,8 @@ VarFrame* VarScopeVisitor::currentThenFrame() {
   CHPL_ASSERT(frame->scopeAst->isConditional());
   CHPL_ASSERT(frame->subBlocks.size() == 1 || frame->subBlocks.size() == 2);
   VarFrame* ret = frame->subBlocks[0].frame.get();
-  CHPL_ASSERT(ret);
+  // ret can be nullptr if the if branch was skipped at resolution time
+  // (i.e. if the condition was param false).
   return ret;
 }
 VarFrame* VarScopeVisitor::currentElseFrame() {
@@ -135,9 +150,25 @@ VarFrame* VarScopeVisitor::currentCatchFrame(int i) {
   return ret;
 }
 
+int VarScopeVisitor::currentNumWhenFrames() {
+  VarFrame* frame = currentFrame();
+  CHPL_ASSERT(frame->scopeAst->isSelect());
+  int ret = frame->subBlocks.size();
+  //allowance for otherwise placeholder
+  CHPL_ASSERT(frame->scopeAst->toSelect()->numWhenStmts() == ret);
+  return ret;
+}
+VarFrame* VarScopeVisitor::currentWhenFrame(int i) {
+  VarFrame* frame = currentFrame();
+  CHPL_ASSERT(frame->scopeAst->isSelect());
+  CHPL_ASSERT(0 <= i && (size_t) i < frame->subBlocks.size());
+  VarFrame* ret = frame->subBlocks[i].frame.get();
+  return ret;
+}
+
 ID VarScopeVisitor::refersToId(const AstNode* ast, RV& rv) {
   ID toId;
-  if (ast != nullptr && rv.hasAst(ast)) {
+  if (ast != nullptr) {
     toId = rv.byAst(ast).toId();
   }
   return toId;
@@ -200,6 +231,33 @@ const QualifiedType& VarScopeVisitor::returnOrYieldType() {
   return fnReturnType;
 }
 
+void VarScopeVisitor::handleConditional(const Conditional* cond, RV& rv) {
+  VarFrame* frame = currentFrame();
+  VarFrame* thenFrame = currentThenFrame();
+  VarFrame* elseFrame = currentElseFrame();
+
+  std::vector<VarFrame*> frames;
+  if (thenFrame) frames.push_back(thenFrame);
+  if (elseFrame) frames.push_back(elseFrame);
+  handleDisjunction(cond, frame, frames, elseFrame != nullptr, rv);
+  handleScope(cond, rv);
+}
+
+void VarScopeVisitor::handleSelect(const Select* sel, RV& rv) {
+  VarFrame * frame = currentFrame();
+
+  std::vector<VarFrame*> frames;
+  bool total = sel->hasOtherwise();
+  for(int i = 0; i < sel->numWhenStmts(); i++) {
+    VarFrame * whenFrame = currentWhenFrame(i);
+    if (!whenFrame) continue;
+    frames.push_back(whenFrame);
+    total |= whenFrame->paramTrueCond;
+  }
+  handleDisjunction(sel, frame, frames, total, rv);
+  handleScope(sel, rv);
+}
+
 void VarScopeVisitor::enterScope(const AstNode* ast, RV& rv) {
   if (createsScope(ast->tag())) {
     scopeStack.push_back(toOwned(new VarFrame(ast)));
@@ -214,6 +272,11 @@ void VarScopeVisitor::enterScope(const AstNode* ast, RV& rv) {
     VarFrame* tryFrame = scopeStack.back().get();
     for (auto clause : t->handlers()) {
       tryFrame->subBlocks.push_back(ControlFlowSubBlock(clause));
+    }
+  } else if (auto s = ast->toSelect()) {
+    VarFrame* selFrame = scopeStack.back().get();
+    for (auto when : s->whenStmts()) {
+      selFrame->subBlocks.push_back(ControlFlowSubBlock(when));
     }
   }
 }
@@ -241,7 +304,8 @@ void VarScopeVisitor::exitScope(const AstNode* ast, RV& rv) {
     if (savedSubBlock) {
       // frame will be processed with parent block
       CHPL_ASSERT(parentFrame->scopeAst->isConditional() ||
-             parentFrame->scopeAst->isTry());
+             parentFrame->scopeAst->isTry() || 
+             parentFrame->scopeAst->isSelect());
     } else if (auto cond = ast->toConditional()) {
       handleConditional(cond, rv);
       if (parentFrame != nullptr) {
@@ -250,6 +314,12 @@ void VarScopeVisitor::exitScope(const AstNode* ast, RV& rv) {
         VarFrame* elseFrame = currentElseFrame();
         if (thenFrame && elseFrame &&
             thenFrame->returnsOrThrows && elseFrame->returnsOrThrows) {
+          parentFrame->returnsOrThrows = true;
+        }
+        if (thenFrame && thenFrame->returnsOrThrows && thenFrame->knownPath) {
+          parentFrame->returnsOrThrows = true;
+        }
+        if (elseFrame && elseFrame->returnsOrThrows && elseFrame->knownPath) {
           parentFrame->returnsOrThrows = true;
         }
       }
@@ -273,6 +343,22 @@ void VarScopeVisitor::exitScope(const AstNode* ast, RV& rv) {
             parentFrame->returnsOrThrows = true;
           }
         }
+      }
+    } else if (auto s = ast->toSelect()) {
+      handleSelect(s, rv);
+      if (parentFrame != nullptr) {
+        bool allReturnOrThrow = true;
+        for(int i = 0; i < s->numWhenStmts(); i++) {  
+          auto whenFrame = currentWhenFrame(i);  
+          if (!whenFrame) continue;  
+          allReturnOrThrow &= whenFrame->returnsOrThrows;  
+          if (whenFrame->knownPath) {  // this is known to be the taken path
+            parentFrame->returnsOrThrows = whenFrame->returnsOrThrows;  
+            break;  
+          }  
+        }
+
+        if (s->hasOtherwise()) parentFrame->returnsOrThrows |= allReturnOrThrow;
       }
     } else {
       handleScope(ast, rv);
@@ -300,16 +386,48 @@ void VarScopeVisitor::exitAst(const uast::AstNode* ast) {
   inAstStack.pop_back();
 }
 
-bool VarScopeVisitor::enter(const VarLikeDecl* ast, RV& rv) {
+bool VarScopeVisitor::enter(const NamedDecl* ast, RV& rv) {
+
+  if (ast->id().isSymbolDefiningScope()) {
+    // It's a symbol with a different path, e.g. a Function.
+    // Don't try to resolve it now in this
+    // traversal. Instead, resolve it e.g. when the function is called.
+    return false;
+  }
+
   enterAst(ast);
   enterScope(ast, rv);
 
   return true;
 }
-void VarScopeVisitor::exit(const VarLikeDecl* ast, RV& rv) {
+void VarScopeVisitor::exit(const NamedDecl* ast, RV& rv) {
+  if (ast->id().isSymbolDefiningScope()) {
+    // It's a symbol with a different path, e.g. a Function.
+    // Don't try to resolve it now in this
+    // traversal. Instead, resolve it e.g. when the function is called.
+    return;
+  }
+
+  // Loop index variables don't need default-initialization and aren't
+  // subject to split init etc., so skip them.
+  //
+  // TODO: I think it's fine to skip this for all users of VarScopeVisitor;
+  //       is there an analysis that does need to handle loop indices?
+  bool skipDecl = false;
+  if (inAstStack.size() > 1) {
+    auto parentAst = inAstStack[inAstStack.size() - 2];
+    if (auto indexableLoop = parentAst->toIndexableLoop()) {
+      if (ast == indexableLoop->index()) {
+        skipDecl = true;
+      }
+    }
+  }
+
   CHPL_ASSERT(!scopeStack.empty());
-  if (!scopeStack.empty()) {
-    handleDeclaration(ast, rv);
+  if (!scopeStack.empty() && !skipDecl) {
+    if (auto vld = ast->toVarLikeDecl()) {
+      handleDeclaration(vld, rv);
+    }
   }
 
   exitScope(ast, rv);
@@ -346,8 +464,12 @@ bool VarScopeVisitor::enter(const FnCall* callAst, RV& rv) {
     // This filter is intended as an optimization.
     const MostSpecificCandidates& candidates = rv.byAst(callAst).mostSpecific();
     bool anyInOutInout = false;
-    for (const TypedFnSignature* fn : candidates) {
-      if (fn != nullptr) {
+    bool isMethod = false;
+    for (const MostSpecificCandidate& candidate : candidates) {
+      if (candidate) {
+        auto fn = candidate.fn();
+        if (fn->untyped()->isMethod()) isMethod = true;
+
         int n = fn->numFormals();
         for (int i = 0; i < n; i++) {
           const QualifiedType& formalQt = fn->formalType(i);
@@ -374,44 +496,55 @@ bool VarScopeVisitor::enter(const FnCall* callAst, RV& rv) {
       // Use FormalActualMap to figure out which variable ID
       // is passed to a formal with out/in/inout intent.
       // Issue an error if it does not match among return intent overloads.
-      auto calledExprAst = callAst->calledExpression();
-      if (rv.hasAst(calledExprAst)) {
-        std::vector<const AstNode*> actualAsts;
-        auto ci = CallInfo::create(context, callAst, rv.byPostorder(),
-                                   /* raiseErrors */ false,
-                                   &actualAsts);
+      //
+      // TODO: Should we store the resolved CallInfo so we don't need to build
+      // it back up here?
+      std::vector<const AstNode*> actualAsts;
+      auto ci = CallInfo::create(context, callAst, rv.byPostorder(),
+                                 /* raiseErrors */ false,
+                                 &actualAsts);
 
-        // compute a vector indicating which actuals are passed to
-        // an 'out' formal in all return intent overloads
-        std::vector<QualifiedType> actualFormalTypes;
-        std::vector<Qualifier> actualFormalIntents;
-        computeActualFormalIntents(context, candidates, ci, actualAsts,
-                                   actualFormalIntents, actualFormalTypes);
+      if (isMethod && ci.isMethodCall() == false) {
+        // Create a dummy 'this' actual
+        ci = ci.createWithReceiver(ci, QualifiedType());
+        actualAsts.insert(actualAsts.begin(), nullptr);
+      }
 
-        int actualIdx = 0;
-        for (auto actual : ci.actuals()) {
-          (void) actual; // avoid compilation error about unused variable
+      // compute a vector indicating which actuals are passed to
+      // an 'out' formal in all return intent overloads
+      std::vector<QualifiedType> actualFormalTypes;
+      std::vector<Qualifier> actualFormalIntents;
+      computeActualFormalIntents(context, candidates, ci, actualAsts,
+                                 actualFormalIntents, actualFormalTypes);
 
-          const AstNode* actualAst = actualAsts[actualIdx];
-          Qualifier kind = actualFormalIntents[actualIdx];
+      int actualIdx = 0;
+      for (auto actual : ci.actuals()) {
+        (void) actual; // avoid compilation error about unused variable
 
-          // handle an actual that is passed to an 'out'/'in'/'inout' formal
-          if (kind == Qualifier::OUT) {
-            handleOutFormal(callAst, actualAst,
+        const AstNode* actualAst = actualAsts[actualIdx];
+        Qualifier kind = actualFormalIntents[actualIdx];
+
+        // handle an actual that is passed to an 'out'/'in'/'inout' formal
+        if (actualAst == nullptr) {
+          CHPL_ASSERT(ci.isMethodCall() && actualIdx == 0);
+        } else if (kind == Qualifier::OUT) {
+          handleOutFormal(callAst, actualAst,
+                          actualFormalTypes[actualIdx], rv);
+        } else if ((kind == Qualifier::IN || kind == Qualifier::CONST_IN) &&
+                   !(ci.name() == "init" && actualIdx == 0)) {
+          // don't do this for the 'this' argument to 'init', because it
+          // is not getting copied.
+          handleInFormal(callAst, actualAst,
+                         actualFormalTypes[actualIdx], rv);
+        } else if (kind == Qualifier::INOUT) {
+          handleInoutFormal(callAst, actualAst,
                             actualFormalTypes[actualIdx], rv);
-          } else if (kind == Qualifier::IN || kind == Qualifier::CONST_IN) {
-            handleInFormal(callAst, actualAst,
-                           actualFormalTypes[actualIdx], rv);
-          } else if (kind == Qualifier::INOUT) {
-            handleInoutFormal(callAst, actualAst,
-                              actualFormalTypes[actualIdx], rv);
-          } else {
-            // otherwise, visit the actuals to gather mentions
-            actualAst->traverse(rv);
-          }
-
-          actualIdx++;
+        } else {
+          // otherwise, visit the actuals to gather mentions
+          actualAst->traverse(rv);
         }
+
+        actualIdx++;
       }
     }
   }
@@ -470,14 +603,86 @@ bool VarScopeVisitor::enter(const Identifier* ast, RV& rv) {
 }
 void VarScopeVisitor::exit(const Identifier* ast, RV& rv) {
   if (!scopeStack.empty()) {
-    ID toId;
-    if (rv.hasAst(ast)) {
-      toId = rv.byAst(ast).toId();
-    }
+    ID toId = rv.byAst(ast).toId();
     if (!toId.isEmpty()) {
       handleMention(ast, toId, rv);
     }
   }
+  exitAst(ast);
+}
+
+bool VarScopeVisitor::enter(const Conditional* cond, RV& rv) {
+  enterAst(cond);
+  enterScope(cond, rv);
+
+  auto condRE = rv.byAst(cond->condition());
+  if (condRE.type().isParamTrue()) {
+    // Don't need to process the false branch.
+    cond->thenBlock()->traverse(rv);
+    currentThenFrame()->paramTrueCond = true;
+    currentThenFrame()->knownPath = true;
+    return false;
+  } else if (condRE.type().isParamFalse()) {
+    if (auto elseBlock = cond->elseBlock()) {
+      elseBlock->traverse(rv);
+      currentElseFrame()->paramTrueCond = true;
+      currentElseFrame()->knownPath = true;
+    }
+    return false;
+  }
+  // Not param-known condition; visit both branches as normal.
+  return true;
+}
+
+void VarScopeVisitor::exit(const Conditional* cond, RV& rv) {
+  exitScope(cond, rv);
+  exitAst(cond);
+}
+
+bool VarScopeVisitor::enter(const Select* sel, RV& rv) {
+  enterAst(sel);
+  enterScope(sel, rv);
+
+  // have we encountered a when without param-decided conditions?
+  bool anyWhenNonParam = false; 
+
+  for(int i = 0; i < sel->numWhenStmts(); i++) {
+    auto whenAst = sel->whenStmt(i);
+
+    bool anyCaseParamTrue = false;
+    bool allCaseParamFalse = !whenAst->isOtherwise();
+    for(auto caseExpr : whenAst->caseExprs()) {
+      auto res = rv.byAst(caseExpr);
+      anyCaseParamTrue |= res.type().isParamTrue();
+      allCaseParamFalse &= res.type().isParamFalse();
+    }
+    
+    anyWhenNonParam |= !anyCaseParamTrue && !allCaseParamFalse;
+
+    if (!allCaseParamFalse) {
+      // only traverse whens that are not param false
+      whenAst->traverse(rv);
+      // if there is a param true case and none of the preceding whens might
+      // be taken at runtime, then this is the only path we need to consider
+      currentWhenFrame(i)->knownPath = anyCaseParamTrue && !anyWhenNonParam;
+      currentWhenFrame(i)->paramTrueCond = anyCaseParamTrue;
+    }
+
+    if (whenAst->isOtherwise()) {
+      // if we've reached this point, none of the preceding whens have a param
+      // true condition, so the otherwise is paramTrue if all preceding whens
+      // are param false.
+      currentWhenFrame(i)->knownPath = !anyWhenNonParam;
+    } else if (anyCaseParamTrue) {
+      break;
+    }
+  }
+
+  return false;
+}
+
+void VarScopeVisitor::exit(const Select* ast, RV& rv) {
+  exitScope(ast, rv);
   exitAst(ast);
 }
 
@@ -531,9 +736,9 @@ computeActualFormalIntents(Context* context,
   }
 
   bool firstCandidate = true;
-  for (const TypedFnSignature* fn : candidates) {
-    if (fn != nullptr) {
-      auto formalActualMap = FormalActualMap(fn, ci);
+  for (const MostSpecificCandidate& candidate : candidates) {
+    if (candidate) {
+      auto& formalActualMap = candidate.formalActualMap();
       for (int actualIdx = 0; actualIdx < nActuals; actualIdx++) {
         const FormalActual* fa = formalActualMap.byActualIdx(actualIdx);
         auto intent  = normalizeFormalIntent(fa->formalType().kind());

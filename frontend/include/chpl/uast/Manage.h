@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -44,6 +44,8 @@ namespace uast {
   that can be referred to as 'res'.
  */
 class Manage final : public SimpleBlockLike {
+ friend class AstNode;
+
  private:
   int managerExprChildNum_;
   int numManagerExprs_;
@@ -65,6 +67,18 @@ class Manage final : public SimpleBlockLike {
         if (auto as = mgr->toAs()) CHPL_ASSERT(as->rename()->isVariable());
       }
     #endif
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    simpleBlockLikeSerializeInner(ser);
+    ser.writeVInt(managerExprChildNum_);
+    ser.writeVInt(numManagerExprs_);
+  }
+
+  explicit Manage(Deserializer& des)
+    : SimpleBlockLike(asttags::Manage, des) {
+    managerExprChildNum_ = des.readVInt();
+    numManagerExprs_ = des.readVInt();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {

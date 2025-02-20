@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -41,14 +41,33 @@ namespace uast {
   An array expression will never contain comments.
  */
 class Array final : public AstNode {
+ friend class AstNode;
+
  private:
-  // TODO: Record if initializer list has trailing comma?
-  Array(AstList children)
+  bool trailingComma_,
+       associative_;
+  
+  Array(AstList children, bool trailingComma, bool associative)
     : AstNode(asttags::Array, std::move(children)) {
+    trailingComma_ = trailingComma;
+    associative_ = associative;
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    ser.write(trailingComma_);
+    ser.write(associative_);
+  }
+
+  explicit Array(Deserializer& des)
+    : AstNode(asttags::Array, des) {
+    trailingComma_ = des.read<bool>();
+    associative_ = des.read<bool>();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
-    return true;
+    const Array* rhs = other->toArray();
+    return this->trailingComma_ == rhs->trailingComma_ &&
+           this->associative_ == rhs->associative_;
   }
 
   void markUniqueStringsInner(Context* context) const override {
@@ -63,8 +82,12 @@ class Array final : public AstNode {
    Create and return an Array expression.
    */
   static owned<Array> build(Builder* builder, Location loc,
-                            AstList exprs);
+                            AstList exprs, bool trailingComma=false,
+                            bool associative=false);
 
+  bool hasTrailingComma() const { return this->trailingComma_; }
+  bool isAssociative() const { return this->associative_; }
+  
   /**
     Return a way to iterate over the expressions of this array.
   */
@@ -87,7 +110,6 @@ class Array final : public AstNode {
     const AstNode* ast = this->child(i);
     return ast;
   }
-
 };
 
 

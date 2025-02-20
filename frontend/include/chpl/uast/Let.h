@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -41,6 +41,8 @@ namespace uast {
 
  */
 class Let final : public AstNode {
+ friend class AstNode;
+
  private:
   int numDecls_;
 
@@ -49,6 +51,15 @@ class Let final : public AstNode {
       numDecls_(numDecls) {
     CHPL_ASSERT(numChildren() >= 2);
     CHPL_ASSERT(1 <= numDecls && (numDecls == numChildren() - 1));
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    ser.writeVInt(numDecls_);
+  }
+
+  explicit Let(Deserializer& des)
+    : AstNode(asttags::Let, des) {
+    numDecls_ = des.readVInt();
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -106,7 +117,6 @@ class Let final : public AstNode {
     CHPL_ASSERT(ret);
     return ret;
   }
-
 };
 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -29,8 +29,7 @@
 #include "chpl/uast/Variable.h"
 
 static void test1() {
-  Context ctx;
-  auto context = &ctx;
+  auto context = buildStdContext();
   QualifiedType qt =  resolveQualifiedTypeOfX(context,
                          R""""(
                          var x : if true then string else "not-a-type";
@@ -39,8 +38,7 @@ static void test1() {
 }
 
 static void test2() {
-  Context ctx;
-  auto context = &ctx;
+  auto context = buildStdContext();
   QualifiedType qt =  resolveQualifiedTypeOfX(context,
                          R""""(
                          var x : if false then "not-a-type" else int;
@@ -49,8 +47,7 @@ static void test2() {
 }
 
 static void test3() {
-  Context ctx;
-  auto context = &ctx;
+  auto context = buildStdContext();
   QualifiedType qt =  resolveQualifiedTypeOfX(context,
                          R""""(
                          var b : bool;
@@ -62,8 +59,7 @@ static void test3() {
 }
 
 static void test4() {
-  Context ctx;
-  auto context = &ctx;
+  auto context = buildStdContext();
   QualifiedType qt =  resolveTypeOfXInit(context,
                          R""""(
                          var b : bool;
@@ -76,8 +72,7 @@ static void test4() {
 }
 
 static void test5() {
-  Context ctx;
-  auto context = &ctx;
+  auto context = buildStdContext();
   QualifiedType qt =  resolveTypeOfXInit(context,
                          R""""(
                          record r {}
@@ -93,8 +88,7 @@ static void test5() {
 }
 
 static void test6() {
-  Context ctx;
-  auto context = &ctx;
+  auto context = buildStdContext();
   QualifiedType qt =  resolveTypeOfXInit(context,
                          R""""(
                          param b : bool;
@@ -106,8 +100,7 @@ static void test6() {
 }
 
 static void testIfVarErrorUseInElseBranch1() {
-  Context context;
-  auto ctx = &context;
+  auto ctx = buildStdContext();
   ErrorGuard guard(ctx);
 
   auto path = TEST_NAME_FROM_FN_NAME(ctx);
@@ -147,12 +140,13 @@ static void testIfVarErrorUseInElseBranch1() {
   assert(reIfUse.toId() == var->id());
   assert(reElseUse.toId().isEmpty());
   assert(reElseUse.type().isUnknown());
+
+  assert(guard.realizeErrors() > 0);
 }
 
 // In this variation the use is in a 'else-if'.
 static void testIfVarErrorUseInElseBranch2() {
-  Context context;
-  auto ctx = &context;
+  auto ctx = buildStdContext();
   ErrorGuard guard(ctx);
 
   auto path = TEST_NAME_FROM_FN_NAME(ctx);
@@ -196,12 +190,14 @@ static void testIfVarErrorUseInElseBranch2() {
   assert(reUseY.toId() == elseIfVar->id());
   assert(reUseX.toId().isEmpty());
   assert(reUseX.type().isUnknown());
+
+  assert(guard.numErrors() > 0);
+  guard.realizeErrors();
 }
 
 // In this variation the use is in a deeply nested block.
 static void testIfVarErrorUseInElseBranch3() {
-  Context context;
-  auto ctx = &context;
+  auto ctx = buildStdContext();
   ErrorGuard guard(ctx);
 
   auto path = TEST_NAME_FROM_FN_NAME(ctx);
@@ -238,12 +234,14 @@ static void testIfVarErrorUseInElseBranch3() {
   auto& reElseUse = rr.byAst(elseUse);
   assert(reElseUse.toId().isEmpty());
   assert(reElseUse.type().isUnknown());
+
+  assert(guard.numErrors() > 0);
+  guard.realizeErrors();
 }
 
 // Uses of two if-vars with the same name across multiple branches.
 static void testIfVarErrorUseInElseBranch4() {
-  Context context;
-  auto ctx = &context;
+  auto ctx = buildStdContext();
   ErrorGuard guard(ctx);
 
   auto path = TEST_NAME_FROM_FN_NAME(ctx);
@@ -307,11 +305,13 @@ static void testIfVarErrorUseInElseBranch4() {
 
   assert(reElseUseX.toId().isEmpty());
   assert(reElseUseX.type().isUnknown());
+
+  assert(guard.numErrors() > 0);
+  guard.realizeErrors();
 }
 
 static void testIfVarErrorNonClassType() {
-  Context context;
-  auto ctx = &context;
+  auto ctx = buildStdContext();
   ErrorGuard guard(ctx);
 
   auto path = TEST_NAME_FROM_FN_NAME(ctx);
@@ -342,6 +342,68 @@ static void testIfVarErrorNonClassType() {
   guard.realizeErrors();
 }
 
+static void testIfVarNonNilInThen() {
+  auto ctx = buildStdContext();
+  ErrorGuard guard(ctx);
+
+  auto path = TEST_NAME_FROM_FN_NAME(ctx);
+  std::string contents =
+    R""""(
+    class Bar {
+      var _msg : string;
+      proc message():string {
+        return _msg;
+      }
+    }
+
+    proc foo() {
+      var e : owned Bar? = new Bar("foo");
+      return e;
+    }
+
+    if var err = foo() {
+      var x = err.message();
+    }
+    )"""";
+  setFileText(ctx, path, contents);
+
+  auto& br = parseAndReportErrors(ctx, path);
+  auto mod = br.singleModule();
+  assert(mod);
+
+  auto& rr = resolveModule(ctx, mod->id());
+  (void)rr;
+  assert(guard.numErrors() == 0);
+  guard.realizeErrors();
+}
+
+static void testIfVarBorrow() {
+  auto context = buildStdContext();
+  ErrorGuard guard(context);
+
+  std::string program =
+    R"""(
+    class C {
+      var i : int;
+    }
+
+    proc retClass() : owned C? {
+      return new C(5);
+    }
+
+    if const obj = retClass() {
+      var x = obj.i;
+    }
+    )""";
+
+  auto vars = resolveTypesOfVariables(context, program, {"x", "obj"});
+  assert(vars["x"].type()->isIntType());
+  auto obj = vars["obj"].type()->toClassType();
+  assert(obj->decorator().isNonNilable());
+  assert(obj->decorator().isBorrowed());
+  assert(obj->basicClassType()->name() == "C");
+}
+
 int main() {
   test1();
   test2();
@@ -349,10 +411,13 @@ int main() {
   test4();
   test5();
   test6();
+  testIfVarBorrow();
   testIfVarErrorUseInElseBranch1();
   testIfVarErrorUseInElseBranch2();
   testIfVarErrorUseInElseBranch3();
   testIfVarErrorUseInElseBranch4();
   testIfVarErrorNonClassType();
+  testIfVarNonNilInThen();
+
   return 0;
 }

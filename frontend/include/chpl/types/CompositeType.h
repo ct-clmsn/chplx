@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -117,8 +117,11 @@ class CompositeType : public Type {
     CHPL_ASSERT(instantiatedFrom_ == nullptr ||
            instantiatedFrom_->instantiatedFrom_ == nullptr);
 
-    // check that subs is consistent with instantiatedFrom
-    CHPL_ASSERT((instantiatedFrom_ == nullptr) == subs_.empty());
+    // check that subs is consistent with instantiatedFrom, except in the
+    // case of class types which can be generic with empty subs due to
+    // inheritance
+    CHPL_ASSERT(tag == typetags::BasicClassType ||
+                (instantiatedFrom_ == nullptr) == subs_.empty());
   }
 
   bool compositeTypeContentsMatchInner(const CompositeType* other) const {
@@ -206,6 +209,34 @@ class CompositeType : public Type {
 
     return types::QualifiedType();
   }
+
+  /** Get the string type */
+  static const RecordType* getStringType(Context* context);
+
+  /** Get the range type */
+  static const RecordType* getRangeType(Context* context);
+
+  /** Get the bytes type */
+  static const RecordType* getBytesType(Context* context);
+
+  /** Get the locale type */
+  static const RecordType* getLocaleType(Context* context);
+
+  /** Get the chpl_localeID_t type */
+  static const RecordType* getLocaleIDType(Context* context);
+
+  /** Get the _distribution type */
+  static const RecordType* getDistributionType(Context* context);
+
+  /** Get the record _owned implementing owned */
+  static const RecordType* getOwnedRecordType(Context* context, const BasicClassType* bct);
+
+  /** Get the record _shared implementing shared */
+  static const RecordType* getSharedRecordType(Context* context, const BasicClassType* bct);
+
+  /* Get the Error type */
+  static const ClassType* getErrorType(Context* context);
+
 };
 
 size_t hashSubstitutionsMap(const CompositeType::SubstitutionsMap& subs);

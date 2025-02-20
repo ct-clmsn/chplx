@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -26,6 +26,7 @@
 namespace chpl {
 class Context;
 
+#define ID_GEN_START -3
 
 /**
   This class represents an ID for an AST node.
@@ -34,6 +35,13 @@ class Context;
   All AST nodes have IDs.
  */
 class ID final {
+ public:
+  enum FabricatedIdKind {
+    // all of these need to be <= -2
+    ExternBlockElement = -2,
+    Generated = ID_GEN_START,
+  };
+
  private:
   // A path to the symbol, e.g. MyModule#0.MyFunction#1
   // Note that this is escaped (\. and \# are not the same as . and #)
@@ -41,11 +49,13 @@ class ID final {
 
   // Within that symbol, what is the number of this node in
   // a postorder traversal?
-  // The symbol itself has ID -1.
+  // The symbol itself has postOrderId -1.
+  // Generated symbols have postOrderId <= -2.
   int postOrderId_ = -1;
 
-  // How many of the previous ids would be considered within
-  // this node?
+  // How many of the previous ids would be considered within this node?
+  // Note that this field is not compared or hashed, so IDs without it
+  // can be used as a key.
   int numChildIds_ = 0;
 
  public:
@@ -64,6 +74,12 @@ class ID final {
   }
 
   /**
+    Construct an ID with specified symbol path, and default postorder traversal
+    number.
+   */
+  explicit ID(UniqueString symbolPath) : symbolPath_(symbolPath) {}
+
+  /**
     Return a path to the ID symbol scope. For example, a function 'foo'
     declared in a module M would have symbolPath M.foo.
 
@@ -73,11 +89,81 @@ class ID final {
   UniqueString symbolPath() const { return symbolPath_; }
 
   /**
+    Return a path to the ID symbol scope, but without taking into account
+    repeated names within a symbol. In particular, M.f#0 and M.f#1 would
+    both return M.f.
+
+    This is useful for exposing a "user-facing" path, such as one that a user
+    can specify from the command line.
+   */
+  UniqueString symbolPathWithoutRepeats(Context* context) const;
+
+  /**
     Returns the numbering of this node in a postorder traversal
     of a symbol's nodes. When the AST node defines a new ID symbol scope,
     (as with Function or Module) this will return -1.
    */
-  int postOrderId() const { return postOrderId_; }
+  int postOrderId() const {
+    if (postOrderId_ < -2) {
+      if (postOrderId_ == ID_GEN_START) {
+        // generated symbol
+        return -1;
+      } else {
+        // generated uAST nodes
+        return (postOrderId_ * -1) + ID_GEN_START - 1;
+      }
+    } else {
+      return postOrderId_;
+    }
+  }
+
+  /**
+    Returns 'true' if this symbol has a 'postOrderId()' value of == -1,
+    which means this is an ID for something that defines a new symbol
+    scope.
+   */
+   inline bool isSymbolDefiningScope() const { return postOrderId_ == -1 ||
+                                                      postOrderId_ == ID_GEN_START; }
+
+  /**
+    Some IDs are introduced during compilation and don't represent
+    something that is directly contained within the source code.
+    This function will return 'true' for such IDs.
+   */
+  bool isFabricatedId() const { return postOrderId_ <= -2; }
+
+  FabricatedIdKind fabricatedIdKind() const {
+    CHPL_ASSERT(isFabricatedId());
+    if (postOrderId_ <= ID_GEN_START) {
+      return FabricatedIdKind::Generated;
+    } else {
+      return (FabricatedIdKind) postOrderId_;
+    }
+  }
+
+  /**
+    Create an ID that represents something that isn't directly contained
+    in the source code but rather something created during compilation.
+    In order to keep postorder ID numbering intact, there are some constraints:
+      * Such an ID can only be added within another ID that is a symbol
+        (e.g. within a Module, Function, Record; but not within a Block).
+      * Such an ID can itself only be a symbol
+
+    Also note that even though a fabricated ID will report as being
+    contained within another ID (with ID::contains), uAST traversal
+    will never find it.
+   */
+  static ID fabricateId(Context* context,
+                        ID parentSymbolId,
+                        UniqueString name,
+                        FabricatedIdKind kind);
+
+  /**
+    Create an ID that represents a uAST node created during compilation.
+   */
+  static ID generatedId(UniqueString symbolPath,
+                       int postOrderId,
+                       int numChildIds);
 
   /**
     Return the number of ids contained in this node, not including itself. In
@@ -154,7 +240,7 @@ class ID final {
   expandSymbolPath(Context* context, UniqueString symbolPath);
 
   bool operator==(const ID& other) const {
-    (void)numChildIds_; // quiet nextLinter
+    (void)numChildIds_; // this field is intentionally not compared
     return symbolPath_ == other.symbolPath_ &&
            postOrderId_ == other.postOrderId_;
   }
@@ -180,8 +266,10 @@ class ID final {
     return symbolPath_.isEmpty();
   }
 
+  inline explicit operator bool() const { return !isEmpty(); }
+
   size_t hash() const {
-    (void)numChildIds_; // quiet nextLinter
+    (void)numChildIds_; // this field is intentionally not hashed
     std::hash<int> hasher;
     return hash_combine(symbolPath_.hash(), hasher(postOrderId_));
   }
@@ -196,15 +284,31 @@ class ID final {
     this->symbolPath_.mark(context);
   }
 
-  static bool update(chpl::ID& keep, chpl::ID& addin);
+  static bool update(ID& keep, ID& addin);
 
-  void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
+  void stringify(std::ostream& ss, StringifyKind stringKind) const;
 
   /// \cond DO_NOT_DOCUMENT
   DECLARE_DUMP;
   /// \endcond
 
+  /** Return a string encoding this ID */
   std::string str() const;
+
+  /** The inverse of str() -- converts a string encoding an ID to an ID */
+  static ID fromString(Context* context, const char* idStr);
+
+  void serialize(Serializer& ser) const {
+    ser.write(symbolPath_);
+    ser.writeVInt(postOrderId_);
+    ser.writeVInt(numChildIds_);
+  }
+  static ID deserialize(Deserializer& des) {
+    auto path = des.read<UniqueString>();
+    auto poi = des.readVInt();
+    auto nci = des.readVInt();
+    return ID(path, poi, nci);
+  }
 };
 
 // docs are turned off for this as a workaround for breathe errors

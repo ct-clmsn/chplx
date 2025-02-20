@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -54,9 +54,37 @@ bool needCompilerGeneratedMethod(Context* context, const types::Type* type,
   If no method was generated, returns nullptr.
 */
 const TypedFnSignature*
-getCompilerGeneratedMethod(Context* context, const types::Type* type,
+getCompilerGeneratedMethod(Context* context,
+                           const types::QualifiedType receiverType,
                            UniqueString name, bool parenless);
 
+/**
+  Given a CallInfo object describing a call, attempts to find a compiler-generated
+  function that would match. This is more general than the getCompilerGeneratedMethod
+  mechanism, since the signature of the compiler-generated function can't
+  be deduced from the type of the receiver itself; inspecting all arguments
+  to the call is necessary.
+*/
+const TypedFnSignature*
+getCompilerGeneratedFunction(Context* context,
+                             const CallInfo& ci);
+
+/**
+  Given the name of a binary operation and the types of its operands,
+  determine if the compiler needs to provide a generated implementation,
+  and if so, generates and returns a TypedFnSignature representing the
+  generated binary operation.
+
+  If no operation was generated, returns nullptr.
+ */
+const TypedFnSignature*
+getCompilerGeneratedBinaryOp(Context* context,
+                       const types::QualifiedType lhs,
+                       const types::QualifiedType rhs,
+                       UniqueString name);
+
+const uast::BuilderResult& buildInitializer(Context* context, ID typeID);
+const uast::BuilderResult& buildTypeConstructor(Context* context, ID typeID);
 
 } // end namespace resolution
 } // end namespace chpl

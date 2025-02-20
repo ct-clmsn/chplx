@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -43,13 +43,15 @@ namespace uast {
   (for a, b, c in the example).
  */
 class Enum final : public TypeDecl {
+ friend class AstNode;
+
  private:
-  Enum(AstList children, int attributesChildNum, Decl::Visibility vis,
+  Enum(AstList children, int attributeGroupChildNum, Decl::Visibility vis,
        UniqueString name)
-    : TypeDecl(asttags::Enum, std::move(children), attributesChildNum,
+    : TypeDecl(asttags::Enum, std::move(children), attributeGroupChildNum,
                vis,
                Decl::DEFAULT_LINKAGE,
-               /*linkageNameChildNum*/ -1,
+               /*linkageNameChildNum*/ NO_CHILD,
                name) {
 
     #ifndef NDEBUG
@@ -57,14 +59,20 @@ class Enum final : public TypeDecl {
         CHPL_ASSERT(ast->isEnumElement() || ast->isComment());
       }
 
-      if (attributes()) {
+      if (attributeGroup()) {
         CHPL_ASSERT(declOrCommentChildNum() > 0);
       }
     #endif
   }
 
+  void serializeInner(Serializer& ser) const override {
+    typeDeclSerializeInner(ser);
+  }
+
+  explicit Enum(Deserializer& des) : TypeDecl(asttags::Enum, des) { }
+
   int declOrCommentChildNum() const {
-    return attributes() ? 1 : 0;
+    return attributeGroup() ? 1 : 0;
   }
 
   bool contentsMatchInner(const AstNode* other) const override {
@@ -81,7 +89,7 @@ class Enum final : public TypeDecl {
   ~Enum() override = default;
 
   static owned<Enum> build(Builder* builder, Location loc,
-                           owned<Attributes> attributes,
+                           owned<AttributeGroup> attributeGroup,
                            Decl::Visibility vis,
                            UniqueString name,
                            AstList stmts);
@@ -101,7 +109,7 @@ class Enum final : public TypeDecl {
    Return the number of EnumElements and Comments contained in this Enum.
    */
   int numDeclOrComments() const {
-    return attributes() ? numChildren() - 1 : numChildren();
+    return attributeGroup() ? numChildren() - 1 : numChildren();
   }
   /**
    Return the i'th EnumElement or Comment in this Enum.
@@ -122,6 +130,18 @@ class Enum final : public TypeDecl {
           : children_.end();
     auto end = begin + numDeclOrComments();
     return AstListNoCommentsIteratorPair<EnumElement>(begin, end);
+  }
+
+  /**
+   Return the number of EnumElements in this Enum.
+   */
+  int numElements() const {
+    int numElts = 0;
+    for (auto elt : this->enumElements()) {
+      (void) elt;
+      numElts++;
+    }
+    return numElts;
   }
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -31,27 +31,37 @@ namespace uast {
   This is an abstract base class for declarations that carry a name.
  */
 class NamedDecl : public Decl {
+ friend class AstNode;
 
  private:
   UniqueString name_;
 
  protected:
   NamedDecl(AstTag tag, Decl::Visibility visibility, Decl::Linkage linkage,
-            int attributesChildNum,
             UniqueString name)
-    : Decl(tag, attributesChildNum, visibility, linkage),
+    : Decl(tag, visibility, linkage),
       name_(name) {
   }
 
-  NamedDecl(AstTag tag, AstList children, int attributesChildNum,
+  NamedDecl(AstTag tag, AstList children, int attributeGroupChildNum,
             Decl::Visibility visibility,
             Decl::Linkage linkage,
             int linkageNameChildNum,
             UniqueString name)
-    : Decl(tag, std::move(children), attributesChildNum, visibility,
+    : Decl(tag, std::move(children), attributeGroupChildNum, visibility,
            linkage,
            linkageNameChildNum),
       name_(name) {
+  }
+
+  void namedDeclSerializeInner(Serializer& ser) const {
+    declSerializeInner(ser);
+    ser.write(name_);
+  }
+
+  NamedDecl(AstTag tag, Deserializer& des)
+    : Decl(tag, des) {
+    name_ = des.read<UniqueString>();
   }
 
   bool namedDeclContentsMatchInner(const NamedDecl* other) const {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -42,7 +42,11 @@ namespace uast {
 
  */
 class AggregateDecl : public TypeDecl {
+ friend class AstNode;
+
  private:
+  int inheritExprChildNum_;
+  int numInheritExprs_;
   int elementsChildNum_;
   int numElements_;
 
@@ -53,6 +57,8 @@ class AggregateDecl : public TypeDecl {
     const AggregateDecl* lhs = this;
     const AggregateDecl* rhs = other;
     return lhs->typeDeclContentsMatchInner(rhs) &&
+           lhs->inheritExprChildNum_ == rhs->inheritExprChildNum_ &&
+           lhs->numInheritExprs_ == rhs->numInheritExprs_ &&
            lhs->elementsChildNum_ == rhs->elementsChildNum_ &&
            lhs->numElements_ == rhs->numElements_;
   }
@@ -61,25 +67,54 @@ class AggregateDecl : public TypeDecl {
     typeDeclMarkUniqueStringsInner(context);
   }
 
- public:
-  AggregateDecl(AstTag tag, AstList children, int attributesChildNum,
+  std::string aggregateDeclDumpChildLabelInner(int i) const;
+
+  AggregateDecl(AstTag tag, AstList children, int attributeGroupChildNum,
                 Decl::Visibility vis,
                 Decl::Linkage linkage,
                 int linkageNameChildNum,
                 UniqueString name,
+                int inheritExprChildNum,
+                int numInheritExprs,
                 int elementsChildNum,
                 int numElements)
-    : TypeDecl(tag, std::move(children), attributesChildNum, vis, linkage,
+    : TypeDecl(tag, std::move(children), attributeGroupChildNum, vis, linkage,
                linkageNameChildNum,
                name),
+      inheritExprChildNum_(inheritExprChildNum),
+      numInheritExprs_(numInheritExprs),
       elementsChildNum_(elementsChildNum),
       numElements_(numElements) {
+
+    if (inheritExprChildNum_ != NO_CHILD && elementsChildNum != NO_CHILD) {
+      CHPL_ASSERT(inheritExprChildNum_ + numInheritExprs_ ==
+                  elementsChildNum);
+    }
+
+    // Don't validate inherit expressions here, they're checked post-parse.
 
     CHPL_ASSERT(validAggregateChildren(declOrComments()));
   }
 
+  void aggregateDeclSerializeInner(Serializer& ser) const {
+    typeDeclSerializeInner(ser);
+    ser.writeVInt(inheritExprChildNum_);
+    ser.writeVInt(numInheritExprs_);
+    ser.writeVInt(elementsChildNum_);
+    ser.writeVInt(numElements_);
+  }
+
+  AggregateDecl(AstTag tag, Deserializer& des)
+    : TypeDecl(tag, des) {
+    inheritExprChildNum_ = des.readVInt();
+    numInheritExprs_ = des.readVInt();
+    elementsChildNum_ = des.readVInt();
+    numElements_ = des.readVInt();
+  }
+
   ~AggregateDecl() = 0; // this is an abstract base class
 
+ public:
   /**
     Return a way to iterate over the contained Decls and Comments.
    */
@@ -120,6 +155,42 @@ class AggregateDecl : public TypeDecl {
               children_.begin() + elementsChildNum_,
               children_.begin() + elementsChildNum_ + numElements_);
   }
+
+  /**
+   Return the number of inherit exprs (parent classes or implemented interfaces)
+   in this aggregate type.
+   */
+  inline int numInheritExprs() const { return numInheritExprs_; }
+
+  /**
+    Return the ith interface implemented as part of this record's declaration.
+   */
+  const AstNode* inheritExpr(int i) const {
+    if (inheritExprChildNum_ < 0 || i >= numInheritExprs_)
+      return nullptr;
+
+    auto ret = child(inheritExprChildNum_ + i);
+    return ret;
+  }
+
+  /**
+    Return an iterator of all the inherit exprs (parent classes or implemented
+    interfaces).
+   */
+  AstListNoCommentsIteratorPair<AstNode> inheritExprs() const {
+    if (inheritExprChildNum_ < 0)
+      return AstListNoCommentsIteratorPair<AstNode>(
+                children_.end(), children_.end());
+
+    return AstListNoCommentsIteratorPair<AstNode>(
+              children_.begin() + inheritExprChildNum_,
+              children_.begin() + inheritExprChildNum_ + numInheritExprs_);
+  }
+
+  /** Returns the inherited Identifier or Dot, including considering
+      one marked generic with Superclass(?) */
+  static const AstNode* getUnwrappedInheritExpr(const AstNode* ast,
+                                            bool& markedGeneric);
 };
 
 

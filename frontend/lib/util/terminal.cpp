@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2020-2024 Hewlett Packard Enterprise Development LP
  * Copyright 2004-2019 Cray Inc.
  * Other additional copyright holders may be indicated within.
  *
@@ -22,13 +22,7 @@
 #include "chpl/util/terminal.h"
 #include <cstring>
 #include <map>
-#ifndef YY_NO_UNISTD_H
 #include <unistd.h>
-#endif
-#if defined(_MSC_VER)
-#include <io.h>
-#define isatty(fd) _isatty(fd)
-#endif
 
 namespace chpl {
 
@@ -61,7 +55,7 @@ std::string getColorFormat(TermColorName colorName) {
   return ret.c_str();
 }
 
-std::string clearTerminalColor() {
+std::string getClearColorFormat() {
   std::string ret = getColorFormat(CLEAR);
   return ret;
 }

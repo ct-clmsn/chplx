@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -42,11 +42,17 @@ namespace uast {
 
  */
 class Yield final : public AstNode {
+ friend class AstNode;
+
  private:
   Yield(AstList children)
     : AstNode(asttags::Yield, std::move(children)) {
     CHPL_ASSERT(children_.size() == 1);
   }
+
+  void serializeInner(Serializer& ser) const override { }
+
+  explicit Yield(Deserializer& des) : AstNode(asttags::Yield, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     // The 'valueChildNum_' is const and does not need to be compared.
@@ -76,7 +82,6 @@ class Yield final : public AstNode {
     CHPL_ASSERT(ret);
     return ret;
   }
-
 };
 
 

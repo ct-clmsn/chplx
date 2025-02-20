@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -99,11 +99,24 @@ class VarScopeVisitor {
   /** Called to process a Conditional after handling its contents --
       should update currentFrame() which is the frame for the Conditional.
       The then/else frames are sitting in currentFrame().subBlocks. */
-  virtual void handleConditional(const uast::Conditional* cond, RV& rv) = 0;
+  virtual void handleConditional(const uast::Conditional* cond, RV& rv);
   /** Called to process a Try after handling its contents --
       should update currentFrame() which is the frame for the Try.
       The catch clause frames are sitting in currentFrame().subBlocks. */
   virtual void handleTry(const uast::Try* t, RV& rv) = 0;
+  /** Called to process a Select after handling its contents --
+      should update currentFrame() which is the frame for the Select.
+      The when frames are sitting in currentFrame().subBlocks. */
+  virtual void handleSelect(const uast::Select* cond, RV& rv);
+  /** Generalizes processing Conditional and Select nodes after handling 
+      their contents. Updates currentFrame based on the frames of the 
+      possible branching targets stored in frames. total indicates whether
+      a branch is taken no matter the input. */
+  virtual void handleDisjunction(const uast::AstNode * node, 
+                                 VarFrame* currentFrame, 
+                                 const std::vector<VarFrame*>& frames, 
+                                 bool total,
+                                 RV& rv) = 0;
   /** Called to process any other Scope after handling its contents --
       should update scopeStack.back() which is the frame for the Try.
       Not called for Conditional or Try. */
@@ -155,6 +168,13 @@ class VarScopeVisitor {
       returns the i'th saved Catch frame. */
   VarFrame* currentCatchFrame(int i);
 
+  /** Assuming that the current frame refers to a Select,
+      returns the number of frames saved for When clauses.  */
+  int currentNumWhenFrames();
+  /** Assuming that the current frame refers to a Select,
+      returns the i'th saved When frame.  */
+  VarFrame * currentWhenFrame(int i);
+
   /** If ast is an Identifier that refers to a VarLikeDecl, return the
       Id of the VarLikeDecl. Otherwise, return an empty ID. */
   ID refersToId(const AstNode* ast, RV& rv);
@@ -190,8 +210,8 @@ class VarScopeVisitor {
   void enterAst(const uast::AstNode* ast);
   void exitAst(const uast::AstNode* ast);
 
-  bool enter(const VarLikeDecl* ast, RV& rv);
-  void exit(const VarLikeDecl* ast, RV& rv);
+  bool enter(const NamedDecl* ast, RV& rv);
+  void exit(const NamedDecl* ast, RV& rv);
 
   bool enter(const OpCall* ast, RV& rv);
   void exit(const OpCall* ast, RV& rv);
@@ -210,6 +230,12 @@ class VarScopeVisitor {
 
   bool enter(const Identifier* ast, RV& rv);
   void exit(const Identifier* ast, RV& rv);
+
+  bool enter(const uast::Conditional* node, RV& rv);
+  void exit(const uast::Conditional* node, RV& rv);
+
+  bool enter(const uast::Select* node, RV& rv);
+  void exit(const uast::Select* node, RV& rv);
 
   bool enter(const uast::AstNode* node, RV& rv);
   void exit(const uast::AstNode* node, RV& rv);
@@ -247,6 +273,12 @@ struct VarFrame {
   // has the block already encountered a return or a throw?
   bool returnsOrThrows = false;
 
+  // for conditionals/selects, does this block have a param true condition?
+  bool paramTrueCond = false;
+
+  // for conditionals/selects, is this known to be the only path?
+  bool knownPath = false;
+
   // When processing a conditional or catch blocks,
   // instead of popping the SplitInitFrame for the then/else/catch blocks,
   // store them here, for use in handleExitScope(Conditional or Try).
@@ -254,6 +286,10 @@ struct VarFrame {
 
 
   // ----- variables declared here for use in particular subclasses
+
+  // TODO: These probably can't store ID because, for a variable
+  // declared within a param for loop, we want to have a different
+  // variable for each iteration, rather than considering them all the same.
 
   // for split init and copy elision:
   // which variables are declared here in a way that allows split init?
@@ -269,7 +305,7 @@ struct VarFrame {
   // for copy elision:
   // Is the last mention of the variable a copy?
   // What are the copy points?
-  std::map<ID,CopyElisionState> copyElisionState;
+  std::unordered_map<ID,CopyElisionState> copyElisionState;
 
   // for call init deinit:
   // localsAndDefers contains both VarSymbol and DeferStmt in
@@ -285,7 +321,8 @@ struct VarFrame {
   std::vector<ID> initedOuterVars;
 
   // Which variables have been deinitialized early in this scope?
-  std::set<ID> deinitedVars;
+  // Map of (ID of decl) -> (ID of call after which it is deinited)
+  std::unordered_map<ID, ID> deinitedVars;
 
   VarFrame(const AstNode* scopeAst) : scopeAst(scopeAst) { }
 

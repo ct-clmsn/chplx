@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -135,9 +135,9 @@ static void test3() {
   assert(dQt.kind() == QualifiedType::VAR);
   assert(dQt.type() == IntType::get(context, 0));
   assert(eQt.kind() == QualifiedType::VAR);
-  assert(eQt.type() == RecordType::getStringType(context));
+  assert(eQt.type() == CompositeType::getStringType(context));
   assert(fQt.kind() == QualifiedType::VAR);
-  assert(fQt.type() == RecordType::getStringType(context));
+  assert(fQt.type() == CompositeType::getStringType(context));
 }
 
 static void test4() {
@@ -234,12 +234,58 @@ static void test5() {
   assert(dQt.type() == RealType::get(context, 0));
 }
 
+static void test6() {
+  printf("test6\n");
+  Context ctx;
+  Context* context = &ctx;
+  ErrorGuard guard(context);
+
+  std::string program = R"""(
+    var a, b : int;
+
+    var x = a;
+    )""";
+
+  auto xt = resolveTypeOfX(context, program);
+  assert(xt->isIntType());
+}
+
+static void test7() {
+  printf("test7\n");
+  Context ctx;
+  Context* context = &ctx;
+
+  auto M = parseModule(context,
+                R""""(
+                  operator +(lhs: int, rhs: int) do return __primitive("+", lhs, rhs);
+                  var a = 1, b = (1 + a);
+                )"""");
+
+  assert(M->numStmts() == 2);
+  const MultiDecl* md = M->stmt(1)->toMultiDecl();
+  assert(md);
+  auto a = md->declOrComment(0)->toVariable();
+  assert(a);
+  auto b = md->declOrComment(1)->toVariable();
+  assert(b);
+
+  const ResolutionResultByPostorderID& rr = resolveModule(context, M->id());
+  auto aQt = rr.byAst(a).type();
+  auto bQt = rr.byAst(b).type();
+  assert(aQt.kind() == QualifiedType::VAR);
+  assert(aQt.type()->isIntType());
+  assert(bQt.kind() == QualifiedType::VAR);
+  assert(bQt.type()->isIntType());
+}
+
 int main() {
   test1();
   test2();
   test3();
   test4();
   test5();
+  test6();
+  test7();
 
   return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -44,7 +44,7 @@ namespace uast {
   \endrst
 
   Each of the lines above is represented by a TupleDecl containing a
-  list of VariableDecls.  Note that the initial value and/or type is inferred
+  list of Variables.  Note that the initial value and/or type is inferred
   from later declarations.
 
   Since the Tuple does not itself have a name, it is not
@@ -52,6 +52,8 @@ namespace uast {
 
  */
 class TupleDecl final : public Decl {
+ friend class AstNode;
+
  public:
   enum IntentOrKind {
     DEFAULT_INTENT = (int) Qualifier::DEFAULT_INTENT,
@@ -74,23 +76,50 @@ class TupleDecl final : public Decl {
   int numElements_;
   int typeExpressionChildNum_;
   int initExpressionChildNum_;
+  bool isTupleDeclFormal_;
 
-  TupleDecl(AstList children, int attributesChildNum, Decl::Visibility vis,
+  TupleDecl(AstList children, int attributeGroupChildNum, Decl::Visibility vis,
             Decl::Linkage linkage,
             IntentOrKind intentOrKind,
             int numElements,
             int typeExpressionChildNum,
             int initExpressionChildNum)
-    : Decl(asttags::TupleDecl, std::move(children), attributesChildNum,
+    : Decl(asttags::TupleDecl, std::move(children), attributeGroupChildNum,
            vis,
            linkage,
-           /*linkageNameChildNum*/ -1),
+           /*linkageNameChildNum*/ NO_CHILD),
       intentOrKind_(intentOrKind),
       numElements_(numElements),
       typeExpressionChildNum_(typeExpressionChildNum),
       initExpressionChildNum_(initExpressionChildNum) {
 
     CHPL_ASSERT(assertAcceptableTupleDecl());
+
+    isTupleDeclFormal_ = false;
+    for (auto decl : decls()) {
+      if (decl->isFormal()) {
+        isTupleDeclFormal_ = true;
+        break;
+      }
+    }
+  }
+
+  void serializeInner(Serializer& ser) const override {
+    declSerializeInner(ser);
+    ser.write(intentOrKind_);
+    ser.writeVInt(numElements_);
+    ser.writeVInt(typeExpressionChildNum_);
+    ser.writeVInt(initExpressionChildNum_);
+    ser.write(isTupleDeclFormal_);
+  }
+
+  explicit TupleDecl(Deserializer& des)
+    : Decl(asttags::TupleDecl, des) {
+    intentOrKind_ = des.read<IntentOrKind>();
+    numElements_ = des.readVInt();
+    typeExpressionChildNum_ = des.readVInt();
+    initExpressionChildNum_ = des.readVInt();
+    isTupleDeclFormal_ = des.read<bool>();
   }
 
   bool assertAcceptableTupleDecl();
@@ -102,7 +131,8 @@ class TupleDecl final : public Decl {
            lhs->intentOrKind_ == rhs->intentOrKind_ &&
            lhs->numElements_ == rhs->numElements_ &&
            lhs->typeExpressionChildNum_ == rhs->typeExpressionChildNum_ &&
-           lhs->initExpressionChildNum_ == rhs->initExpressionChildNum_;
+           lhs->initExpressionChildNum_ == rhs->initExpressionChildNum_ &&
+           lhs->isTupleDeclFormal_ == rhs->isTupleDeclFormal_;
   }
 
   void markUniqueStringsInner(Context* context) const override {
@@ -113,14 +143,14 @@ class TupleDecl final : public Decl {
   std::string dumpChildLabelInner(int i) const override;
 
   int declChildNum() const {
-    return attributes() ? 1 : 0;
+    return attributeGroup() ? 1 : 0;
   }
 
  public:
   ~TupleDecl() override = default;
 
   static owned<TupleDecl> build(Builder* builder, Location loc,
-                                owned<Attributes> attributes,
+                                owned<AttributeGroup> attributeGroup,
                                 Decl::Visibility vis,
                                 Decl::Linkage linkage,
                                 IntentOrKind intentOrKind,
@@ -139,8 +169,8 @@ class TupleDecl final : public Decl {
    */
   AstListIteratorPair<Decl> decls() const {
     auto begin = numDecls()
-        ? children_.begin() + declChildNum()
-        : children_.end();
+        ? children_.begin()
+        : children_.end() - declChildNum();
     auto end = begin + numDecls();
     return AstListIteratorPair<Decl>(begin, end);
   }
@@ -156,7 +186,7 @@ class TupleDecl final : public Decl {
    */
   const Decl* decl(int i) const {
     CHPL_ASSERT(i >= 0 && i < numDecls());
-    const AstNode* ast = this->child(i + declChildNum());
+    const AstNode* ast = this->child(i);
     CHPL_ASSERT(ast->isVariable() || ast->isTupleDecl());
     CHPL_ASSERT(ast->isDecl());
     return (const Decl*)ast;
@@ -192,10 +222,22 @@ class TupleDecl final : public Decl {
     Returns a string describing the passed intentOrKind.
    */
   static const char* intentOrKindToString(IntentOrKind kind);
+
+  /**
+    Returns 'true' if this TupleDecl is a formal in a procedure.
+   */
+  const bool isTupleDeclFormal() const {
+    return isTupleDeclFormal_;
+  }
 };
 
 
 } // end namespace uast
+
+
+DECLARE_SERDE_ENUM(uast::TupleDecl::IntentOrKind, uint8_t);
+
+
 } // end namespace chpl
 
 #endif

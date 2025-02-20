@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -40,10 +40,16 @@ namespace uast {
   \endrst
 */
 class Delete final : public AstNode {
+ friend class AstNode;
+
  private:
   Delete(AstList children)
     : AstNode(asttags::Delete, std::move(children)) {
   }
+
+  void serializeInner(Serializer& ser) const override { }
+
+  explicit Delete(Deserializer& des) : AstNode(asttags::Delete, des) { }
 
   bool contentsMatchInner(const AstNode* other) const override {
     return true;

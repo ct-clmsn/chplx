@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -20,6 +20,7 @@
 #include "chpl/types/BasicClassType.h"
 
 #include "chpl/framework/query-impl.h"
+#include "chpl/parsing/parsing-queries.h"
 
 namespace chpl {
 namespace types {
@@ -43,7 +44,7 @@ BasicClassType::get(Context* context, ID id, UniqueString name,
                     const BasicClassType* parentType,
                     const BasicClassType* instantiatedFrom,
                     SubstitutionsMap subs) {
-  // getObjectType should be used to construct object
+  // getRootClassType should be used to construct RootClass
   // everything else should have a parent type.
   CHPL_ASSERT(parentType != nullptr);
   return getBasicClassType(context, id, name,
@@ -52,12 +53,24 @@ BasicClassType::get(Context* context, ID id, UniqueString name,
 }
 
 const BasicClassType*
-BasicClassType::getObjectType(Context* context) {
+BasicClassType::getRootClassType(Context* context) {
   ID emptyId;
-  auto name = UniqueString::get(context, "object");
+  auto name = UniqueString::get(context, "RootClass");
 
   return getBasicClassType(context, emptyId, name,
                            /* parentType */ nullptr,
+                           /* instantiatedFrom */ nullptr,
+                           SubstitutionsMap()).get();
+}
+
+const BasicClassType*
+BasicClassType::getReduceScanOpType(Context* context) {
+  auto [id, name] = parsing::getSymbolFromTopLevelModule(
+      context, "ChapelReduce", "ReduceScanOp");
+  auto objectType = getRootClassType(context);
+
+  return getBasicClassType(context, id, name,
+                           /* parentType */ objectType,
                            /* instantiatedFrom */ nullptr,
                            SubstitutionsMap()).get();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -31,9 +31,19 @@ namespace uast {
   This class represents an imaginary floating point literal, e.g. ``10.4i``.
  */
 class ImagLiteral final : public NumericLiteral<double, types::RealParam> {
+ friend class AstNode;
+
  private:
   ImagLiteral(const types::RealParam* value, UniqueString text)
     : NumericLiteral(asttags::ImagLiteral, value, text)
+  { }
+
+  void serializeInner(Serializer& ser) const override {
+    numericLiteralSerializeInner(ser);
+  }
+
+  explicit ImagLiteral(Deserializer& des)
+    : NumericLiteral(asttags::ImagLiteral, des)
   { }
 
   // contentsMatchInner / markUniqueStringsInner are in NumericLiteral

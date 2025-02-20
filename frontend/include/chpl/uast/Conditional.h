@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -43,7 +43,20 @@ namespace uast {
 
  */
 class Conditional final : public AstNode {
+ friend class AstNode;
+
  private:
+  // Condition always exists, and its position is always the same.
+  static const int8_t conditionChildNum_ = 0;
+  // Ditto then
+  static const int8_t thenBodyChildNum_ = 1;
+  // Ditto else (if this > children_.size(), there is no else clause)
+  static const int8_t elseBodyChildNum_ = 2;
+
+  BlockStyle thenBlockStyle_;
+  BlockStyle elseBlockStyle_;
+  bool isExpressionLevel_;
+
   Conditional(AstList children,
               BlockStyle thenBlockStyle,
               BlockStyle elseBlockStyle,
@@ -80,6 +93,19 @@ class Conditional final : public AstNode {
     CHPL_ASSERT(thenBodyChildNum_ < (int) children_.size());
   }
 
+  void serializeInner(Serializer& ser) const override {
+    ser.write(thenBlockStyle_);
+    ser.write(elseBlockStyle_);
+    ser.write(isExpressionLevel_);
+  }
+
+  explicit Conditional(Deserializer& des)
+    : AstNode(asttags::Conditional, des) {
+    thenBlockStyle_ = des.read<BlockStyle>();
+    elseBlockStyle_ = des.read<BlockStyle>();
+    isExpressionLevel_ = des.read<bool>();
+  }
+
   bool contentsMatchInner(const AstNode* other) const override {
     const Conditional* lhs = this;
     const Conditional* rhs = other->toConditional();
@@ -101,17 +127,6 @@ class Conditional final : public AstNode {
 
   void dumpFieldsInner(const DumpSettings& s) const override;
   std::string dumpChildLabelInner(int i) const override;
-
-  // Condition always exists, and its position is always the same.
-  static const int8_t conditionChildNum_ = 0;
-  // Ditto then
-  static const int8_t thenBodyChildNum_ = 1;
-  // Ditto else (if this > children_.size(), there is no else clause)
-  static const int8_t elseBodyChildNum_ = 2;
-
-  BlockStyle thenBlockStyle_;
-  BlockStyle elseBlockStyle_;
-  bool isExpressionLevel_;
 
  public:
   ~Conditional() override = default;
@@ -253,7 +268,6 @@ class Conditional final : public AstNode {
   bool isExpressionLevel() const {
     return isExpressionLevel_;
   }
-
 };
 
 

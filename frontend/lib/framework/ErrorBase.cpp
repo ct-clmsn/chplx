@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -26,6 +26,16 @@
 
 namespace chpl {
 
+const char* ErrorBase::getKindName(ErrorBase::Kind kind) {
+  switch (kind) {
+    case ErrorBase::Kind::NOTE: return "note";
+    case ErrorBase::Kind::WARNING: return "warning";
+    case ErrorBase::Kind::SYNTAX: return "syntax";
+    case ErrorBase::Kind::ERROR: return "error";
+  }
+  return "(unknown kind)";
+}
+
 const char* ErrorBase::getTypeName(ErrorType type) {
   switch (type) {
 #define DIAGNOSTIC_CLASS(NAME, KIND, EINFO...) case NAME: return #NAME;
@@ -35,95 +45,19 @@ const char* ErrorBase::getTypeName(ErrorType type) {
   }
 }
 
-/**
-  Implementation of ErrorWriterBase that records calls
-  to the various API functions in order to convert ErrorBase
-  subclasses into backwards-compatible ErrorMessage instances.
- */
-class CompatibilityWriter : public ErrorWriterBase {
- private:
-  IdOrLocation idOrLoc_;
-  /** The computed location (derived from the ::id_ or ::loc_) */
-  Location computedLoc_;
-  /** The error's brief message */
-  std::string message_;
-  /** A list of notes associated with this error (aka details) */
-  std::vector<Note> notes_;
-
- public:
-  CompatibilityWriter(Context* context)
-    : ErrorWriterBase(context, OutputFormat::BRIEF) {}
-
-  void writeHeading(ErrorBase::Kind kind, ErrorType type,
-                    IdOrLocation idOrLoc, const std::string& message) override {
-    // We may not have a context e.g. if we are just figuring out the error
-    // message text. Trust that `computedLoc_` is not important for that.
-    if (context) this->computedLoc_ = errordetail::locate(context, idOrLoc);
-    this->idOrLoc_ = std::move(idOrLoc);
-    this->message_ = message;
-  }
-
-  void writeMessage(const std::string& message) override {}
-  void writeCode(const Location& loc,
-                 const std::vector<Location>& hl) override {}
-
-  void writeNote(IdOrLocation loc, const std::string& message) override {
-    this->notes_.push_back(std::make_tuple(std::move(loc), message));
-  }
-
-  /**
-    Get the error's ID (could be empty in favor of the location).
-
-    This only works after ErrorBase::write was invoked with this
-    CompatibilityWriter.
-   */
-  inline ID id() const { return idOrLoc_.id(); }
-  /**
-    Get the error's location (could be empty in favor of the ID)
-
-    This only works after ErrorBase::write was invoked with this
-    CompatibilityWriter.
-   */
-  inline Location location() const { return idOrLoc_.location(); }
-  /**
-    Return the location that should be reported to the user.
-
-    This only works after ErrorBase::write was invoked with this
-    CompatibilityWriter.
-   */
-  inline Location computedLocation() const { return computedLoc_; }
-  /**
-    Return the error's brief message.
-
-    This only works after ErrorBase::write was invoked with this
-    CompatibilityWriter.
-   */
-  inline const std::string& message() const { return message_; }
-  /**
-    Return the error's notes / details.
-
-    This only works after ErrorBase::write was invoked with this
-    CompatibilityWriter.
-   */
-  const std::vector<Note>& notes() const { return notes_; }
-};
-
 std::string ErrorBase::message() const {
-  std::ostringstream oss;
   CompatibilityWriter ew(/* context */ nullptr);
   write(ew);
   return ew.message();
 }
 
 Location ErrorBase::location(Context* context) const {
-  std::ostringstream oss;
   CompatibilityWriter ew(context);
   write(ew);
   return ew.computedLocation();
 }
 
 ErrorMessage ErrorBase::toErrorMessage(Context* context) const {
-  std::ostringstream oss;
   CompatibilityWriter ew(context);
   write(ew);
   ErrorMessage::Kind kind = ErrorMessage::NOTE;
@@ -136,7 +70,7 @@ ErrorMessage ErrorBase::toErrorMessage(Context* context) const {
   auto message = ew.id().isEmpty() ?
     ErrorMessage(kind, ew.location(), ew.message()) :
     ErrorMessage(kind, ew.id(), ew.message());
-  for (auto note : ew.notes()) {
+  for (const auto& note : ew.notes()) {
     auto detailKind = ErrorMessage::NOTE;
     auto detailmessage = std::get<std::string>(note);
     message.addDetail(
@@ -150,7 +84,7 @@ ErrorMessage ErrorBase::toErrorMessage(Context* context) const {
 void BasicError::write(ErrorWriterBase& wr) const {
   // if the ID is set, determine the location from that
   wr.heading(kind_, type_, idOrLoc_, message_);
-  for (auto note : notes_) {
+  for (const auto& note : notes_) {
     auto& idOrLoc = std::get<IdOrLocation>(note);
     auto& message = std::get<std::string>(note);
     wr.note(idOrLoc, message);
@@ -158,43 +92,38 @@ void BasicError::write(ErrorWriterBase& wr) const {
 }
 
 void BasicError::mark(Context* context) const {
-  chpl::mark<Note> marker;
+  chpl::mark<ErrorNote> marker;
   idOrLoc_.mark(context);
   for (auto& note : notes_) {
     marker(context, note);
   }
 }
 
-const owned<GeneralError>&
-GeneralError::getGeneralErrorForID(Context* context, Kind kind, ID id, std::string message) {
-  QUERY_BEGIN(getGeneralErrorForID, context, kind, id, message);
-  auto result = owned<GeneralError>(new GeneralError(kind, id, std::move(message), {}));
-  return QUERY_END(result);
-}
-
-const owned<GeneralError>&
-GeneralError::getGeneralErrorForLocation(Context* context, Kind kind, Location loc, std::string message) {
-  QUERY_BEGIN(getGeneralErrorForLocation, context, kind, loc, message);
-  auto result = owned<GeneralError>(new GeneralError(kind, loc, std::move(message), {}));
-  return QUERY_END(result);
-}
-
-const GeneralError* GeneralError::vbuild(Context* context, Kind kind, ID id, const char* fmt, va_list vl) {
+owned<GeneralError> GeneralError::vbuild(Kind kind, ID id, const char* fmt, va_list vl) {
   auto message = vprintToString(fmt, vl);
-  return getGeneralErrorForID(context, kind, id, message).get();
+  return owned<GeneralError>(new GeneralError(kind, std::move(id), std::move(message), {}));
 }
 
-const GeneralError* GeneralError::vbuild(Context* context, Kind kind, Location loc, const char* fmt, va_list vl) {
+owned<GeneralError> GeneralError::vbuild(Kind kind, Location loc, const char* fmt, va_list vl) {
   auto message = vprintToString(fmt, vl);
-  return getGeneralErrorForLocation(context, kind, loc, message).get();
+  return owned<GeneralError>(new GeneralError(kind, std::move(loc), std::move(message), {}));
 }
 
-const GeneralError* GeneralError::get(Context* context, Kind kind, Location loc, std::string msg) {
-  return getGeneralErrorForLocation(context, kind, loc, std::move(msg)).get();
+owned<GeneralError> GeneralError::vbuild(Kind kind, IdOrLocation loc, const char* fmt, va_list vl) {
+  auto message = vprintToString(fmt, vl);
+  return owned<GeneralError>(new GeneralError(kind, std::move(loc), std::move(message), {}));
 }
 
-const GeneralError* GeneralError::error(Context* context, Location loc, std::string msg) {
-  return GeneralError::get(context, ErrorBase::ERROR, std::move(loc), std::move(msg));
+owned<GeneralError> GeneralError::get(Kind kind, Location loc, std::string msg) {
+  return owned<GeneralError>(new GeneralError(kind, std::move(loc), std::move(msg), {}));
+}
+
+owned<GeneralError> GeneralError::error(Location loc, std::string msg) {
+  return GeneralError::get(ErrorBase::ERROR, std::move(loc), std::move(msg));
+}
+
+owned<ErrorBase> GeneralError::clone() const {
+  return owned<ErrorBase>(new GeneralError(*this));
 }
 
 } // end namespace 'chpl'

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -39,13 +39,6 @@
 
 static bool debug = true;
 static bool verbose = true;
-
-static std::vector<Context*> globalContexts;
-static Context* getNewContext() {
-  Context* ret = new Context();
-  globalContexts.push_back(ret);
-  return ret;
-}
 
 std::vector<const ErrorBase*> errors;
 
@@ -120,10 +113,10 @@ struct Collector {
     if (rv.hasAst(call)) {
       const ResolvedExpression& result = rv.byAst(call);
       if (result.mostSpecific().isEmpty() == false) {
-        const TypedFnSignature* sig = result.mostSpecific().only();
-        auto fn = resolveFunction(rv.context(), sig, result.poiScope());
+        const TypedFnSignature* sig = result.mostSpecific().only().fn();
+        auto fn = resolveFunction(rv.rc(), sig, result.poiScope());
 
-        ResolvedVisitor<Collector> newRV(rv.context(), nullptr, *this, fn->resolutionById());
+        ResolvedVisitor<Collector> newRV(rv.rc(), nullptr, *this, fn->resolutionById());
         auto untyped = idToAst(rv.context(), sig->id());
         assert(untyped->id() == sig->id());
         untyped->traverse(newRV);
@@ -332,7 +325,11 @@ static std::string buildProgram(Qualifier formalIntent,
   }
   stream << "..." << count;
   stream << ") {\n";
-  stream << "  var varArgRet : args.type;\n";
+
+  stream << "  var varArgRet : args";
+  if (formalIntent != Qualifier::TYPE) stream << ".type";
+  stream << ";\n";
+
   stream << "  return varArgRet;\n";
   stream << "}\n\n";
 
@@ -358,7 +355,9 @@ static std::string buildProgram(Qualifier formalIntent,
     if (i > 0) stream << ", ";
     stream << "formal_" << std::to_string(i);
   }
-  stream << ").type;\n";
+  stream << ")";
+  if (formalIntent != Qualifier::TYPE) stream << ".type";
+  stream << ";\n";
   stream << "  return ret;\n";
   stream << "}\n\n";
 
@@ -499,15 +498,16 @@ static void testMatcher(Qualifier formalIntent,
   std::string program = buildProgram(formalIntent, formalType, count,
                                      info, fail);
 
-  Context ctx;
-  Context* context = &ctx;
+  Context* context = buildStdContext();
   ErrorGuard guard(context);
+  ResolutionContext rcval(context);
+  auto rc = &rcval;
 
   const Module* m = parseModule(context, program.c_str());
 
   const ResolutionResultByPostorderID& rr = resolveModule(context, m->id());
   Collector col;
-  ResolvedVisitor<Collector> rv(context, m, col, rr);
+  ResolvedVisitor<Collector> rv(rc, m, col, rr);
   m->traverse(rv);
 
   if (guard.errors().size()) {
@@ -527,19 +527,22 @@ static void testMatcher(Qualifier formalIntent,
 
 static Collector
 customHelper(std::string program, bool fail = false,
-             std::vector<const ErrorBase*>* errorsOut=nullptr) {
-  Context* context = getNewContext();
+             std::vector<owned<ErrorBase>>* errorsOut=nullptr) {
+  Context* context = buildStdContext();
   ErrorGuard guard(context);
+  ResolutionContext rcval(context);
+  auto rc = &rcval;
 
   const Module* m = parseModule(context, program.c_str());
 
   const ResolutionResultByPostorderID& rr = resolveModule(context, m->id());
   Collector pc;
-  ResolvedVisitor<Collector> rv(context, m, pc, rr);
+  ResolvedVisitor<Collector> rv(rc, m, pc, rr);
   m->traverse(rv);
 
+  int numErrors = guard.numErrors();
   if (guard.errors().size() && errorsOut) {
-    for (auto err : guard.errors()) errorsOut->push_back(err);
+    guard.moveErrors(*errorsOut);
   }
 
   if (debug) {
@@ -558,7 +561,8 @@ customHelper(std::string program, bool fail = false,
   }
 
   // Consume the errors so the destructor does not abort.
-  assert(fail == guard.realizeErrors());
+  guard.realizeErrors();
+  assert(fail == numErrors);
 
   return pc;
 }
@@ -647,7 +651,7 @@ static void testConcrete() {
   testMatcher(Qualifier::DEFAULT_INTENT, "int", "",
               ArgInfo({"int", "int(8)", "int(32)"}));
 
-  // varargs specifiying a tuple as the formal type
+  // varargs specifying a tuple as the formal type
   testMatcher(Qualifier::DEFAULT_INTENT, "(int,int,int)", "",
               ArgInfo(3, "(int,int,int)"));
 
@@ -671,8 +675,7 @@ proc fn(param n : int, args...n) {
 }
 )""");
 
-  std::vector<const ErrorBase*> errors;
-  auto errMsg = "Cannot resolve call to 'fn': no matching candidates";
+  std::vector<owned<ErrorBase>> errors;
 
   auto good = std::string(R"""(var x = fn(3, 1, 2.0, "hello");)""");
   auto gc = customHelper(paramFn + good);
@@ -680,12 +683,12 @@ proc fn(param n : int, args...n) {
 
   auto less = std::string(R"""(var x = fn(3, 1, 2.0);)""");
   customHelper(paramFn + less, true, &errors);
-  assert(errors.size() == 1 && errors[0]->message() == errMsg);
+  assert(errors.size() == 1 && errors[0]->type() == chpl::NoMatchingCandidates);
   errors.clear();
 
   auto more = std::string(R"""(var x = fn(3, 1, 2.0, "hello", "oops");)""");
   customHelper(paramFn + more, true, &errors);
-  assert(errors.size() == 1 && errors[0]->message() == errMsg);
+  assert(errors.size() == 1 && errors[0]->type() == chpl::NoMatchingCandidates);
   errors.clear();
 
   // non-integrals should not be valid in count-expressions
@@ -698,7 +701,7 @@ proc fn(param n : bool, args...n) {
 fn(true, true);
 )""");
   customHelper(paramBoolFn, true, &errors);
-  assert(errors.size() == 1 && errors[0]->message() == errMsg);
+  assert(errors.size() == 1 && errors[0]->type() == chpl::NoMatchingCandidates);
   errors.clear();
 
   // TODO: Make sure uints resolve (cannot cast to param uints yet)
@@ -766,20 +769,19 @@ proc fn(param n : int, args...n, y : int, z : real) {
 }
 )""");
 
-  auto errMsg = "Cannot resolve call to 'fn': no matching candidates";
-  std::vector<const ErrorBase*> errors;
+  std::vector<owned<ErrorBase>> errors;
 
   auto good = std::string(R"""(var x = fn(3, 1, 2, 3, 4, 5.0);)""");
   customHelper(paramFn + good);
 
   auto less = std::string(R"""(var x = fn(3, 1, 2, 2.0);)""");
   customHelper(paramFn + less, true, &errors);
-  assert(errors.size() == 1 && errors[0]->message() == errMsg);
+  assert(errors.size() == 1 && errors[0]->type() == chpl::NoMatchingCandidates);
   errors.clear();
 
   auto more = std::string(R"""(var x = fn(3, 1, 2, 3, 4, 5, 6, 7.0);)""");
   customHelper(paramFn + more, true, &errors);
-  assert(errors.size() == 1 && errors[0]->message() == errMsg);
+  assert(errors.size() == 1 && errors[0]->type() == chpl::NoMatchingCandidates);
   errors.clear();
 
   auto named = std::string(R"""(var x = fn(z=5.0, 3, 1, 2, 3, 4);)""");
@@ -864,11 +866,6 @@ int main(int argc, char** argv) {
   testAlignment();
 
   printf("\nAll tests passed successfully.\n");
-
-  // Cleanup
-  for (auto* con : globalContexts) {
-    delete con;
-  }
 
   return 0;
 }

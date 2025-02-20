@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -21,14 +21,29 @@
 #define CHPL_UTIL_HASH_H
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <map>
 #include <set>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
 
+#include "chpl/util/memory.h"
+
 namespace chpl {
+
+namespace detail {
+
+template <typename T>
+struct hasher {
+  size_t operator()(const T& x) const {
+    return std::hash<T>{}(x);
+  }
+};
+
+} // end namespace detail
 
 // Combine two hash functions
 inline size_t hash_combine(size_t hash, size_t other) {
@@ -68,7 +83,7 @@ inline size_t hash(const std::string& s)
 // Default hash function for one argument
 template<typename T>
 inline size_t hash(const T& x) {
-  std::hash<T> hasher;
+  detail::hasher<T> hasher;
   return hasher(x);
 }
 
@@ -95,7 +110,6 @@ static inline size_t hash(const std::tuple<>& tuple) {
   return 0;
 }
 
-// Hash function for vector
 template<typename T>
 inline size_t hashVector(const std::vector<T>& key) {
   size_t ret = 0;
@@ -105,7 +119,6 @@ inline size_t hashVector(const std::vector<T>& key) {
   return ret;
 }
 
-// Hash function for set
 template<typename T>
 inline size_t hashSet(const std::set<T>& key) {
   size_t ret = 0;
@@ -115,7 +128,15 @@ inline size_t hashSet(const std::set<T>& key) {
   return ret;
 }
 
-// Hash function for pair
+template<typename T>
+inline size_t hashOwned(const chpl::owned<T>& key) {
+  size_t ret = 0;
+  if (key) {
+    ret = hash_combine(ret, hash(*key));
+  }
+  return ret;
+}
+
 template<typename T, typename U>
 inline size_t hashPair(const std::pair<T, U>& key) {
   size_t ret = 0;
@@ -124,37 +145,72 @@ inline size_t hashPair(const std::pair<T, U>& key) {
   return ret;
 }
 
+template <typename K, typename V>
+inline size_t hashMap(const std::map<K, V>& key) {
+  size_t ret = 0;
 
+  // Just iterate and hash, relying on std::map being a sorted container.
+  for (auto& [k, v] : key) {
+    ret = hash_combine(ret, hash(k));
+    ret = hash_combine(ret, hash(v));
+  }
 
-} // end namespace chpl
+  return ret;
+}
 
-namespace std {
+namespace detail {
 
-// These std::hash functions are here b/c the hash functions
+// These hasher specialization are here b/c the hash functions
 // above can't have partial template specialization.
-template<typename T> struct hash<std::vector<T>> {
+template<typename T> struct hasher<std::vector<T>> {
   size_t operator()(const std::vector<T>& key) const {
     return chpl::hashVector(key);
   }
 };
-template<typename T> struct hash<std::set<T>> {
+template<typename T> struct hasher<std::set<T>> {
   size_t operator()(const std::set<T>& key) const {
     return chpl::hashSet(key);
   }
 };
-template<typename T, typename U> struct hash<std::pair<T,U>> {
+template<typename K, typename V> struct hasher<std::map<K, V>> {
+  size_t operator()(const std::map<K, V>& key) const {
+    return chpl::hashMap(key);
+  }
+};
+template<typename T> struct hasher<chpl::owned<T>> {
+  size_t operator()(const chpl::owned<T>& key) const {
+    return chpl::hashOwned(key);
+  }
+};
+template<typename T, typename U> struct hasher<std::pair<T,U>> {
   size_t operator()(const std::pair<T,U>& key) const {
     return chpl::hashPair(key);
   }
 };
-template <typename ... Ts> struct hash<std::tuple<Ts...>> {
+template <typename ... Ts> struct hasher<std::tuple<Ts...>> {
   size_t operator()(const std::tuple<Ts...>& key) const {
     return chpl::hash(key);
   }
 };
 
 
-} // end namespace std
+} // end namespace detail
 
+
+} // end namespace chpl
+
+namespace std {
+  template <typename T, typename U> struct hash<std::pair<T,U>> {
+    size_t operator()(const std::pair<T,U>& key) const {
+      return chpl::hashPair(key);
+    }
+  };
+
+  template <typename... Ts> struct hash<std::tuple<Ts...>> {
+    size_t operator()(const std::tuple<Ts...>& key) const {
+      return chpl::hash(key);
+    }
+  };
+} // end namespace std
 
 #endif

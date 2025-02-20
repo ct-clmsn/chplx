@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -56,7 +56,9 @@ class AstNode {
 
  private:
   AstTag tag_;
+  int attributeGroupChildNum_;
   ID id_;
+
 
  protected:
   AstList children_;
@@ -76,6 +78,15 @@ class AstNode {
    or the UniqueStrings stored in the ID.
    */
   virtual void markUniqueStringsInner(Context* context) const = 0;
+
+  /**
+   This function needs to be defined by subclasses.
+   It should serialize any fields in the subclasses.
+   It need not concern itself with AstNode's fields, including the children.
+   Note that subclasses also need to provide a constructor
+   accepting AstTag, Deserializer.
+   */
+  virtual void serializeInner(Serializer& os) const = 0;
 
   struct DumpSettings {
     chpl::StringifyKind kind = StringifyKind::DEBUG_DETAIL;
@@ -105,16 +116,42 @@ class AstNode {
                          const AstNode* parent,
                          int parentIdx);
 
- protected:
   AstNode(AstTag tag)
-    : tag_(tag), id_(), children_() {
+    : tag_(tag), attributeGroupChildNum_(NO_CHILD), id_(), children_() {
   }
   AstNode(AstTag tag, AstList children)
-    : tag_(tag), id_(), children_(std::move(children)) {
+    : tag_(tag), attributeGroupChildNum_(NO_CHILD), id_(),
+      children_(std::move(children)) {
+  }
+  AstNode(AstTag tag, AstList children, int attributeGroupChildNum)
+    : tag_(tag), attributeGroupChildNum_(attributeGroupChildNum), id_(),
+      children_(std::move(children)) {
+    CHPL_ASSERT(NO_CHILD <= attributeGroupChildNum_ &&
+                attributeGroupChildNum_ < (ssize_t)children_.size());
+
+    if (attributeGroupChildNum_ >= 0) {
+      CHPL_ASSERT(child(attributeGroupChildNum_)->isAttributeGroup());
+    }
   }
 
-  // Magic constant to indicate no such child exists.
-  static const int NO_CHILD = -1;
+  /** To be called by subclasses to set the tag and
+      deserialize the AstNode fields other than the children */
+  AstNode(AstTag tag, Deserializer& des);
+
+  AstNode(const AstNode& node) {
+    this->tag_ = node.tag_;
+    this->attributeGroupChildNum_ = node.attributeGroupChildNum_;
+    for (auto child : node.children()) {
+      children_.push_back(child->copy());
+    }
+  }
+
+  /** Completes the deserialization process for an AstNode
+      by deserializing the children. */
+  void deserializeChildren(Deserializer& des);
+
+  /** Serializes the children, but skips comments */
+  void serializeChildren(Serializer& ser) const;
 
   // Quick way to return an already exhausted iterator.
   template <typename T>
@@ -145,6 +182,9 @@ class AstNode {
  public:
   virtual ~AstNode() = 0; // this is an abstract base class
 
+  // Magic constant to indicate no such child exists.
+  static constexpr int NO_CHILD = -1;
+
   /**
     Returns the tag indicating which AstNode subclass this is.
    */
@@ -155,7 +195,7 @@ class AstNode {
   /**
     Returns the ID of this AST node.
    */
-  ID id() const {
+  inline const ID& id() const {
     return id_;
   }
 
@@ -186,6 +226,43 @@ class AstNode {
   const AstNode* child(int i) const {
     CHPL_ASSERT(0 <= i && i < (int) children_.size());
     return children_[i].get();
+  }
+
+  /**
+    Returns the index into children of the attributeGroup child node,
+    or AstNode::NO_CHILD if no attributeGroup exists on this node.
+   */
+  int attributeGroupChildNum() const {
+    return attributeGroupChildNum_;
+  }
+
+  /*
+    Attach an AttributeGroup to this AstNode after it was initially built
+    without an AttributeGroup. This is used by the ParserContextImpl to
+    handle parsing Variables and TupleDecls, and will result in the
+    AttributeGroup being attached as the last child of this AstNode.
+    TODO: We may want to consider moving the AttributeGroup to the front
+    of the children list, to maintain consistency with other AstNodes. But that
+    will require updating the indices of all the existing children.
+  */
+  void attachAttributeGroup(owned<AstNode> attributeGroup) {
+    CHPL_ASSERT(attributeGroupChildNum_ == NO_CHILD);
+    CHPL_ASSERT(attributeGroup->isAttributeGroup());
+    attributeGroupChildNum_ = children_.size();
+    children_.push_back(std::move(attributeGroup));
+  }
+
+  /**
+    Return the attributeGroup associated with this AstNode, or nullptr
+    if none exists. Note that it would be better to use the parsing query
+    idToAttributeGroup to ensure you get the AttributeGroup when the AstNode
+    is a child of a MultiDecl or TupleDecl.
+   */
+  const AttributeGroup* attributeGroup() const {
+    if (attributeGroupChildNum_ < 0) return nullptr;
+    auto ret = child(attributeGroupChildNum_);
+    CHPL_ASSERT(ret->isAttributeGroup());
+    return (const AttributeGroup*)ret;
   }
 
   /**
@@ -226,6 +303,14 @@ class AstNode {
   // compute the maximum width of all of the IDs
   int computeMaxIdStringWidth() const;
 
+  /** Serialize this uAST node to the stream stored in 'ser' */
+  void serialize(Serializer& ser) const;
+
+  /** Deserialize this uAST node from the stream in 'des'. Note
+      that uAST nodes deserialized in this way will not have IDs assigned.
+      To assign IDs, it's necessary to use a Builder. */
+  static owned<AstNode> deserializeWithoutIds(Deserializer& des);
+
   /// \cond DO_NOT_DOCUMENT
   DECLARE_DUMP;
   /// \endcond DO_NOT_DOCUMENT
@@ -241,6 +326,8 @@ class AstNode {
   #define AST_LEAF(NAME) AST_IS(NAME)
   #define AST_BEGIN_SUBCLASSES(NAME) AST_IS(NAME)
   #define AST_END_SUBCLASSES(NAME)
+  // Used for macro-based casting
+  bool isAstNode() const { return true; }
   /// \endcond
   // Apply the above macros to uast-classes-list.h
   #include "chpl/uast/uast-classes-list.h"
@@ -266,6 +353,8 @@ class AstNode {
   #define AST_LEAF(NAME) AST_TO(NAME)
   #define AST_BEGIN_SUBCLASSES(NAME) AST_TO(NAME)
   #define AST_END_SUBCLASSES(NAME)
+  // Used for macro-based casting
+  AST_TO(AstNode)
   /// \endcond
   // Apply the above macros to uast-classes-list.h
   #include "chpl/uast/uast-classes-list.h"
@@ -473,8 +562,30 @@ class AstNode {
       #undef CASE_OTHER
     }
   }
+
+  owned<AstNode> copy() const;
 };
 } // end namespace uast
+
+template<> struct serialize<uast::AstList> {
+  void operator()(Serializer& ser, const uast::AstList& list) {
+    ser.writeVU64(list.size());
+    for (const auto& node : list) {
+      node->serialize(ser);
+    }
+  }
+};
+
+template<> struct deserialize<uast::AstList> {
+  uast::AstList operator()(Deserializer& des) {
+    uast::AstList ret;
+    uint64_t len = des.readVU64();
+    for (uint64_t i = 0; i < len; i++) {
+      ret.push_back(uast::AstNode::deserializeWithoutIds(des));
+    }
+    return ret;
+  }
+};
 } // end namespace chpl
 
 /// \cond DO_NOT_DOCUMENT
@@ -511,7 +622,6 @@ AST_LESS(AstNode)
 #undef AST_END_SUBCLASSES
 #undef AST_LESS
 /// \endcond
-
 
 } // end namespace std
 

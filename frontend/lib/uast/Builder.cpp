@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -19,6 +19,7 @@
 
 #include "chpl/uast/Builder.h"
 
+#include "chpl/framework/compiler-configuration.h"
 #include "chpl/framework/Context.h"
 #include "chpl/framework/ErrorMessage.h"
 #include "chpl/framework/ErrorBase.h"
@@ -53,6 +54,21 @@ useConfigSetting(Context* context, std::string name, ID id) {
   QUERY_STORE_INPUT_RESULT(nameToConfigSettingId, context, id, name);
 }
 
+// Generate compile-time warnings for deprecated/unstable config params set
+// in command line
+static void
+generateConfigWarning(std::string varName, std::string kind,
+                      UniqueString message) {
+  // TODO: Need proper message handling here
+  std::string msg = "'" + varName + "' was set via a compiler flag";
+  if (message.isEmpty()) {
+    std::cerr << "warning: " + varName + " is " + kind << std::endl;
+  } else {
+    std::cerr << "warning: " + message.str() << std::endl;
+  }
+  std::cerr << "note: " + msg << std::endl;
+}
+
 bool Builder::checkAllConfigVarsAssigned(Context* context) {
    // check that all config vars that were set from the command line were assigned
    bool anyBadConfigs = false;
@@ -61,7 +77,8 @@ bool Builder::checkAllConfigVarsAssigned(Context* context) {
      auto usedId = nameToConfigSettingId(context, config.first);
      if (usedId.isEmpty()) {
        auto loc = Location();
-       context->error(loc,"Trying to set unrecognized config '%s' via -s flag", config.first.c_str());
+       context->error(loc,"Trying to set unrecognized config '%s' via -s flag",
+                          config.first.c_str());
        anyBadConfigs = true;
      }
    }
@@ -88,7 +105,8 @@ owned<Builder> Builder::createForTopLevelModule(Context* context,
                                                 const char* filepath) {
   auto uniqueFilename = UniqueString::get(context, filepath);
   UniqueString startingSymbolPath;
-  auto b = new Builder(context, uniqueFilename, startingSymbolPath);
+  auto b = new Builder(context, uniqueFilename, startingSymbolPath,
+                       /* LibraryFile */ nullptr);
   return toOwned(b);
 }
 
@@ -96,26 +114,126 @@ owned<Builder> Builder::createForIncludedModule(Context* context,
                                                 const char* filepath,
                                                 UniqueString parentSymbolPath) {
   auto uniqueFilename = UniqueString::get(context, filepath);
-  auto b = new Builder(context, uniqueFilename, parentSymbolPath);
+  auto b = new Builder(context, uniqueFilename, parentSymbolPath,
+                       /* LibraryFile */ nullptr);
+  return toOwned(b);
+}
+
+owned<Builder> Builder::createForGeneratedCode(Context* context,
+                                               ID generatedFrom) {
+  // Note: currently filePath only appears to be used when modules are
+  // involved, and generated uAST is currently expected to be a single
+  // top-level function. Locations will be set manually by caller.
+  auto uniqueFilename = UniqueString::get(context, "<dummy>");
+  auto b = new Builder(context, uniqueFilename, generatedFrom.symbolPath(),
+                       /* LibraryFile */ nullptr,
+                       /* isGenerated=*/true);
+  return toOwned(b);
+}
+
+owned<Builder> Builder::createForLibraryFileModule(
+                                        Context* context,
+                                        UniqueString filePath,
+                                        UniqueString parentSymbolPath,
+                                        const libraries::LibraryFile* lib) {
+  auto b = new Builder(context, filePath, parentSymbolPath, lib);
+  // locations won't be noted when working with a library file
+  // (since they will be stored and retrieved separately, instead)
+  // so don't fail if a location was not noted.
+  b->useNotedLocations_ = false;
+  // this flag helps an assertion in Builder::result if
+  // noteSymbolTableSymbols was not called
+  b->expectSymbolTableVec_ = true;
   return toOwned(b);
 }
 
 void Builder::addToplevelExpression(owned<AstNode> e) {
-  this->topLevelExpressions_.push_back(std::move(e));
-}
-
-void Builder::addError(const ErrorBase* e) {
-  this->errors_.push_back(e);
+  this->br.topLevelExpressions_.push_back(std::move(e));
 }
 
 void Builder::noteLocation(AstNode* ast, Location loc) {
   notedLocations_[ast] = loc;
 }
 
+void Builder::noteAdditionalLocation(AstLocMap& m, AstNode* ast,
+                                     Location loc) {
+  if (!ast || loc.isEmpty()) return;
+  CHPL_ASSERT(m.find(ast) == m.end());
+  m.emplace(ast, std::move(loc));
+}
+
+void Builder::tryNoteAdditionalLocation(AstLocMap& m, AstNode* ast,
+                                     Location loc) {
+  if (!ast || loc.isEmpty()) return;
+  auto found = m.find(ast);
+  if (found == m.end()) {
+    m.emplace_hint(found, ast, std::move(loc));
+  }
+}
+
+void Builder::copyAdditionalLocation(AstLocMap& m, const AstNode* from, const AstNode* to) {
+  if (!from || !to) return;
+  auto foundFrom = m.find(from);
+  if (foundFrom == m.end()) return;
+  auto foundTo = m.find(to);
+  if (foundTo == m.end()) {
+    m.emplace_hint(foundTo, to, foundFrom->second);
+  }
+}
+
+void Builder::deleteAdditionalLocation(AstLocMap& m, const AstNode* ast) {
+  if (!ast) return;
+  m.erase(ast);
+}
+
+#define LOCATION_MAP(ast__, location__) \
+  void Builder::note##location__##Location(ast__* ast, Location loc) { \
+    auto& m = CHPL_AST_LOC_MAP(ast__, location__); \
+    noteAdditionalLocation(m, ast, std::move(loc)); \
+  } \
+  void Builder::tryNote##location__##Location(ast__* ast, Location loc) { \
+    auto& m = CHPL_AST_LOC_MAP(ast__, location__); \
+    tryNoteAdditionalLocation(m, ast, std::move(loc)); \
+  }\
+  void Builder::copy##location__##Location(const ast__* from, const ast__* to) { \
+    auto& m = CHPL_AST_LOC_MAP(ast__, location__); \
+    copyAdditionalLocation(m, from, to); \
+  }\
+  void Builder::delete##location__##Location(const ast__* ast) { \
+    auto& m = CHPL_AST_LOC_MAP(ast__, location__); \
+    deleteAdditionalLocation(m, ast); \
+  }
+#include "chpl/uast/all-location-maps.h"
+#undef LOCATION_MAP
+
+void Builder::deleteAllLocations(const AstNode* ast) {
+  notedLocations_.erase(ast);
+  #define LOCATION_MAP(ast__, location__) \
+    CHPL_AST_LOC_MAP(ast__, location__).erase(ast);
+  #include "chpl/uast/all-location-maps.h"
+  #undef LOCATION_MAP
+}
+
+void Builder::noteSymbolTableSymbols(SymbolTableVec vec) {
+  symbolTableVec_ = std::move(vec);
+  expectSymbolTableVec_ = false;
+}
+
 BuilderResult Builder::result() {
-  this->createImplicitModuleIfNeeded();
+  if (isGenerated() == false) {
+    this->createImplicitModuleIfNeeded();
+  }
   this->assignIDs();
-  this->postParseChecks();
+
+  // if we have a symbolTableVec, use it to compute
+  // br.libraryFileSymbols_, now that IDs have been assigned.
+  CHPL_ASSERT(!expectSymbolTableVec_); // was noteSymbolTableSymbols called?
+  if (!symbolTableVec_.empty()) {
+    for (const auto& info : symbolTableVec_) {
+      br.libraryFileSymbols_[info.ast->id()] =
+        std::make_pair(info.moduleIndex, info.symbolIndex);
+    }
+  }
 
   // Performance: We could consider copying all of these AST
   // nodes to a newly allocated buffer big enough to hold them
@@ -123,22 +241,31 @@ BuilderResult Builder::result() {
   // that a postorder traversal of the AST has good data locality
   // (i.e. good cache behavior).
 
-  BuilderResult ret(filepath_);
-  ret.topLevelExpressions_.swap(topLevelExpressions_);
-  ret.errors_.swap(errors_);
-  ret.idToAst_.swap(idToAst_);
-  ret.idToLocation_.swap(idToLocation_);
-  ret.commentIdToLocation_.swap(commentToLocation_);
+  // TODO: Any other state that can be reset?
+  notedLocations_.clear();
 
+  #define LOCATION_MAP(ast__, location__) \
+    CHPL_AST_LOC_MAP(ast__, location__).clear();
+  #include "chpl/uast/all-location-maps.h"
+  #undef LOCATION_MAP
+
+  // swap the stored BuilderResult with an empty one and return it
+  BuilderResult ret;
+  ret.swap(br);
   return ret;
 }
 
 bool Builder::astTagIndicatesNewIdScope(asttags::AstTag tag) {
-  return asttags::isNamedDecl(tag) &&
-        (asttags::isFunction(tag) ||
-         asttags::isModule(tag) ||
-         asttags::isInterface(tag) ||
-         asttags::isTypeDecl(tag));
+  if (asttags::isNamedDecl(tag)) {
+    return (asttags::isFunction(tag) ||
+            asttags::isModule(tag) ||
+            asttags::isInterface(tag) ||
+            asttags::isTypeDecl(tag));
+  } else if (asttags::isExternBlock(tag)) {
+    return true;
+  }
+
+  return false;
 }
 
 // If the implicit module is needed, moves the statements in to it.
@@ -151,7 +278,7 @@ void Builder::createImplicitModuleIfNeeded() {
   const AstNode* firstNonModule = nullptr;
   const AstNode* firstUseImportOrRequire = nullptr;
 
-  for (auto const& ownedExpression: topLevelExpressions_) {
+  for (auto const& ownedExpression: br.topLevelExpressions_) {
     const AstNode* ast = ownedExpression.get();
     if (ast->isComment()) {
       // ignore comments for this analysis
@@ -177,28 +304,28 @@ void Builder::createImplicitModuleIfNeeded() {
     return;
   } else {
     // compute the basename of filename to get the inferred module name
-    std::string modname = Builder::filenameToModulename(filepath_.c_str());
+    std::string modname = Builder::filenameToModulename(br.filePath_.c_str());
     auto inferredModuleName = UniqueString::get(context_, modname);
     // create a new module containing all of the statements
     AstList stmts;
-    stmts.swap(topLevelExpressions_);
-    auto loc = Location(filepath_, 1, 1, 1, 1);
+    stmts.swap(br.topLevelExpressions_);
+    auto loc = Location(br.filePath_, 1, 1, 1, 1);
     auto ownedModule = Module::build(this, std::move(loc),
-                                     /*attributes*/ nullptr,
+                                     /*attributeGroup*/ nullptr,
                                      Decl::DEFAULT_VISIBILITY,
                                      inferredModuleName,
                                      Module::IMPLICIT,
                                      std::move(stmts));
     const Module* implicitModule = ownedModule.get();
-    topLevelExpressions_.push_back(std::move(ownedModule));
+    br.topLevelExpressions_.push_back(std::move(ownedModule));
 
     // emit warnings as needed
     if (firstUseImportOrRequire && !containsOther && nModules == 1) {
-      addError(ErrorImplicitFileModule::get(context(),
-            std::make_tuple(firstUseImportOrRequire, lastModule, implicitModule)));
+      CHPL_REPORT(context(), ImplicitFileModule,
+                  firstUseImportOrRequire, lastModule, implicitModule);
     } else if (nModules >= 1 && !containsOnlyModules) {
-      addError(ErrorImplicitFileModule::get(context(),
-            std::make_tuple(firstNonModule, lastModule, implicitModule)));
+      CHPL_REPORT(context(), ImplicitFileModule,
+                  firstNonModule, lastModule, implicitModule);
     }
   }
 }
@@ -214,9 +341,10 @@ void Builder::assignIDs() {
     pathVec = ID::expandSymbolPath(context_, startingSymbolPath_);
   }
 
-  for (auto const& ownedExpression: topLevelExpressions_) {
+  for (auto const& ownedExpression: br.topLevelExpressions_) {
     AstNode* ast = ownedExpression.get();
-    if (ast->isModule() || ast->isComment()) {
+    bool isModuleOrComment = ast->isModule() || ast->isComment();
+    if (isGenerated() || isModuleOrComment) {
       UniqueString emptyString;
       doAssignIDs(ast, emptyString, i, commentIndex, pathVec, duplicates);
     } else {
@@ -269,21 +397,24 @@ void Builder::doAssignIDs(AstNode* ast, UniqueString symbolPath, int& i,
     comment->setCommentId(commentIndex);
     commentIndex += 1;
 
-    auto search = notedLocations_.find(ast);
-    if (search != notedLocations_.end()) {
-      CHPL_ASSERT(!search->second.isEmpty());
-      commentToLocation_.push_back(search->second);
-    } else {
-      CHPL_ASSERT(false && "Location for all ast should be set by noteLocation");
+    if (useNotedLocations_) {
+      auto search = notedLocations_.find(ast);
+      if (search != notedLocations_.end()) {
+        CHPL_ASSERT(!search->second.isEmpty());
+        br.commentIdToLocation_.push_back(search->second);
+      } else {
+        CHPL_ASSERT(false && "Location for all ast should be set by noteLocation");
+      }
     }
     return;
   }
 
-  // check if this is a config var/param/type and if a value was set from the command line
-  // and update the initExpr for this node if so
+  // check if this is a config var/param/type and if a value was set from the
+  // command line and update the initExpr for this node if so
   std::string configName;
   std::string configValue;
   AstNode* ieNode = nullptr;
+
   if (auto var = ast->toVariable()) {
     if (var->isConfig()) {
      lookupConfigSettingsForVar(var, pathVec, configName, configValue);
@@ -299,9 +430,33 @@ void Builder::doAssignIDs(AstNode* ast, UniqueString symbolPath, int& i,
   if (newScope) {
     // for scoping constructs, adjust the symbolPath and
     // then visit the defined symbol
-    UniqueString declName = ast->toNamedDecl()->name();
-    int repeat = 0;
+    UniqueString declName;
 
+    if (auto nd = ast->toNamedDecl()) {
+      declName = nd->name();
+    } else if (ast->isExternBlock()) {
+      declName = UniqueString::get(context_, "-externblock");
+    }
+
+    // For anonymous functions, just use the 'kind' as the name.
+    if (auto fn = ast->toFunction()) {
+      if (fn->isAnonymous()) {
+        assert(declName.isEmpty());
+        auto str = Function::kindToString(fn->kind());
+        declName = UniqueString::get(context_, str);
+      }
+    }
+
+    // Assumption: doAssignIDs is invoked on top-level uAST with an empty
+    // string for the symbolPath. If the symbolPath is not empty, and this
+    // builder is for generated uAST, then we have violated the assumption that
+    // there is only one scope-defining symbol.
+    if (isGenerated() && !symbolPath.isEmpty()) {
+      CHPL_ASSERT(false && "generated uAST may not contain scope-defining "
+                           "symbols other than the top-level symbol");
+    }
+
+    int repeat = 0;
     auto search = duplicates.find(declName);
     if (search != duplicates.end()) {
       // it's already there, so increment the repeat counter
@@ -347,7 +502,13 @@ void Builder::doAssignIDs(AstNode* ast, UniqueString symbolPath, int& i,
     }
 
     int numContainedIds = freshId;
-    ast->setID(ID(newSymbolPath, -1, numContainedIds));
+    ID id;
+    if (isGenerated()) {
+      id = ID::generatedId(newSymbolPath, -1, numContainedIds);
+    } else {
+      id = ID(newSymbolPath, -1, numContainedIds);
+    }
+    ast->setID(id);
 
     // Note: when creating a new symbol (e.g. fn), we're not incrementing i.
     // The new symbol ID has the updated path (e.g. function name)
@@ -359,6 +520,7 @@ void Builder::doAssignIDs(AstNode* ast, UniqueString symbolPath, int& i,
 
   } else {
     // not a new scope
+    CHPL_ASSERT(!ast->isModule()); // modules should be a new scope
 
     // visit the children now to get integer part of ids in postorder
     for (auto & child : ast->children_) {
@@ -367,53 +529,78 @@ void Builder::doAssignIDs(AstNode* ast, UniqueString symbolPath, int& i,
     }
 
     int afterChildID = i;
-    int myID = afterChildID;
     i++; // count the ID for the node we are currently visiting
     int numContainedIDs = afterChildID - firstChildID;
-    ast->setID(ID(symbolPath, myID, numContainedIDs));
+    ID id;
+    if (isGenerated()) {
+      id = ID::generatedId(symbolPath, afterChildID, numContainedIDs);
+    } else {
+      id = ID(symbolPath, afterChildID, numContainedIDs);
+    }
+    ast->setID(id);
   }
 
   // update idToAst_ for the visited AST node
-  idToAst_[ast->id()] = ast;
+  br.idToAst_[ast->id()] = ast;
 
   // update locations_ for the visited ast
-  auto search = notedLocations_.find(ast);
-  if (search != notedLocations_.end()) {
-    CHPL_ASSERT(!search->second.isEmpty());
-    idToLocation_[ast->id()] = search->second;
-    // if a config's initExpr was updated, mark it as used and make sure it wasn't used previously
-    if (ieNode) {
-      CHPL_ASSERT(ast->isVariable());
-      checkConfigPreviouslyUsed(ast->toVariable(), configName);
+  if (useNotedLocations_) {
+    auto search = notedLocations_.find(ast);
+    if (search != notedLocations_.end()) {
+      CHPL_ASSERT(!search->second.isEmpty());
+      br.idToLocation_[ast->id()] = search->second;
+
+      // Also map additional locations to ID.
+      #define LOCATION_MAP(ast__, location__) \
+        if (auto x = ast->to##ast__()) { \
+          auto& m1 = CHPL_AST_LOC_MAP(ast__, location__); \
+          auto it = m1.find(x); \
+          if (it != m1.end()) { \
+            auto& m2 = br.CHPL_ID_LOC_MAP(ast__, location__); \
+            m2[x->id()] = it->second; \
+          } \
+        }
+      #include "chpl/uast/all-location-maps.h"
+      #undef LOCATION_MAP
+
+      // if a config's initExpr was updated, mark it as used and make sure it wasn't used previously
+      if (ieNode) {
+        CHPL_ASSERT(ast->isVariable());
+        checkConfigPreviouslyUsed(ast->toVariable(), configName);
+      }
+    } else {
+      CHPL_ASSERT(false && "Location for all ast should be set by noteLocation");
     }
-  } else {
-    CHPL_ASSERT(false && "Location for all ast should be set by noteLocation");
   }
 }
 
-void Builder::checkConfigPreviouslyUsed(const Variable* var, std::string& configNameUsed) {
+void
+Builder::checkConfigPreviouslyUsed(const Variable* var, std::string& configNameUsed) {
   // If you're reading this and confused about how we can call useConfigSetting
   // and then call nameToConfigSetting, essentially setting a value and then
   // asking for it back and comparing against the value we just used, you're not alone.
   // See the docs in query-impl.h (QUERY_STORE_INPUT_RESULT) that describes
   // why this works.
-  // An important aspect is that calling a "Getter" type input query also stores the results and will
-  // return those saved results on subsequent calls to during the same revision.
+  // An important aspect is that calling a "Getter" type input query also stores
+  // the results and will return those saved results on subsequent calls to
+  // the "Getter" query during the same revision.
   // "If called multiple times __within the same revision__, only the first
   // stored result in that revision will be saved."
   useConfigSetting(context(), configNameUsed, var->id());
   auto usedId = nameToConfigSettingId(context(), configNameUsed);
 
   if (usedId != var->id()) {
-    addError(ErrorAmbiguousConfigName::get(context(),
-          std::make_tuple(configNameUsed, var, usedId)));
+    CHPL_REPORT(context(), AmbiguousConfigName, configNameUsed, var, usedId);
   }
 }
 
 /**
- * Check if a config var has a setting passed from the command line and save the name/value into ref args
+ * Check if a config var has a setting passed from the command line and save
+ * the name/value into ref args
  */
-void Builder::lookupConfigSettingsForVar(Variable* var, pathVecT& pathVec, std::string& name, std::string& value) {
+void
+Builder::lookupConfigSettingsForVar(Variable* var, pathVecT& pathVec,
+                                    std::string& name, std::string& value) {
   std::pair<std::string, std::string> configMatched;
   CHPL_ASSERT(var->isConfig());
   const auto &configs = parsing::configSettings(this->context());
@@ -430,27 +617,23 @@ void Builder::lookupConfigSettingsForVar(Variable* var, pathVecT& pathVec, std::
   }
   // for config vars, check if they were set from the command line
   for (auto configPair: configs) {
-    if ((var->name().str() == configPair.first && var->visibility() != Decl::PRIVATE)
-        || configPair.first == possibleModule + var->name().str()) {
+    std::string varName = var->name().str();
+    if ((varName == configPair.first && var->visibility() != Decl::PRIVATE) ||
+        configPair.first == possibleModule + varName) {
       // found a config that was set via cmd line
-      // handle deprecations
-      if (auto attribs = var->attributes()) {
-        if (attribs->isDeprecated()) {
-          // TODO: Need proper message handling here
-          std::string msg = "'" + var->name().str() + "' was set via a compiler flag";
-          if (attribs->deprecationMessage().isEmpty()) {
-            std::cerr << "warning: " + var->name().str() + " is deprecated" << std::endl;
-          } else {
-            std::cerr << "warning: " + attribs->deprecationMessage().str() << std::endl;
-          }
-          std::cerr << "note: " + msg << std::endl;
-        }
+      // handle deprecations/unstability
+      if (auto attribs = var->attributeGroup()) {
+        if (attribs->isDeprecated())
+          generateConfigWarning(varName, "deprecated", attribs->deprecationMessage());
+        if (attribs->isUnstable() &&
+            isCompilerFlagSet(this->context(), CompilerFlags::WARN_UNSTABLE))
+          generateConfigWarning(varName, "unstable", attribs->unstableMessage());
       }
       if (!configMatched.first.empty() &&
           configMatched.first != configPair.first) {
 
-        addError(ErrorAmbiguousConfigSet::get(context(),
-              std::make_tuple(var, configMatched.first, configPair.first)));
+        CHPL_REPORT(context(), AmbiguousConfigSet,
+                    var, configMatched.first, configPair.first);
       }
       configMatched = configPair;
     }
@@ -462,25 +645,29 @@ void Builder::lookupConfigSettingsForVar(Variable* var, pathVecT& pathVec, std::
 /*
  * Update the initExpr for a config var/param/type
  */
-AstNode* Builder::updateConfig(Variable* var, std::string configName, std::string configVal) {
+AstNode* Builder::updateConfig(Variable* var, std::string configName,
+                               std::string configVal) {
   AstNode* ret = nullptr;
   CHPL_ASSERT(var->isConfig());
   CHPL_ASSERT(!configName.empty());
   // TODO: how to handle nested module configs e.g., -sFoo.Baz.bar=10
   owned<AstNode> initNode = parseDummyNodeForInitExpr(var, configVal);
-  ret = initNode.get();
-  // create a last column value, add 1 for the initial column and 1 for the `=`
-  int lastColumn = configName.length() + configVal.length() + 2;
-  auto loc = Location(ret->id().symbolPath(), 1,1,1,lastColumn);
-  noteChildrenLocations(ret, loc);
-  addOrReplaceInitExpr(var->toVariable(), std::move(initNode));
+  if (initNode) {
+    ret = initNode.get();
+    // create a last column value, add 1 for the initial column and 1 for the `=`
+    int lastColumn = configName.length() + configVal.length() + 2;
+    auto loc = Location(ret->id().symbolPath(), 1,1,1,lastColumn);
+    noteChildrenLocations(ret, loc);
+    addOrReplaceInitExpr(var->toVariable(), std::move(initNode));
+  }
   return ret;
 }
 
 /**
  * Create a dummy input for a variable and parse it to extract the initExpr
  */
-owned <AstNode> Builder::parseDummyNodeForInitExpr(Variable* var, std::string value) {
+owned <AstNode>
+Builder::parseDummyNodeForInitExpr(Variable* var, std::string value) {
   std::string inputText;
   // for types, it's important for the parser to see that it's a type
   if (var->kind() == uast::Variable::TYPE) {
@@ -495,12 +682,6 @@ owned <AstNode> Builder::parseDummyNodeForInitExpr(Variable* var, std::string va
   path += var->name().str();
   path += ")";
   auto parseResult = parser.parseString(path.c_str(), inputText.c_str());
-  // Propagate any parse errors from the dummy node to builder errors
-  if (parseResult.numErrors() > 0) {
-   for (const ErrorBase* error : parseResult.errors()) {
-     addError(error);
-   }
-  }
   auto mod = parseResult.singleModule();
   CHPL_ASSERT(mod);
   owned<AstNode> initNode;
@@ -509,6 +690,9 @@ owned <AstNode> Builder::parseDummyNodeForInitExpr(Variable* var, std::string va
     initNode = std::move(mod->children_[0]->children_.back());
     // clean out the nullptr
     mod->children_[0]->children_.pop_back();
+  } else if (mod->stmt(0)->isErroneousExpression()) {
+    auto loc = Location();
+    context()->error(loc, "Error while trying to set config '%s'", var->name().c_str());
   } else {
     CHPL_ASSERT(false && "should only be an assignment or type initializer");
   }

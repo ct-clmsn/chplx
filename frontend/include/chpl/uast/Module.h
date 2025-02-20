@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -39,6 +39,8 @@ namespace uast {
   is a declaration for a module named M.
  */
 class Module final : public NamedDecl {
+ friend class AstNode;
+
  public:
   enum Kind {
     DEFAULT_MODULE_KIND,
@@ -49,17 +51,28 @@ class Module final : public NamedDecl {
  private:
   Kind kind_;
 
-  Module(AstList children, int attributesChildNum, Decl::Visibility vis,
+  Module(AstList children, int attributeGroupChildNum, Decl::Visibility vis,
          UniqueString name,
          Kind kind)
-    : NamedDecl(asttags::Module, std::move(children), attributesChildNum,
+    : NamedDecl(asttags::Module, std::move(children), attributeGroupChildNum,
                 vis,
                 Decl::DEFAULT_LINKAGE,
-                /*linkageNameChildNum*/ -1,
+                /*linkageNameChildNum*/ NO_CHILD,
                 name),
                 kind_(kind) {
 
   }
+
+  void serializeInner(Serializer& ser) const override {
+    namedDeclSerializeInner(ser);
+    ser.write(kind_);
+  }
+
+  explicit Module(Deserializer& des)
+    : NamedDecl(asttags::Module, des) {
+    kind_ = des.read<Kind>();
+  }
+
 
   bool contentsMatchInner(const AstNode* other) const override {
     const Module* lhs = this;
@@ -73,7 +86,7 @@ class Module final : public NamedDecl {
   }
 
   int stmtChildNum() const {
-    return attributes() ? 1 : 0;
+    return attributeGroup() ? 1 : 0;
   }
 
   void dumpFieldsInner(const DumpSettings& s) const override;
@@ -82,7 +95,7 @@ class Module final : public NamedDecl {
   ~Module() override = default;
 
   static owned<Module> build(Builder* builder, Location loc,
-                             owned<Attributes> attributes,
+                             owned<AttributeGroup> attributeGroup,
                              Decl::Visibility vis,
                              UniqueString name,
                              Module::Kind kind,
@@ -108,7 +121,7 @@ class Module final : public NamedDecl {
     Return the number of statements in this module.
   */
   int numStmts() const {
-    return attributes() ? numChildren()-1 : numChildren();
+    return attributeGroup() ? numChildren()-1 : numChildren();
   }
 
   /**
@@ -128,6 +141,28 @@ class Module final : public NamedDecl {
 
 
 } // end namespace uast
+
+DECLARE_SERDE_ENUM(uast::Module::Kind, uint8_t);
+
+/// \cond DO_NOT_DOCUMENT
+template<> struct update<uast::Module::Kind> {
+  bool operator()(uast::Module::Kind& keep,
+                  uast::Module::Kind& addin) const {
+    return defaultUpdateBasic(keep, addin);
+  }
+};
+
+template<> struct mark<uast::Module::Kind> {
+  void operator()(Context* context,
+                  const uast::Module::Kind& keep) const {
+    // nothing to do for enum
+  }
+};
+
+
+/// \endcond DO_NOT_DOCUMENT
+
+
 } // end namespace chpl
 
 #endif

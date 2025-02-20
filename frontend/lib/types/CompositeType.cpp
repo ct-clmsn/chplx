@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -19,9 +19,17 @@
 
 #include "chpl/types/CompositeType.h"
 
+#include "chpl/parsing/parsing-queries.h"
 #include "chpl/resolution/can-pass.h"
 #include "chpl/resolution/resolution-queries.h"
+#include "chpl/resolution/resolution-types.h"
 #include "chpl/types/BasicClassType.h"
+#include "chpl/types/ClassType.h"
+#include "chpl/types/ClassTypeDecorator.h"
+#include "chpl/types/CPtrType.h"
+#include "chpl/types/DomainType.h"
+#include "chpl/types/RecordType.h"
+#include "chpl/types/TupleType.h"
 #include "chpl/uast/Decl.h"
 #include "chpl/uast/NamedDecl.h"
 
@@ -36,6 +44,8 @@ CompositeType::areSubsInstantiationOf(Context* context,
                                       const CompositeType* partial) const {
   // Check to see if the substitutions of `this` are all instantiations
   // of the field types of `partial`
+  //
+  // Note: Assumes 'this' and 'partial' share a root instantiation.
 
   const SubstitutionsMap& mySubs = substitutions();
   const SubstitutionsMap& pSubs = partial->substitutions();
@@ -43,7 +53,7 @@ CompositeType::areSubsInstantiationOf(Context* context,
   // check, for each substitution in mySubs, that it matches
   // or is an instantiation of pSubs.
 
-  for (auto mySubPair : mySubs) {
+  for (const auto& mySubPair : mySubs) {
     ID mySubId = mySubPair.first;
     QualifiedType mySubType = mySubPair.second;
 
@@ -59,6 +69,16 @@ CompositeType::areSubsInstantiationOf(Context* context,
         // it was not an instantiation
         return false;
       }
+    } else {
+      // If the ID isn't found, then that means the generic component doesn't
+      // exist in the other type, which means this cannot be an instantiation
+      // of the other type.
+      //
+      // Currently this check assumes that 'this' and 'partial' share a root
+      // instantiation, so how could we reach this condition? One path here
+      // involves passing a tuple to a tuple formal with a fewer number of
+      // elements. For example, passing "(1, 2, 3)" to "(int, ?)".
+      return false;
     }
   }
 
@@ -76,31 +96,173 @@ void CompositeType::stringify(std::ostream& ss,
     superType = bct->parentClassType();
   }
 
-  //std::string ret = typetags::tagToString(tag());
-  name().stringify(ss, stringKind);
+  if (isStringType()) {
+    ss << "string";
+  } else if (isBytesType()) {
+    ss << "bytes";
+  } else if (isLocaleType()) {
+    ss << "locale";
+  } else if (id().symbolPath() == USTR("ChapelRange._range")) {
+    ss << "range";
+  } else {
+    name().stringify(ss, stringKind);
+  }
 
   auto sorted = sortedSubstitutions();
 
-  if (superType || !sorted.empty()) {
+  bool printSupertype =
+    superType != nullptr && stringKind != StringifyKind::CHPL_SYNTAX;
+
+  // Prepend parent substitutions to 'sorted' list
+  if (!printSupertype && superType != nullptr) {
+    auto cur = superType->toBasicClassType();
+    while (cur != nullptr) {
+      auto parentSubs = cur->getCompositeType()->sortedSubstitutions();
+      sorted.insert(sorted.begin(), parentSubs.begin(), parentSubs.end());
+      cur = cur->parentClassType();
+    }
+  }
+
+  if (printSupertype || !sorted.empty()) {
     bool emittedField = false;
     ss << "(";
 
-    if (superType != nullptr) {
+    if (printSupertype) {
       ss << "super:";
       superType->stringify(ss, stringKind);
       emittedField = true;
     }
 
-    for (auto sub : sorted) {
+    for (const auto& sub : sorted) {
       if (emittedField) ss << ", ";
-      sub.first.stringify(ss, stringKind);
-      ss << ":";
-      sub.second.stringify(ss, stringKind);
+
+      if (stringKind != StringifyKind::CHPL_SYNTAX) {
+        sub.first.stringify(ss, stringKind);
+        ss << ":";
+        sub.second.stringify(ss, stringKind);
+      } else {
+        if (sub.second.isType() || (sub.second.isParam() && sub.second.param() == nullptr)) {
+          sub.second.type()->stringify(ss, stringKind);
+        } else if (sub.second.isParam()) {
+          sub.second.param()->stringify(ss, stringKind);
+        } else {
+          // Some odd configuration; fall back to printing the qualified type.
+          CHPL_UNIMPL("attempting to stringify odd type representation as Chapel syntax");
+          sub.second.stringify(ss, stringKind);
+        }
+      }
+
       emittedField = true;
     }
     ss << ")";
   }
 }
+
+const RecordType* CompositeType::getStringType(Context* context) {
+  auto [id, name] =
+      parsing::getSymbolFromTopLevelModule(context, "String", "_string");
+  return RecordType::get(context, id, name,
+                         /* instantiatedFrom */ nullptr, SubstitutionsMap());
+}
+
+const RecordType* CompositeType::getRangeType(Context* context) {
+  auto [id, name] =
+      parsing::getSymbolFromTopLevelModule(context, "ChapelRange", "_range");
+  return RecordType::get(context, id, name,
+                         /* instantiatedFrom */ nullptr, SubstitutionsMap());
+}
+
+const RecordType* CompositeType::getBytesType(Context* context) {
+  auto [id, name] =
+      parsing::getSymbolFromTopLevelModule(context, "Bytes", "_bytes");
+  return RecordType::get(context, id, name,
+                         /* instantiatedFrom */ nullptr, SubstitutionsMap());
+}
+
+const RecordType* CompositeType::getLocaleType(Context* context) {
+  auto [id, name] =
+      parsing::getSymbolFromTopLevelModule(context, "ChapelLocale", "_locale");
+  return RecordType::get(context, id, name,
+                         /* instantiatedFrom */ nullptr,
+                         SubstitutionsMap());
+}
+
+const RecordType* CompositeType::getLocaleIDType(Context* context) {
+  auto id = ID();
+  auto name = UniqueString::get(context, "chpl_localeID_t");
+  return RecordType::get(context, id, name,
+                         /* instantiatedFrom */ nullptr,
+                         SubstitutionsMap());
+}
+
+const RecordType* CompositeType::getDistributionType(Context* context) {
+  auto [id, name] = parsing::getSymbolFromTopLevelModule(
+      context, "ChapelDistribution", "_distribution");
+  return RecordType::get(context, id, name,
+                         /* instantiatedFrom */ nullptr, SubstitutionsMap());
+}
+
+static const ID getOwnedRecordId(Context* context) {
+  return parsing::getSymbolIdFromTopLevelModule(context, "OwnedObject",
+                                                "_owned");
+}
+
+static const ID getSharedRecordId(Context* context) {
+  return parsing::getSymbolIdFromTopLevelModule(context, "SharedObject",
+                                                "_shared");
+}
+
+static const RecordType* tryCreateManagerRecord(Context* context,
+                                                const ID& recordId,
+                                                const BasicClassType* bct) {
+  const RecordType* instantiatedFrom = nullptr;
+  SubstitutionsMap subs;
+  if (bct != nullptr) {
+    instantiatedFrom = tryCreateManagerRecord(context,
+                                              recordId,
+                                              /*bct*/ nullptr);
+
+    auto fields = fieldsForTypeDecl(context,
+                                    instantiatedFrom,
+                                    DefaultsPolicy::IGNORE_DEFAULTS);
+    for (int i = 0; i < fields.numFields(); i++) {
+      if (fields.fieldName(i) != "chpl_t") continue;
+      auto ctd = ClassTypeDecorator(ClassTypeDecorator::BORROWED_NONNIL);
+      auto ct = ClassType::get(context, bct, /* manager */ nullptr, ctd);
+
+      subs[fields.fieldDeclId(i)] = QualifiedType(QualifiedType::TYPE, ct);
+      break;
+    }
+  }
+
+  auto name = recordId.symbolName(context);
+  return RecordType::get(context, recordId, name,
+                         instantiatedFrom,
+                         std::move(subs));
+}
+
+const RecordType*
+CompositeType::getOwnedRecordType(Context* context, const BasicClassType* bct) {
+  return tryCreateManagerRecord(context, getOwnedRecordId(context), bct);
+}
+
+const RecordType*
+CompositeType::getSharedRecordType(Context* context, const BasicClassType* bct) {
+  return tryCreateManagerRecord(context, getSharedRecordId(context), bct);
+}
+
+const ClassType* CompositeType::getErrorType(Context* context) {
+  auto [id, name] =
+      parsing::getSymbolFromTopLevelModule(context, "Errors", "Error");
+  auto dec = ClassTypeDecorator(ClassTypeDecorator::GENERIC_NONNIL);
+  auto bct = BasicClassType::get(context, id,
+                                name,
+                                BasicClassType::getRootClassType(context),
+                                /* instantiatedFrom */ nullptr,
+                                SubstitutionsMap());
+  return ClassType::get(context, bct, /* manager */ nullptr, dec);
+}
+
 
 using SubstitutionPair = CompositeType::SubstitutionPair;
 

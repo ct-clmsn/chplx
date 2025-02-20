@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -44,7 +44,11 @@ namespace uast {
   'Bar as A'.
 */
 class Use final : public AstNode {
+ friend class AstNode;
+
  private:
+  Decl::Visibility visibility_;
+
   Use(AstList children, Decl::Visibility visibility)
     : AstNode(asttags::Use, std::move(children)),
       visibility_(visibility) {
@@ -65,6 +69,14 @@ class Use final : public AstNode {
     #endif
   }
 
+  void serializeInner(Serializer& ser) const override {
+    ser.write(visibility_);
+  }
+
+  explicit Use(Deserializer& des) : AstNode(asttags::Use, des) {
+    visibility_ = des.read<Decl::Visibility>();
+  }
+
   bool contentsMatchInner(const AstNode* other) const override {
     const Use* rhs = other->toUse();
     return this->visibility_ == rhs->visibility_;
@@ -74,8 +86,6 @@ class Use final : public AstNode {
   }
 
   void dumpFieldsInner(const DumpSettings& s) const override;
-
-  Decl::Visibility visibility_;
 
  public:
 
@@ -116,7 +126,6 @@ class Use final : public AstNode {
     CHPL_ASSERT(ret->isVisibilityClause());
     return (const VisibilityClause*)ret;
   }
-
 };
 
 

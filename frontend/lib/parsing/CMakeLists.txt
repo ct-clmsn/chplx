@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# Copyright 2021-2024 Hewlett Packard Enterprise Development LP
 # Other additional copyright holders may be indicated within.
 #
 # The entirety of this work is licensed under the Apache License,
@@ -43,9 +43,12 @@ target_sources(ChplFrontend-obj
                parser-dependencies.h
                parser-help.h
                parser-stats.cpp
+
                # these are implementing the public interface
                Parser.cpp
+               parser-error-classes-list.cpp
                parsing-queries.cpp
+               FileContents.cpp
               )
 
 add_custom_target(parser
@@ -54,4 +57,3 @@ add_custom_target(parser
                   COMMAND flex chpl.lex
                   COMMAND rm -f bison-chpl-lib.output
                   COMMENT "generating flex/bison parser")
-set_target_properties(parser PROPERTIES FOLDER "Frontend/Support")

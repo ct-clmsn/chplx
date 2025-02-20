@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+ * Copyright 2021-2024 Hewlett Packard Enterprise Development LP
  * Other additional copyright holders may be indicated within.
  *
  * The entirety of this work is licensed under the Apache License,
@@ -20,6 +20,8 @@
 #include "chpl/uast/AggregateDecl.h"
 
 #include "chpl/uast/Builder.h"
+#include "chpl/uast/FnCall.h"
+#include "chpl/uast/Identifier.h"
 
 namespace chpl {
 namespace uast {
@@ -47,7 +49,47 @@ bool AggregateDecl::validAggregateChildren(AstListIteratorPair<AstNode> it) {
   return true;
 }
 
+std::string AggregateDecl::aggregateDeclDumpChildLabelInner(int i) const {
+  if (i >= inheritExprChildNum_ && i  < inheritExprChildNum_ + numInheritExprs_) {
+    return "inherit-expr";
+  }
+
+  return "";
+}
+
 AggregateDecl::~AggregateDecl() {
+}
+
+const AstNode* AggregateDecl::getUnwrappedInheritExpr(const AstNode* ast,
+                                                      bool& markedGeneric) {
+  // This doesn't do a deep check that e.g., the Dot expression is well-formed.
+  // This is expected to be done once during post-parse checks.
+
+  if (ast != nullptr) {
+    if (ast->isIdentifier() || ast->isDot()) {
+      // inheriting from e.g. Parent or M.Parent is OK
+      markedGeneric = false;
+      return ast;
+    } else if (auto call = ast->toFnCall()) {
+      const AstNode* calledExpr = call->calledExpression();
+      if (calledExpr != nullptr &&
+          (calledExpr->isIdentifier() || calledExpr->isDot()) &&
+          call->numActuals() == 1) {
+        if (const AstNode* actual = call->actual(0)) {
+          if (auto id = actual->toIdentifier()) {
+            if (id->name() == USTR("?")) {
+              // inheriting from e.g. Parent(?) is OK
+              markedGeneric = true;
+              return calledExpr;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  markedGeneric = false;
+  return nullptr;
 }
 
 
