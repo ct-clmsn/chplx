@@ -6,7 +6,6 @@
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 cmake_minimum_required(VERSION 3.19)
-cmake_policy(SET CMP0175 OLD)
 
 set(CHPLX_BACKEND_MAJOR_VERSION 1)
 set(CHPLX_BACKEND_MINOR_VERSION 30)

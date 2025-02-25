@@ -40,7 +40,7 @@ struct SymbolBuildingVisitor {
    SymbolBuildingVisitor(SymbolBuildingVisitor * v) = delete;
    SymbolBuildingVisitor(SymbolBuildingVisitor const* v) = delete;
 
-   SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapel_br, std::string const& chapel_file_path_str);
+   SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapel_br, Context* ctx, std::string const& chapel_file_path_str);
    ~SymbolBuildingVisitor() = default;
 
    template <typename Kind>
@@ -54,6 +54,7 @@ struct SymbolBuildingVisitor {
    void exit(const uast::AstNode * node);
 
    chpl::uast::BuilderResult const& br;
+   Context* ctx;
    std::size_t indent; 
 
    std::string chplFilePathStr;

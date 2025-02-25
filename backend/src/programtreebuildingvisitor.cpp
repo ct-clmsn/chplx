@@ -48,11 +48,12 @@ struct VariableVisitor {
    Symbol & sym;
    std::vector<Statement> & curStmts;
    chpl::uast::BuilderResult const& br;
+   Context* ctx;
    uast::AstNode const* ast;
 
    std::string emitChapelLine(uast::AstNode const* ast) const {
       auto const fp = br.filePath();
-      return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
+      return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ctx, ast->id(), fp).line());
    }
 
    template<typename T>
@@ -110,11 +111,12 @@ struct VariableLiteralVisitor {
    Symbol & sym;
    std::vector<Statement> & curStmts;
    chpl::uast::BuilderResult const& br;
+   Context* ctx;
    uast::AstNode const* ast;
 
    std::string emitChapelLine(uast::AstNode const* ast) const {
       auto const fp = br.filePath();
-      return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
+      return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ctx, ast->id(), fp).line());
    }
 
   template<typename T>
@@ -169,7 +171,7 @@ struct VariableLiteralVisitor {
 
 std::string ProgramTreeBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
    auto const fp = br.filePath();
-   return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
+   return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ctx, ast->id(), fp).line());
 }
 
 bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
@@ -187,7 +189,7 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
     break;
     case asttags::Array:
     break;
-    case asttags::Attributes:
+    case asttags::Attribute:
     break;
     case asttags::Break:
     break;
@@ -1372,13 +1374,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
              if(varsym->literal.size() ||
                 std::holds_alternative<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->retKind) ) {
                    std::visit(
-                      VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
+                      VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ctx, ast},
                       varsym->kind
                    );
                 }
                 else {
                    std::visit(
-                   VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
+                   VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ctx, ast},
                    varsym->kind
                    );
              }
@@ -1443,13 +1445,13 @@ bool ProgramTreeBuildingVisitor::enter(const uast::AstNode * ast) {
                    ( std::holds_alternative<std::shared_ptr<array_kind>>(varsym->kind) &&
                      std::holds_alternative<std::shared_ptr<kind_node_type>>(std::get<std::shared_ptr<array_kind>>(varsym->kind)->retKind)) ) {
                    std::visit(
-                      VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
+                      VariableLiteralVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ctx, ast},
                       varsym->kind
                    );
                 }
                 else {
                    std::visit(
-                      VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ast},
+                      VariableVisitor{symbolTableRef->id, identifier, *varsym, *cStmts, br, ctx, ast},
                       varsym->kind
                    );
                 }
@@ -1885,7 +1887,7 @@ void ProgramTreeBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Array:
     break;
-    case asttags::Attributes:
+    case asttags::Attribute:
     break;
     case asttags::Break:
     break;

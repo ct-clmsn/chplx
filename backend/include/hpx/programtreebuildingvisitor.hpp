@@ -44,6 +44,7 @@ struct ProgramTreeBuildingVisitor {
    // symbolTableRef->id
 
    chpl::uast::BuilderResult const& br;
+   Context* ctx;
    SymbolTable & symbolTable;
    ProgramTree const& program;
 

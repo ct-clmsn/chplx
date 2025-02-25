@@ -29,8 +29,8 @@ void SymbolBuildingVisitor::addSymbolEntry(char const* type, Symbol && symbol) {
    symbolTable.addEntry(symbol.identifier, symbol);
 }
 
-SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapelBr, std::string const& cfps)
-   : br(chapelBr), indent(0),
+SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& chapelBr, Context* ctx_, std::string const& cfps)
+   : br(chapelBr), indent(0),ctx(ctx_),
      chplFilePathStr(cfps),
      symstack(), sym(), symnode(), configVars(), symbolTable()
 {
@@ -125,7 +125,7 @@ SymbolBuildingVisitor::SymbolBuildingVisitor(chpl::uast::BuilderResult const& ch
 
 std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
    auto const fp = br.filePath();
-   return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
+   return chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ctx ,ast->id(), fp).line());
 }
 
 bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
@@ -185,7 +185,7 @@ bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
         }
     }
     break;
-    case asttags::Attributes:
+    case asttags::Attribute:
     break;
     case asttags::Break:
     break;
@@ -1586,7 +1586,7 @@ void SymbolBuildingVisitor::exit(const uast::AstNode * ast) {
     break;
     case asttags::Array:
     break;
-    case asttags::Attributes:
+    case asttags::Attribute:
     break;
     case asttags::Break:
     break;
