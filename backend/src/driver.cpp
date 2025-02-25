@@ -137,11 +137,7 @@ int main(int argc, char ** argv) {
    chpl::parsing::setFileText(ctx, *filePath, fileContent);
 
    uast::BuilderResult const& br =
-      parsing::parseFileToBuilderResult(ctx, chpl::UniqueString::get(ctx, *filePath), {});
-
-   // for (auto & e : br.errors()) {
-   //    ctx->report(e);
-   // }
+      parsing::parseFileToBuilderResultAndCheck(ctx, chpl::UniqueString::get(ctx, *filePath), {});
 
    uast::Module const* mod = br.singleModule();
 
