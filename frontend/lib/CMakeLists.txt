@@ -106,7 +106,7 @@ add_library(ChplFrontendShared SHARED
 set(CHPL_FRONTEND_INCLUDES ${CHPL_MAIN_INCLUDE_DIR} ${CHPL_INCLUDE_DIR})
 target_include_directories(ChplFrontend PUBLIC ${CHPL_FRONTEND_INCLUDES})
 target_include_directories(ChplFrontendShared PUBLIC ${CHPL_FRONTEND_INCLUDES})
-
+set(CHPL_LLVM_LINK_ARGS "LLVM")
 if (CHPL_LLVM_STATIC_DYNAMIC STREQUAL "static")
   if(APPLE)
     if (CHPL_LLVM_VERSION VERSION_LESS 14.0)

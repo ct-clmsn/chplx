@@ -11,9 +11,6 @@ add_executable(heateqn heateqn.cpp heateqn_driver.cpp)
 set(CMAKE_CXX_STANDARD 20)
 set(CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
-if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND NOT APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -stdlib=libc++")
-endif()
 if(NOT Chplx_DIR)
   message(FATAL_ERROR "Chplx_DIR variable undefined")
 endif()
@@ -23,21 +20,15 @@ find_package(HPX REQUIRED CONFIG)
 find_package(Chplx REQUIRED CONFIG)
 set(heateqn_sources heateqn.cpp heateqn_driver.cpp)
 set(heateqn_headers heateqn.hpp heateqn_driver.hpp)
-if(NOT WIN32 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND APPLE)
-  find_library(CORE_LIBPATH NAMES CoreFoundation REQUIRED)
   target_compile_options(heateqn
     PUBLIC
-    -nostdlib
-    -std=c++20
     -O3
-    -stdlib=libc++
   )
   target_link_libraries(heateqn PRIVATE ${CORE_LIBPATH})
   target_link_libraries(heateqn
     PUBLIC
     c++
   )
-endif()
 target_link_libraries(heateqn PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
 enable_testing()
 include(CTest)
