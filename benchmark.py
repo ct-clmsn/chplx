@@ -21,6 +21,7 @@ COMMON_COMPILERS = [
 ARG_CHOICES = COMMON_COMPILERS.copy()
 DEFAULT_BUILD_PATH = os.path.join(os.getcwd(), "build")
 DEFAULT_SOURCE_PATH = os.path.join(os.getcwd())
+DEFAULT_BUILD_TYPE = "Release"
 
 
 def find_cpp_compilers():
@@ -115,7 +116,9 @@ def execute_shell_string(shell_code, platform_name):
 
 
 def get_parallel_build_flags(platform_name):
-    threads = multiprocessing.cpu_count()
+    threads = multiprocessing.cpu_count() // 2
+    if threads == 0:
+        threads = 1
     logging.debug(f"Detected {threads} CPU threads for parallel builds.")
 
     if platform_name == "Windows" and shutil.which("msbuild"):
@@ -148,9 +151,21 @@ def main():
         help="Specify a source path to use.",
     )
     parser.add_argument(
+        "--build-type",
+        type=str,
+        default=DEFAULT_BUILD_TYPE,
+        choices=["Release", "RelWithDebInfo", "Debug"],
+        help="Specify a build type for cmake.",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="If set, build commands will not be executed, only displayed.",
+    )
+    parser.add_argument(
+        "--build-only",
+        action="store_true",
+        help="If set, build commands be executed for ChplX but chplx binary will not be executed",
     )
     parser.add_argument(
         "--platform",
@@ -213,7 +228,7 @@ def main():
         "-DHPX_WITH_FETCH_HWLOC=ON",
         "-DCHPLX_WITH_EXAMPLES=OFF",
         "-DCHPLX_WITH_TESTS=OFF",
-        "-DCMAKE_BUILD_TYPE=Release",
+        f"-DCMAKE_BUILD_TYPE={args.build_type}",
     ]
 
     shell_lines.append("cmake " + " ".join(cmake_args))
@@ -227,8 +242,50 @@ def main():
 
     if args.dry_run:
         logging.info(f"Generated build script:\n{full_script}")
-    else:
-        return execute_shell_string(full_script, platform_name)
+        return
+
+    build_return_code = execute_shell_string(full_script, platform_name)
+    if build_return_code != 0:
+        logging.error("Build failed. Skipping chplx execution.")
+        return
+
+    if args.build_only:
+        logging.debug("Build only completed")
+        return
+    ######################## benchmarking part ###############################
+
+    # Check if the chplx binary exists
+    chplx_binary = os.path.join(args.build_path, "backend", "chplx")
+    if not os.path.isfile(chplx_binary):
+        logging.error(f"chplx binary not found at {chplx_binary}")
+        return
+
+    # Find .chpl files in benchmarks directory
+    benchmarks_dir = os.path.join(args.source_path, "benchmarks")
+    if not os.path.isdir(benchmarks_dir):
+        logging.error(f"Benchmarks directory not found: {benchmarks_dir}")
+        return
+
+    chpl_files = [f for f in os.listdir(benchmarks_dir) if f.endswith(".chpl")]
+    if not chpl_files:
+        logging.warning("No Chapel (.chpl) files found in benchmarks directory.")
+        return
+
+    benchmarks_build_dir = os.path.join(args.source_path, "benchmarks-build")
+    os.makedirs(benchmarks_build_dir, exist_ok=True)
+
+    logging.info("Running chplx on benchmark .chpl files:")
+    for chpl_file in chpl_files:
+        full_path = os.path.join(benchmarks_dir, chpl_file)
+        base_name = os.path.splitext(chpl_file)[0]
+        output_dir = os.path.join(benchmarks_build_dir, f"{base_name}_cpp")
+
+        cmd = [chplx_binary, "-f", full_path, "-o", output_dir]
+        logging.info(f"Executing: {' '.join(cmd)}")
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error running chplx on {chpl_file}: {e}")
 
 
 if __name__ == "__main__":
