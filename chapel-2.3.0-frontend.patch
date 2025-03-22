@@ -97,7 +97,7 @@ index d39352c04b..e44fbf257b 100644
  # If CHPL_DONT_BUILD_SHA is set in the ENV, the git-sha will always be xxxxxxxxxx
  find_package(Git)
 -if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND)
-+if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
++if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
    execute_process(COMMAND ${CHPL_CMAKE_PYTHON}
                            ${CMAKE_SOURCE_DIR}/util/config/write-git-sha
                            ${CMAKE_CURRENT_SOURCE_DIR}/util
@@ -113,7 +113,7 @@ index d39352c04b..e44fbf257b 100644
  # Library code can also use headers from the lib/ directory
  # but these are not to be public
 -target_include_directories(ChplFrontend-obj PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-+target_include_directories(ChplFrontend-obj PRIVATE 
++target_include_directories(ChplFrontend-obj PRIVATE
 +                          ${CMAKE_CURRENT_SOURCE_DIR}
 +                          ${LLVM_INCLUDE_DIRS}
 +                          ${CLANG_INCLUDE_DIRS}
