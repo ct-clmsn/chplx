@@ -80,7 +80,7 @@ index 33ee4190e2..9787eff363 100644
      ReportOnExit(ReportOnExit&& rhs) = default;
      ReportOnExit& operator=(const ReportOnExit& rhs) = delete;
 diff --git a/frontend/lib/CMakeLists.txt b/frontend/lib/CMakeLists.txt
-index d39352c04b..700ca61264 100644
+index d39352c04b..01ca7ea40d 100644
 --- a/frontend/lib/CMakeLists.txt
 +++ b/frontend/lib/CMakeLists.txt
 @@ -15,6 +15,9 @@
@@ -93,10 +93,11 @@ index d39352c04b..700ca61264 100644
  
  # generate a git-version.cpp file during the cmake configure step.
  # If one exists, the write-git-sha script will only update it if the
-@@ -28,18 +31,31 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND)
+@@ -27,19 +30,33 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND)
+                           ${CMAKE_CURRENT_SOURCE_DIR}/util
                            --build-version
                            --chpl-home=${CHPL_HOME}
-                           )
+-                          )
 -  message(VERBOSE "wrote git-version.cpp")
 -elseif(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
 -# if we are not in a git repo, or the git binary doesn't exist on this machine,
@@ -109,7 +110,8 @@ index d39352c04b..700ca61264 100644
 -                          --build-version
 -                          --chpl-home=${CHPL_HOME})
 -  message(VERBOSE "wrote git-version.cpp with dummy sha")
-+  message(STATUS "wrote git-version.cpp")
++                          RESULT_VARIABLE rv)
++  message(STATUS "wrote git-version.cpp ${rv}")
 +endif()
 +if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
 +  if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND)
@@ -118,8 +120,8 @@ index d39352c04b..700ca61264 100644
 +                            ${CMAKE_CURRENT_SOURCE_DIR}/util
 +                            --build-version
 +                            --chpl-home=${CHPL_HOME}
-+                            )
-+    message(STATUS "wrote git-version.cpp")
++                    RESULT_VARIABLE rv)
++                    message(STATUS "wrote git-version.cpp ${rv}")
 +  else()
 +  # if we are not in a git repo, or the git binary doesn't exist on this machine,
 +  # write a git-version.cpp file (if one doesn't exist) as if CHPL_DONT_BUILD_SHA
@@ -129,15 +131,16 @@ index d39352c04b..700ca61264 100644
 +                            ${CMAKE_SOURCE_DIR}/util/config/write-git-sha
 +                            ${CMAKE_CURRENT_SOURCE_DIR}/util
 +                            --build-version
-+                            --chpl-home=${CHPL_HOME})
-+    message(STATUS "wrote git-version.cpp with dummy sha")
++                            --chpl-home=${CHPL_HOME}
++                    RESULT_VARIABLE rv)
++    message(STATUS "wrote git-version.cpp with dummy sha ${rv}")
 +  endif()
 +else()
 +  message(STATUS "Found ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp")
  endif()
  
  add_library(git-sha-obj OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
-@@ -54,12 +70,18 @@ set_property(TARGET ChplFrontend-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+@@ -54,12 +71,18 @@ set_property(TARGET ChplFrontend-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
  
  # Include the public library .h files as well as any generated .h files
  target_include_directories(ChplFrontend-obj PUBLIC
@@ -157,7 +160,7 @@ index d39352c04b..700ca61264 100644
  
  # SHELL: is needed here to remove unwanted quotes from the list of arguments
  # COMPILE_LANGUAGE:CXX is needed here to make sure we only set the flags
-@@ -97,7 +119,7 @@ add_library(ChplFrontendShared SHARED
+@@ -97,7 +120,7 @@ add_library(ChplFrontendShared SHARED
  set(CHPL_FRONTEND_INCLUDES ${CHPL_MAIN_INCLUDE_DIR} ${CHPL_INCLUDE_DIR})
  target_include_directories(ChplFrontend PUBLIC ${CHPL_FRONTEND_INCLUDES})
  target_include_directories(ChplFrontendShared PUBLIC ${CHPL_FRONTEND_INCLUDES})
