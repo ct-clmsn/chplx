@@ -1,4 +1,5 @@
 # Copyright (c) 2023 Hartmut Kaiser
+# Copyright (c) 2025 Shreyas Atre
 #
 # SPDX-License-Identifier: BSL-1.0
 # Distributed under the Boost Software License, Version 1.0. *(See accompanying
@@ -97,7 +98,70 @@ if(CHPLX_WITH_TESTS)
   include(CTest)
 endif()
 
-add_subdirectory(frontend)
+set(CHAPEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/extern/chapel")
+set(CHAPEL_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/chapel-2.3.0-frontend.patch")
+set(CHAPEL_REQUIRED_COMMIT "3a18b7be6f70ff1dff29c70c73a3ecc84165efdc")  # <-- Replace with your commit SHA
+
+# ---- Ensure submodule is initialized ----
+if(NOT EXISTS "${CHAPEL_PATH}/.git")
+    message(STATUS "Initializing Chapel submodule...")
+    execute_process(
+        COMMAND git submodule update --init --recursive extern/chapel
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        RESULT_VARIABLE GIT_SUBMODULE_RESULT
+    )
+    if(NOT GIT_SUBMODULE_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to initialize Chapel submodule.")
+    endif()
+endif()
+
+# ---- Get current commit SHA of chapel ----
+execute_process(
+    COMMAND git rev-parse HEAD
+    WORKING_DIRECTORY "${CHAPEL_PATH}"
+    OUTPUT_VARIABLE CHAPEL_CURRENT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+
+# ---- Check for commit mismatch ----
+if(NOT CHAPEL_CURRENT_COMMIT STREQUAL CHAPEL_REQUIRED_COMMIT)
+    message(FATAL_ERROR
+        "Chapel submodule is not at the required commit.\n"
+        "Expected: ${CHAPEL_REQUIRED_COMMIT}\n"
+        "Found:    ${CHAPEL_CURRENT_COMMIT}\n"
+        "Please checkout the correct commit in extern/chapel."
+    )
+endif()
+
+# ---- Check if patch is already applied ----
+execute_process(
+    COMMAND git apply --reverse --check "${CHAPEL_PATCH}"
+    WORKING_DIRECTORY "${CHAPEL_PATH}"
+    RESULT_VARIABLE PATCH_REVERSED_OK
+    OUTPUT_QUIET
+    ERROR_QUIET
+)
+
+if(PATCH_REVERSED_OK EQUAL 0)
+    message(STATUS "Patch already applied. Skipping.")
+else()
+    message(STATUS "Applying chapel-frontend.patch to Chapel...")
+
+    execute_process(
+        COMMAND git apply "${CHAPEL_PATCH}"
+        WORKING_DIRECTORY "${CHAPEL_PATH}"
+        RESULT_VARIABLE PATCH_RESULT
+        OUTPUT_VARIABLE PATCH_OUTPUT
+        ERROR_VARIABLE PATCH_ERROR
+    )
+    if(NOT PATCH_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to apply chapel-frontend.patch:\n${PATCH_ERROR}")
+    endif()
+endif()
+
+# ---- Add frontend directory ----
+add_subdirectory("${CHAPEL_PATH}/frontend")
 add_subdirectory(backend)
 add_subdirectory(library)
 
