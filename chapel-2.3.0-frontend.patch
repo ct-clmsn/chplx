@@ -80,10 +80,10 @@ index 33ee4190e2..9787eff363 100644
      ReportOnExit(ReportOnExit&& rhs) = default;
      ReportOnExit& operator=(const ReportOnExit& rhs) = delete;
 diff --git a/frontend/lib/CMakeLists.txt b/frontend/lib/CMakeLists.txt
-index d39352c04b..e44fbf257b 100644
+index d39352c04b..34a2e0ee56 100644
 --- a/frontend/lib/CMakeLists.txt
 +++ b/frontend/lib/CMakeLists.txt
-@@ -15,13 +15,16 @@
+@@ -15,6 +15,9 @@
  # See the License for the specific language governing permissions and
  # limitations under the License.
  
@@ -93,15 +93,47 @@ index d39352c04b..e44fbf257b 100644
  
  # generate a git-version.cpp file during the cmake configure step.
  # If one exists, the write-git-sha script will only update it if the
- # values are different.
- # If CHPL_DONT_BUILD_SHA is set in the ENV, the git-sha will always be xxxxxxxxxx
- find_package(Git)
--if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND)
-+if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND AND NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
-   execute_process(COMMAND ${CHPL_CMAKE_PYTHON}
-                           ${CMAKE_SOURCE_DIR}/util/config/write-git-sha
-                           ${CMAKE_CURRENT_SOURCE_DIR}/util
-@@ -54,12 +57,18 @@ set_property(TARGET ChplFrontend-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
+@@ -29,17 +32,28 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND)
+                           --chpl-home=${CHPL_HOME}
+                           )
+   message(VERBOSE "wrote git-version.cpp")
+-elseif(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
+-# if we are not in a git repo, or the git binary doesn't exist on this machine,
+-# write a git-version.cpp file (if one doesn't exist) as if CHPL_DONT_BUILD_SHA
+-# was set so we dont try to execute the git command
+-  execute_process(COMMAND ${CMAKE_COMMAND} -E env CHPL_DONT_BUILD_SHA=1
+-                          ${CHPL_CMAKE_PYTHON}
+-                          ${CMAKE_SOURCE_DIR}/util/config/write-git-sha
+-                          ${CMAKE_CURRENT_SOURCE_DIR}/util
+-                          --build-version
+-                          --chpl-home=${CHPL_HOME})
+-  message(VERBOSE "wrote git-version.cpp with dummy sha")
++endif()
++if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
++  if (EXISTS ${CMAKE_SOURCE_DIR}/.git AND Git_FOUND)
++    execute_process(COMMAND ${CHPL_CMAKE_PYTHON}
++                            ${CMAKE_SOURCE_DIR}/util/config/write-git-sha
++                            ${CMAKE_CURRENT_SOURCE_DIR}/util
++                            --build-version
++                            --chpl-home=${CHPL_HOME}
++                            )
++    message(VERBOSE "wrote git-version.cpp")
++  else()
++  # if we are not in a git repo, or the git binary doesn't exist on this machine,
++  # write a git-version.cpp file (if one doesn't exist) as if CHPL_DONT_BUILD_SHA
++  # was set so we dont try to execute the git command
++    execute_process(COMMAND ${CMAKE_COMMAND} -E env CHPL_DONT_BUILD_SHA=1
++                            ${CHPL_CMAKE_PYTHON}
++                            ${CMAKE_SOURCE_DIR}/util/config/write-git-sha
++                            ${CMAKE_CURRENT_SOURCE_DIR}/util
++                            --build-version
++                            --chpl-home=${CHPL_HOME})
++    message(VERBOSE "wrote git-version.cpp with dummy sha")
++  endif()
+ endif()
+ 
+ add_library(git-sha-obj OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/util/git-version.cpp)
+@@ -54,12 +68,18 @@ set_property(TARGET ChplFrontend-obj PROPERTY POSITION_INDEPENDENT_CODE 1)
  
  # Include the public library .h files as well as any generated .h files
  target_include_directories(ChplFrontend-obj PUBLIC
@@ -121,7 +153,7 @@ index d39352c04b..e44fbf257b 100644
  
  # SHELL: is needed here to remove unwanted quotes from the list of arguments
  # COMPILE_LANGUAGE:CXX is needed here to make sure we only set the flags
-@@ -97,7 +106,7 @@ add_library(ChplFrontendShared SHARED
+@@ -97,7 +117,7 @@ add_library(ChplFrontendShared SHARED
  set(CHPL_FRONTEND_INCLUDES ${CHPL_MAIN_INCLUDE_DIR} ${CHPL_INCLUDE_DIR})
  target_include_directories(ChplFrontend PUBLIC ${CHPL_FRONTEND_INCLUDES})
  target_include_directories(ChplFrontendShared PUBLIC ${CHPL_FRONTEND_INCLUDES})
