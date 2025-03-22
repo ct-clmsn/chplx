@@ -206,8 +206,14 @@ def main():
 
     if platform_name != "Windows":
         shell_lines.append(f'export CXX="{cxx_compiler_path}"')
+        shell_lines.append(
+            f'export CHPL_HOME="{os.path.join(args.source_path,"extern","chapel")}"'
+        )
     else:
         shell_lines.append(f"set CXX={cxx_compiler_path}")
+        shell_lines.append(
+            f'set CHPL_HOME="{os.path.join(args.source_path,"extern","chapel")}"'
+        )
 
     if not os.path.exists(args.build_path):
         os.makedirs(args.build_path)
@@ -229,6 +235,7 @@ def main():
         "-DCHPLX_WITH_EXAMPLES=OFF",
         "-DCHPLX_WITH_TESTS=OFF",
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
+        '-DCHPL_HOME="${CHPL_HOME}"',
     ]
 
     shell_lines.append("cmake " + " ".join(cmake_args))
