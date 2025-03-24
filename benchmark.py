@@ -212,7 +212,7 @@ def main():
     else:
         shell_lines.append(f"set CXX={cxx_compiler_path}")
         shell_lines.append(
-            f'set CHPL_HOME="{os.path.join(args.source_path,"extern","chapel")}"'
+            f'set CHPL_HOME={os.path.join(args.source_path,"extern","chapel")}'
         )
 
     if not os.path.exists(args.build_path):
@@ -235,8 +235,12 @@ def main():
         "-DCHPLX_WITH_EXAMPLES=OFF",
         "-DCHPLX_WITH_TESTS=OFF",
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
-        '-DCHPL_HOME="${CHPL_HOME}"',
     ]
+
+    if platform_name != "Windows":
+        cmake_args.append("-DCHPL_HOME=${CHPL_HOME}")
+    else:
+        cmake_args.append("-DCHPL_HOME=%CHPL_HOME%")
 
     shell_lines.append("cmake " + " ".join(cmake_args))
     build_cmd = f'cmake --build "{args.build_path}"'

@@ -40,6 +40,11 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 include(CHPLX_Utils)
 
+# Ensure Python is found and set CHPL_CMAKE_PYTHON to the default Python
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+set(CHPL_CMAKE_PYTHON ${Python3_EXECUTABLE})
+message(STATUS "CHPL_CMAKE_PYTHON set to ${CHPL_CMAKE_PYTHON}")
+
 # ##############################################################################
 # build options
 if(WIN32)
@@ -100,7 +105,7 @@ endif()
 
 set(CHAPEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/extern/chapel")
 set(CHAPEL_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/chapel-2.3.0-frontend.patch")
-set(CHAPEL_REQUIRED_COMMIT "3a18b7be6f70ff1dff29c70c73a3ecc84165efdc")  # <-- Replace with your commit SHA
+set(CHAPEL_REQUIRED_COMMIT "3a18b7be6f70ff1dff29c70c73a3ecc84165efdc")
 
 # ---- Ensure submodule is initialized ----
 if(NOT EXISTS "${CHAPEL_PATH}/.git")
@@ -126,11 +131,11 @@ execute_process(
 
 # ---- Check for commit mismatch ----
 if(NOT CHAPEL_CURRENT_COMMIT STREQUAL CHAPEL_REQUIRED_COMMIT)
-    message(FATAL_ERROR
+    message(WARNING
         "Chapel submodule is not at the required commit.\n"
         "Expected: ${CHAPEL_REQUIRED_COMMIT}\n"
         "Found:    ${CHAPEL_CURRENT_COMMIT}\n"
-        "Please checkout the correct commit in extern/chapel."
+        "Please ensure changes in extern/chapel are intentional."
     )
 endif()
 
@@ -156,7 +161,7 @@ else()
         ERROR_VARIABLE PATCH_ERROR
     )
     if(NOT PATCH_RESULT EQUAL 0)
-        message(FATAL_ERROR "Failed to apply chapel-frontend.patch:\n${PATCH_ERROR}")
+        message(WARNING "Could not apply chapel-frontend.patch.\nThis might be due to manual modifications in extern/chapel.\n\nPatch error:\n${PATCH_ERROR}")
     endif()
 endif()
 
@@ -164,4 +169,3 @@ endif()
 add_subdirectory("${CHAPEL_PATH}/frontend")
 add_subdirectory(backend)
 add_subdirectory(library)
-
