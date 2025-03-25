@@ -211,7 +211,11 @@ def main():
             logging.error("No C++ compilers found on this system.")
             return
 
-    if (args.cxx_path or args.cxx) and not args.cmake_gen and platform_name == "Windows":
+    if (
+        (args.cxx_path or args.cxx)
+        and not args.cmake_gen
+        and platform_name == "Windows"
+    ):
         logging.warning(
             "Windows uses visual studio generator by default which ignores compiler path"
         )
@@ -252,7 +256,8 @@ def main():
     ]
 
     if args.cc_path:
-        cmake_args.append(f'-DCMAKE_C_COMPILER="{args.cc_path.replace("\\","/")}"')
+        cc_path = args.cc_path.replace("\\", "/")
+        cmake_args.append(f'-DCMAKE_C_COMPILER="{cc_path}"')
 
     if platform_name != "Windows":
         cmake_args.append("-DCHPL_HOME=${CHPL_HOME}")
