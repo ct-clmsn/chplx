@@ -138,6 +138,10 @@ def main():
     parser.add_argument(
         "--cxx", choices=ARG_CHOICES, help="Select a specific compiler to use."
     )
+    parser.add_argument("--cxx-path", type=str, help="Provide a cxx compiler path.")
+    parser.add_argument("--cc-path", type=str, help="Provide a c compiler path.")
+    parser.add_argument("--cmake-args", type=str, help="Provide a cxx compiler path.")
+    parser.add_argument("--cmake-gen", type=str, help="Provide a cmake generator.")
     parser.add_argument(
         "--build-path",
         type=str,
@@ -189,6 +193,11 @@ def main():
         else:
             logging.error(f"Compiler '{args.cxx}' not found on this system.")
             return
+    elif args.cxx_path:
+        version = get_compiler_version(args.cxx_path, args.cxx_path)
+        logging.info(f"Selected compiler '{args.cxx_path}'")
+        logging.info(f"Version: {version}")
+        cxx_compiler_path = args.cxx_path.replace("\\", "/")
     else:
         if compilers:
             logging.info("Available C++ compilers found:")
@@ -201,6 +210,11 @@ def main():
         else:
             logging.error("No C++ compilers found on this system.")
             return
+
+    if (args.cxx_path or args.cxx) and not args.cmake_gen and platform_name == "Windows":
+        logging.warning(
+            "Windows uses visual studio generator by default which ignores compiler path"
+        )
 
     shell_lines = []
 
@@ -237,10 +251,19 @@ def main():
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
     ]
 
+    if args.cc_path:
+        cmake_args.append(f'-DCMAKE_C_COMPILER="{args.cc_path.replace("\\","/")}"')
+
     if platform_name != "Windows":
         cmake_args.append("-DCHPL_HOME=${CHPL_HOME}")
     else:
         cmake_args.append("-DCHPL_HOME=%CHPL_HOME%")
+
+    if args.cmake_args:
+        cmake_args.append(args.cmake_args)
+
+    if args.cmake_gen:
+        cmake_args.append(f'-G "{args.cmake_gen}"')
 
     shell_lines.append("cmake " + " ".join(cmake_args))
     build_cmd = f'cmake --build "{args.build_path}"'
