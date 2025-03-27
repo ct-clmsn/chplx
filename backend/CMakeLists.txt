@@ -64,6 +64,11 @@ endif()
 
 add_executable(chplx ${chplx_sources} ${chplx_headers})
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(chplx PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+    target_link_options(chplx PRIVATE -fsanitize=address,undefined)
+endif()
+
 target_include_directories(
   chplx
   PUBLIC ${LLVM_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/../frontend/include
