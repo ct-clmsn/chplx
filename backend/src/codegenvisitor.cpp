@@ -33,9 +33,9 @@ CodegenVisitor::CodegenVisitor(
    std::vector< Symbol > & configVars,
    ProgramTree & prgmTree,
    chpl::uast::BuilderResult const& chapelBr,
-   Context* ctx_,
    std::string const& cppFilePath,
-   std::string const& chapelFilePath)
+   std::string const& chapelFilePath,
+   Context* ctx_)
    : symbolTable(st), cfgVars(configVars), programTree(prgmTree), br(chapelBr),
      indent(0), scope(0), ctx(ctx_),
      cppFilePathStr(cppFilePath),
@@ -1093,7 +1093,7 @@ struct StatementVisitor {
 
    SymbolTable & symbolTable;
    chpl::uast::BuilderResult const& br;
-   Context* ctx;
+   Context* ctx = nullptr;
    std::ostream & os;
    std::size_t indent;
    std::vector<bool> & headers;

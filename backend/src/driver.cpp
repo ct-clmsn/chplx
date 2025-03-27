@@ -198,7 +198,7 @@ int main(int argc, char ** argv) {
          std::cout << "[ProgramTreeBuildingVisitor] Exit" << std::endl;
       }
 
-      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, sbv.configVars, program, br, ctx, ofilePath, chplFilePth.filename().string()};
+      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, sbv.configVars, program, br, ofilePath, chplFilePth.filename().string(), ctx};
       cgv.indent += 1;
 
       cgv.visit();

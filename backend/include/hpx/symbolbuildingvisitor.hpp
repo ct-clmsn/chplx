@@ -54,7 +54,7 @@ struct SymbolBuildingVisitor {
    void exit(const uast::AstNode * node);
 
    chpl::uast::BuilderResult const& br;
-   Context* ctx;
+   Context* ctx = nullptr;
    std::size_t indent; 
 
    std::string chplFilePathStr;

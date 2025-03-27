@@ -129,6 +129,7 @@ std::string SymbolBuildingVisitor::emitChapelLine(uast::AstNode const* ast) {
 }
 
 bool SymbolBuildingVisitor::enter(const uast::AstNode * ast) {
+   assert(ctx != nullptr);
    if(chplx::util::compilerDebug) {
       std::cout << "***Enter AST Node\t" << tagToString(ast->tag()) << std::endl
                 << "***\tCurrent Scope\t" << symbolTable.symbolTableRef->id << std::endl

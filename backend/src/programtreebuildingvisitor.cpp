@@ -48,7 +48,7 @@ struct VariableVisitor {
    Symbol & sym;
    std::vector<Statement> & curStmts;
    chpl::uast::BuilderResult const& br;
-   Context* ctx;
+   Context* ctx = nullptr;
    uast::AstNode const* ast;
 
    std::string emitChapelLine(uast::AstNode const* ast) const {
@@ -111,7 +111,7 @@ struct VariableLiteralVisitor {
    Symbol & sym;
    std::vector<Statement> & curStmts;
    chpl::uast::BuilderResult const& br;
-   Context* ctx;
+   Context* ctx = nullptr;
    uast::AstNode const* ast;
 
    std::string emitChapelLine(uast::AstNode const* ast) const {

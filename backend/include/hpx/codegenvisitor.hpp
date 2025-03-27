@@ -70,9 +70,9 @@ struct CodegenVisitor {
       std::vector< Symbol > & configVars,
       ProgramTree & prgmTree,
       chpl::uast::BuilderResult const& chapelBr,
-      Context* ctx_,
       std::string const& cppFilePathStr,
-      std::string const& chapelFilePathStr
+      std::string const& chapelFilePathStr,
+      Context* ctx_
    );
 
    ~CodegenVisitor() = default;
@@ -106,7 +106,7 @@ struct CodegenVisitor {
    std::vector< Symbol > & cfgVars;
    ProgramTree & programTree;
    chpl::uast::BuilderResult const& br;
-   Context* ctx;
+   Context* ctx = nullptr;
    std::size_t indent; 
    std::size_t scope;
    std::string identifier;
