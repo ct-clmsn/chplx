@@ -11,9 +11,6 @@
 // (4) use --nt=YYY to set the number of time steps to YYY.
 // CHPL_RT_NUM_THREADS_PER_LOCALE=6 ./heat --nx=10_000_000
 
-use Time;
-
-extern proc getenv(name : c_string) : c_string;
 config const ghosts: int = 1;
 config const k: real = 0.4;
 config const dt: real = 1.0;
@@ -41,13 +38,9 @@ forall i in 0..NX do {
   data2[i] = 0;
 }
 
-var t: stopwatch;
-t.start();
 
 for t in 1..nt do {
   update(data, data2);
 }
 
-t.stop();
-writeln("chapelng,",nx,",",nt,",",getenv('CHPL_RT_NUM_THREADS_PER_LOCALE'.c_str()):string,",",dt,",",dx,",",t.elapsed(),",0");
 
