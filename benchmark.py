@@ -22,6 +22,7 @@ ARG_CHOICES = COMMON_COMPILERS.copy()
 DEFAULT_BUILD_PATH = os.path.join(os.getcwd(), "build")
 DEFAULT_SOURCE_PATH = os.path.join(os.getcwd())
 DEFAULT_BUILD_TYPE = "Release"
+DEFAULT_INSTALL_PATH = os.path.join(os.getcwd(), "install")
 
 
 def find_cpp_compilers():
@@ -143,6 +144,12 @@ def main():
     parser.add_argument("--cmake-args", type=str, help="Provide a cxx compiler path.")
     parser.add_argument("--cmake-gen", type=str, help="Provide a cmake generator.")
     parser.add_argument(
+        "--cmake-prefix",
+        type=str,
+        default=DEFAULT_INSTALL_PATH,
+        help="Provide a cmake install prefix.",
+    )
+    parser.add_argument(
         "--build-path",
         type=str,
         default=DEFAULT_BUILD_PATH,
@@ -237,6 +244,10 @@ def main():
         os.makedirs(args.build_path)
         logging.info(f"Created build path: {args.build_path}")
 
+    if not os.path.exists(args.cmake_prefix):
+        os.makedirs(args.cmake_prefix)
+        logging.info(f"Created install path: {args.cmake_prefix}")
+
     if not os.path.exists(args.source_path):
         logging.error(f"Source path does not exist: {args.source_path}")
         return
@@ -253,6 +264,7 @@ def main():
         "-DCHPLX_WITH_EXAMPLES=OFF",
         "-DCHPLX_WITH_TESTS=OFF",
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
+        f"-DCMAKE_INSTALL_PREFIX={args.cmake_prefix}",
     ]
 
     if args.cc_path:
@@ -272,10 +284,12 @@ def main():
 
     shell_lines.append("cmake " + " ".join(cmake_args))
     build_cmd = f'cmake --build "{args.build_path}"'
+    install_cmd = f"cmake --install {args.build_path} --prefix {args.cmake_prefix}"
     parallel_flags = get_parallel_build_flags(platform_name)
     if parallel_flags:
         build_cmd += f" -- {parallel_flags}"
     shell_lines.append(build_cmd)
+    shell_lines.append(install_cmd)
 
     full_script = "\n".join(shell_lines)
 
@@ -315,6 +329,8 @@ def main():
 
     logging.info("Running chplx on benchmark .chpl files:")
     for chpl_file in chpl_files:
+        if not "heat" in chpl_file:
+            continue
         full_path = os.path.join(benchmarks_dir, chpl_file)
         base_name = os.path.splitext(chpl_file)[0]
         output_dir = os.path.join(benchmarks_build_dir, f"{base_name}_cpp")
@@ -325,6 +341,51 @@ def main():
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
             logging.error(f"Error running chplx on {chpl_file}: {e}")
+
+        shell_lines = []
+        hpx_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "HPX")
+        fmt_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "fmt")
+        chplx_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "Chplx")
+        build_dir = os.path.join(output_dir, "build")
+        if not os.path.exists(build_dir):
+            os.makedirs(build_dir)
+
+        chplx_programs_cmake_args = [
+            f'-B"{build_dir}"',
+            f'-S"{output_dir}"',
+            f'-DCMAKE_CXX_COMPILER="{cxx_compiler_path}"',
+            f"-DCMAKE_BUILD_TYPE={args.build_type}",
+            f"-DHPX_DIR={hpx_dir}",
+            f"-Dfmt_DIR={fmt_dir}",
+            f"-DChplx_DIR={chplx_dir}",
+            "-DHPX_CONFIG_IS_INSTALL=ON",
+        ]
+
+        if args.cc_path:
+            cc_path = args.cc_path.replace("\\", "/")
+            chplx_programs_cmake_args.append(f'-DCMAKE_C_COMPILER="{cc_path}"')
+
+        if platform_name != "Windows":
+            chplx_programs_cmake_args.append("-DCHPL_HOME=${CHPL_HOME}")
+        else:
+            chplx_programs_cmake_args.append("-DCHPL_HOME=%CHPL_HOME%")
+
+        if args.cmake_args:
+            chplx_programs_cmake_args.append(args.cmake_args)
+
+        if args.cmake_gen:
+            chplx_programs_cmake_args.append(f'-G "{args.cmake_gen}"')
+
+        shell_lines.append("cmake " + " ".join(chplx_programs_cmake_args))
+        build_cmd = f'cmake --build "{build_dir}"'
+        shell_lines.append(build_cmd)
+        full_script = "\n".join(shell_lines)
+        logging.info(f"*********Building {base_name} *****************")
+        build_return_code = execute_shell_string(full_script, platform_name)
+        if build_return_code != 0:
+            logging.error("Build failed. Skipping chplx execution.")
+            return
+        return
 
 
 if __name__ == "__main__":

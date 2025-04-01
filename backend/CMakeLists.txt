@@ -100,3 +100,9 @@ if(CHPLX_WITH_TESTS)
   include(CTest)
   add_subdirectory(test)
 endif()
+
+install(TARGETS chplx
+         ARCHIVE DESTINATION lib
+         LIBRARY DESTINATION lib
+         RUNTIME DESTINATION bin
+)

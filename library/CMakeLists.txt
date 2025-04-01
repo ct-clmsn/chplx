@@ -114,8 +114,8 @@ add_library(library STATIC ${chplx_library_sources} ${chplx_library_headers})
 target_link_libraries(library PRIVATE fmt::fmt-header-only HPX::hpx)
 
 target_include_directories(
-  library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-                 ${CMAKE_CURRENT_BINARY_DIR}/include
+  library PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+                  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 # define additional properties
@@ -134,10 +134,19 @@ set_target_properties(
 )
 
 # generate version file
+# "$<IF:$<BOOL:INSTALL_INTERFACE>,${CMAKE_INSTALL_PREFIX}/include,${CMAKE_CURRENT_SOURCE_DIR}/include>/chplx/config/version.hpp"
+# if($<BOOL:INSTALL_INTERFACE>)
+#   configure_file(
+#     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/version.hpp.in"
+#     "${CMAKE_INSTALL_PREFIX}/include/chplx/config/version.hpp" @ONLY
+#   )
+# endif()
+# if($<BOOL:BUILD_INTERFACE>)
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/version.hpp.in"
   "${CMAKE_CURRENT_BINARY_DIR}/include/chplx/config/version.hpp" @ONLY
 )
+# endif()
 
 find_package(PythonInterp)
 
@@ -166,3 +175,25 @@ if(CHPLX_WITH_EXAMPLES)
   add_chplx_pseudo_target(examples)
   add_subdirectory(examples)
 endif()
+
+install(
+  DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include" # source directory
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/" # target directory
+  # FILES_MATCHING # install only matched files
+  # PATTERN "*.h" # select header files
+  # PATTERN "*.hpp" # select header files
+)
+
+install(TARGETS library
+  EXPORT ChplxTargets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(
+  EXPORT ChplxTargets
+  NAMESPACE Chplx::
+  FILE ChplxConfig.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Chplx
+)
