@@ -19,11 +19,6 @@ set(CHPLX_BACKEND_VERSION
     ${CHPLX_BACKEND_MAJOR_VERSION}.${CHPLX_BACKEND_MINOR_VERSION}.${CHPLX_BACKEND_PATCH_VERSION}.${CHPLX_BACKEND_BUILD_VERSION}
 )
 
-# request C++17
-set(CMAKE_CXX_STANDARD 17)
-set(CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 project(chplx_backend VERSION ${CHPLX_BACKEND_VERSION})
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -31,7 +26,18 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 find_package(LLVM REQUIRED CONFIG)
 find_package(Clang REQUIRED CONFIG)
-find_package(fmt REQUIRED CONFIG)
+
+if(CHPLX_WITH_FETCH_FMT)
+  include(FetchContent)
+  FetchContent_Declare(fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG master
+    GIT_PROGRESS TRUE
+  )
+  FetchContent_MakeAvailable(fmt)
+else()
+  find_package(fmt REQUIRED CONFIG)
+endif()
 
 link_directories(${LD_LIBRARY_PATH})
 
@@ -57,6 +63,11 @@ if(MSVC)
 endif()
 
 add_executable(chplx ${chplx_sources} ${chplx_headers})
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(chplx PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer -Wall)
+    target_link_options(chplx PRIVATE -fsanitize=address,undefined)
+endif()
 
 target_include_directories(
   chplx
@@ -89,3 +100,9 @@ if(CHPLX_WITH_TESTS)
   include(CTest)
   add_subdirectory(test)
 endif()
+
+install(TARGETS chplx
+         ARCHIVE DESTINATION lib
+         LIBRARY DESTINATION lib
+         RUNTIME DESTINATION bin
+)

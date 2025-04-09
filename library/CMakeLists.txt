@@ -10,7 +10,7 @@ set(CHPLX_LIBRARY_MAJOR_VERSION 0)
 set(CHPLX_LIBRARY_MINOR_VERSION 1)
 set(CHPLX_LIBRARY_PATCH_VERSION 0)
 set(CHPLX_LIBRARY_BUILD_VERSION 0)
-
+set(CHPL_OFFICIAL_RELEASE false)
 set(CHPLX_LIBRARY_DEVELOPER ON)
 set(CHPLX_LIBRARY_OFFICIAL_RELEASE 0)
 
@@ -19,25 +19,39 @@ set(CHPLX_LIBRARY_VERSION
 )
 
 set(CMAKE_CXX_STANDARD 20)
-set(CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
-
-if(NOT WIN32
-   AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang"
-   AND NOT APPLE
-)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -stdlib=libc++ -Ofast")
-endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(chplx_library VERSION ${CHPLX_LIBRARY_VERSION})
+
+include(FetchContent)
+
+set(HPX_USE_CMAKE_CXX_STANDARD ON CACHE BOOL "")
+set(HPX_WITH_CXX20 ON CACHE BOOL "")
+
+set(hpx_repository https://github.com/STEllAR-GROUP/hpx.git CACHE STRING "URL for hpx")
+
+if(CHPLX_WITH_FETCH_HPX)
+  FetchContent_Declare(hpx
+    GIT_REPOSITORY ${hpx_repository}
+    GIT_TAG master
+    GIT_PROGRESS TRUE
+    GIT_SHALLOW 1
+  )
+  set(HPX_WITH_FETCH_ASIO ON CACHE BOOL "FETCH ASIO for HPX")
+  set(HPX_WITH_FETCH_BOOST OFF CACHE BOOL "FETCH BOOST for HPX")
+  set(HPX_WITH_FETCH_HWLOC ON CACHE BOOL "FETCH HWLOC for HPX")
+  set(HPX_WITH_EXAMPLES OFF CACHE BOOL "Examples for HPX")
+  set(HPX_WITH_TESTS OFF CACHE BOOL "Tests for HPX")
+  set(HPX_WITH_MALLOC system CACHE STRING "Malloc type for HPX") 
+  FetchContent_MakeAvailable(hpx)
+else()
+  find_package(HPX REQUIRED CONFIG)
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-# global dependencies
-find_package(fmt REQUIRED CONFIG)
-find_package(HPX REQUIRED CONFIG)
 
 # create library target
 set(chplx_library_detail_headers include/chplx/detail/iterator_generator.hpp)
@@ -97,23 +111,11 @@ endif()
 
 add_library(library STATIC ${chplx_library_sources} ${chplx_library_headers})
 
-if(NOT WIN32
-   AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang"
-   AND APPLE
-)
-  find_library(CORE_LIBPATH NAMES CoreFoundation REQUIRED)
-
-  target_compile_options(library PUBLIC -nostdlib -std=c++20 -stdlib=libc++)
-
-  target_link_libraries(library PRIVATE ${CORE_LIBPATH})
-  target_link_libraries(library PUBLIC c++)
-endif()
-
-target_link_libraries(library PUBLIC fmt::fmt-header-only HPX::hpx)
+target_link_libraries(library PRIVATE fmt::fmt-header-only HPX::hpx)
 
 target_include_directories(
-  library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-                 ${CMAKE_CURRENT_BINARY_DIR}/include
+  library PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+                  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 # define additional properties
@@ -132,10 +134,19 @@ set_target_properties(
 )
 
 # generate version file
+# "$<IF:$<BOOL:INSTALL_INTERFACE>,${CMAKE_INSTALL_PREFIX}/include,${CMAKE_CURRENT_SOURCE_DIR}/include>/chplx/config/version.hpp"
+# if($<BOOL:INSTALL_INTERFACE>)
+#   configure_file(
+#     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/version.hpp.in"
+#     "${CMAKE_INSTALL_PREFIX}/include/chplx/config/version.hpp" @ONLY
+#   )
+# endif()
+# if($<BOOL:BUILD_INTERFACE>)
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/version.hpp.in"
   "${CMAKE_CURRENT_BINARY_DIR}/include/chplx/config/version.hpp" @ONLY
 )
+# endif()
 
 find_package(PythonInterp)
 
@@ -164,3 +175,25 @@ if(CHPLX_WITH_EXAMPLES)
   add_chplx_pseudo_target(examples)
   add_subdirectory(examples)
 endif()
+
+install(
+  DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include" # source directory
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/" # target directory
+  # FILES_MATCHING # install only matched files
+  # PATTERN "*.h" # select header files
+  # PATTERN "*.hpp" # select header files
+)
+
+install(TARGETS library
+  EXPORT ChplxTargets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(
+  EXPORT ChplxTargets
+  NAMESPACE Chplx::
+  FILE ChplxConfig.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Chplx
+)

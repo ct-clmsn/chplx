@@ -471,7 +471,12 @@ struct ArgumentVisitor {
        if(node->statements.size() == 2) {
           const bool rop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[1]);
           const bool lop = std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0]);
-
+          if(!rop && !lop){
+            std::visit(*this, node->statements[0]);
+            os << ' ' << node->op << ' ';
+            std::visit(*this, node->statements[1]);
+            return;
+          }
           if(rop) {
              os << "( ";
           }
@@ -562,8 +567,8 @@ void FunctionCallExpression::emit(std::ostream & os) const {
              std::visit(v, stmt);
              store.push_back(v.os.str());
           }
-
-          os << v.os.str()  << '(' << fmt::vformat(fn_fmt_str, store) << ')';
+          auto inside_par = fmt::vformat(fn_fmt_str, store);
+          os << v.os.str()  << '(' << inside_par << ')';
       }
       else {
          for(std::size_t i = 1; i < args_sz; ++i) {

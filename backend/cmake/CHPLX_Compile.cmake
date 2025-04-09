@@ -102,11 +102,12 @@ function(chplx_format_file name)
     add_custom_command(
       TARGET ${name}_compile_chpl
       POST_BUILD
-      COMMAND "${CLANGFORMAT_EXECUTABLE}" "-i" "${input_path}" DEPENDS
-              "${input_path}" ${${name}_DEPENDENCIES}
+      COMMAND "${CLANGFORMAT_EXECUTABLE}" "-i" "${input_path}"
       WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${name}"
       VERBATIM
     )
+
+    # add_dependencies(${name}_compile_chpl "${input_path}" ${${name}_DEPENDENCIES})
 
     # COMMENT "Clang-formatting file ${input_path}.\n"
 

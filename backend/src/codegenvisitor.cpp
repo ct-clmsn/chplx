@@ -34,9 +34,10 @@ CodegenVisitor::CodegenVisitor(
    ProgramTree & prgmTree,
    chpl::uast::BuilderResult const& chapelBr,
    std::string const& cppFilePath,
-   std::string const& chapelFilePath)
+   std::string const& chapelFilePath,
+   Context* ctx_)
    : symbolTable(st), cfgVars(configVars), programTree(prgmTree), br(chapelBr),
-     indent(0), scope(0),
+     indent(0), scope(0), ctx(ctx_),
      cppFilePathStr(cppFilePath),
      chplFilePathStr(chapelFilePath),
      headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false)
@@ -944,7 +945,7 @@ struct StatementVisitor {
       
       std::filesystem::path ofile = chplx::util::output_path / node->symbol.identifier;
       std::fstream cppofs(ofile.string() + ".cpp", std::ios_base::out);
-      StatementVisitor cppv{symbolTable, br, cppofs, indent, headers, true, false, true};
+      StatementVisitor cppv{symbolTable, br, ctx, cppofs, indent, headers, true, false, true};
 
       // populate prologue of template
 
@@ -1087,11 +1088,12 @@ struct StatementVisitor {
 
    void emitChapelLine(std::ostream & os, uast::AstNode const* ast) const {
       auto const fp = br.filePath();
-      os << chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
+      os << chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ctx, ast->id(), fp).line());
    }
 
    SymbolTable & symbolTable;
    chpl::uast::BuilderResult const& br;
+   Context* ctx = nullptr;
    std::ostream & os;
    std::size_t indent;
    std::vector<bool> & headers;
@@ -1237,7 +1239,7 @@ void CodegenVisitor::visit() {
 
       // generate cpp code for each module from the program tree
       //
-      visit(StatementVisitor{symbolTable, br, rootos, indent, headers, true, false});
+      visit(StatementVisitor{symbolTable, br, ctx, rootos, indent, headers, true, false});
    }
 
 }
