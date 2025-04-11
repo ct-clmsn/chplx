@@ -13,6 +13,8 @@
 #include <hpx/config.hpp>
 #include <hpx/generator.hpp>
 
+#include <hpx/iterator_support/counting_iterator.hpp>
+
 #include <iterator>
 
 namespace chplx {

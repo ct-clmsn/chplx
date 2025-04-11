@@ -33,9 +33,15 @@ namespace detail {
 template <typename Tuple, typename F, typename... Args>
 void coforall(Tuple &t, F &&f, Args &&...args) {
 
+#if HPX_VERSION_FULL >= 0x011100
+  auto policy = hpx::execution::experimental::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#else
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#endif
 
   using base_tuple = typename Tuple::base_type;
   if constexpr (std::tuple_size_v<base_tuple> != 0) {
@@ -87,9 +93,15 @@ template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F,
 void coforall(Range<T, BoundedType, Stridable> const &r, F &&f,
               Args &&...args) {
 
+#if HPX_VERSION_FULL >= 0x011100
+  auto policy = hpx::execution::experimental::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#else
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#endif
 
   hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
@@ -106,9 +118,15 @@ void coforall(Range<T, BoundedType, Stridable> const &r, F &&f,
 template <int N, typename T, bool Stridable, typename F, typename... Args>
 void coforall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
 
+#if HPX_VERSION_FULL >= 0x011100
+  auto policy = hpx::execution::experimental::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#else
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#endif
 
   hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
@@ -125,9 +143,15 @@ void coforall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
 template <typename T, typename F, typename... Args>
 void coforall(AssocDomain<T> const &d, F &&f, Args &&...args) {
 
+#if HPX_VERSION_FULL >= 0x011100
+  auto policy = hpx::execution::experimental::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#else
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#endif
 
   hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
@@ -144,9 +168,15 @@ void coforall(AssocDomain<T> const &d, F &&f, Args &&...args) {
 template <typename... Rs, typename F, typename... Args>
 void coforall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
 
+#if HPX_VERSION_FULL >= 0x011100
+  auto policy = hpx::execution::experimental::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#else
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#endif
 
   hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),
@@ -163,9 +193,15 @@ void coforall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
 template <typename T, typename Domain, typename F, typename... Args>
 void coforall(Array<T, Domain> const &a, F &&f, Args &&...args) {
 
+#if HPX_VERSION_FULL >= 0x011100
+  auto policy = hpx::execution::experimental::adapt_sharing_mode(
+      hpx::execution::par,
+      hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#else
   auto policy = hpx::parallel::util::adapt_sharing_mode(
       hpx::execution::par,
       hpx::threads::thread_sharing_hint::do_not_combine_tasks);
+#endif
 
   hpx::wait_all(hpx::parallel::execution::bulk_async_execute(
       policy.executor(),

@@ -144,4 +144,19 @@ void forall(Array<T, Domain> const &a, F &&f, Args &&...args) {
       });
 }
 
+
+//-----------------------------------------------------------------------------
+// forall loop for simple array iteration
+template <typename T, typename F, typename... Args>
+void forall(Array<T, Domain<1>> const &a, F &&f, Args &&...args) {
+
+  hpx::ranges::experimental::for_loop(
+      hpx::execution::par, a.these(),
+      [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+              std::forward<Args>(args))]<typename Arg>(Arg &&value) mutable {
+        f(std::forward<Arg>(value),
+          hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+      });
+}
+
 } // namespace chplx

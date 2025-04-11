@@ -29,7 +29,7 @@ template <typename... Ts> struct Tuple;
 // The value of boundedType determines which bounds of the range are specified
 // (making the range "bounded", as opposed to infinite, in the corresponding
 // direction(s)).
-enum class BoundedRangeType {
+enum class BoundedRangeType : std::uint8_t {
   bounded,     ///< both bounds are specified.
   boundedLow,  ///< the low bound is specified(the high bound is +inf)
   boundedHigh, ///< the high bound is specified(the low bound is -inf)
@@ -37,7 +37,7 @@ enum class BoundedRangeType {
 };
 
 // encode range type
-enum class BoundsCategoryType {
+enum class BoundsCategoryType : std::uint8_t {
   None,   // default: not specified
   Closed, // closed range
   Open    // open range
@@ -62,7 +62,7 @@ struct Range;
 // A domain is a first-class representation of an index set. Domains are used to
 // specify iteration spaces, to define the size and shape of arrays (Arrays),
 // and to specify aggregate operations like slicing. A domain can specify a
-// single- or multi-dimensional rectangular iteration space or represent a set
+// single- or multidimensional rectangular iteration space or represent a set
 // of indices of a given type. Domains can also represent a subset of another
 // domain's index set, using either a dense or sparse representation. A domain's
 // indices may potentially be distributed across multiple locales as described
@@ -83,12 +83,12 @@ template <typename T, typename Domain = Domain<1>> class Array;
 struct locale;
 
 //-----------------------------------------------------------------------------
-// Returns true if the type T is one the following types, of any width: int,
+// Returns true if the type T is one of the following types, of any width: int,
 // uint, real, imag, complex.
 template <typename T>
 inline constexpr bool isNumericType = std::is_arithmetic_v<T>;
 
-// Returns true if the type T is one the following types, of any width: int,
+// Returns true if the type T is one of the following types, of any width: int,
 // uint.
 template <typename T>
 inline constexpr bool isIntegralType = std::is_integral_v<T>;
@@ -134,13 +134,13 @@ template <> inline constexpr bool isStringType<std::string> = true;
 // Returns true if the type t is an enum type.
 template <typename T> inline constexpr bool isEnumType = std::is_enum_v<T>;
 
-// Returns true if the value T is one the following types, of any width: int,
+// Returns true if the value T is one of the following types, of any width: int,
 // uint, real, imag, complex.
 template <typename T> [[nodiscard]] constexpr bool isNumericValue(T) noexcept {
   return std::is_arithmetic_v<T>;
 }
 
-// Returns true if the value T is one the following types, of any width: int,
+// Returns true if the value T is one of the following types, of any width: int,
 // uint.
 template <typename T> [[nodiscard]] constexpr bool isIntegralValue(T) noexcept {
   return std::is_integral_v<T>;
@@ -156,7 +156,7 @@ template <typename T> [[nodiscard]] constexpr bool isImagValue(T) noexcept {
   return std::is_floating_point_v<T>;
 }
 
-// Returns true if the value T is an complex value, of any width.
+// Returns true if the value T is a complex value, of any width.
 template <typename T> [[nodiscard]] constexpr bool isComplexValue(T) noexcept {
   return false;
 }
