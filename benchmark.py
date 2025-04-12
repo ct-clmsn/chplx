@@ -7,6 +7,8 @@ import subprocess
 import logging
 import platform
 import multiprocessing
+import sys
+import re
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -117,19 +119,252 @@ def execute_shell_string(shell_code, platform_name):
 
 
 def get_parallel_build_flags(platform_name):
-    threads = multiprocessing.cpu_count() // 2
-    if threads == 0:
-        threads = 1
+    threads = multiprocessing.cpu_count()
+    half_threads = threads // 2
+    if half_threads == 0:
+        half_threads = 1
     logging.debug(f"Detected {threads} CPU threads for parallel builds.")
 
     if platform_name == "Windows" and shutil.which("msbuild"):
         return f"/m:{threads}"
 
-    if shutil.which("ninja") or shutil.which("make"):
+    if shutil.which("ninja"):
         return f"-j{threads}"
+
+    if shutil.which("make"):
+        return f"-j{half_threads}"
 
     logging.warning("Unknown or unsupported build system, no parallel flags applied.")
     return ""
+
+
+def build_chplx_benchmarks(cxx_compiler_path, args):
+    # Find .chpl files in benchmarks directory
+    benchmarks_dir = os.path.join(args.source_path, "benchmarks", "chplx")
+    if not os.path.isdir(benchmarks_dir):
+        logging.error(f"Benchmarks directory not found: {benchmarks_dir}")
+        return
+
+    chpl_files = [f for f in os.listdir(benchmarks_dir) if f.endswith(".chpl")]
+    if not chpl_files:
+        logging.warning("No Chapel (.chpl) files found in benchmarks directory.")
+        return
+
+    benchmarks_build_dir = os.path.join(args.source_path, "benchmarks-build")
+    os.makedirs(benchmarks_build_dir, exist_ok=True)
+
+    logging.info("Running chplx on benchmark .chpl files:")
+    for chpl_file in chpl_files:
+        full_path = os.path.join(benchmarks_dir, chpl_file)
+        base_name = os.path.splitext(chpl_file)[0]
+        output_dir = os.path.join(benchmarks_build_dir, f"{base_name}_cpp")
+
+        cmd = [chplx_binary, "-f", full_path, "-o", output_dir]
+        logging.info(f"Executing: {' '.join(cmd)}")
+        try:
+            subprocess.run(cmd, check=True)
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error running chplx on {chpl_file}: {e}")
+
+        shell_lines = []
+        hpx_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "HPX")
+        fmt_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "fmt")
+        chplx_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "Chplx")
+        build_dir = os.path.join(output_dir, "build")
+        if not os.path.exists(build_dir):
+            os.makedirs(build_dir)
+
+        chplx_programs_cmake_args = [
+            f'-B"{build_dir}"',
+            f'-S"{output_dir}"',
+            f'-DCMAKE_CXX_COMPILER="{cxx_compiler_path}"',
+            f"-DCMAKE_BUILD_TYPE={args.build_type}",
+            f"-DHPX_DIR={hpx_dir}",
+            f"-Dfmt_DIR={fmt_dir}",
+            f"-DChplx_DIR={chplx_dir}",
+        ]
+
+        if args.cc_path:
+            cc_path = args.cc_path.replace("\\", "/")
+            chplx_programs_cmake_args.append(f'-DCMAKE_C_COMPILER="{cc_path}"')
+
+        if platform_name != "Windows":
+            chplx_programs_cmake_args.append("-DCHPL_HOME=${CHPL_HOME}")
+        else:
+            chplx_programs_cmake_args.append("-DCHPL_HOME=%CHPL_HOME%")
+
+        if args.cmake_args:
+            chplx_programs_cmake_args.append(args.cmake_args)
+
+        if args.cmake_gen:
+            chplx_programs_cmake_args.append(f'-G "{args.cmake_gen}"')
+
+        shell_lines.append("cmake " + " ".join(chplx_programs_cmake_args))
+        build_cmd = f'cmake --build "{build_dir}"'
+        shell_lines.append(build_cmd)
+        full_script = "\n".join(shell_lines)
+        logging.info(f"*********Building {base_name} *****************")
+        build_return_code = execute_shell_string(full_script, platform_name)
+        if build_return_code != 0:
+            logging.error("Build failed. Skipping chplx execution.")
+            return
+        return
+
+
+def get_llvm_shared_mode(llvm_config='llvm-config'):
+    try:
+        return subprocess.check_output([llvm_config, '--shared-mode'], text=True).strip()
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to get shared mode: {e}")
+
+def get_llvm_libdir(llvm_config='llvm-config'):
+    try:
+        return subprocess.check_output([llvm_config, '--libdir'], text=True).strip()
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to get libdir: {e}")
+
+def get_static_llvm_link_flags(lib_dir):
+    flags = set()
+    pattern = re.compile(r'^lib(LLVM.*?|clang.*?)\.a$')
+
+    for file in os.listdir(lib_dir):
+        match = pattern.match(file)
+        if match:
+            flags.add(f"-l{match.group(1)}")
+    return ' '.join(sorted(flags))
+
+def get_dynamic_llvm_link_flags(llvm_config='llvm-config'):
+    try:
+        return subprocess.check_output([llvm_config, '--libs', '--system-libs'], text=True).strip()
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to get dynamic link flags: {e}")
+
+def get_cmake_llvm_link_flags(llvm_config='llvm-config'):
+    mode = get_llvm_shared_mode(llvm_config)
+    lib_dir = get_llvm_libdir(llvm_config)
+
+    if mode == "static":
+        return get_static_llvm_link_flags(lib_dir)
+    else:
+        return get_dynamic_llvm_link_flags(llvm_config)
+
+
+def build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args):
+
+    chapel_dir = os.path.join(args.source_path, "extern", "chapel")  # CHPL_HOME
+    chapel_build_dir = os.path.join(args.source_path, "build-chapel")
+    chapel_install_prefix = os.path.join(args.source_path, "install-chapel")
+    os.makedirs(chapel_install_prefix, exist_ok=True)
+    os.makedirs(chapel_build_dir, exist_ok=True)
+
+    shell_lines = []
+
+    # cmake_llvm_cxx_flags = ""
+    # cmake_llvm_ld_flags = ""
+    cmake_llvm_cxx_libs = ""
+    # cmake_chapel_exe_linker_flags = cmake_llvm_cxx_libs
+    # if shutil.which("llvm-config") == "":
+    #     logging.warning("You need to provide appropriate llvm flags")
+    # else:
+    #     cmake_llvm_cxx_libs = get_cmake_llvm_link_flags("llvm-config")
+    #     logging.info(f"cmake llvm cxx libs: {cmake_llvm_cxx_libs}")
+    #     cmake_llvm_cxx_flags = subprocess.run(["llvm-config", "--cxxflags"],capture_output=True, text=True, check=True).stdout.strip()
+    #     cmake_llvm_ld_flags = subprocess.run(["llvm-config", "--ldflags"],capture_output=True, text=True, check=True).stdout.strip()
+    #     cmake_llvm_cxx_libs = subprocess.run(["llvm-config", "--libs", "all"],capture_output=True, text=True, check=True).stdout.strip()
+
+    if platform_name != "Windows":
+        shell_lines.append(f'export CXX="{cxx_compiler_path}"')
+        shell_current = os.environ["SHELL"]
+        if "bash" in shell_current:
+            shell_lines.append(f". {chapel_dir}/util/quickstart/setchplenv.bash")
+        elif "fish" in shell_current:
+            shell_lines.append(f". {chapel_dir}/util/quickstart/setchplenv.fish")
+        elif "csh" in shell_current:
+            shell_lines.append(f". {chapel_dir}/util/quickstart/setchplenv.csh ")
+        else:
+            shell_lines.append(f". {chapel_dir}/util/quickstart/setchplenv.sh")
+        shell_lines.append(f'export CHPL_HOME="{chapel_dir}"')
+        shell_lines.append(
+            f'export CHPL_TARGET_PLATFORM="`$CHPL_HOME/util/chplenv/chpl_platform.py`"'
+        )
+        shell_lines.append(
+            f'export CHPL_HOST_CXX="{cxx_compiler_path}"'  # default value for CHPL_HOST_COMPILER is inferred from
+        )
+        shell_lines.append(
+            f'export CHPL_HOST_CC="{cc_compiler_path}"'  # default value for CHPL_HOST_COMPILER is inferred from
+        )
+        shell_lines.append(f"export CHPL_TARGET_CPU=native")
+        shell_lines.append(f"export CHPL_LOCALE_MODEL=flat")  # flat/gpu
+        shell_lines.append(f"export CHPL_COMM=none")  # currently single locale
+        shell_lines.append(f"export CHPL_TASKS=qthreads")  # fifo/qthreads
+        shell_lines.append(f"export CHPL_LAUNCHER=none")
+        shell_lines.append(f"export CHPL_TIMERS=generic")
+        shell_lines.append(f"export CHPL_UNWIND=none")  # disabled stack tracing
+        shell_lines.append(f"export CHPL_MEM=jemalloc")  # cstdlib / jemalloc
+        shell_lines.append(f"export CHPL_ATOMICS=cstdlib")
+        shell_lines.append(f"export CHPL_GMP=bundled")
+        shell_lines.append(f"export CHPL_HWLOC=bundled")
+        shell_lines.append(f"export CHPL_RE2=bundled")
+        shell_lines.append(f"export CHPL_LLVM=system")
+        shell_lines.append(f"export CHPL_AUX_FILESYS=none")
+        shell_lines.append(f"export CHPL_CMAKE_PYTHON={sys.executable}")
+        shell_lines.append(f"{chapel_dir}/util/printchplenv --all --internal")
+    else:
+        shell_lines.append(f"set CXX={cxx_compiler_path}")
+        shell_lines.append(f"set CHPL_HOME={chapel_dir}")
+        logging.warning("Please set environment variables manually")
+
+    cmake_args = [
+        f'-B"{chapel_build_dir}"',
+        f'-S"{chapel_dir}"',
+        f'-DCMAKE_CXX_COMPILER="{cxx_compiler_path}"',
+        f'-DCMAKE_C_COMPILER="{cc_compiler_path}"',
+        f"-DCMAKE_BUILD_TYPE={args.build_type}",
+        f"-DCMAKE_INSTALL_PREFIX={chapel_install_prefix}",
+        f"-DCHPL_CMAKE_PYTHON={sys.executable}",
+    ]
+
+    # if cmake_llvm_cxx_flags != "":
+    #     cmake_args.append(f"-DCMAKE_CXX_FLAGS=\"{cmake_llvm_cxx_flags}\"")
+
+    if cmake_llvm_cxx_libs != "":
+        cmake_args.append(f'-DCMAKE_CXX_STANDARD_LIBRARIES="{cmake_llvm_cxx_libs}"')
+
+    # cmake_args.append(f"-DCMAKE_EXE_LINKER_FLAGS=\"{cmake_chapel_exe_linker_flags}\"")
+
+    # if cmake_llvm_ld_flags != "":
+    #     cmake_args.append(f"-DCMAKE_SHARED_LINKER_FLAGS=\"{cmake_llvm_ld_flags}\"")
+
+    if args.cmake_args_chapel:
+        cmake_args.append(args.cmake_args_chapel)
+
+    if args.cmake_gen_chapel:
+        cmake_args.append(f'-G "{args.cmake_gen_chapel}"')
+
+    shell_lines.append(f"git -C {chapel_dir} stash")
+    shell_lines.append(f"git -C {chapel_dir} reset HEAD --hard")
+
+    shell_lines.append("cmake " + " ".join(cmake_args))
+    build_cmd = f'cmake --build "{chapel_build_dir}"'
+    install_cmd = f"cmake --install {chapel_build_dir} --prefix {chapel_install_prefix}"
+    parallel_flags = get_parallel_build_flags(platform_name)
+    if parallel_flags:
+        build_cmd += f" -- {parallel_flags}"
+    shell_lines.append(build_cmd)
+    shell_lines.append(install_cmd)
+    shell_lines.append(f"git -C {chapel_dir} stash pop")
+
+    full_script = "\n".join(shell_lines)
+
+    if args.dry_run_chapel:
+        logging.info(f"Generated build script for chapel:\n{full_script}")
+        return
+
+    build_return_code = execute_shell_string(full_script, platform_name)
+
+    if build_return_code != 0:
+        logging.error("Chapel Build failed")
+        return
 
 
 def main():
@@ -142,7 +377,13 @@ def main():
     parser.add_argument("--cxx-path", type=str, help="Provide a cxx compiler path.")
     parser.add_argument("--cc-path", type=str, help="Provide a c compiler path.")
     parser.add_argument("--cmake-args", type=str, help="Provide a cxx compiler path.")
+    parser.add_argument(
+        "--cmake-args-chapel", type=str, help="Provide a cxx compiler path."
+    )
     parser.add_argument("--cmake-gen", type=str, help="Provide a cmake generator.")
+    parser.add_argument(
+        "--cmake-gen-chapel", type=str, help="Provide a cmake generator."
+    )
     parser.add_argument(
         "--cmake-prefix",
         type=str,
@@ -174,7 +415,17 @@ def main():
         help="If set, build commands will not be executed, only displayed.",
     )
     parser.add_argument(
+        "--dry-run-chapel",
+        action="store_true",
+        help="If set, build commands for chapel will not be executed, only displayed.",
+    )
+    parser.add_argument(
         "--build-only",
+        action="store_true",
+        help="If set, build commands be executed for ChplX but chplx binary will not be executed",
+    )
+    parser.add_argument(
+        "--build-chapel-only",
         action="store_true",
         help="If set, build commands be executed for ChplX but chplx binary will not be executed",
     )
@@ -190,6 +441,7 @@ def main():
 
     compilers = find_cpp_compilers()
     cxx_compiler_path = None
+    cc_compiler_path = None
 
     if args.cxx:
         if args.cxx in compilers:
@@ -268,8 +520,22 @@ def main():
     ]
 
     if args.cc_path:
-        cc_path = args.cc_path.replace("\\", "/")
-        cmake_args.append(f'-DCMAKE_C_COMPILER="{cc_path}"')
+        cc_compiler_path = args.cc_path.replace("\\", "/")
+        cmake_args.append(f'-DCMAKE_C_COMPILER="{cc_compiler_path}"')
+    else:
+
+        def get_cc_from_cxx(cxx_path):
+            dirname, basename = os.path.split(cxx_path)
+            if basename.endswith("++"):
+                cc_basename = basename[:-2]  # remove last two characters (the '++')
+                cc_path = os.path.join(dirname, cc_basename)
+                return cc_path
+            else:
+                raise ValueError(
+                    f"The C++ compiler path doesn't end with '++': {cxx_path}"
+                )
+
+        cc_compiler_path = get_cc_from_cxx(cxx_compiler_path)
 
     if platform_name != "Windows":
         cmake_args.append("-DCHPL_HOME=${CHPL_HOME}")
@@ -297,95 +563,33 @@ def main():
         logging.info(f"Generated build script:\n{full_script}")
         return
 
-    build_return_code = execute_shell_string(full_script, platform_name)
-    if build_return_code != 0:
-        logging.error("Build failed. Skipping chplx execution.")
-        return
+    if not args.build_chapel_only:
 
-    if args.build_only:
-        logging.debug("Build only completed")
-        return
-    ######################## benchmarking part ###############################
-
-    # Check if the chplx binary exists
-    chplx_binary = os.path.join(args.build_path, "backend", "chplx")
-    if not os.path.isfile(chplx_binary):
-        logging.error(f"chplx binary not found at {chplx_binary}")
-        return
-
-    # Find .chpl files in benchmarks directory
-    benchmarks_dir = os.path.join(args.source_path, "benchmarks")
-    if not os.path.isdir(benchmarks_dir):
-        logging.error(f"Benchmarks directory not found: {benchmarks_dir}")
-        return
-
-    chpl_files = [f for f in os.listdir(benchmarks_dir) if f.endswith(".chpl")]
-    if not chpl_files:
-        logging.warning("No Chapel (.chpl) files found in benchmarks directory.")
-        return
-
-    benchmarks_build_dir = os.path.join(args.source_path, "benchmarks-build")
-    os.makedirs(benchmarks_build_dir, exist_ok=True)
-
-    logging.info("Running chplx on benchmark .chpl files:")
-    for chpl_file in chpl_files:
-        if not "heat" in chpl_file:
-            continue
-        full_path = os.path.join(benchmarks_dir, chpl_file)
-        base_name = os.path.splitext(chpl_file)[0]
-        output_dir = os.path.join(benchmarks_build_dir, f"{base_name}_cpp")
-
-        cmd = [chplx_binary, "-f", full_path, "-o", output_dir]
-        logging.info(f"Executing: {' '.join(cmd)}")
-        try:
-            subprocess.run(cmd, check=True)
-        except subprocess.CalledProcessError as e:
-            logging.error(f"Error running chplx on {chpl_file}: {e}")
-
-        shell_lines = []
-        hpx_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "HPX")
-        fmt_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "fmt")
-        chplx_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "Chplx")
-        build_dir = os.path.join(output_dir, "build")
-        if not os.path.exists(build_dir):
-            os.makedirs(build_dir)
-
-        chplx_programs_cmake_args = [
-            f'-B"{build_dir}"',
-            f'-S"{output_dir}"',
-            f'-DCMAKE_CXX_COMPILER="{cxx_compiler_path}"',
-            f"-DCMAKE_BUILD_TYPE={args.build_type}",
-            f"-DHPX_DIR={hpx_dir}",
-            f"-Dfmt_DIR={fmt_dir}",
-            f"-DChplx_DIR={chplx_dir}",
-            "-DHPX_CONFIG_IS_INSTALL=ON",
-        ]
-
-        if args.cc_path:
-            cc_path = args.cc_path.replace("\\", "/")
-            chplx_programs_cmake_args.append(f'-DCMAKE_C_COMPILER="{cc_path}"')
-
-        if platform_name != "Windows":
-            chplx_programs_cmake_args.append("-DCHPL_HOME=${CHPL_HOME}")
-        else:
-            chplx_programs_cmake_args.append("-DCHPL_HOME=%CHPL_HOME%")
-
-        if args.cmake_args:
-            chplx_programs_cmake_args.append(args.cmake_args)
-
-        if args.cmake_gen:
-            chplx_programs_cmake_args.append(f'-G "{args.cmake_gen}"')
-
-        shell_lines.append("cmake " + " ".join(chplx_programs_cmake_args))
-        build_cmd = f'cmake --build "{build_dir}"'
-        shell_lines.append(build_cmd)
-        full_script = "\n".join(shell_lines)
-        logging.info(f"*********Building {base_name} *****************")
         build_return_code = execute_shell_string(full_script, platform_name)
         if build_return_code != 0:
             logging.error("Build failed. Skipping chplx execution.")
             return
+
+        if args.build_only:
+            logging.debug("Build only completed")
+            return
+        ######################## benchmarking part ###############################
+
+        # Check if the chplx binary exists
+        chplx_binary = os.path.join(args.build_path, "backend", "chplx")
+        if not os.path.isfile(chplx_binary):
+            logging.error(f"chplx binary not found at {chplx_binary}")
+            return
+
+    ####################### build chapel itself #############################
+    if args.build_only:
         return
+
+    build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args)
+    ####################### end build chapel itself #########################
+
+    if not args.build_chapel_only:
+        build_chplx_benchmarks(cxx_compiler_path, args)
 
 
 if __name__ == "__main__":
