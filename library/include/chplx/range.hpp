@@ -493,14 +493,22 @@ struct Range {
   // - its alignment is non-ambiguous or
   // - its stride is either 1 or -1.
   [[nodiscard]] constexpr bool isNaturallyAligned() const noexcept {
-    return !alignment_.isAmbiguous() || !stride_.hasAmbiguousValue();
+    if constexpr (!Stridable) {
+      return true;
+    } else {
+      return !alignment_.isAmbiguous() || !stride_.hasAmbiguousValue();
+    }
   }
 
   // A range is ambiguously aligned if
   // - its alignment is ambiguous and
   // - its stride is neither 1 nor -1.
   [[nodiscard]] constexpr bool isAmbiguous() const noexcept {
-    return alignment_.isAmbiguous() && stride_.hasAmbiguousValue();
+    if constexpr (!Stridable) {
+      return false;
+    } else {
+      return alignment_.isAmbiguous() && stride_.hasAmbiguousValue();
+    }
   }
 
   [[nodiscard]] constexpr auto alignment() const noexcept {
@@ -584,7 +592,7 @@ struct Range {
   [[nodiscard]] constexpr bool hasFirst() const noexcept {
 
     if constexpr (!Stridable) {
-      return bounds_.hasFirst() && isNaturallyAligned();
+      return bounds_.hasFirst();
     } else {
       if (stride_.getStride() > 0) {
         return bounds_.hasFirst() && isNaturallyAligned();
@@ -613,7 +621,7 @@ struct Range {
   [[nodiscard]] constexpr bool hasLast() const noexcept {
 
     if constexpr (!Stridable) {
-      return bounds_.hasLast() && isNaturallyAligned();
+      return bounds_.hasLast();
     } else {
       if (stride_.getStride() > 0) {
         return bounds_.hasLast() && isNaturallyAligned();
@@ -720,7 +728,7 @@ struct Range {
     }
   }
 
-  [[nodiscard]] constexpr T operator[](std::int64_t idx) const noexcept {
+  [[nodiscard]] constexpr T operator[](std::int64_t const idx) const noexcept {
     return orderToIndex(idx);
   }
 
