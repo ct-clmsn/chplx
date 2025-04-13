@@ -1,4 +1,4 @@
-//  Copyright (c) 2023 Hartmut Kaiser
+//  Copyright (c) 2023-2025 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -88,6 +88,19 @@ void forall(Range<T, BoundedType, Stridable> const &r, F &&f, Args &&...args) {
       });
 }
 
+template <typename T, typename F, typename... Args>
+void forall(Range<T, BoundedRangeType::bounded, false> const &r, F &&f,
+            Args &&...args) {
+
+  hpx::ranges::experimental::for_loop(
+      hpx::execution::par, r.these(),
+      [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+              std::forward<Args>(args))]<typename Arg>(Arg &&value) mutable {
+        f(*std::forward<Arg>(value),
+          hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+      });
+}
+
 //-----------------------------------------------------------------------------
 // forall loop for domain
 template <int N, typename T, bool Stridable, typename F, typename... Args>
@@ -98,6 +111,18 @@ void forall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
       [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
               std::forward<Args>(args))]<typename Arg>(Arg &&value) mutable {
         f(std::forward<Arg>(value),
+          hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+      });
+}
+
+template <typename Idx, typename F, typename... Args>
+void forall(Domain<1, Idx, false> const &d, F &&f, Args &&...args) {
+
+  hpx::ranges::experimental::for_loop(
+      hpx::execution::par, d.these(),
+      [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+              std::forward<Args>(args))]<typename Arg>(Arg &&value) mutable {
+        f(*std::forward<Arg>(value),
           hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
       });
 }
@@ -144,7 +169,6 @@ void forall(Array<T, Domain> const &a, F &&f, Args &&...args) {
       });
 }
 
-
 //-----------------------------------------------------------------------------
 // forall loop for simple array iteration
 template <typename T, typename F, typename... Args>
@@ -154,7 +178,7 @@ void forall(Array<T, Domain<1>> const &a, F &&f, Args &&...args) {
       hpx::execution::par, a.these(),
       [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
               std::forward<Args>(args))]<typename Arg>(Arg &&value) mutable {
-        f(std::forward<Arg>(value),
+        f(*std::forward<Arg>(value),
           hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
       });
 }

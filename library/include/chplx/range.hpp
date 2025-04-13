@@ -480,7 +480,7 @@ struct Range {
                 BoundsCategoryType::Open),
         stride_(rhs.stride()), alignment_(rhs.alignment()) {}
 
-  decltype(auto) these() const { return iterate(*this); }
+  [[nodiscard]] decltype(auto) these() const { return iterate(*this); }
 
   [[nodiscard]] HPX_FORCEINLINE constexpr auto getFirstIndex() const noexcept {
     return bounds_.getFirstIndex();
