@@ -140,7 +140,7 @@ def get_parallel_build_flags(platform_name):
 
 
 
-def build_chplx_benchmarks(cxx_compiler_path, args):
+def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args):
     # Find .chpl files in benchmarks directory
     benchmarks_dir = os.path.join(args.source_path, "benchmarks", "chplx")
     if not os.path.isdir(benchmarks_dir):
@@ -169,9 +169,15 @@ def build_chplx_benchmarks(cxx_compiler_path, args):
             logging.error(f"Error running chplx on {chpl_file}: {e}")
 
         shell_lines = []
-        hpx_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "HPX")
-        fmt_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "fmt")
-        chplx_dir = os.path.join(args.cmake_prefix, "lib", "cmake", "Chplx")
+        lib_dir = "lib"
+        if not os.path.isdir(os.path.join(args.cmake_prefix, lib_dir, "cmake", "HPX")):
+            lib_dir += "64"
+            if not os.path.isdir(os.path.join(args.cmake_prefix, lib_dir, "cmake", "HPX")):
+                logging.error("Neither lib nor lib64 contains cmake required")
+                return
+        hpx_dir = os.path.join(args.cmake_prefix, lib_dir, "cmake", "HPX")
+        fmt_dir = os.path.join(args.cmake_prefix, lib_dir, "cmake", "fmt")
+        chplx_dir = os.path.join(args.cmake_prefix, lib_dir, "cmake", "Chplx")
         build_dir = os.path.join(output_dir, "build")
         if not os.path.exists(build_dir):
             os.makedirs(build_dir)
@@ -529,8 +535,8 @@ def main():
 
         def get_cc_from_cxx(cxx_path):
             dirname, basename = os.path.split(cxx_path)
-            if basename.endswith("++"):
-                cc_basename = basename[:-2]  # remove last two characters (the '++')
+            if basename.endswith("g++"):
+                cc_basename = basename[:-2] + "cc"  # remove last two characters (the '++')
                 cc_path = os.path.join(dirname, cc_basename)
                 return cc_path
             else:
@@ -592,7 +598,7 @@ def main():
     ####################### end build chapel itself #########################
 
     if not args.build_chapel_only:
-        build_chplx_benchmarks(cxx_compiler_path, args)
+        build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
 
 
 if __name__ == "__main__":
