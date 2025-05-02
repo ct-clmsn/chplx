@@ -73,7 +73,11 @@ struct Stridable<T, BoundedType, true> {
 
   [[nodiscard]] HPX_FORCEINLINE constexpr bool
   hasAmbiguousValue() const noexcept {
-    return stride != 1 && stride != -1;
+    if constexpr (BoundedType == BoundedRangeType::boundedNone) {
+      return true;
+    } else {
+      return stride != 1 && stride != -1;
+    }
   }
 
   StrideType_t<T> stride = StrideType_t<T>(1);
@@ -160,8 +164,8 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedLow> {
 
   constexpr Bounds(T low, RangeInit) noexcept : firstIndex(low) {}
 
-  constexpr Bounds(RangeInit, T high,
-                   BoundsCategoryType type = BoundsCategoryType::None) noexcept
+  constexpr Bounds(RangeInit, [[maybe_unused]] T high,
+                   BoundsCategoryType = BoundsCategoryType::None) noexcept
       : firstIndex(MinValue_v<T>) {
     HPX_ASSERT(high == MaxValue_v<T>);
   }
@@ -476,7 +480,7 @@ struct Range {
                 BoundsCategoryType::Open),
         stride_(rhs.stride()), alignment_(rhs.alignment()) {}
 
-  decltype(auto) these() const { return iterate(*this); }
+  [[nodiscard]] decltype(auto) these() const { return iterate(*this); }
 
   [[nodiscard]] HPX_FORCEINLINE constexpr auto getFirstIndex() const noexcept {
     return bounds_.getFirstIndex();
@@ -493,14 +497,22 @@ struct Range {
   // - its alignment is non-ambiguous or
   // - its stride is either 1 or -1.
   [[nodiscard]] constexpr bool isNaturallyAligned() const noexcept {
-    return !alignment_.isAmbiguous() || !stride_.hasAmbiguousValue();
+    if constexpr (!Stridable) {
+      return true;
+    } else {
+      return !alignment_.isAmbiguous() || !stride_.hasAmbiguousValue();
+    }
   }
 
   // A range is ambiguously aligned if
   // - its alignment is ambiguous and
   // - its stride is neither 1 nor -1.
   [[nodiscard]] constexpr bool isAmbiguous() const noexcept {
-    return alignment_.isAmbiguous() && stride_.hasAmbiguousValue();
+    if constexpr (!Stridable) {
+      return false;
+    } else {
+      return alignment_.isAmbiguous() && stride_.hasAmbiguousValue();
+    }
   }
 
   [[nodiscard]] constexpr auto alignment() const noexcept {
@@ -584,7 +596,7 @@ struct Range {
   [[nodiscard]] constexpr bool hasFirst() const noexcept {
 
     if constexpr (!Stridable) {
-      return bounds_.hasFirst() && isNaturallyAligned();
+      return bounds_.hasFirst();
     } else {
       if (stride_.getStride() > 0) {
         return bounds_.hasFirst() && isNaturallyAligned();
@@ -613,7 +625,7 @@ struct Range {
   [[nodiscard]] constexpr bool hasLast() const noexcept {
 
     if constexpr (!Stridable) {
-      return bounds_.hasLast() && isNaturallyAligned();
+      return bounds_.hasLast();
     } else {
       if (stride_.getStride() > 0) {
         return bounds_.hasLast() && isNaturallyAligned();
@@ -720,7 +732,7 @@ struct Range {
     }
   }
 
-  [[nodiscard]] constexpr T operator[](std::int64_t idx) const noexcept {
+  [[nodiscard]] constexpr T operator[](std::int64_t const idx) const noexcept {
     return orderToIndex(idx);
   }
 
@@ -737,9 +749,9 @@ private:
   operator!=(Range<T1, BoundedType1, Stridable1> const &lhs,
              Range<T2, BoundedType2, Stridable2> const &rhs) noexcept;
 
-  [[no_unique_address]] detail::Bounds<T, BoundedType> bounds_{};
-  [[no_unique_address]] detail::Stridable<T, BoundedType, Stridable> stride_{};
-  [[no_unique_address]] detail::Alignment<T, BoundedType, Stridable>
+  HPX_NO_UNIQUE_ADDRESS detail::Bounds<T, BoundedType> bounds_{};
+  HPX_NO_UNIQUE_ADDRESS detail::Stridable<T, BoundedType, Stridable> stride_{};
+  HPX_NO_UNIQUE_ADDRESS detail::Alignment<T, BoundedType, Stridable>
       alignment_{};
 };
 
