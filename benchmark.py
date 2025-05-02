@@ -128,7 +128,6 @@ def get_parallel_build_flags(platform_name):
     if platform_name == "Windows" and shutil.which("msbuild"):
         return f"/m:{threads}"
 
-
     if shutil.which("ninja"):
         return f"-j{threads}"
 
@@ -139,15 +138,15 @@ def get_parallel_build_flags(platform_name):
     return ""
 
 
-
 def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args):
+    chapel_dir = os.path.join(args.source_path, "extern", "chapel")  # CHPL_HOME
     # Find .chpl files in benchmarks directory
-    benchmarks_dir = os.path.join(args.source_path, "benchmarks", "chplx")
-    if not os.path.isdir(benchmarks_dir):
-        logging.error(f"Benchmarks directory not found: {benchmarks_dir}")
+    chplx_benchmarks_dir = os.path.join(args.source_path, "benchmarks", "chplx")
+    if not os.path.isdir(chplx_benchmarks_dir):
+        logging.error(f"Benchmarks directory not found: {chplx_benchmarks_dir}")
         return
 
-    chpl_files = [f for f in os.listdir(benchmarks_dir) if f.endswith(".chpl")]
+    chpl_files = [f for f in os.listdir(chplx_benchmarks_dir) if f.endswith(".chpl")]
     if not chpl_files:
         logging.warning("No Chapel (.chpl) files found in benchmarks directory.")
         return
@@ -157,7 +156,7 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
 
     logging.info("Running chplx on benchmark .chpl files:")
     for chpl_file in chpl_files:
-        full_path = os.path.join(benchmarks_dir, chpl_file)
+        full_path = os.path.join(chplx_benchmarks_dir, chpl_file)
         base_name = os.path.splitext(chpl_file)[0]
         output_dir = os.path.join(benchmarks_build_dir, f"{base_name}_cpp")
 
@@ -172,7 +171,9 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
         lib_dir = "lib"
         if not os.path.isdir(os.path.join(args.cmake_prefix, lib_dir, "cmake", "HPX")):
             lib_dir += "64"
-            if not os.path.isdir(os.path.join(args.cmake_prefix, lib_dir, "cmake", "HPX")):
+            if not os.path.isdir(
+                os.path.join(args.cmake_prefix, lib_dir, "cmake", "HPX")
+            ):
                 logging.error("Neither lib nor lib64 contains cmake required")
                 return
         hpx_dir = os.path.join(args.cmake_prefix, lib_dir, "cmake", "HPX")
@@ -216,38 +217,92 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
         if build_return_code != 0:
             logging.error("Build failed. Skipping chplx execution.")
             return
+    chapel_benchmarks_dir = os.path.join(args.source_path, "benchmarks", "chapel")
+    if not os.path.isdir(chapel_benchmarks_dir):
+        logging.error(f"Benchmarks directory not found: {benchmarks_dir}")
         return
 
+    chapel_files = [f for f in os.listdir(chapel_benchmarks_dir) if f.endswith(".chpl")]
+    if not chapel_files:
+        logging.warning("No Chapel (.chpl) files found in benchmarks directory.")
+        return
 
-def get_llvm_shared_mode(llvm_config='llvm-config'):
+    chapel_benchmarks_build_dir = os.path.join(
+        args.source_path, "benchmarks-build-chapel"
+    )
+    os.makedirs(chapel_benchmarks_build_dir, exist_ok=True)
+    chapel_compiler_bin_dir = os.path.join(args.source_path, "install-chapel", "bin")
+    if not os.path.isdir(chapel_compiler_bin_dir):
+        logging.error(f"Chapel Bin directory not found: {chapel_compiler_bin_dir}")
+        return
+    chapel_compiler_bin_dir_sub_dir = [f for f in os.listdir(chapel_compiler_bin_dir)]
+    if len(chapel_compiler_bin_dir_sub_dir) > 1:
+        logging.error(
+            f"Multiple directories inside chapel bin: {chapel_compiler_bin_dir_sub_dir}"
+        )
+        return
+    chapel_compiler_path = os.path.join(
+        chapel_compiler_bin_dir, chapel_compiler_bin_dir_sub_dir[0], "chpl"
+    )
+    if not os.path.exists(chapel_compiler_path):
+        logging.error(f"Chapel binary not found: {chapel_compiler_path}")
+        return
+    logging.info("Running chpl on benchmark .chpl files with --fast:")
+    for chpl_file in chapel_files:
+        full_path = os.path.join(chapel_benchmarks_dir, chpl_file)
+        base_name = os.path.splitext(chpl_file)[0]
+        output_dir = os.path.join(chapel_benchmarks_build_dir, f"{base_name}_chapel")
+
+        cmd = []
+        if platform_name != "Windows":
+            cmd.append(f"export CHPL_HOME={chapel_dir}")
+        else:
+            cmd.append(f"set CHPL_HOME={chapel_dir}")
+        cmd.append(f"{chapel_compiler_path} {full_path} -o {output_dir} --fast")
+        full_script = "\n".join(cmd)
+        logging.info(f"Executing: {full_script}")
+        if execute_shell_string(full_script, platform_name) != 0:
+            logging.error(f"{full_script} failed")
+            return
+
+
+def get_llvm_shared_mode(llvm_config="llvm-config"):
     try:
-        return subprocess.check_output([llvm_config, '--shared-mode'], text=True).strip()
+        return subprocess.check_output(
+            [llvm_config, "--shared-mode"], text=True
+        ).strip()
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Failed to get shared mode: {e}")
 
-def get_llvm_libdir(llvm_config='llvm-config'):
+
+def get_llvm_libdir(llvm_config="llvm-config"):
     try:
-        return subprocess.check_output([llvm_config, '--libdir'], text=True).strip()
+        return subprocess.check_output([llvm_config, "--libdir"], text=True).strip()
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Failed to get libdir: {e}")
 
+
 def get_static_llvm_link_flags(lib_dir):
     flags = set()
-    pattern = re.compile(r'^lib(LLVM.*?|clang.*?)\.a$')
+    pattern = re.compile(r"^lib(LLVM.*?|clang.*?)\.a$")
 
     for file in os.listdir(lib_dir):
         match = pattern.match(file)
         if match:
             flags.add(f"-l{match.group(1)}")
-    return ' '.join(sorted(flags))
+    return " ".join(sorted(flags))
 
-def get_dynamic_llvm_link_flags(llvm_config='llvm-config'):
+
+def get_dynamic_llvm_link_flags(llvm_config="llvm-config"):
     try:
-        return subprocess.check_output([llvm_config, '--libs', '--system-libs'], text=True).strip()
+        return subprocess.check_output(
+            [llvm_config, "--libs", "--system-libs"], text=True
+        ).strip()
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Failed to get dynamic link flags: {e}")
 
-def get_cmake_llvm_link_flags(llvm_config='llvm-config'):
+
+def get_cmake_llvm_link_flags(llvm_config="llvm-config"):
     mode = get_llvm_shared_mode(llvm_config)
     lib_dir = get_llvm_libdir(llvm_config)
 
@@ -439,6 +494,11 @@ def main():
         help="If set, build commands be executed for ChplX but chplx binary will not be executed",
     )
     parser.add_argument(
+        "--build-benchmarks-only",
+        action="store_true",
+        help="If set, builds only the benchmarks in benchmarks directory",
+    )
+    parser.add_argument(
         "--platform",
         type=str,
         choices=["Windows", "Linux", "Darwin"],
@@ -536,7 +596,9 @@ def main():
         def get_cc_from_cxx(cxx_path):
             dirname, basename = os.path.split(cxx_path)
             if basename.endswith("g++"):
-                cc_basename = basename[:-2] + "cc"  # remove last two characters (the '++')
+                cc_basename = (
+                    basename[:-2] + "cc"
+                )  # remove last two characters (the '++')
                 cc_path = os.path.join(dirname, cc_basename)
                 return cc_path
             else:
@@ -568,6 +630,12 @@ def main():
 
     full_script = "\n".join(shell_lines)
 
+    chplx_binary = os.path.join(args.build_path, "backend", "chplx")
+
+    if args.build_benchmarks_only:
+        build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
+        return
+
     if args.dry_run:
         logging.info(f"Generated build script:\n{full_script}")
         return
@@ -585,7 +653,6 @@ def main():
         ######################## benchmarking part ###############################
 
         # Check if the chplx binary exists
-        chplx_binary = os.path.join(args.build_path, "backend", "chplx")
         if not os.path.isfile(chplx_binary):
             logging.error(f"chplx binary not found at {chplx_binary}")
             return
