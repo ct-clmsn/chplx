@@ -21,20 +21,25 @@ cmake_minimum_required(VERSION 3.19)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Configuration type" FORCE)
 endif()
+
 project({1})
+
 add_executable({1} {1}.cpp {1}_driver.cpp)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
+
 if(NOT Chplx_DIR)
   message(FATAL_ERROR "Chplx_DIR variable undefined")
 endif()
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 find_package(fmt REQUIRED CONFIG)
 find_package(HPX REQUIRED CONFIG)
 find_package(Chplx REQUIRED CONFIG)
-set({1}_sources {1}.cpp {1}_driver.cpp)
-set({1}_headers {1}.hpp {1}_driver.hpp)
+
 target_link_libraries({1} PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
 )";
 

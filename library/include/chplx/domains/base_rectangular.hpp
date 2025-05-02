@@ -338,7 +338,15 @@ struct BaseRectangularArray : BaseArray {
                    "Initializer list must have same size as underlying domain");
   }
 
-  constexpr auto const &dsiGetBaseDomain() const { return domain; }
+
+  auto& dsiGetBaseDomain()
+  {
+      return domain;
+  }
+  const auto& dsiGetBaseDomain() const
+  {
+      return domain;
+  }
 
   constexpr inline T &dsiAccess(IndexType idx) { return data[idx]; }
   constexpr inline T const &dsiAccess(IndexType idx) const { return data[idx]; }
