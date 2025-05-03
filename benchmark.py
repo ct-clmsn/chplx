@@ -269,6 +269,25 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
 
 
 def run_benchmarks(args):
+    def decide_runs(
+        nx,
+        threads,
+        base_runs=50,  # default “middle‐of‐the‐road” count
+        min_runs=5,  # never fewer than this
+        max_runs=100,
+    ):  # cap at this
+        workload = nx * threads
+        if workload < 1e4:
+            return max_runs
+        elif workload < 1e5:
+            return int(base_runs * 1.5)
+        elif workload < 1e6:
+            return base_runs
+        elif workload < 1e7:
+            return int(base_runs / 2)
+        else:
+            return min_runs
+
     def run_binary(binary, nx_values, n_threads):
         threads = [pow(2, j) for j in range(int(math.log(n_threads, 2)) + 1)]
         print(f"Thread Sequence: {threads}")
@@ -276,6 +295,7 @@ def run_benchmarks(args):
             print("Binary,NThreads,nx,AverageTime,StdDev")
             for nx in nx_values:
                 times = []
+                runs = decide_runs(nx, i, 50, 10, 100)
                 for _ in range(runs):
                     try:
                         my_env = os.environ.copy()
