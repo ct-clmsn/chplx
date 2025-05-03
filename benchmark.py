@@ -698,10 +698,14 @@ def main():
 
         def get_cc_from_cxx(cxx_path):
             dirname, basename = os.path.split(cxx_path)
-            if basename.endswith("g++"):
+            if basename == "g++":
                 cc_basename = (
                     basename[:-2] + "cc"
                 )  # remove last two characters (the '++')
+                cc_path = os.path.join(dirname, cc_basename)
+                return cc_path
+            elif basename == "clang++":
+                cc_basename = basename[:-2]  # remove last two characters (the '++')
                 cc_path = os.path.join(dirname, cc_basename)
                 return cc_path
             else:
