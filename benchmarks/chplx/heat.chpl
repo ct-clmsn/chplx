@@ -36,7 +36,7 @@ proc update(d : []real, d2 : []real) {
 //proc main() {
 
   //const NX : int = nx + 1;
-  const NX : int = nx - 1;
+  const NX : int = nx + 1;
 
   var data: [0..NX] real;
   var data2: [0..NX] real;
