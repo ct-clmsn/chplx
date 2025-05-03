@@ -9,6 +9,8 @@ import platform
 import multiprocessing
 import sys
 import re
+import statistics
+import math
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -266,6 +268,82 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
             return
 
 
+def run_benchmarks(args):
+    def run_binary(binary, nx_values, n_threads):
+        threads = [pow(2, j) for j in range(int(math.log(n_threads, 2)) + 1)]
+        print(f"Thread Sequence: {threads}")
+        for i in threads:
+            print("Binary,NThreads,nx,AverageTime,StdDev")
+            for nx in nx_values:
+                times = []
+                for _ in range(runs):
+                    try:
+                        my_env = os.environ.copy()
+                        result = None
+                        if "chapel" in binary:
+                            my_env["CHPL_RT_NUM_THREADS_PER_LOCALE"] = f"{i}"
+                            result = subprocess.run(
+                                [f"{binary}", f"--nx={nx}"],
+                                capture_output=True,
+                                text=True,
+                                check=True,
+                                env=my_env,
+                            )
+                        else:
+                            result = subprocess.run(
+                                [f"{binary}", f"--nx={nx}", f"--hpx:threads={i}"],
+                                capture_output=True,
+                                text=True,
+                                check=True,
+                            )
+                        output = result.stdout.strip()
+                        time_str = output.split(",")[6]
+                        times.append(float(time_str))
+                    except Exception as e:
+                        print(f"Error running {binary} with nx={nx}: {e}")
+                        return
+                if len(times) >= 2:
+                    avg_time = statistics.mean(times)
+                    std_dev = statistics.stdev(times)
+                    print(f"{binary},{i},{nx},{avg_time:.8f},{std_dev:.8f}")
+                elif len(times) == 1:
+                    print(f"{binary},{i},{nx},{times[0]:.8f},0.00000000")
+                else:
+                    print(f"{binary},{i},{nx},ERROR,ERROR")
+
+    chapel_benchmarks_build_dir = os.path.join(
+        args.source_path, "benchmarks-build-chapel"
+    )
+    if not os.path.exists(chapel_benchmarks_build_dir):
+        logging.error(f"Benchmarks directory not found: {chapel_benchmarks_build_dir}")
+    chapel_benchmarks_dir = os.path.join(args.source_path, "benchmarks", "chapel")
+    if not os.path.isdir(chapel_benchmarks_dir):
+        logging.error(f"Benchmarks directory not found: {benchmarks_dir}")
+        return
+    chapel_files = [f for f in os.listdir(chapel_benchmarks_dir) if f.endswith(".chpl")]
+
+    nx_values = [100 * (10**i) for i in range(7)]
+    print(f"nx values: {nx_values}")
+    runs = 50
+    chplx_benchmarks_build_dir = os.path.join(args.source_path, "benchmarks-build")
+    for chpl_file in chapel_files:
+        base_name = os.path.splitext(chpl_file)[0]
+        chapel_output_dir = os.path.join(
+            chapel_benchmarks_build_dir, f"{base_name}_chapel"
+        )
+        chplx_output_dir = os.path.join(
+            chplx_benchmarks_build_dir, f"{base_name}_cpp", "build", f"{base_name}"
+        )
+        if not os.path.exists(chplx_output_dir):
+            logging.error(f"Not found {chplx_output_dir}")
+            return
+        if not os.path.exists(chapel_output_dir):
+            logging.error(f"Not found {chapel_output_dir}")
+            return
+        run_binary(chapel_output_dir, nx_values, multiprocessing.cpu_count())
+        run_binary(chplx_output_dir, nx_values, multiprocessing.cpu_count())
+
+
 def get_llvm_shared_mode(llvm_config="llvm-config"):
     try:
         return subprocess.check_output(
@@ -499,6 +577,11 @@ def main():
         help="If set, builds only the benchmarks in benchmarks directory",
     )
     parser.add_argument(
+        "--run-benchmarks-only",
+        action="store_true",
+        help="If set, runs only the benchmarks in benchmarks directory",
+    )
+    parser.add_argument(
         "--platform",
         type=str,
         choices=["Windows", "Linux", "Darwin"],
@@ -632,6 +715,10 @@ def main():
 
     chplx_binary = os.path.join(args.build_path, "backend", "chplx")
 
+    if args.run_benchmarks_only:
+        run_benchmarks(args)
+        return
+
     if args.build_benchmarks_only:
         build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
         return
@@ -666,6 +753,8 @@ def main():
 
     if not args.build_chapel_only:
         build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
+
+    run_benchmarks(args)
 
 
 if __name__ == "__main__":
