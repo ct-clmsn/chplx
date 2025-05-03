@@ -30,7 +30,7 @@ proc update(d : []real, d2 : []real) {
     d2[i] = d[i] + dt*k/(dx*dx)*(d[i+1] + d[i-1] - 2*d[i]);
   }
   d2[0] = d2[NX-1];
-  d2[NX] = d2[1];
+  d2[NX-1] = d2[1];
 }
 
 //proc main() {
