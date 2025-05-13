@@ -9,5 +9,5 @@
 #SBATCH --time=4:00:00                # Maximum runtime (D-HH:MM:SS)
 
 module load gcc/14.1.0
-python3 benchmark.py  --run-benchmarks-only 2>&1
+python3 benchmark.py 2>&1
 
