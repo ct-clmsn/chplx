@@ -290,9 +290,9 @@ def run_benchmarks(args):
 
     def run_binary(binary, nx_values, n_threads):
         threads = [pow(2, j) for j in range(int(math.log(n_threads, 2)) + 1)]
-        print(f"Thread Sequence: {threads}")
+        logging.info(f"Thread Sequence: {threads}")
         for i in threads:
-            print("Binary,NThreads,nx,AverageTime,StdDev")
+            logging.info("Binary,NThreads,nx,AverageTime,StdDev")
             for nx in nx_values:
                 times = []
                 runs = decide_runs(nx, i, 50, 10, 100)
@@ -320,16 +320,16 @@ def run_benchmarks(args):
                         time_str = output.split(",")[6]
                         times.append(float(time_str))
                     except Exception as e:
-                        print(f"Error running {binary} with nx={nx}: {e}")
+                        logging.info(f"Error running {binary} with nx={nx}: {e}")
                         return
                 if len(times) >= 2:
                     avg_time = statistics.mean(times)
                     std_dev = statistics.stdev(times)
-                    print(f"{binary},{i},{nx},{avg_time:.8f},{std_dev:.8f}")
+                    logging.info(f"{binary},{i},{nx},{avg_time:.8f},{std_dev:.8f}")
                 elif len(times) == 1:
-                    print(f"{binary},{i},{nx},{times[0]:.8f},0.00000000")
+                    logging.info(f"{binary},{i},{nx},{times[0]:.8f},0.00000000")
                 else:
-                    print(f"{binary},{i},{nx},ERROR,ERROR")
+                    logging.info(f"{binary},{i},{nx},ERROR,ERROR")
 
     chapel_benchmarks_build_dir = os.path.join(
         args.source_path, "benchmarks-build-chapel"
@@ -343,7 +343,7 @@ def run_benchmarks(args):
     chapel_files = [f for f in os.listdir(chapel_benchmarks_dir) if f.endswith(".chpl")]
 
     nx_values = [100 * (10**i) for i in range(7)]
-    print(f"nx values: {nx_values}")
+    logging.info(f"nx values: {nx_values}")
     runs = 50
     chplx_benchmarks_build_dir = os.path.join(args.source_path, "benchmarks-build")
     for chpl_file in chapel_files:
@@ -466,7 +466,7 @@ def build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args):
         shell_lines.append(f"export CHPL_GMP=bundled")
         shell_lines.append(f"export CHPL_HWLOC=bundled")
         shell_lines.append(f"export CHPL_RE2=bundled")
-        shell_lines.append(f"export CHPL_LLVM=system")
+        shell_lines.append(f"export CHPL_LLVM=bundled")
         shell_lines.append(f"export CHPL_AUX_FILESYS=none")
         shell_lines.append(f"export CHPL_CMAKE_PYTHON={sys.executable}")
         shell_lines.append(f"{chapel_dir}/util/printchplenv --all --internal")
