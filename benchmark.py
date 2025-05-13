@@ -301,7 +301,12 @@ def run_benchmarks(args):
                 runs = decide_runs(p, t, base_runs=50, min_runs=10, max_runs=100)
                 for _ in range(runs):
                     try:
-                        cmd = [binary, f"--hpx:threads={t}"]
+                        cmd = [binary]
+                        env = environ.copy()
+                        if "chapel" not in binary.lower():
+                            cmd.append(f"--hpx:threads={t}")
+                        else:
+                            env["CHPL_RT_NUM_THREADS_PER_LOCALE"] = str(t)
                         if is_gups:
                             cmd.append(f"--memRatio={p}")
                         else:
@@ -312,6 +317,7 @@ def run_benchmarks(args):
                             capture_output=True,
                             text=True,
                             check=True,
+                            env=env,
                         )
                         output = result.stdout.strip()
                         fields = output.split(",")
