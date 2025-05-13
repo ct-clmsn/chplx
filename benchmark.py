@@ -302,7 +302,7 @@ def run_benchmarks(args):
                 for _ in range(runs):
                     try:
                         cmd = [binary]
-                        env = environ.copy()
+                        env = os.environ.copy()
                         if "chapel" not in binary.lower():
                             cmd.append(f"--hpx:threads={t}")
                         else:
