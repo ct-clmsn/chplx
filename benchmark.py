@@ -288,48 +288,50 @@ def run_benchmarks(args):
         else:
             return min_runs
 
-    def run_binary(binary, nx_values, n_threads):
-        threads = [pow(2, j) for j in range(int(math.log(n_threads, 2)) + 1)]
+    def run_binary(binary, param_values, n_threads):
+        is_gups = "gups" in os.path.basename(binary).lower()
+        # build the thread list [1,2,4,...,n_threads]
+        threads = [1 << j for j in range(int(math.log2(n_threads)) + 1)]
         logging.info(f"Thread Sequence: {threads}")
-        for i in threads:
-            logging.info("Binary,NThreads,nx,AverageTime,StdDev")
-            for nx in nx_values:
+
+        for t in threads:
+            logging.info("Binary,Threads,ParamValue,AverageTime,StdDev")
+            for p in param_values:
                 times = []
-                runs = decide_runs(nx, i, 50, 10, 100)
+                runs = decide_runs(p, t, base_runs=50, min_runs=10, max_runs=100)
                 for _ in range(runs):
                     try:
-                        my_env = os.environ.copy()
-                        result = None
-                        if "chapel" in binary:
-                            my_env["CHPL_RT_NUM_THREADS_PER_LOCALE"] = f"{i}"
-                            result = subprocess.run(
-                                [f"{binary}", f"--nx={nx}"],
-                                capture_output=True,
-                                text=True,
-                                check=True,
-                                env=my_env,
-                            )
+                        cmd = [binary, f"--hpx:threads={t}"]
+                        if is_gups:
+                            cmd.append(f"--memRatio={p}")
                         else:
-                            result = subprocess.run(
-                                [f"{binary}", f"--nx={nx}", f"--hpx:threads={i}"],
-                                capture_output=True,
-                                text=True,
-                                check=True,
-                            )
+                            cmd.append(f"--nx={p}")
+
+                        result = subprocess.run(
+                            cmd,
+                            capture_output=True,
+                            text=True,
+                            check=True,
+                        )
                         output = result.stdout.strip()
-                        time_str = output.split(",")[6]
+                        fields = output.split(",")
+                        # gups prints: threads, elapsed, gups, physMem, memRatio, n
+                        # non-gups prints: …,time,…  where time is at index 6
+                        time_str = fields[1] if is_gups else fields[6]
                         times.append(float(time_str))
                     except Exception as e:
-                        logging.info(f"Error running {binary} with nx={nx}: {e}")
-                        return
-                if len(times) >= 2:
-                    avg_time = statistics.mean(times)
-                    std_dev = statistics.stdev(times)
-                    logging.info(f"{binary},{i},{nx},{avg_time:.8f},{std_dev:.8f}")
-                elif len(times) == 1:
-                    logging.info(f"{binary},{i},{nx},{times[0]:.8f},0.00000000")
-                else:
-                    logging.info(f"{binary},{i},{nx},ERROR,ERROR")
+                        logging.error(
+                            f"Error running {binary} with param={p}, t={t}: {e}"
+                        )
+                        break
+
+                if not times:
+                    logging.info(f"{binary},{t},{p},ERROR,ERROR")
+                    continue
+
+                avg_time = statistics.mean(times)
+                std_dev = statistics.stdev(times) if len(times) > 1 else 0.0
+                logging.info(f"{binary},{t},{p},{avg_time:.8f},{std_dev:.8f}")
 
     chapel_benchmarks_build_dir = os.path.join(
         args.source_path, "benchmarks-build-chapel"
@@ -752,11 +754,17 @@ def main():
         return
 
     if not args.build_chapel_only:
-
-        build_return_code = execute_shell_string(full_script, platform_name)
-        if build_return_code != 0:
-            logging.error("Build failed. Skipping chplx execution.")
-            return
+        # skip ChplX build if already installed
+        chplx_install_bin = os.path.join(args.cmake_prefix, "bin", "chplx")
+        if os.path.isfile(chplx_install_bin):
+            logging.info(
+                f"Found existing chplx at {chplx_install_bin}, skipping build."
+            )
+        else:
+            build_return_code = execute_shell_string(full_script, platform_name)
+            if build_return_code != 0:
+                logging.error("Build failed. Skipping chplx execution.")
+                return
 
         if args.build_only:
             logging.debug("Build only completed")
@@ -768,11 +776,42 @@ def main():
             logging.error(f"chplx binary not found at {chplx_binary}")
             return
 
-    ####################### build chapel itself #############################
+    ####################### build chapel itself (skip if already built) #############################
     if args.build_only:
         return
 
-    build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args)
+    # locate chapel home and installed chpl binary
+    chapel_home = os.path.join(args.source_path, "extern", "chapel")
+    chapel_compiler_bin_dir = os.path.join(args.source_path, "install-chapel", "bin")
+    chpl_available = False
+
+    if os.path.isdir(chapel_compiler_bin_dir):
+        subdirs = os.listdir(chapel_compiler_bin_dir)
+        if len(subdirs) == 1:
+            chpl_path = os.path.join(chapel_compiler_bin_dir, subdirs[0], "chpl")
+            if os.path.isfile(chpl_path):
+                # export CHPL_HOME so version check works
+                env = os.environ.copy()
+                env["CHPL_HOME"] = chapel_home
+                try:
+                    ver = subprocess.check_output(
+                        [chpl_path, "--version"],
+                        text=True,
+                        stderr=subprocess.STDOUT,
+                        env=env,
+                    ).strip()
+                    logging.info(
+                        f"Found existing Chapel compiler: {ver.splitlines()[0]}"
+                    )
+                    chpl_available = True
+                except subprocess.CalledProcessError:
+                    # binary exists but version check failed → rebuild
+                    pass
+
+    if chpl_available:
+        logging.info("Skipping Chapel build (already installed).")
+    else:
+        build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args)
     ####################### end build chapel itself #########################
 
     if not args.build_chapel_only:

@@ -16,14 +16,14 @@ proc randindex() {
 }
 
 // Example usage with an array size of 1000000
-config var arraySize = 134217728; //1000000;
+config var nx = 134217728; //1000000;
 
-var A:[1..arraySize] real;
-var B:[1..arraySize] real;
-var C:[1..arraySize] real;
+var A:[1..nx] real;
+var B:[1..nx] real;
+var C:[1..nx] real;
 
 // Initialize arrays
-forall i in 1..arraySize {
+forall i in 1..nx {
    A[i] = randindex();
    B[i] = randindex();
    C[i] = randindex();
@@ -34,11 +34,12 @@ proc run(A : [] real, B : [] real, C : [] real) {
    copy_t.start();
 
    // Benchmark Copy
-   forall it in 1..arraySize do {
+   forall it in 1..nx do {
       C[it] = A[it] + 3.0 * B[it];
    }
    copy_t.stop();
-   writeln(getenv('CHPL_RT_NUM_THREADS_PER_LOCALE'.c_str()):string, ",",copy_t.elapsed());
+   //writeln(getenv('CHPL_RT_NUM_THREADS_PER_LOCALE'.c_str()):string, ",",copy_t.elapsed());
+   writeln("chapelng,",nx,",",0,",",getenv('CHPL_RT_NUM_THREADS_PER_LOCALE'.c_str()):string,",",0,",",0,",",copy_t.elapsed(),",0");
 }
 
 run(A, B, C);
