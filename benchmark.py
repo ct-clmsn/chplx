@@ -497,6 +497,8 @@ def build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args):
         f"-DCHPL_CMAKE_PYTHON={sys.executable}",
     ]
 
+    if platform.machine() == "aarch64":
+        cmake_args.append('-DCMAKE_CXX_FLAGS="-U__arm_streaming"')
     # if cmake_llvm_cxx_flags != "":
     #     cmake_args.append(f"-DCMAKE_CXX_FLAGS=\"{cmake_llvm_cxx_flags}\"")
 
