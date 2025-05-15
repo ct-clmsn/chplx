@@ -296,12 +296,14 @@ def run_benchmarks(args):
             param_values = memRatio_vals
         threads = [1 << j for j in range(int(math.log2(n_threads)) + 1)]
         logging.info(f"Thread Sequence: {threads}")
+        logging.info(f"param values: {param_values}")
 
         for t in threads:
             logging.info("Binary,Threads,ParamValue,AverageTime,StdDev")
             for p in param_values:
                 times = []
                 runs = decide_runs(p, t, base_runs=50, min_runs=10, max_runs=100)
+                logging.info(f"Number of Runs: {runs}")
                 for _ in range(runs):
                     try:
                         cmd = [binary]
@@ -354,7 +356,6 @@ def run_benchmarks(args):
     chapel_files = [f for f in os.listdir(chapel_benchmarks_dir) if f.endswith(".chpl")]
 
     nx_values = [100 * (10**i) for i in range(7)]
-    logging.info(f"nx values: {nx_values}")
     runs = 50
     chplx_benchmarks_build_dir = os.path.join(args.source_path, "benchmarks-build")
     for chpl_file in chapel_files:
