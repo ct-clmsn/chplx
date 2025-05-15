@@ -303,6 +303,8 @@ def run_benchmarks(args):
             for p in param_values:
                 times = []
                 runs = decide_runs(p, t, base_runs=50, min_runs=10, max_runs=100)
+                if is_gups:
+                    runs = min_runs
                 logging.info(f"Number of Runs: {runs}")
                 for _ in range(runs):
                     try:
