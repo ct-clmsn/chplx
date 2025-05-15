@@ -291,6 +291,9 @@ def run_benchmarks(args):
     def run_binary(binary, param_values, n_threads):
         is_gups = "gups" in os.path.basename(binary).lower()
         # build the thread list [1,2,4,...,n_threads]
+        memRatio_vals = [1 << j for j in range(len(param_values))]
+        if is_gups:
+            param_values = memRatio_vals
         threads = [1 << j for j in range(int(math.log2(n_threads)) + 1)]
         logging.info(f"Thread Sequence: {threads}")
 
