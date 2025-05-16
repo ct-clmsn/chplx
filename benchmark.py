@@ -297,12 +297,13 @@ def run_benchmarks(args):
         threads = [1 << j for j in range(int(math.log2(n_threads)) + 1)]
         logging.info(f"Thread Sequence: {threads}")
         logging.info(f"param values: {param_values}")
+        min_runs = 10
 
         for t in threads:
             logging.info("Binary,Threads,ParamValue,AverageTime,StdDev")
             for p in param_values:
                 times = []
-                runs = decide_runs(p, t, base_runs=50, min_runs=10, max_runs=100)
+                runs = decide_runs(p, t, base_runs=50, min_runs=min_runs, max_runs=100)
                 if is_gups:
                     runs = min_runs
                 logging.info(f"Number of Runs: {runs}")
