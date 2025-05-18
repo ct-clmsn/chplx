@@ -300,9 +300,13 @@ def run_benchmarks(args):
         min_runs = 10
 
         for t in threads:
-            logging.info("Binary,Threads,ParamValue,AverageTime,StdDev")
+            if is_gups:
+                logging.info("Binary,Threads,ParamValue,GUPS,AverageTime,StdDev")
+            else:
+                logging.info("Binary,Threads,ParamValue,AverageTime,StdDev")
             for p in param_values:
                 times = []
+                gups = []
                 runs = decide_runs(p, t, base_runs=50, min_runs=min_runs, max_runs=100)
                 if is_gups:
                     runs = min_runs
@@ -333,6 +337,8 @@ def run_benchmarks(args):
                         # non-gups prints: …,time,…  where time is at index 6
                         time_str = fields[1] if is_gups else fields[6]
                         times.append(float(time_str))
+                        if is_gups:
+                            gups.append(float(fields[2]))
                     except Exception as e:
                         logging.error(
                             f"Error running {binary} with param={p}, t={t}: {e}"
@@ -345,7 +351,10 @@ def run_benchmarks(args):
 
                 avg_time = statistics.mean(times)
                 std_dev = statistics.stdev(times) if len(times) > 1 else 0.0
-                logging.info(f"{binary},{t},{p},{avg_time:.8f},{std_dev:.8f}")
+                avg_gups = statistics.mean(gups)
+                logging.info(
+                    f"{binary},{t},{p},{avg_gups:.8f},{avg_time:.8f},{std_dev:.8f}"
+                )
 
     chapel_benchmarks_build_dir = os.path.join(
         args.source_path, "benchmarks-build-chapel"
@@ -377,6 +386,8 @@ def run_benchmarks(args):
             return
         run_binary(chapel_output_dir, nx_values, multiprocessing.cpu_count())
         run_binary(chplx_output_dir, nx_values, multiprocessing.cpu_count())
+
+    logging.info("Benchmarking Done!")
 
 
 def get_llvm_shared_mode(llvm_config="llvm-config"):
