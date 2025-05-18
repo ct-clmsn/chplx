@@ -351,10 +351,13 @@ def run_benchmarks(args):
 
                 avg_time = statistics.mean(times)
                 std_dev = statistics.stdev(times) if len(times) > 1 else 0.0
-                avg_gups = statistics.mean(gups)
-                logging.info(
-                    f"{binary},{t},{p},{avg_gups:.8f},{avg_time:.8f},{std_dev:.8f}"
-                )
+                if is_gups:
+                    avg_gups = statistics.mean(gups)
+                    logging.info(
+                        f"{binary},{t},{p},{avg_gups:.8f},{avg_time:.8f},{std_dev:.8f}"
+                    )
+                else:
+                    logging.info(f"{binary},{t},{p},{avg_time:.8f},{std_dev:.8f}")
 
     chapel_benchmarks_build_dir = os.path.join(
         args.source_path, "benchmarks-build-chapel"
