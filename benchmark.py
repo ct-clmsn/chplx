@@ -243,9 +243,13 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
             f"Multiple directories inside chapel bin: {chapel_compiler_bin_dir_sub_dir}"
         )
         return
-    chapel_compiler_path = os.path.join(
-        chapel_compiler_bin_dir, chapel_compiler_bin_dir_sub_dir[0], "chpl"
-    )
+    chapel_compiler_path = None
+    if len(chapel_compiler_bin_dir_sub_dir) == 0:
+        chapel_compiler_path = os.path.join(chapel_compiler_bin_dir, "chpl")
+    else:
+        chapel_compiler_path = os.path.join(
+            chapel_compiler_bin_dir, chapel_compiler_bin_dir_sub_dir[0], "chpl"
+        )
     if not os.path.exists(chapel_compiler_path):
         logging.error(f"Chapel binary not found: {chapel_compiler_path}")
         return
@@ -449,19 +453,6 @@ def build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args):
 
     shell_lines = []
 
-    # cmake_llvm_cxx_flags = ""
-    # cmake_llvm_ld_flags = ""
-    cmake_llvm_cxx_libs = ""
-    # cmake_chapel_exe_linker_flags = cmake_llvm_cxx_libs
-    # if shutil.which("llvm-config") == "":
-    #     logging.warning("You need to provide appropriate llvm flags")
-    # else:
-    #     cmake_llvm_cxx_libs = get_cmake_llvm_link_flags("llvm-config")
-    #     logging.info(f"cmake llvm cxx libs: {cmake_llvm_cxx_libs}")
-    #     cmake_llvm_cxx_flags = subprocess.run(["llvm-config", "--cxxflags"],capture_output=True, text=True, check=True).stdout.strip()
-    #     cmake_llvm_ld_flags = subprocess.run(["llvm-config", "--ldflags"],capture_output=True, text=True, check=True).stdout.strip()
-    #     cmake_llvm_cxx_libs = subprocess.run(["llvm-config", "--libs", "all"],capture_output=True, text=True, check=True).stdout.strip()
-
     if platform_name != "Windows":
         shell_lines.append(f'export CXX="{cxx_compiler_path}"')
         shell_current = os.environ["SHELL"]
@@ -504,44 +495,17 @@ def build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args):
         shell_lines.append(f"set CHPL_HOME={chapel_dir}")
         logging.warning("Please set environment variables manually")
 
-    cmake_args = [
-        f'-B"{chapel_build_dir}"',
-        f'-S"{chapel_dir}"',
-        f'-DCMAKE_CXX_COMPILER="{cxx_compiler_path}"',
-        f'-DCMAKE_C_COMPILER="{cc_compiler_path}"',
-        f"-DCMAKE_BUILD_TYPE={args.build_type}",
-        f"-DCMAKE_INSTALL_PREFIX={chapel_install_prefix}",
-        f"-DCHPL_CMAKE_PYTHON={sys.executable}",
-    ]
-
-    if platform.machine() == "aarch64":
-        cmake_args.append('-DCMAKE_CXX_FLAGS="-U__arm_streaming"')
-    # if cmake_llvm_cxx_flags != "":
-    #     cmake_args.append(f"-DCMAKE_CXX_FLAGS=\"{cmake_llvm_cxx_flags}\"")
-
-    if cmake_llvm_cxx_libs != "":
-        cmake_args.append(f'-DCMAKE_CXX_STANDARD_LIBRARIES="{cmake_llvm_cxx_libs}"')
-
-    # cmake_args.append(f"-DCMAKE_EXE_LINKER_FLAGS=\"{cmake_chapel_exe_linker_flags}\"")
-
-    # if cmake_llvm_ld_flags != "":
-    #     cmake_args.append(f"-DCMAKE_SHARED_LINKER_FLAGS=\"{cmake_llvm_ld_flags}\"")
-
-    if args.cmake_args_chapel:
-        cmake_args.append(args.cmake_args_chapel)
-
-    if args.cmake_gen_chapel:
-        cmake_args.append(f'-G "{args.cmake_gen_chapel}"')
-
     shell_lines.append(f"git -C {chapel_dir} stash")
     shell_lines.append(f"git -C {chapel_dir} reset HEAD --hard")
 
-    shell_lines.append("cmake " + " ".join(cmake_args))
-    build_cmd = f'cmake --build "{chapel_build_dir}"'
-    install_cmd = f"cmake --install {chapel_build_dir} --prefix {chapel_install_prefix}"
+    shell_lines.append(
+        f"cd extern/chapel && ./configure --prefix={chapel_install_prefix}"
+    )
+    build_cmd = "make"
+    install_cmd = "make install"
     parallel_flags = get_parallel_build_flags(platform_name)
     if parallel_flags:
-        build_cmd += f" -- {parallel_flags}"
+        build_cmd += f" {parallel_flags}"
     shell_lines.append(build_cmd)
     shell_lines.append(install_cmd)
     shell_lines.append(f"git -C {chapel_dir} stash pop")
@@ -815,8 +779,13 @@ def main():
     chpl_available = False
 
     if os.path.isdir(chapel_compiler_bin_dir):
-        subdirs = os.listdir(chapel_compiler_bin_dir)
+        subdirs = [
+            entry
+            for entry in os.listdir(chapel_compiler_bin_dir)
+            if os.path.isdir(os.path.join(chapel_compiler_bin_dir, entry))
+        ]
         if len(subdirs) == 1:
+            logging.info(f"{subdirs}")
             chpl_path = os.path.join(chapel_compiler_bin_dir, subdirs[0], "chpl")
             if os.path.isfile(chpl_path):
                 # export CHPL_HOME so version check works
@@ -833,13 +802,34 @@ def main():
                         f"Found existing Chapel compiler: {ver.splitlines()[0]}"
                     )
                     chpl_available = True
-                except subprocess.CalledProcessError:
+                except subprocess.CalledProcessError as e:
+                    # binary exists but version check failed → rebuild
+                    pass
+        else:
+            chpl_path = os.path.join(chapel_compiler_bin_dir, "chpl")
+            if os.path.isfile(chpl_path):
+                # export CHPL_HOME so version check works
+                env = os.environ.copy()
+                env["CHPL_HOME"] = chapel_home
+                try:
+                    ver = subprocess.check_output(
+                        [chpl_path, "--version"],
+                        text=True,
+                        stderr=subprocess.STDOUT,
+                        env=env,
+                    ).strip()
+                    logging.info(
+                        f"Found existing Chapel compiler: {ver.splitlines()[0]}"
+                    )
+                    chpl_available = True
+                except subprocess.CalledProcessError as e:
                     # binary exists but version check failed → rebuild
                     pass
 
     if chpl_available:
         logging.info("Skipping Chapel build (already installed).")
     else:
+        logging.info("Chapel compiler not available")
         build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args)
     ####################### end build chapel itself #########################
 
