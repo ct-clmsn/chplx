@@ -237,14 +237,18 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
     if not os.path.isdir(chapel_compiler_bin_dir):
         logging.error(f"Chapel Bin directory not found: {chapel_compiler_bin_dir}")
         return
-    chapel_compiler_bin_dir_sub_dir = [f for f in os.listdir(chapel_compiler_bin_dir)]
+    chapel_compiler_bin_dir_sub_dir = [
+        f
+        for f in os.listdir(chapel_compiler_bin_dir)
+        if os.path.isdir(os.path.join(chapel_compiler_bin_dir, f))
+    ]
     if len(chapel_compiler_bin_dir_sub_dir) > 1:
         logging.error(
             f"Multiple directories inside chapel bin: {chapel_compiler_bin_dir_sub_dir}"
         )
         return
     chapel_compiler_path = None
-    if len(chapel_compiler_bin_dir_sub_dir) == 0:
+    if len(chapel_compiler_bin_dir_sub_dir) != 1:
         chapel_compiler_path = os.path.join(chapel_compiler_bin_dir, "chpl")
     else:
         chapel_compiler_path = os.path.join(
