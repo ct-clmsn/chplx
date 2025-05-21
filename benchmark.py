@@ -303,6 +303,8 @@ def run_benchmarks(args):
         if is_gups:
             param_values = memRatio_vals
         threads = [1 << j for j in range(int(math.log2(n_threads)) + 1)]
+        if n_threads not in threads:
+            threads.append(n_threads)
         logging.info(f"Thread Sequence: {threads}")
         logging.info(f"param values: {param_values}")
         min_runs = 10
