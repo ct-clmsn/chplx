@@ -65,14 +65,16 @@ proc RAStream(vals : [] int, numvals : int, m2 : [] int, m2count : int) {
 }
 
 param randWidth = 64;
-param physicalMemory = 17179869184; //1024;
+var bytesPerType: int = c_sizeof(int):int;
+config var physicalMemory = 134217728;
 config var memRatio = 4;
+var memoryTarget = physicalMemory / memRatio;
 var numTables = 1;
 
 var m2 : [0..randWidth] int;
 computeM2Values(m2, randWidth);
 
-var SZ = 134217728;
+var SZ = memoryTarget / bytesPerType;
 var N_U = 0;
 var n = 0;
 n = computeProblemSize(numTables, physicalMemory, memRatio, false);

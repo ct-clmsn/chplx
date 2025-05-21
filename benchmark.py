@@ -380,7 +380,7 @@ def run_benchmarks(args):
         return
     chapel_files = [f for f in os.listdir(chapel_benchmarks_dir) if f.endswith(".chpl")]
 
-    nx_values = [100 * (10 ** i) for i in range(7)]
+    nx_values = [100 * (10**i) for i in range(7)]
     runs = 50
     chplx_benchmarks_build_dir = os.path.join(args.source_path, "benchmarks-build")
     for chpl_file in chapel_files:
