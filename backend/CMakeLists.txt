@@ -90,7 +90,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_link_libraries(chplx PRIVATE stdc++fs stdc++)
 else()
   # Clang + libc++ may require both the fs library and the ABI
-  target_link_libraries(chplx PRIVATE c++fs c++abi)
+  target_link_libraries(chplx PRIVATE c++abi)
 endif()
 
 set_target_properties(chplx PROPERTIES FOLDER "Backend")
