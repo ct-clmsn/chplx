@@ -76,15 +76,16 @@ proc RAStream(vals : [] int, numvals : int, m2 : [] int, m2count : int) {
 param randWidth = 64;
 config var physicalMemory = 134217728;
 config var memRatio = 4;
-var memoryTarget = physicalMemory / memRatio;
+var memoryTarget_ = physicalMemory / memRatio;
 var bytesPerType = 4;
-inlinecxx("{} = sizeof(decltype(std::int64_t));",bytesPerType);
+inlinecxx("{} = sizeof(decltype({}));",bytesPerType, memoryTarget_);
 param numTables = 1;
 
 var m2 : [0..randWidth] int;
 var val = computeM2Values(m2, randWidth);
 
-var SZ = memoryTarget / bytesPerType;
+var SZ = 0;
+inlinecxx("{} = {} / {};", SZ, memoryTarget_ , bytesPerType);
 var N_U = 0;
 var n = 1;
 n = computeProblemSize(numTables, physicalMemory, memRatio, false);
