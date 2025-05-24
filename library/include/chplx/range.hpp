@@ -701,7 +701,8 @@ struct Range {
     std::int64_t result;
 
     if constexpr (!Stridable) {
-      result = idx - first();
+      auto const first_ = first();
+      return idx - first_;
     } else {
       if (stride() > 0) {
         result = (idx - first() + stride() - 1) / stride();
@@ -934,7 +935,7 @@ auto count(Range<T, BoundedType, Stridable> const &rhs, Count n) {
 // and high bounds, producing a shifted version of the range. If the operand
 // range is unbounded above or below, the missing bounds are ignored. The index
 // type of the resulting range is the type of the value that would result from
-// an addition between the scalar value and a value with the range’s index type.
+// an addition between the scalar value and a value with the rangeï¿½s index type.
 // The bounded and stridable parameters for the result range are the same as for
 // the input range.
 //
