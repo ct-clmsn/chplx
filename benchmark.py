@@ -277,6 +277,16 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
 
 
 def run_benchmarks(args):
+    regex = None
+    if args.pattern:
+        try:
+            regex = re.compile(args.pattern, re.IGNORECASE)
+        except re.error:
+            logging.warning(
+                f"Invalid regex '{args.pattern}', will do simple substring match."
+            )
+            regex = None
+
     def decide_runs(
         nx,
         threads,
@@ -321,6 +331,27 @@ def run_benchmarks(args):
                 if is_gups:
                     runs = min_runs
                 logging.info(f"Number of Runs: {runs}")
+                try:
+                    cmd = [binary]
+                    env = os.environ.copy()
+                    if "chapel" not in binary.lower():
+                        cmd.append(f"--hpx:threads={t}")
+                    else:
+                        env["CHPL_RT_NUM_THREADS_PER_LOCALE"] = str(t)
+                    if is_gups:
+                        cmd.append(f"--memRatio={p}")
+                    else:
+                        cmd.append(f"--nx={p}")
+                    result = subprocess.run(
+                        cmd,
+                        capture_output=True,
+                        text=True,
+                        check=True,
+                        env=env,
+                    )
+                except Exception as e:
+                    logging.error(f"Error running {binary} with param={p}, t={t}: {e}")
+                    break
                 for _ in range(runs):
                     try:
                         cmd = [binary]
@@ -385,6 +416,15 @@ def run_benchmarks(args):
     chplx_benchmarks_build_dir = os.path.join(args.source_path, "benchmarks-build")
     for chpl_file in chapel_files:
         base_name = os.path.splitext(chpl_file)[0]
+        if args.pattern:
+            if regex:
+                if not regex.search(base_name):
+                    logging.debug(f"Skipping '{base_name}' (no regex match).")
+                    continue
+            else:
+                if args.pattern.lower() not in base_name.lower():
+                    logging.debug(f"Skipping '{base_name}' (no regex match).")
+                    continue
         chapel_output_dir = os.path.join(
             chapel_benchmarks_build_dir, f"{base_name}_chapel"
         )
@@ -397,6 +437,7 @@ def run_benchmarks(args):
         if not os.path.exists(chapel_output_dir):
             logging.error(f"Not found {chapel_output_dir}")
             return
+        # run only the matching ones
         run_binary(chapel_output_dir, nx_values, multiprocessing.cpu_count())
         run_binary(chplx_output_dir, nx_values, multiprocessing.cpu_count())
 
@@ -607,6 +648,12 @@ def main():
         type=str,
         choices=["Windows", "Linux", "Darwin"],
         help="Override the detected platform (e.g., Windows, Linux, Darwin)",
+    )
+    parser.add_argument(
+        "-p",
+        "--pattern",
+        type=str,
+        help="Only run benchmarks whose name matches this pattern (substring or regex)",
     )
     args = parser.parse_args()
 
