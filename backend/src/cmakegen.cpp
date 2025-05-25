@@ -41,6 +41,7 @@ find_package(HPX REQUIRED CONFIG)
 find_package(Chplx REQUIRED CONFIG)
 
 target_link_libraries({1} PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
+set(CMAKE_CXX_FLAGS "${2} -march=native -finline-limit=1000")
 )";
 
 void CMakeGenerator::generate(std::filesystem::path const& p) {
@@ -103,5 +104,5 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
 
     std::filesystem::path opath = chplx::util::output_path / "CMakeLists.txt";
     std::ofstream ofs(opath.string());
-    ofs << fmt::format(CMakeListsTemplate, cppfilename, cppprefix);
+    ofs << fmt::format(CMakeListsTemplate, cppfilename, cppprefix, "{CMAKE_CXX_FLAGS}");
 }
