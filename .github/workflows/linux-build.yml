@@ -1,0 +1,44 @@
+# Copyright (c) 2023 Hartmut Kaiser
+#
+# SPDX-License-Identifier: BSL-1.0
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+name: Linux CI (Debug)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install llvm, clang 17
+      shell: bash
+      run: |
+          sudo apt purge llvm-16 clang-16 llvm-17 llvm-18 clang-17 clang-18 -y || true
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 17
+          sudo apt install libclang-17-dev -y
+
+    - name: Build ChplX Debug
+      shell: bash
+      run: |
+          mkdir -p build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Debug -DCHPL_HOME=$(realpath ../extern/chapel) -DHPX_WITH_FETCH_BOOST=ON -G Ninja
+          ninja
+          ninja tests.unit.backend_dir tests.unit.library_dir
+    
+    - name: CTest
+      shell: bash
+      run: |
+          cd build && ctest --output-on-failure
+
+
+
