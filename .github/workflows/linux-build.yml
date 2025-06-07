@@ -31,7 +31,12 @@ jobs:
       shell: bash
       run: |
           mkdir -p build && cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Debug -DCHPL_HOME=$(realpath ../extern/chapel) -DHPX_WITH_FETCH_BOOST=ON -G Ninja
+          cmake .. -DCMAKE_BUILD_TYPE=Debug \
+              -DCHPL_HOME=$(realpath ../extern/chapel) \
+              -DHPX_WITH_FETCH_BOOST=ON \
+              -Dfmt_DIR=$(realpath .)/_deps/fmt-build \
+              -DHPX_DIR=$(realpath .)/_deps/hpx-build/lib/cmake/HPX \
+              -G Ninja
           ninja
           ninja tests.unit.backend_dir tests.unit.library_dir
     
