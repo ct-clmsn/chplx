@@ -185,8 +185,6 @@ function(chplx_compile_project name)
   add_custom_command(
     COMMAND ${CMAKE_COMMAND} . -B ./build
         -G ${CMAKE_GENERATOR} ${generator_toolset}
-        "-Dfmt_DIR=${fmt_DIR}"
-        "-DHPX_DIR=${HPX_DIR}"
         "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
         "-DChplx_DIR=$<TARGET_PROPERTY:library,TARGET_BINARY_DIR>/lib/cmake/Chplx"
         "-DHPX_IGNORE_COMPILER_COMPATIBILITY=On"
