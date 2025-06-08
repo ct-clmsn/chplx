@@ -7,7 +7,7 @@
 include(CHPLX_LibraryAddTest)
 
 set(tests
-    # array
+    array
     assoc_domain
     atomic
     begin
@@ -15,31 +15,31 @@ set(tests
     coforall_loop_array
     coforall_loop_assoc_domain
     coforall_loop_domain
-    # coforall_loop_range
+    coforall_loop_range
     coforall_loop_tuple
     coforall_loop_zip
     domain
     forall_loop_array
     forall_loop_assoc_domain
     forall_loop_domain
-    # forall_loop_range
+    forall_loop_range
     forall_loop_tuple
     forall_loop_zip
     for_loop_array
     for_loop_assoc_domain
     for_loop_domain
-    # for_loop_range
+    for_loop_range
     for_loop_tuple
     for_loop_zip
     index_buffer
-    # index_generator
-    # locales
-    # print_ranges
-    # range
-    # single_variable
+    index_generator
+    locales
+    print_ranges
+    range
+    single_variable
     sync_variable
     tuple
-    # write_array
+    write_array
     zip
 )
 
