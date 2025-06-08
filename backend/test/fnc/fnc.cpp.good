@@ -39,7 +39,7 @@ namespace fnc {
     auto __thisModule::betad(std::int64_t b)
     {
 #line 22 "fnc.chpl"
-        return b + delta(b);
+        return delta(b) + b;
     };
 
     void __thisModule::__main()

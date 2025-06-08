@@ -29,7 +29,7 @@ namespace expr {
 #line 108 "expr.chpl"
         x = valuea(a);
 #line 109 "expr.chpl"
-        return valuea(a) + x;
+        return x + valuea(a);
     };
 
     void __thisModule::__main()
@@ -101,11 +101,11 @@ namespace expr {
 #line 50 "expr.chpl"
         a = valuea(a);
 #line 51 "expr.chpl"
-        a = valuea(1 + a);
+        a = valuea(a + 1);
 #line 52 "expr.chpl"
-        a = 1 + valuea(1 + a);
+        a = 1 + valuea(a + 1);
 #line 53 "expr.chpl"
-        a = valuea(1 + a) + 1;
+        a = valuea(a + 1) + 1;
 #line 54 "expr.chpl"
         a = 1 + valuea(a);
 #line 55 "expr.chpl"
