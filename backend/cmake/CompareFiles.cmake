@@ -26,13 +26,15 @@ foreach(val RANGE ${len})
   list(GET TEST_OUTPUTS ${val} test_output)
 
   execute_process(
-    COMMAND ${CMAKE_COMMAND} -E compare_files ${test_output} ${blessed_output}
-    RESULT_VARIABLE test_result # OUTPUT_QUIET ERROR_QUIET
+    COMMAND diff -w ${test_output} ${blessed_output}
+    RESULT_VARIABLE test_result
+    OUTPUT_VARIABLE diff_output
+    ERROR_VARIABLE diff_error
   )
 
   if(test_result)
     file(READ ${test_output} test_output_content)
     file(READ ${blessed_output} blessed_output_content)
-    message(SEND_ERROR "${test_output} and ${blessed_output} do not match:\n${test_output_content}\n${blessed_output_content}")
+    message(SEND_ERROR "Output mismatch (ignoring whitespace):\nDiff:\n${diff_output}\n\nTest Output:\n${test_output_content}\n\nExpected Output:\n${blessed_output_content}")
   endif()
 endforeach()
