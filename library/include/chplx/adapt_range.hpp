@@ -44,9 +44,8 @@ decltype(auto) iterate(Range<T, BoundedType, Stridable> const &r) noexcept {
 template <typename T>
 decltype(auto)
 iterate(Range<T, BoundedRangeType::bounded, false> const &r) noexcept {
-  if (r.low() <= r.high())
-    return hpx::util::counting_shape(r.low(), r.high() + 1);
-  return hpx::util::counting_shape(r.low(), r.low());
+
+  return hpx::util::counting_shape(r.low(), r.high());
 }
 
 } // namespace chplx
