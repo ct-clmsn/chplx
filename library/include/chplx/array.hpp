@@ -305,14 +305,14 @@ public:
 
   // Rank == 1
   explicit Array(std::vector<T> &&data)
-      : bounds(rangeType(0, data.size())), array(std::move(data)) {}
+      : bounds(rangeType(0, data.size()-1)), array(std::move(data)) {}
   Array(std::initializer_list<T> &&data)
-      : bounds(rangeType(0, data.size())), array(std::move(data)) {}
+      : bounds(rangeType(0, data.size()-1)), array(std::move(data)) {}
 
   Array(domain, std::vector<T> &&data)
-      : bounds(rangeType(0, data.size())), array(std::move(data)) {}
+      : bounds(rangeType(0, data.size()-1)), array(std::move(data)) {}
   Array(domain, std::initializer_list<T> &&data)
-      : bounds(rangeType(0, data.size())), array(std::move(data)) {}
+      : bounds(rangeType(0, data.size()-1)), array(std::move(data)) {}
 
   Array(Array const &rhs) = default;
   Array &operator=(Array const &rhs) = default;
@@ -367,7 +367,7 @@ public:
 
   // Return the number of indices in this array as an int.
   [[nodiscard]] constexpr std::int64_t size() const noexcept {
-    return bounds.size();
+    return array.size();
   }
 
   // Returns true if the embedded domain is fully bounded, false otherwise.

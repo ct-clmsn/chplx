@@ -57,7 +57,11 @@ decltype(auto) iterate(Domain<N, T, Stridable> const &d) noexcept {
 template <typename Idx>
 decltype(auto) iterate(Domain<1, Idx> const &d) noexcept {
 
-  return hpx::util::counting_shape(std::get<0>(d.low()), std::get<0>(d.high()));
+  auto low = std::get<0>(d.low());
+  auto high = std::get<0>(d.high());
+  if (low <= high)
+    return hpx::util::counting_shape(low, high + 1);
+  return hpx::util::counting_shape(low, low);
 }
 
 //-----------------------------------------------------------------------------

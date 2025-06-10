@@ -497,22 +497,14 @@ struct Range {
   // - its alignment is non-ambiguous or
   // - its stride is either 1 or -1.
   [[nodiscard]] constexpr bool isNaturallyAligned() const noexcept {
-    if constexpr (!Stridable) {
-      return true;
-    } else {
-      return !alignment_.isAmbiguous() || !stride_.hasAmbiguousValue();
-    }
+    return !alignment_.isAmbiguous() || !stride_.hasAmbiguousValue();
   }
 
   // A range is ambiguously aligned if
   // - its alignment is ambiguous and
   // - its stride is neither 1 nor -1.
   [[nodiscard]] constexpr bool isAmbiguous() const noexcept {
-    if constexpr (!Stridable) {
-      return false;
-    } else {
-      return alignment_.isAmbiguous() && stride_.hasAmbiguousValue();
-    }
+    return alignment_.isAmbiguous() && stride_.hasAmbiguousValue();
   }
 
   [[nodiscard]] constexpr auto alignment() const noexcept {
@@ -577,7 +569,7 @@ struct Range {
     }
 
     if constexpr (!Stridable) {
-      return size;
+      return size + 1;
     } else {
       auto stride = std::abs(stride_.getStride());
       auto num = size + stride;
@@ -698,23 +690,23 @@ struct Range {
   // index. The indexOrder procedure is the reverse of orderToIndex.
   [[nodiscard]] constexpr std::int64_t indexOrder(idxType idx) const noexcept {
 
-    std::int64_t result;
-
     if constexpr (!Stridable) {
       auto const first_ = first();
       return idx - first_;
     } else {
+      std::int64_t result;
+
       if (stride() > 0) {
         result = (idx - first() + stride() - 1) / stride();
       } else {
         result = (first() - idx - stride() - 1) / -stride();
       }
-    }
 
-    if (result < 0 || result > size()) {
-      return -1;
+      if (result < 0 || result > size()) {
+        return -1;
+      }
+      return result;
     }
-    return result;
   }
 
   // Returns the zero-based ord-th element of this range's represented sequence.

@@ -45,7 +45,9 @@ template <typename T>
 decltype(auto)
 iterate(Range<T, BoundedRangeType::bounded, false> const &r) noexcept {
 
-  return hpx::util::counting_shape(r.low(), r.high());
+  if (r.low() <= r.high())
+    return hpx::util::counting_shape(r.low(), r.high() + 1);
+  return hpx::util::counting_shape(r.low(), r.low());
 }
 
 } // namespace chplx
