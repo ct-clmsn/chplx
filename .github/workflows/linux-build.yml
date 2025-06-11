@@ -17,7 +17,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
+    - name: CCache
+      uses: hendrikmuhs/ccache-action@v1.2.11
+      with:
+        key: ubuntu-latest-linux
+
     - name: Install llvm, clang 17
       shell: bash
       run: |
@@ -25,11 +31,12 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 17
-          sudo apt install libclang-17-dev -y
+          sudo apt install libclang-17-dev ccache -y
 
     - name: Build ChplX Debug
       shell: bash
       run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           mkdir -p build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Debug \
               -DCHPL_HOME=$(realpath ../extern/chapel) \
