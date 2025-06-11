@@ -9,30 +9,34 @@
 #include <chplx.hpp>
 #line 1 "cfg.chpl"
 namespace cfg {
-extern struct __thisModule *__this;
+    extern struct __thisModule* __this;
 
 #line 8 "cfg.chpl"
-extern std::int64_t a;
+    extern std::int64_t a;
 #line 9 "cfg.chpl"
-extern std::int64_t b;
+    extern std::int64_t b;
 #line 10 "cfg.chpl"
-extern std::int64_t c;
+    extern std::int64_t c;
 #line 11 "cfg.chpl"
-extern std::int64_t d;
+    extern std::int64_t d;
 
-struct __thisModule {
+    struct __thisModule
+    {
+        static void __construct()
+        {
+            cfg::__this = new __thisModule();
+        }
 
-  static void __construct() { cfg::__this = new __thisModule(); }
+        static void __destruct() noexcept
+        {
+            auto* m = cfg::__this;
+            cfg::__this = nullptr;
+            delete m;
+        }
 
-  static void __destruct() noexcept {
-    auto *m = cfg::__this;
-    cfg::__this = nullptr;
-    delete m;
-  }
+        void __main();
+    };    // end struct __thisModule
 
-  void __main();
-}; // end struct __thisModule
-
-} // namespace cfg
+}    // namespace cfg
 
 #endif

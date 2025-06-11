@@ -56,6 +56,7 @@ struct ScalarDeclarationLiteralExpressionVisitor {
     void operator()(int_kind const&);
     void operator()(real_kind const&);
     void operator()(string_kind const&);
+    void operator()(std::shared_ptr<array_kind> const&);
 
     uast::AstNode const* ast;
     std::ostream & os;
@@ -66,16 +67,11 @@ struct ArrayDeclarationExpression : public VariableDeclarationExpression {
 };
 
 struct ArrayDeclarationLiteralExpression : public VariableDeclarationExpression {
-   std::vector<uast::AstNode const*> literalValues;
+   std::vector<Symbol*> literalValues;
    void emit(std::ostream & os) const;
 };
 
 struct TupleDeclarationExpression : public VariableDeclarationExpression {
-   void emit(std::ostream & os) const;
-};
-
-struct TupleDeclarationLiteralExpression : public VariableDeclarationExpression {
-   std::vector<uast::AstNode const*> literalValues;
    void emit(std::ostream & os) const;
 };
 
@@ -87,6 +83,11 @@ struct ArithmeticOpExpression : public ExpressionBase {
 struct LiteralExpression {
    kind_types kind;
    uast::AstNode const * value;
+   void emit(std::ostream & os) const;
+};
+
+struct TupleDeclarationLiteralExpression : public VariableDeclarationExpression {
+   std::vector<Symbol> literalValues;
    void emit(std::ostream & os) const;
 };
 
@@ -115,6 +116,8 @@ struct CoforallLoopExpression;
 
 struct StatementList;
 struct ScalarDeclarationExprExpression;
+struct ArrayDeclarationExprExpression;
+struct TupleDeclarationExprExpression;
 
 struct RecordDeclarationExpression;
 struct ClassDeclarationExpression;
@@ -128,8 +131,10 @@ using Statement = std::variant<
    std::shared_ptr<ScalarDeclarationExprExpression>,
    ArrayDeclarationExpression,
    ArrayDeclarationLiteralExpression,
+   std::shared_ptr<ArrayDeclarationExprExpression>,
    TupleDeclarationExpression,
    TupleDeclarationLiteralExpression,
+   std::shared_ptr<TupleDeclarationExprExpression>,
    LiteralExpression,
    VariableExpression,
    OpExpression,
@@ -172,6 +177,18 @@ struct TernaryOpExpression : public ArithmeticOpExpression {
 };
 
 struct ScalarDeclarationExprExpression : public VariableDeclarationExpression {
+   std::vector<Statement> statements;
+
+   void emit(std::ostream & os) const;
+};
+
+struct ArrayDeclarationExprExpression : public VariableDeclarationExpression {
+   std::vector<Statement> statements;
+
+   void emit(std::ostream & os) const;
+};
+
+struct TupleDeclarationExprExpression : public VariableDeclarationExpression {
    std::vector<Statement> statements;
 
    void emit(std::ostream & os) const;
@@ -222,7 +239,9 @@ struct ConditionalExpression : public ScopeExpression {
 struct ForLoopExpression : public ScopeExpression {
    Symbol symbol;
    Symbol iterator;
-   Symbol indexSet;
+   // this needs to store Statements
+   //Symbol indexSet;
+   std::vector<Statement> indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 
@@ -232,7 +251,8 @@ struct ForLoopExpression : public ScopeExpression {
 struct ForallLoopExpression : public ScopeExpression {
    Symbol symbol;
    Symbol iterator;
-   Symbol indexSet;
+   //Symbol indexSet;
+   std::vector<Statement> indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 
@@ -242,7 +262,8 @@ struct ForallLoopExpression : public ScopeExpression {
 struct CoforallLoopExpression : public ScopeExpression {
    Symbol symbol;
    Symbol iterator;
-   Symbol indexSet;
+   //Symbol indexSet;
+   std::vector<Statement> indexSet;
    std::vector<Statement> statements;
    std::string chplLine;
 

@@ -8,7 +8,7 @@
  */
 #include "hpx/codegenvisitor.hpp"
 #include "hpx/symboltypes.hpp"
-#include "hpx/util.hpp"
+#include "hpx/utils.hpp"
 
 #include "chpl/uast/all-uast.h"
 
@@ -34,9 +34,10 @@ CodegenVisitor::CodegenVisitor(
    ProgramTree & prgmTree,
    chpl::uast::BuilderResult const& chapelBr,
    std::string const& cppFilePath,
-   std::string const& chapelFilePath)
+   std::string const& chapelFilePath,
+   Context* ctx_)
    : symbolTable(st), cfgVars(configVars), programTree(prgmTree), br(chapelBr),
-     indent(0), scope(0),
+     indent(0), scope(0), ctx(ctx_),
      cppFilePathStr(cppFilePath),
      chplFilePathStr(chapelFilePath),
      headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false)
@@ -90,43 +91,111 @@ void CodegenVisitor::generateApplicationHeader(std::string const& chplpth, std::
 
 struct FuncDeclArgVisitor {
 
+   FuncDeclArgVisitor(std::ostream & s) : os(s), ret(false), dim(0), inc(0) {}
+
    template<typename T>
    void operator()(T const&) {
    }
+   void reset() { ret = false; dim = 0; inc = 0; }
    void operator()(bool_kind const& kind) {
-      os << "bool";
+      if(!ret) {
+         os << "bool";
+         ret = true;
+      }
    }
    void operator()(byte_kind const&) {
-      os << "std::uint8_t";
+      if(!ret) {
+         os << "std::uint8_t";
+         ret = true;
+      }
    }
    void operator()(int_kind const&) {
-      os << "std::int64_t";
+      if(!ret) {
+         os << "std::int64_t";
+         ret = true;
+      }
    }
    void operator()(real_kind const&) {
-      os << "double";
+      if(!ret) {
+         os << "double";
+         ret = true;
+      }
    }
    void operator()(complex_kind const&) {
-      os << "std::complex<double>";
+      if(!ret) {
+         os << "std::complex<double>";
+         ret = true;
+      }
    }
    void operator()(string_kind const&) {
-      os << "std::string";
+      if(!ret) {
+         os << "std::string";
+         ret = true;
+      }
    }
    void operator()(nil_kind const&) {
-      os << "void";
+      if(!ret) {
+         os << "void";
+         ret = true;
+      }
    }
    void operator()(auto_kind const&) {
-      os << "auto";
+      if(!ret) {
+         os << "auto";
+         ret = true;
+      }
+   }
+   void enter(std::shared_ptr<array_kind> const& arg) {
+      dim += 1;
+      inc += 1;
+
+      if(std::holds_alternative<std::shared_ptr<kind_node_type>>(arg->retKind)) {
+         auto & rk = std::get<std::shared_ptr<kind_node_type>>(arg->retKind);
+         for(auto & c : rk->children) {
+            if(std::holds_alternative<nil_kind>(c)) { continue; }
+            std::visit(*this, c);
+         }
+      }
+      else {
+         std::visit(*this, arg->retKind);
+      }
+   }
+   void exit(std::shared_ptr<array_kind> const& arg) {
+      if(0 < dim) {
+         dim -= 1;
+      }
+   }
+   void operator()(std::shared_ptr<array_kind> const& arg) {
+       if(dim < 1) {
+         os << "chplx::Array<";
+       }
+
+       enter(arg);
+       exit(arg);
+
+       if(dim < 1) {
+         inc -= 1;
+         os << ", chplx::Domain<" << inc << "> > &";
+       }
    }
 
    std::ostream & os;
+   bool ret;   
+   std::size_t dim, inc;
 };
 
 struct ExprVisitor {
     template<typename T>
     void operator()(T const&) {}
 
+    void operator()(ScalarDeclarationExpression const& node) {
+       node.emit(os);
+    }
     void operator()(ScalarDeclarationLiteralExpression const& node) {
        node.emit(os);
+    }
+    void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const& node) {
+      node->emit(os);
     }
     void operator()(LiteralExpression const& node) {
        node.emit(os);
@@ -135,6 +204,18 @@ struct ExprVisitor {
        node.emit(os);
     }
     void operator()(std::shared_ptr<FunctionCallExpression> const& node) {
+       node->emit(os);
+    }
+    void operator()(std::shared_ptr<TupleDeclarationExprExpression> const& node) {
+       node->emit(os);
+    }
+    void operator()(TupleDeclarationLiteralExpression const& node) {
+       node.emit(os);
+    }
+    void operator()(ArrayDeclarationLiteralExpression const& node) {
+       node.emit(os);
+    }
+    void operator()(std::shared_ptr<ArrayDeclarationExprExpression> const& node) {
        node->emit(os);
     }
     void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
@@ -277,7 +358,6 @@ struct HppStatementVisitor {
    }
    void operator()(std::shared_ptr<FunctionDeclarationExpression> const& node) {
       if(node->symbol.identifier.size() < 1) { std::cerr << "codegenvisitor.cpp FunctionDeclarationExpression " << node->symbol.identifier << " not found" << std::endl; }
-
       if(printChplLine) {
          emitIndent(); emitIndent();
          os << node->chplLine;
@@ -289,13 +369,13 @@ struct HppStatementVisitor {
          std::shared_ptr<func_kind> const& fk =
             std::get<std::shared_ptr<func_kind>>(node->symbol.kind);
 
-         FuncDeclArgVisitor fdav{os};
          const std::size_t args_sz = fk->args.size()-1;
-
+         FuncDeclArgVisitor fdav{os};
          std::visit(fdav, fk->retKind);
+         fdav.reset();
+
          std::string const& fn_sig_ref =
             node->symbol.identifier;
-
          const std::size_t pos =
             fn_sig_ref.find("|");
 
@@ -303,11 +383,13 @@ struct HppStatementVisitor {
 
          if(0 < args_sz) {
             std::visit(fdav, fk->args[0].kind);
+            fdav.reset();
             os << ' ' << fk->args[0].identifier;
-
             for(std::size_t i = 1; i < args_sz; ++i) {
+               if(std::holds_alternative<nil_kind>(fk->args[i].kind)) { continue; }
                os << ',';
                std::visit(fdav, fk->args[i].kind );
+               fdav.reset();
                os << ' ' << fk->args[i].identifier;
             }
          }
@@ -358,6 +440,7 @@ struct StatementVisitor {
       node.emit(os);
    }
    void operator()(ArrayDeclarationExpression const& node) {
+/*
       headers[static_cast<std::size_t>(HeaderEnum::std_vector)] = true;
 
       std::shared_ptr<array_kind> const& akref =
@@ -372,6 +455,7 @@ struct StatementVisitor {
             std::holds_alternative<string_kind>(akref->kind);
       }
 
+*/
       if(printChplLine) {
          emitIndent();
          os << node.chplLine;
@@ -390,19 +474,59 @@ struct StatementVisitor {
       node.emit(os);
       if( 0 < node.literalValue.size() ) {
          os << " = ";
-         std::visit(ScalarDeclarationLiteralExpressionVisitor{s->literal[0], os}, node.kind);
+         std::visit(ScalarDeclarationLiteralExpressionVisitor{node.literalValue[0], os}, node.kind);
       }
       os << ";" << std::endl;
    }
    void operator()(ArrayDeclarationLiteralExpression const& node) {
       std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
-      if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
+      if(!s) { std::cerr << "codegenvisitor.cpp ArrayDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
       if(printChplLine) {
          emitIndent();
          os << node.chplLine;
       }
       emitIndent();
       node.emit(os);
+   }
+   void operator()(std::shared_ptr<ArrayDeclarationExprExpression> const& node) {
+      std::optional<Symbol> s = symbolTable.find(node->scopeId, node->identifier);
+      if(!s) { std::cerr << "codegenvisitor.cpp ArrayDeclarationExprExpression " << node->identifier << " not found" << std::endl; }
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
+      emitIndent();
+      node->emit(os);
+   }
+   void operator()(TupleDeclarationExpression const& node) {
+      std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
+      if(!s) { std::cerr << "codegenvisitor.cpp TupleDeclarationExpression " << node.identifier << " not found" << std::endl; }
+      if(printChplLine) {
+         emitIndent();
+         os << node.chplLine;
+      }
+      emitIndent();
+      node.emit(os);
+   }
+   void operator()(TupleDeclarationLiteralExpression const& node) {
+      std::optional<Symbol> s = symbolTable.find(node.scopeId, node.identifier);
+      if(!s) { std::cerr << "codegenvisitor.cpp TupleDeclarationLiteralExpression " << node.identifier << " not found" << std::endl; }
+      if(printChplLine) {
+         emitIndent();
+         os << node.chplLine;
+      }
+      emitIndent();
+      node.emit(os);
+   }
+   void operator()(std::shared_ptr<TupleDeclarationExprExpression> const& node) {
+      std::optional<Symbol> s = symbolTable.find(node->scopeId, node->identifier);
+      if(!s) { std::cerr << "codegenvisitor.cpp TupleDeclarationExprExpression " << node->identifier << " not found" << std::endl; }
+      if(printChplLine) {
+         emitIndent();
+         os << node->chplLine;
+      }
+      emitIndent();
+      node->emit(os);
    }
    void operator()(VariableExpression const& node) {
       if(arg) {
@@ -443,8 +567,45 @@ struct StatementVisitor {
       }
       emitIndent();
 
-      range_kind const& rk = std::get<range_kind>(node->indexSet.kind);
-      os << "chplx::forLoop(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      //auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
+      //auto & indices = rk->args;
+
+      os << "chplx::forLoop(chplx::Range{";
+      if(node->indexSet.size() == 1) {
+          ExprVisitor ev{os};
+          std::visit(ev, node->indexSet[0]);
+      }
+      else if(node->indexSet.size() == 2) {
+          ExprVisitor ev{os};
+          std::visit(ev, node->indexSet[0]);
+          os << ',';
+          std::visit(ev, node->indexSet[1]);
+      }
+      else {
+         assert(node->indexSet.size() < 3);
+      }
+/*
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         if(indices[0].identifier.size() < 1 || indices[0].identifier.find("lit") != std::string::npos) {
+            os << int_kind::value(indices[0].literal[0]);
+         }
+         else {
+            os << indices[0].identifier;
+         }
+      }
+
+      os << ", ";
+      if(std::holds_alternative<int_kind>(indices[1].kind)) {
+         if(indices[1].identifier.size() < 1 || indices[1].identifier.find("lit") != std::string::npos) {
+            os << int_kind::value(indices[1].literal[0]);
+         }
+         else {
+            os << indices[1].identifier;
+         }
+      }
+*/
+      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);
@@ -460,8 +621,48 @@ struct StatementVisitor {
       }
       emitIndent();
 
-      range_kind const& rk = std::get<range_kind>(node->indexSet.kind);
-      os << "chplx::forall(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      // replace with statements
+      //
+      //auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
+      //auto & indices = rk->args;
+
+      os << "chplx::forall(chplx::Range{";
+
+      if(node->indexSet.size() == 1) {
+          ExprVisitor ev{os};
+          std::visit(ev, node->indexSet[0]);
+      }
+      else if(node->indexSet.size() == 2) {
+          ExprVisitor ev{os};
+          std::visit(ev, node->indexSet[0]);
+          os << ',';
+          std::visit(ev, node->indexSet[1]);
+      }
+      else {
+         assert(node->indexSet.size() < 3);
+      }
+/*
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         if(indices[0].identifier.size() < 1 || indices[0].identifier.find("lit") != std::string::npos) {
+            os << int_kind::value(indices[0].literal[0]);
+         }
+         else {
+            os << indices[0].identifier;
+         }
+      }
+
+      os << ", ";
+      if(std::holds_alternative<int_kind>(indices[1].kind)) {
+         if(indices[1].identifier.size() < 1 || indices[1].identifier.find("lit") != std::string::npos) {
+            os << int_kind::value(indices[1].literal[0]);
+         }
+         else {
+            os << indices[1].identifier;
+         }
+      }
+*/
+      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);
@@ -477,8 +678,35 @@ struct StatementVisitor {
       }
       emitIndent();
 
-      range_kind const& rk = std::get<range_kind>(node->indexSet.kind);
-      os << "chplx::coforall(chplx::Range{" << rk.points[0] << ", " << rk.points[1] << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
+      //auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
+      //auto & indices = rk->args;
+
+      os << "chplx::coforall(chplx::Range{";
+/*
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         os << int_kind::value(indices[0].literal[0]);
+      }
+
+      os << ", ";
+      if(std::holds_alternative<int_kind>(indices[0].kind)) {
+         os << int_kind::value(indices[1].literal[0]);
+      }
+*/
+      if(node->indexSet.size() == 1) {
+          ExprVisitor ev{os};
+          std::visit(ev, node->indexSet[0]);
+      }
+      else if(node->indexSet.size() == 2) {
+          ExprVisitor ev{os};
+          std::visit(ev, node->indexSet[0]);
+          os << ',';
+          std::visit(ev, node->indexSet[1]);
+      }
+      else {
+         assert(node->indexSet.size() < 3);
+      }
+
+      os << "}, [&](auto " << node->iterator.identifier << ") {" << std::endl;
       ++indent;
       for(const auto& stmt : node->statements) {
          visit(*this, stmt);
@@ -523,11 +751,12 @@ struct StatementVisitor {
          std::shared_ptr<func_kind> const& fk =
             std::get<std::shared_ptr<func_kind>>(node->symbol.kind);
 
-         FuncDeclArgVisitor fdav{os};
          const std::size_t args_sz = fk->args.size()-1;
+         FuncDeclArgVisitor fdav{os};
 
          if(moduleLevel) {
             std::visit(fdav, fk->retKind);
+            fdav.reset();
             std::string const& fn_sig_ref =
                node->symbol.identifier;
 
@@ -538,11 +767,14 @@ struct StatementVisitor {
 
             if(0 < args_sz) {
                std::visit(fdav, fk->args[0].kind);
+               fdav.reset();
                os << ' ' << fk->args[0].identifier;
 
                for(std::size_t i = 1; i < args_sz; ++i) {
+                  if(std::holds_alternative<nil_kind>(fk->args[i].kind)) { continue; }
                   os << ',';
                   std::visit(fdav, fk->args[i].kind );
+                  fdav.reset();
                   os << ' ' << fk->args[i].identifier;
                }
             }
@@ -566,11 +798,13 @@ struct StatementVisitor {
 
             if(0 < args_sz) {
                std::visit(fdav, fk->args[0].kind);
+               fdav.reset();
                os << ' ' << fk->args[0].identifier;
 
                for(std::size_t i = 1; i < args_sz; ++i) {
                   os << ',';
                   std::visit(fdav, fk->args[i].kind );
+                  fdav.reset();
                   os << ' ' << fk->args[i].identifier;
                }
             }
@@ -581,6 +815,7 @@ struct StatementVisitor {
             else {
                os << ") -> ";
                std::visit(fdav, fk->retKind);
+               fdav.reset();
             }
          }
 
@@ -603,23 +838,67 @@ struct StatementVisitor {
    void operator()(std::shared_ptr<BinaryOpExpression> const& node) {
       if(printChplLine) {
          emitIndent();
-         emitChapelLine(os, node->ast);
+         if(node->statements.size() &&
+            !std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0])) {
+            emitChapelLine(os, node->ast);
+         }
+
+         if(node->statements.size() &&
+            std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0])) {
+            auto & sdee = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0]);
+            os << sdee->chplLine;
+         }
       }
 
       if(!arg) {
          emitIndent();
       }
+
       std::visit(ExprVisitor{os}, node->statements[0]);
 
       os << ' ' << node->op << ' ';
 
-      std::visit(ExprVisitor{os}, node->statements[1]);
+      if(std::holds_alternative<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0])) {
+         auto & sdee = std::get<std::shared_ptr<ScalarDeclarationExprExpression>>(node->statements[0]);
+         if(sdee->statements.size()) {
+            std::visit(ExprVisitor{os}, sdee->statements[0]);
+            os << ';' << std::endl;
+            if(1 < node->statements.size()) {
+               emitIndent();
+            }
+         }
+      }
+
+      if(std::holds_alternative<std::shared_ptr<ArrayDeclarationExprExpression>>(node->statements[0])) {
+         auto & adee = std::get<std::shared_ptr<ArrayDeclarationExprExpression>>(node->statements[0]);
+         os << "chplx::Array<>{";
+         for(auto i = 0; i < adee->statements.size(); ++i) {
+            std::visit(ExprVisitor{os}, adee->statements[i]);
+            if(i != adee->statements.size()-1) {
+               os << ',';
+            }
+         }
+        
+         os << "}";
+      }
+      else {
+         for(auto i = 1; i < node->statements.size(); ++i) {
+            std::visit(ExprVisitor{os}, node->statements[i]);
+            if(i != node->statements.size()-1) {
+               os << ',';
+            }
+         }
+      }
 
       if(!arg) {
          os << ';' << std::endl;
       }
    }
    void operator()(std::shared_ptr<ScalarDeclarationExprExpression> const& node) {
+      if( node->statements.size() < 1) {
+         std::cerr << node->chplLine << std::endl;
+         assert(node->statements.size());
+      }
       std::optional<Symbol> s = symbolTable.find(node->scopeId, node->identifier);
       if(!s) { std::cerr << "codegenvisitor.cpp ScalarDeclarationExprExpression " << node->identifier << " not found" << std::endl; }
 
@@ -629,10 +908,14 @@ struct StatementVisitor {
       }
 
       emitIndent();
-      node->emit(os);
-      os << " = ";
-
-      std::visit(ExprVisitor{os}, node->statements[0]);
+      if(std::holds_alternative<std::shared_ptr<BinaryOpExpression>>(node->statements[0])) {
+         std::visit(ExprVisitor{os}, node->statements[0]);
+      }
+      else {
+         node->emit(os);
+         os << " = ";
+         std::visit(ExprVisitor{os}, node->statements[0]);
+      }
 
       if(!arg) {
          os << ';' << std::endl;
@@ -659,8 +942,10 @@ struct StatementVisitor {
    void operator()(std::shared_ptr<ModuleDeclarationExpression> const& node) {
       // needs to open a file and generate the module template provided by HK
       //
-      std::fstream cppofs(node->symbol.identifier + ".cpp", std::ios_base::out);
-      StatementVisitor cppv{symbolTable, br, cppofs, indent, headers, true, false, true};
+      
+      std::filesystem::path ofile = chplx::util::output_path / node->symbol.identifier;
+      std::fstream cppofs(ofile.string() + ".cpp", std::ios_base::out);
+      StatementVisitor cppv{symbolTable, br, ctx, cppofs, indent, headers, true, false, true};
 
       // populate prologue of template
 
@@ -745,7 +1030,7 @@ struct StatementVisitor {
 
       // populate hpp
       //
-      std::fstream hppofs(node->symbol.identifier + ".hpp", std::ios_base::out);
+      std::fstream hppofs(ofile.string() + ".hpp", std::ios_base::out);
       HppStatementVisitor hppv{symbolTable, br, hppofs, indent, headers, true, false};
       hppv.prologue(node);
 
@@ -803,11 +1088,12 @@ struct StatementVisitor {
 
    void emitChapelLine(std::ostream & os, uast::AstNode const* ast) const {
       auto const fp = br.filePath();
-      os << chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
+      os << chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ctx, ast->id(), fp).line());
    }
 
    SymbolTable & symbolTable;
    chpl::uast::BuilderResult const& br;
+   Context* ctx = nullptr;
    std::ostream & os;
    std::size_t indent;
    std::vector<bool> & headers;
@@ -922,9 +1208,7 @@ void CodegenVisitor::visit() {
    // generate cpp code `filename_driver.cpp`
    //    - figure this out...
    //
-
    std::string fn{};
-   std::string prefix{};
 
    if(chplx::util::fullFilePath) {
       fn = chplFilePathStr;
@@ -934,14 +1218,15 @@ void CodegenVisitor::visit() {
    }
 
    const auto pos = fn.find(".");
-   prefix = fn.substr(0, pos);
+   std::string prefix = fn.substr(0, pos);
+   std::filesystem::path ofile = chplx::util::output_path / prefix;
    {
-      std::fstream ofs(prefix + "_driver.hpp", std::ios_base::out);
+      std::fstream ofs(ofile.string() + "_driver.hpp", std::ios_base::out);
       generateApplicationHeader(fn, prefix, ofs);
    }
 
    {
-      std::fstream ofs(prefix + "_driver.cpp", std::ios_base::out);
+      std::fstream ofs(ofile.string() + "_driver.cpp", std::ios_base::out);
       generateSourceHeader(cfgVars, ofs, prefix, fn);
       generateHpxMain(ofs, prefix);
       generateSourceFooter(prefix, symbolTable, cfgVars, ofs);
@@ -954,7 +1239,7 @@ void CodegenVisitor::visit() {
 
       // generate cpp code for each module from the program tree
       //
-      visit(StatementVisitor{symbolTable, br, rootos, indent, headers, true, false});
+      visit(StatementVisitor{symbolTable, br, ctx, rootos, indent, headers, true, false});
    }
 
 }

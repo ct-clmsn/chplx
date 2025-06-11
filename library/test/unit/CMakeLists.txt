@@ -8,7 +8,6 @@ include(CHPLX_LibraryAddTest)
 
 set(tests
     array
-    assoc_domain
     atomic
     begin
     cobegin

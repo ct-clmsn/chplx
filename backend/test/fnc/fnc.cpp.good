@@ -5,36 +5,55 @@
 
 namespace fnc {
 
-struct __thisModule *__this = nullptr;
+    struct __thisModule* __this = nullptr;
 
 #line 1 "fnc.chpl"
-void __thisModule::alpha() {
+    void __thisModule::alpha()
+    {
 #line 2 "fnc.chpl"
-  std::int64_t a;
-};
+        std::int64_t a;
+    };
 
 #line 7 "fnc.chpl"
-std::int64_t __thisModule::delta(std::int64_t c) {
+    auto __thisModule::delta(std::int64_t c)
+    {
 #line 8 "fnc.chpl"
-  return c;
-};
+        return c;
+    };
 
 #line 11 "fnc.chpl"
-std::int64_t __thisModule::beta(std::int64_t b) {
+    auto __thisModule::beta(std::int64_t c)
+    {
 #line 12 "fnc.chpl"
-  return b + delta(b);
-};
+        return c;
+    };
 
-void __thisModule::__main() {
-
-#line 5 "fnc.chpl"
-  alpha();
 #line 15 "fnc.chpl"
-  std::int64_t c = 1;
-#line 16 "fnc.chpl"
-  beta(c);
-#line 17 "fnc.chpl"
-  c = beta(c);
-}
+    void __thisModule::phi(chplx::Array<double, chplx::Domain<1>>& c) {};
 
-} // namespace fnc
+#line 18 "fnc.chpl"
+    void __thisModule::chai(chplx::Array<double, chplx::Domain<1>>& c,
+        chplx::Array<double, chplx::Domain<1>>& d) {};
+
+#line 21 "fnc.chpl"
+    auto __thisModule::betad(std::int64_t b)
+    {
+#line 22 "fnc.chpl"
+        return delta(b) + b;
+    };
+
+    void __thisModule::__main()
+    {
+#line 5 "fnc.chpl"
+        alpha();
+#line 25 "fnc.chpl"
+        std::int64_t c = 1;
+#line 26 "fnc.chpl"
+        betad(c);
+#line 27 "fnc.chpl"
+        c = beta(c);
+#line 28 "fnc.chpl"
+        c = betad(c);
+    }
+
+}    // namespace fnc

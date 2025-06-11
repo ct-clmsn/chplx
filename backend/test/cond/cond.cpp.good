@@ -5,62 +5,71 @@
 
 namespace cond {
 
-struct __thisModule *__this = nullptr;
+    struct __thisModule* __this = nullptr;
 
 #line 38 "cond.chpl"
-void __thisModule::alpha() {
+    void __thisModule::alpha()
+    {
 #line 39 "cond.chpl"
-  std::int64_t d = 1;
+        std::int64_t d = 1;
 #line 40 "cond.chpl"
-  if (d) {
+        if (d)
+        {
 #line 41 "cond.chpl"
-    std::cout << d << std::endl;
-  }
-};
+            std::cout << d << std::endl;
+        }
+    };
 
-void __thisModule::__main() {
-
+    void __thisModule::__main()
+    {
 #line 8 "cond.chpl"
-  std::int64_t a = 1;
+        std::int64_t a = 1;
 #line 10 "cond.chpl"
-  if (a) {
+        if (a)
+        {
 #line 11 "cond.chpl"
-    std::cout << a << std::endl;
-  }
+            std::cout << a << std::endl;
+        }
 #line 14 "cond.chpl"
-  std::int64_t b = 0;
+        std::int64_t b = 0;
 #line 16 "cond.chpl"
-  if (b == 0) {
+        if (a == 0)
+        {
 #line 17 "cond.chpl"
-    std::cout << b << std::endl;
-  }
+            std::cout << b << std::endl;
+        }
 #line 19 "cond.chpl"
-  else if (b == 1) {
+        else if (b == 1)
+        {
 #line 20 "cond.chpl"
-    std::cout << b << std::endl;
-  }
+            std::cout << b << std::endl;
+        }
 #line 22 "cond.chpl"
-  else {
+        else
+        {
 #line 23 "cond.chpl"
-    std::cout << b << std::endl;
-  }
+            std::cout << b << std::endl;
+        }
 #line 26 "cond.chpl"
-  std::int64_t c = 0;
+        std::int64_t c = 0;
 #line 28 "cond.chpl"
-  if (c == 3) {
+        if (c == 3)
+        {
 #line 29 "cond.chpl"
-    std::cout << c << std::endl;
-  }
+            std::cout << c << std::endl;
+        }
 #line 31 "cond.chpl"
-  else if (c == 2) {
+        else if (c == 2)
+        {
 #line 32 "cond.chpl"
-    std::cout << c << std::endl;
-  }
+            std::cout << c << std::endl;
+        }
 #line 34 "cond.chpl"
-  else if (c == 1) {
+        else if (c == 1)
+        {
 #line 35 "cond.chpl"
-    std::cout << c << std::endl;
-  }
-}
+            std::cout << c << std::endl;
+        }
+    }
 
-} // namespace cond
+}    // namespace cond

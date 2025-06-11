@@ -8,27 +8,30 @@
 
 #include <chplx.hpp>
 #include <functional>
-#include <iostream>
 #line 1 "fn.chpl"
 namespace fn {
-extern struct __thisModule *__this;
+    extern struct __thisModule* __this;
 
-struct __thisModule {
-
+    struct __thisModule
+    {
 #line 11 "fn.chpl"
-  void print();
+        void print();
 
-  static void __construct() { fn::__this = new __thisModule(); }
+        static void __construct()
+        {
+            fn::__this = new __thisModule();
+        }
 
-  static void __destruct() noexcept {
-    auto *m = fn::__this;
-    fn::__this = nullptr;
-    delete m;
-  }
+        static void __destruct() noexcept
+        {
+            auto* m = fn::__this;
+            fn::__this = nullptr;
+            delete m;
+        }
 
-  void __main();
-}; // end struct __thisModule
+        void __main();
+    };    // end struct __thisModule
 
-} // namespace fn
+}    // namespace fn
 
 #endif

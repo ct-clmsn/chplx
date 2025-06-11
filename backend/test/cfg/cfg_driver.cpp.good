@@ -8,22 +8,23 @@
 
 using namespace cfg;
 
-int hpx_main(int argc, char *argv[]) {
-  cfg::__this->__main();
-  return hpx::finalize();
+int hpx_main(int argc, char* argv[])
+{
+    cfg::__this->__main();
+    return hpx::finalize();
 }
 
-int main(int argc, char *argv[]) {
-  chplx::registerModule<cfg::__thisModule>();
-  hpx::program_options::options_description options;
-  options.add_options()("a", hpx::program_options::value(&cfg::a),
-                        "config const a : std::int64_t")(
-      "b", hpx::program_options::value(&cfg::b), "config var b : std::int64_t")(
-      "c", hpx::program_options::value(&cfg::c),
-      "config const c : std::int64_t")("d",
-                                       hpx::program_options::value(&cfg::d),
-                                       "config const d : std::int64_t");
-  hpx::init_params init_args;
-  init_args.desc_cmdline = options;
-  return hpx::init(argc, argv, init_args);
+int main(int argc, char* argv[])
+{
+    chplx::registerModule<cfg::__thisModule>();
+    hpx::program_options::options_description options;
+    options.add_options()("a", hpx::program_options::value(&cfg::a),
+        "config const a : std::int64_t")("b",
+        hpx::program_options::value(&cfg::b), "config var b : std::int64_t")(
+        "c", hpx::program_options::value(&cfg::c),
+        "config const c : std::int64_t")("d",
+        hpx::program_options::value(&cfg::d), "config const d : std::int64_t");
+    hpx::init_params init_args;
+    init_args.desc_cmdline = options;
+    return hpx::init(argc, argv, init_args);
 }

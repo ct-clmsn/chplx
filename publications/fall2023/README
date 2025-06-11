@@ -1,0 +1,25 @@
+# building the c++ chpl codes...
+
+> with llvm
+
+mkdir build
+cmake -DChplx_DIR=<git_project_path>/chplx/build/library/lib/cmake/Chplx -DHPX_DIR=<install_path>/lib/cmake/HPX -DCMAKE_CXX_COMPILER=clang++-15 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DLLVM_ROOT=/usr/lib/llvm-15/lib/cmake/llvm -DCLANG_ROOT=/usr/lib/llvm-15/lib/cmake/clang -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$HOME/experiment/install .. && make
+
+> with gcc
+
+mkdir build
+cmake -DChplx_DIR=<git_project_path>/chplx/build/library/lib/cmake/Chplx -DHPX_DIR=<install_path>/lib/cmake/HPX -DCMAKE_CXX_COMPILER=g++-15 -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DLLVM_ROOT=/usr/lib/llvm-15/lib/cmake/llvm -DCLANG_ROOT=/usr/lib/llvm-15/lib/cmake/clang -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$HOME/experiment/install .. && make
+
+
+# create the codes 
+
+"slow"
+./chplx -o stream_triad -d -E -f ../../publications/fall2023/stream_cpp_triad.chpl
+
+"fast"
+./chplx --fast -o stream_triad -d -E -f ../../publications/fall2023/stream_cpp_triad.chpl
+
+
+#building chapel
+
+CHPL_LLVM=system CHPL_MEM=jemalloc CHPL_COMM=none CHPL_TASKS=qthreads ./configure --prefix=<INSTALL_PATH> && make -j8

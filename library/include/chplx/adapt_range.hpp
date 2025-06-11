@@ -1,4 +1,4 @@
-//  Copyright (c) 2023 Hartmut Kaiser
+//  Copyright (c) 2023-2025 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -12,6 +12,8 @@
 #include <hpx/assert.hpp>
 #include <hpx/config.hpp>
 #include <hpx/generator.hpp>
+
+#include <hpx/iterator_support/counting_shape.hpp>
 
 #include <cstddef>
 
@@ -36,6 +38,16 @@ template <typename T, BoundedRangeType BoundedType, bool Stridable>
 decltype(auto) iterate(Range<T, BoundedType, Stridable> const &r) noexcept {
 
   return iterate(detail::IteratorGenerator(r));
+}
+
+//-----------------------------------------------------------------------------
+template <typename T>
+decltype(auto)
+iterate(Range<T, BoundedRangeType::bounded, false> const &r) noexcept {
+
+  if (r.low() <= r.high())
+    return hpx::util::counting_shape(r.low(), r.high() + 1);
+  return hpx::util::counting_shape(r.low(), r.low());
 }
 
 } // namespace chplx

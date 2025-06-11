@@ -21,7 +21,7 @@
 
 namespace chplx {
 
-enum class RangeInit { noValue };
+enum class RangeInit : std::uint8_t { noValue };
 
 namespace detail {
 
@@ -50,11 +50,12 @@ struct Stridable {
     HPX_ASSERT(s == StrideType_t<T>(1));
   }
 
-  [[nodiscard]] static constexpr auto getStride() noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr auto getStride() noexcept {
     return StrideType_t<T>(1);
   }
 
-  [[nodiscard]] static constexpr bool hasAmbiguousValue() noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool
+  hasAmbiguousValue() noexcept {
     return BoundedType == BoundedRangeType::boundedNone;
   }
 };
@@ -66,10 +67,17 @@ struct Stridable<T, BoundedType, true> {
 
   explicit constexpr Stridable(T s) noexcept : stride(StrideType_t<T>(s)) {}
 
-  [[nodiscard]] constexpr auto getStride() const noexcept { return stride; }
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto getStride() const noexcept {
+    return stride;
+  }
 
-  [[nodiscard]] constexpr bool hasAmbiguousValue() const noexcept {
-    return stride != 1 && stride != -1;
+  [[nodiscard]] HPX_FORCEINLINE constexpr bool
+  hasAmbiguousValue() const noexcept {
+    if constexpr (BoundedType == BoundedRangeType::boundedNone) {
+      return true;
+    } else {
+      return stride != 1 && stride != -1;
+    }
   }
 
   StrideType_t<T> stride = StrideType_t<T>(1);
@@ -112,20 +120,22 @@ template <typename T, BoundedRangeType BoundedType> struct Bounds {
   constexpr Bounds(RangeInit, RangeInit) noexcept
       : firstIndex(MinValue_v<T>), lastIndex(MaxValue_v<T>) {}
 
-  constexpr Bounds() noexcept : firstIndex(T(1)), lastIndex(T(1)) {}
+  constexpr Bounds() noexcept = default;
 
-  [[nodiscard]] constexpr auto getFirstIndex() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto getFirstIndex() const noexcept {
     return firstIndex;
   }
-  [[nodiscard]] constexpr auto getLastIndex() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto getLastIndex() const noexcept {
     return lastIndex;
   }
-  [[nodiscard]] static constexpr bool isIterable(T) noexcept { return true; }
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool isIterable(T) noexcept {
+    return true;
+  }
 
-  [[nodiscard]] constexpr bool hasFirst() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr bool hasFirst() const noexcept {
     return firstIndex != MinValue_v<T>;
   }
-  [[nodiscard]] constexpr bool hasLast() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr bool hasLast() const noexcept {
     return lastIndex != MaxValue_v<T>;
   }
   [[nodiscard]] constexpr BoundedRangeType boundedType() const noexcept {
@@ -140,8 +150,8 @@ template <typename T, BoundedRangeType BoundedType> struct Bounds {
     return BoundedRangeType::bounded;
   }
 
-  T firstIndex;
-  T lastIndex;
+  T firstIndex = T(1);
+  T lastIndex = T(1);
 };
 
 template <typename T> struct Bounds<T, BoundedRangeType::boundedLow> {
@@ -154,30 +164,33 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedLow> {
 
   constexpr Bounds(T low, RangeInit) noexcept : firstIndex(low) {}
 
-  constexpr Bounds(RangeInit, T high,
-                   BoundsCategoryType type = BoundsCategoryType::None) noexcept
+  constexpr Bounds(RangeInit, [[maybe_unused]] T high,
+                   BoundsCategoryType = BoundsCategoryType::None) noexcept
       : firstIndex(MinValue_v<T>) {
     HPX_ASSERT(high == MaxValue_v<T>);
   }
 
   constexpr Bounds(RangeInit, RangeInit) noexcept : firstIndex(MinValue_v<T>) {}
 
-  constexpr Bounds() noexcept : firstIndex(T(1)) {}
+  constexpr Bounds() noexcept = default;
 
-  [[nodiscard]] constexpr auto getFirstIndex() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto getFirstIndex() const noexcept {
     return firstIndex;
   }
-  [[nodiscard]] static constexpr auto getLastIndex() noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr auto getLastIndex() noexcept {
     return MaxValue_v<T>;
   }
-  [[nodiscard]] static constexpr bool isIterable(T stride) noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool
+  isIterable(T stride) noexcept {
     return stride > 0;
   }
 
-  [[nodiscard]] constexpr bool hasFirst() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr bool hasFirst() const noexcept {
     return firstIndex != MinValue_v<T>;
   }
-  [[nodiscard]] static constexpr bool hasLast() noexcept { return false; }
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool hasLast() noexcept {
+    return false;
+  }
 
   [[nodiscard]] constexpr BoundedRangeType boundedType() const noexcept {
 
@@ -186,7 +199,7 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedLow> {
     return BoundedRangeType::boundedLow;
   }
 
-  T firstIndex;
+  T firstIndex = T(1);
 };
 
 template <typename T> struct Bounds<T, BoundedRangeType::boundedHigh> {
@@ -208,20 +221,23 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedHigh> {
 
   constexpr Bounds(RangeInit, RangeInit) noexcept : lastIndex(MaxValue_v<T>) {}
 
-  constexpr Bounds() noexcept : lastIndex(T(1)) {}
+  constexpr Bounds() noexcept = default;
 
-  [[nodiscard]] static constexpr auto getFirstIndex() noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr auto getFirstIndex() noexcept {
     return MinValue_v<T>;
   }
-  [[nodiscard]] constexpr auto getLastIndex() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto getLastIndex() const noexcept {
     return lastIndex;
   }
-  [[nodiscard]] static constexpr bool isIterable(T stride) noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool
+  isIterable(T stride) noexcept {
     return stride < 0;
   }
 
-  [[nodiscard]] static constexpr bool hasFirst() noexcept { return false; }
-  [[nodiscard]] constexpr bool hasLast() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool hasFirst() noexcept {
+    return false;
+  }
+  [[nodiscard]] HPX_FORCEINLINE constexpr bool hasLast() const noexcept {
     return lastIndex != MaxValue_v<T>;
   }
 
@@ -232,7 +248,7 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedHigh> {
     return BoundedRangeType::boundedHigh;
   }
 
-  T lastIndex;
+  T lastIndex = T(1);
 };
 
 template <typename T> struct Bounds<T, BoundedRangeType::boundedNone> {
@@ -257,16 +273,22 @@ template <typename T> struct Bounds<T, BoundedRangeType::boundedNone> {
 
   constexpr Bounds() noexcept = default;
 
-  [[nodiscard]] static constexpr auto getFirstIndex() noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr auto getFirstIndex() noexcept {
     return MinValue_v<T>;
   }
-  [[nodiscard]] static constexpr auto getLastIndex() noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr auto getLastIndex() noexcept {
     return MaxValue_v<T>;
   }
-  [[nodiscard]] static constexpr bool isIterable(T) noexcept { return false; }
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool isIterable(T) noexcept {
+    return false;
+  }
 
-  [[nodiscard]] static constexpr bool hasFirst() noexcept { return false; }
-  [[nodiscard]] static constexpr bool hasLast() noexcept { return false; }
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool hasFirst() noexcept {
+    return false;
+  }
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool hasLast() noexcept {
+    return false;
+  }
 
   [[nodiscard]] static constexpr BoundedRangeType boundedType() noexcept {
     return BoundedRangeType::boundedNone;
@@ -300,11 +322,13 @@ struct Alignment {
   explicit constexpr Alignment(T a) noexcept : alignment(a) {}
 
   // The alignment is either a specific index value or is ambiguous.
-  [[nodiscard]] constexpr bool isAmbiguous() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr bool isAmbiguous() const noexcept {
     return alignment == MinValue_v<T>;
   }
 
-  [[nodiscard]] constexpr T getAlignment() const noexcept { return alignment; }
+  [[nodiscard]] HPX_FORCEINLINE constexpr T getAlignment() const noexcept {
+    return alignment;
+  }
 
   void setAlignment(T value) noexcept { alignment = value; }
 
@@ -319,9 +343,11 @@ struct Alignment<T, BoundedRangeType::boundedNone, Stridable> {
   explicit constexpr Alignment(T) noexcept {}
 
   // The alignment is either a specific index value or is ambiguous.
-  [[nodiscard]] static constexpr bool isAmbiguous() noexcept { return true; }
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool isAmbiguous() noexcept {
+    return true;
+  }
 
-  [[nodiscard]] static constexpr auto getAlignment() noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr auto getAlignment() noexcept {
     return MinValue_v<T>;
   }
 
@@ -336,9 +362,11 @@ struct Alignment<T, BoundedRangeType::boundedHigh, false> {
   explicit constexpr Alignment(T) noexcept {}
 
   // The alignment is either a specific index value or is ambiguous.
-  [[nodiscard]] static constexpr bool isAmbiguous() noexcept { return true; }
+  [[nodiscard]] HPX_FORCEINLINE static constexpr bool isAmbiguous() noexcept {
+    return true;
+  }
 
-  [[nodiscard]] static constexpr auto getAlignment() noexcept {
+  [[nodiscard]] HPX_FORCEINLINE static constexpr auto getAlignment() noexcept {
     return MinValue_v<T>;
   }
 
@@ -400,7 +428,7 @@ struct Range {
                 "idxType must be an integral, boolean, or enumerated type");
 
   // default constructed range
-  explicit constexpr Range() noexcept : bounds_(), stride_(), alignment_() {}
+  constexpr Range() noexcept = default;
 
   // ..
   explicit constexpr Range(RangeInit, RangeInit) noexcept
@@ -437,7 +465,7 @@ struct Range {
       : bounds_(low, RangeInit::noValue), stride_(stride),
         alignment_(stride > 0 ? low : detail::MinValue_v<T>) {}
 
-  // ..high, with stride
+  // .. high, with stride
   constexpr Range(RangeInit, T high, detail::StrideType_t<T> stride,
                   BoundsCategoryType type = BoundsCategoryType::Closed) noexcept
       : bounds_(RangeInit::noValue, high, type), stride_(stride),
@@ -446,21 +474,22 @@ struct Range {
   template <typename T1, bool Stridable1>
     requires(std::is_convertible_v<T1, T> && (!Stridable1 || Stridable) &&
              BoundedType == BoundedRangeType::bounded)
-  Range(Range<T1, BoundedRangeType::bounded, Stridable1> const &rhs)
+  explicit constexpr Range(
+      Range<T1, BoundedRangeType::bounded, Stridable1> const &rhs) noexcept
       : bounds_(rhs.getFirstIndex(), rhs.getLastIndex(),
                 BoundsCategoryType::Open),
         stride_(rhs.stride()), alignment_(rhs.alignment()) {}
 
-  decltype(auto) these() const { return iterate(*this); }
+  [[nodiscard]] decltype(auto) these() const { return iterate(*this); }
 
-  [[nodiscard]] constexpr auto getFirstIndex() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto getFirstIndex() const noexcept {
     return bounds_.getFirstIndex();
   }
-  [[nodiscard]] constexpr auto getLastIndex() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto getLastIndex() const noexcept {
     return bounds_.getLastIndex();
   }
 
-  [[nodiscard]] constexpr auto stride() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto stride() const noexcept {
     return stride_.getStride();
   }
 
@@ -500,14 +529,14 @@ struct Range {
 
   // Returns the range's low bound. If the range does not have a low bound
   // (e.g., ..10), the behavior is undefined.
-  [[nodiscard]] constexpr auto lowBound() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto lowBound() const noexcept {
     HPX_ASSERT(hasLowBound());
     return bounds_.getFirstIndex();
   }
 
   // Returns the range's aligned low bound. If this bound is undefined (e.g.,
   // ..10 by -2), the behavior is undefined.
-  [[nodiscard]] constexpr auto low() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto low() const noexcept {
     return bounds_.getFirstIndex();
   }
 
@@ -519,14 +548,14 @@ struct Range {
 
   // Return the range's high bound. If the range does not have a high bound
   // (e.g., 1..), the behavior is undefined.
-  [[nodiscard]] constexpr auto highBound() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto highBound() const noexcept {
     HPX_ASSERT(hasHighBound());
     return bounds_.getLastIndex() - 1;
   }
 
   // Return the range's high bound. If the range does not have a high bound
   // (e.g., 1..), the behavior is undefined.
-  [[nodiscard]] constexpr auto high() const noexcept {
+  [[nodiscard]] HPX_FORCEINLINE constexpr auto high() const noexcept {
     return bounds_.getLastIndex() - 1;
   }
 
@@ -534,12 +563,18 @@ struct Range {
   [[nodiscard]] constexpr auto size() const noexcept {
 
     HPX_ASSERT(isBounded());
-    if (highBound() < lowBound()) {
+    auto size = highBound() - lowBound();
+    if (size < 0) {
       return static_cast<decltype(stride_.getStride())>(0);
     }
-    auto stride = std::abs(stride_.getStride());
-    auto num = highBound() - lowBound() + stride;
-    return stride == 1 ? num : num / stride;
+
+    if constexpr (!Stridable) {
+      return size + 1;
+    } else {
+      auto stride = std::abs(stride_.getStride());
+      auto num = size + stride;
+      return stride == 1 ? num : num / stride;
+    }
   }
 
   // Returns true if the sequence represented by the range is empty and false
@@ -552,43 +587,61 @@ struct Range {
   // Returns true if the range has a first index, false otherwise.
   [[nodiscard]] constexpr bool hasFirst() const noexcept {
 
-    if (stride_.getStride() > 0) {
-      return bounds_.hasFirst() && isNaturallyAligned();
+    if constexpr (!Stridable) {
+      return bounds_.hasFirst();
+    } else {
+      if (stride_.getStride() > 0) {
+        return bounds_.hasFirst() && isNaturallyAligned();
+      }
+      return bounds_.hasLast() && isNaturallyAligned();
     }
-    return bounds_.hasLast() && isNaturallyAligned();
   }
 
   [[nodiscard]] constexpr auto first() const noexcept {
 
-    if (stride_.getStride() > 0) {
+    if constexpr (!Stridable) {
       HPX_ASSERT(bounds_.hasFirst());
       return bounds_.getFirstIndex();
-    }
+    } else {
+      if (stride_.getStride() > 0) {
+        HPX_ASSERT(bounds_.hasFirst());
+        return bounds_.getFirstIndex();
+      }
 
-    HPX_ASSERT(bounds_.hasLast());
-    return bounds_.getLastIndex() - 1;
+      HPX_ASSERT(bounds_.hasLast());
+      return bounds_.getLastIndex() - 1;
+    }
   }
 
   // Returns true if the range has a last index, false otherwise.
   [[nodiscard]] constexpr bool hasLast() const noexcept {
 
-    if (stride_.getStride() > 0) {
-      return bounds_.hasLast() && isNaturallyAligned();
+    if constexpr (!Stridable) {
+      return bounds_.hasLast();
+    } else {
+      if (stride_.getStride() > 0) {
+        return bounds_.hasLast() && isNaturallyAligned();
+      }
+      return bounds_.hasFirst() && isNaturallyAligned();
     }
-    return bounds_.hasFirst() && isNaturallyAligned();
   }
 
   [[nodiscard]] constexpr auto last() const noexcept {
 
-    if (stride_.getStride() > 0) {
+    if constexpr (!Stridable) {
       HPX_ASSERT(bounds_.hasLast());
-      return detail::round_down(bounds_.getLastIndex() - 1,
-                                bounds_.getFirstIndex(), stride_.getStride());
-    }
+      return bounds_.getLastIndex() - 1;
+    } else {
+      if (stride_.getStride() > 0) {
+        HPX_ASSERT(bounds_.hasLast());
+        return detail::round_down(bounds_.getLastIndex() - 1,
+                                  bounds_.getFirstIndex(), stride_.getStride());
+      }
 
-    HPX_ASSERT(bounds_.hasFirst());
-    return detail::round_up(bounds_.getFirstIndex(), bounds_.getLastIndex() - 1,
-                            -stride_.getStride());
+      HPX_ASSERT(bounds_.hasFirst());
+      return detail::round_up(bounds_.getFirstIndex(),
+                              bounds_.getLastIndex() - 1, -stride_.getStride());
+    }
   }
 
   // Returns true if the range's represented sequence contains ind, false
@@ -617,9 +670,8 @@ struct Range {
   // - the two range types have the same boundedType, and
   // - either the destination range is stridable or the source range is not
   //   stridable.
-  template <typename T1, bool Stridable1,
-            typename = std::enable_if_t<std::is_convertible_v<T1, T> &&
-                                        (Stridable || !Stridable1)>>
+  template <typename T1, bool Stridable1>
+    requires(std::is_convertible_v<T1, T> && (Stridable || !Stridable1))
   Range &operator=(Range<T1, BoundedType, Stridable1> const &rhs) {
     if (this != &rhs) {
       bounds_ = detail::Bounds<T, BoundedType>(rhs.getFirstIndex(),
@@ -638,17 +690,23 @@ struct Range {
   // index. The indexOrder procedure is the reverse of orderToIndex.
   [[nodiscard]] constexpr std::int64_t indexOrder(idxType idx) const noexcept {
 
-    std::int64_t result;
-    if (stride() > 0) {
-      result = (idx - first() + stride() - 1) / stride();
+    if constexpr (!Stridable) {
+      auto const first_ = first();
+      return idx - first_;
     } else {
-      result = (first() - idx - stride() - 1) / -stride();
-    }
+      std::int64_t result;
 
-    if (result < 0 || result > size()) {
-      return -1;
+      if (stride() > 0) {
+        result = (idx - first() + stride() - 1) / stride();
+      } else {
+        result = (first() - idx - stride() - 1) / -stride();
+      }
+
+      if (result < 0 || result > size()) {
+        return -1;
+      }
+      return result;
     }
-    return result;
   }
 
   // Returns the zero-based ord-th element of this range's represented sequence.
@@ -659,12 +717,15 @@ struct Range {
   orderToIndex(std::int64_t order) const noexcept {
 
     HPX_ASSERT(order >= 0 && ((isBounded() && order <= size()) || hasFirst()));
-    auto result = first() + order * stride();
 
-    return result;
+    if constexpr (!Stridable) {
+      return first() + order;
+    } else {
+      return first() + order * stride();
+    }
   }
 
-  [[nodiscard]] constexpr T operator[](std::int64_t idx) const noexcept {
+  [[nodiscard]] constexpr T operator[](std::int64_t const idx) const noexcept {
     return orderToIndex(idx);
   }
 
@@ -681,9 +742,9 @@ private:
   operator!=(Range<T1, BoundedType1, Stridable1> const &lhs,
              Range<T2, BoundedType2, Stridable2> const &rhs) noexcept;
 
-  [[no_unique_address]] detail::Bounds<T, BoundedType> bounds_{};
-  [[no_unique_address]] detail::Stridable<T, BoundedType, Stridable> stride_{};
-  [[no_unique_address]] detail::Alignment<T, BoundedType, Stridable>
+  HPX_NO_UNIQUE_ADDRESS detail::Bounds<T, BoundedType> bounds_{};
+  HPX_NO_UNIQUE_ADDRESS detail::Stridable<T, BoundedType, Stridable> stride_{};
+  HPX_NO_UNIQUE_ADDRESS detail::Alignment<T, BoundedType, Stridable>
       alignment_{};
 };
 
@@ -866,7 +927,7 @@ auto count(Range<T, BoundedType, Stridable> const &rhs, Count n) {
 // and high bounds, producing a shifted version of the range. If the operand
 // range is unbounded above or below, the missing bounds are ignored. The index
 // type of the resulting range is the type of the value that would result from
-// an addition between the scalar value and a value with the range’s index type.
+// an addition between the scalar value and a value with the rangeï¿½s index type.
 // The bounded and stridable parameters for the result range are the same as for
 // the input range.
 //

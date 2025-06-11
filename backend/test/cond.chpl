@@ -13,7 +13,7 @@ inlinecxx("std::cout << a << std::endl;");
 
 var b = 0;
 
-if (b == 0) {
+if a == 0 {
 inlinecxx("std::cout << b << std::endl;");
 }
 else if(b == 1) {

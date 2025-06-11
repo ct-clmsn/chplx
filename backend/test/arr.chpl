@@ -9,7 +9,7 @@ var k = [1,2,3,4,5];
 var l = [[1,2], [3,4]];
 var m = [[1],[2], [3,4,5]];
 var n = [[1,2],[1,2]];
-var o = [[[1,2],[1,2],[3,4]],[[5,6],[7,8]]];
+var o = [[[1,2],[1,2],[3,4]],[[5,6],[7,8]],[[9,10],[11, 12],[13,14]]];
 var p = [[1,2,3,4,5]];
 var q = [[[1,2,3,4,5]]];
 
@@ -34,11 +34,24 @@ var j = 1.0;
 
 var aa = 1 + 1;
 
-proc dd() {
+proc dd() : int {
    return 1;
 }
 
 var bb = dd();
+
+var zz = 1;
+var aaa : [zz..10] real;
+var aaaa : [1..zz] int;
+var bbbb : [zz..zz] int;
+
+aaa[zz] = aaa[zz];
+aaa(zz) = aaa(zz);
+
+//var za = [dd(), dd()];
+
+//var zc = [1];
+//var zb = [1, dd()];
 
 //var a = {1..10};
 //var a : domain(1) = {1..10};

@@ -68,6 +68,7 @@ bool SymbolTable::findImpl(std::shared_ptr<SymbolTableNode> & stref, std::string
 std::optional<Symbol> SymbolTable::find(std::string const& ident) {
    std::shared_ptr<SymbolTableNode> & stref = symbolTableRef; 
    std::map<std::string, Symbol>::iterator entry = stref->entries.find(ident);
+
    if(entry != std::end(stref->entries)) {
       return entry->second;
    } 
@@ -169,10 +170,6 @@ void SymbolTable::find(const std::size_t idx, std::string const& ident, std::opt
 void SymbolTable::dumpImpl(SymbolTableNode const& node) {
    if(node.entries.size() < 1) {
       return;
-   }
-
-   for(auto const& entry : node.entries) {
-      std::cout << entry.first << std::endl;
    }
 
    for(auto const& child : node.children) {

@@ -6,7 +6,7 @@
 #ifndef __COND_DRIVER_HPP__
 #define __COND_DRIVER_HPP__
 
-#include "cond.hpp"
 #include <chplx.hpp>
+#include "cond.hpp"
 
 #endif

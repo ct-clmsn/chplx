@@ -10,28 +10,39 @@
 #include <functional>
 #line 1 "fnc.chpl"
 namespace fnc {
-extern struct __thisModule *__this;
+    extern struct __thisModule* __this;
 
-struct __thisModule {
-
+    struct __thisModule
+    {
 #line 1 "fnc.chpl"
-  void alpha();
+        void alpha();
 #line 7 "fnc.chpl"
-  std::int64_t delta(std::int64_t c);
+        auto delta(std::int64_t c);
 #line 11 "fnc.chpl"
-  std::int64_t beta(std::int64_t b);
+        auto beta(std::int64_t c);
+#line 15 "fnc.chpl"
+        void phi(chplx::Array<double, chplx::Domain<1>>& c);
+#line 18 "fnc.chpl"
+        void chai(chplx::Array<double, chplx::Domain<1>>& c,
+            chplx::Array<double, chplx::Domain<1>>& d);
+#line 21 "fnc.chpl"
+        auto betad(std::int64_t b);
 
-  static void __construct() { fnc::__this = new __thisModule(); }
+        static void __construct()
+        {
+            fnc::__this = new __thisModule();
+        }
 
-  static void __destruct() noexcept {
-    auto *m = fnc::__this;
-    fnc::__this = nullptr;
-    delete m;
-  }
+        static void __destruct() noexcept
+        {
+            auto* m = fnc::__this;
+            fnc::__this = nullptr;
+            delete m;
+        }
 
-  void __main();
-}; // end struct __thisModule
+        void __main();
+    };    // end struct __thisModule
 
-} // namespace fnc
+}    // namespace fnc
 
 #endif

@@ -11,24 +11,28 @@
 #include <iostream>
 #line 1 "cond.chpl"
 namespace cond {
-extern struct __thisModule *__this;
+    extern struct __thisModule* __this;
 
-struct __thisModule {
-
+    struct __thisModule
+    {
 #line 38 "cond.chpl"
-  void alpha();
+        void alpha();
 
-  static void __construct() { cond::__this = new __thisModule(); }
+        static void __construct()
+        {
+            cond::__this = new __thisModule();
+        }
 
-  static void __destruct() noexcept {
-    auto *m = cond::__this;
-    cond::__this = nullptr;
-    delete m;
-  }
+        static void __destruct() noexcept
+        {
+            auto* m = cond::__this;
+            cond::__this = nullptr;
+            delete m;
+        }
 
-  void __main();
-}; // end struct __thisModule
+        void __main();
+    };    // end struct __thisModule
 
-} // namespace cond
+}    // namespace cond
 
 #endif
