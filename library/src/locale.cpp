@@ -12,7 +12,6 @@
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/modules/actions.hpp>
-#include <hpx/modules/format.hpp>
 #include <hpx/modules/naming_base.hpp>
 #include <hpx/modules/runtime_distributed.hpp>
 #include <hpx/modules/threadmanager.hpp>

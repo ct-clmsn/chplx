@@ -10,14 +10,12 @@
 
 namespace chplx {
 
-    // register startup/shutdown code for a module
-    template <typename Module>
-    struct registerModule
-    {
-        registerModule()
-        {
-            hpx::register_pre_startup_function(&Module::__construct);
-            hpx::register_pre_shutdown_function(&Module::__destruct);
-        }
-    };
-}    // namespace chplx
+// register startup/shutdown code for a module
+template <typename Module> struct registerModule {
+
+  registerModule() {
+    hpx::register_pre_startup_function(&Module::__construct);
+    hpx::register_pre_shutdown_function(&Module::__destruct);
+  }
+};
+} // namespace chplx
