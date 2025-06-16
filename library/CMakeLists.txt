@@ -115,6 +115,8 @@ endif()
 
 add_library(library STATIC ${chplx_library_sources} ${chplx_library_headers})
 
+set_property(TARGET library PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 target_link_libraries(library PRIVATE fmt::fmt-header-only HPX::hpx)
 
 target_include_directories(

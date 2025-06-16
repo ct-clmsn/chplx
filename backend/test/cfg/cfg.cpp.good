@@ -16,6 +16,17 @@ namespace cfg {
 #line 11 "cfg.chpl"
     std::int64_t d = 1;
 
-    void __thisModule::__main() {}
+    void __thisModule::__main()
+    {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
+
+        delete exec;
+    }
 
 }    // namespace cfg

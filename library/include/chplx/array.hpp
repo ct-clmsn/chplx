@@ -305,14 +305,14 @@ public:
 
   // Rank == 1
   explicit Array(std::vector<T> &&data)
-      : bounds(rangeType(0, data.size()-1)), array(std::move(data)) {}
+      : bounds(rangeType(0, data.size() - 1)), array(std::move(data)) {}
   Array(std::initializer_list<T> &&data)
-      : bounds(rangeType(0, data.size()-1)), array(std::move(data)) {}
+      : bounds(rangeType(0, data.size() - 1)), array(std::move(data)) {}
 
   Array(domain, std::vector<T> &&data)
-      : bounds(rangeType(0, data.size()-1)), array(std::move(data)) {}
+      : bounds(rangeType(0, data.size() - 1)), array(std::move(data)) {}
   Array(domain, std::initializer_list<T> &&data)
-      : bounds(rangeType(0, data.size()-1)), array(std::move(data)) {}
+      : bounds(rangeType(0, data.size() - 1)), array(std::move(data)) {}
 
   Array(Array const &rhs) = default;
   Array &operator=(Array const &rhs) = default;
@@ -491,8 +491,8 @@ Array(std::initializer_list<std::initializer_list<T>> &&)
 
 template <typename Domain, typename T>
   requires(isDomainType<Domain> && Domain::Rank == 2)
-Array(Domain, std::initializer_list<std::initializer_list<T>> &&)
-    -> Array<T, Domain>;
+Array(Domain,
+      std::initializer_list<std::initializer_list<T>> &&) -> Array<T, Domain>;
 
 template <typename T>
 Array(std::initializer_list<std::initializer_list<std::initializer_list<T>>> &&)

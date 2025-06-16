@@ -29,11 +29,11 @@ namespace fnc {
     };
 
 #line 15 "fnc.chpl"
-    void __thisModule::phi(chplx::Array<double, chplx::Domain<1>>& c) {};
+    void __thisModule::phi(chplx::Array<double, chplx::Domain<1>>& c){};
 
 #line 18 "fnc.chpl"
     void __thisModule::chai(chplx::Array<double, chplx::Domain<1>>& c,
-        chplx::Array<double, chplx::Domain<1>>& d) {};
+        chplx::Array<double, chplx::Domain<1>>& d){};
 
 #line 21 "fnc.chpl"
     auto __thisModule::betad(std::int64_t b)
@@ -44,6 +44,13 @@ namespace fnc {
 
     void __thisModule::__main()
     {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 5 "fnc.chpl"
         alpha();
 #line 25 "fnc.chpl"
@@ -54,6 +61,8 @@ namespace fnc {
         c = beta(c);
 #line 28 "fnc.chpl"
         c = betad(c);
+
+        delete exec;
     }
 
 }    // namespace fnc

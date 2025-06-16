@@ -25,7 +25,7 @@ template <typename T> class IndexBuffer;
 template <typename IndexType> class AssocDomain {
 
 public:
-  static constexpr int Rank = 1;    // for now, rank is always equal to one
+  static constexpr int Rank = 1; // for now, rank is always equal to one
 
   using idxType = IndexType;
 

@@ -336,6 +336,8 @@ def run_benchmarks(args):
                     env = os.environ.copy()
                     if "chapel" not in binary.lower():
                         cmd.append(f"--hpx:threads={t}")
+                        cmd.append("--chplx-fork-join-executor")
+                        cmd.append("--chplx-fork-join-executor-yield-delay=128")
                     else:
                         env["CHPL_RT_NUM_THREADS_PER_LOCALE"] = str(t)
                     if is_gups:

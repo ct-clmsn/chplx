@@ -14,6 +14,9 @@
 #include <mutex>
 #include <set>
 
+
+bool chplx_fork_join_executor = true;
+hpx::execution::experimental::fork_join_executor *exec = nullptr;
 //-----------------------------------------------------------------------------
 // helper for testing below
 namespace chplx {
@@ -121,14 +124,34 @@ template <typename... Args> void testForallLoopRanges(Args &&...args) {
 
 int main() {
 
-  testForallLoopRanges();
-  testForallLoopRanges(42);
+  chplx_fork_join_executor = true;
+  exec = new hpx::execution::experimental::fork_join_executor();
 
-  chplx::Sync<int> sy(42);
-  testForallLoopRanges(sy);
+  {
+    testForallLoopRanges();
+    testForallLoopRanges(42);
 
-  chplx::Single<int> si(42);
-  testForallLoopRanges(si);
+    chplx::Sync<int> sy(42);
+    testForallLoopRanges(sy);
+
+    chplx::Single<int> si(42);
+    testForallLoopRanges(si);
+  }
+
+  delete exec;
+
+  chplx_fork_join_executor = false;
+
+  {
+    testForallLoopRanges();
+    testForallLoopRanges(42);
+
+    chplx::Sync<int> sy(42);
+    testForallLoopRanges(sy);
+
+    chplx::Single<int> si(42);
+    testForallLoopRanges(si);
+  }
 
   return hpx::util::report_errors();
 }
