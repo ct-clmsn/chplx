@@ -41,7 +41,7 @@ find_package(HPX REQUIRED CONFIG)
 find_package(Chplx REQUIRED CONFIG)
 
 target_link_libraries({1} PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
-set(CMAKE_CXX_FLAGS "${2} -march=native -finline-limit=1000")
+set(CMAKE_CXX_FLAGS "${2} -march=native -finline-limit=1000 -flto")
 )";
 
 void CMakeGenerator::generate(std::filesystem::path const& p) {

@@ -26,4 +26,4 @@ find_package(HPX REQUIRED CONFIG)
 find_package(Chplx REQUIRED CONFIG)
 
 target_link_libraries(arr PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -finline-limit=1000")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -finline-limit=1000 -flto")
