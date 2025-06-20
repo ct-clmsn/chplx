@@ -4,6 +4,7 @@ import urllib.request
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 def download_text(url):
     """
@@ -32,6 +33,45 @@ def parse_manual(text):
     df["AverageTime"] = df["AverageTime"].astype(float)
     df["Stat2"]       = df["Stat2"].astype(float)
     return df
+
+
+def make_grouped_plots(pov, pnv, chapel, cpp, base, prefix):
+    """
+    Generate per-thread and per-element line plots for chapel vs cpp.
+    """
+    base_dir = f"{prefix}_{base}"
+    # create folders
+    for mode in ['old','new']:
+        if mode == 'old' or pnv is not None:
+            os.makedirs(f"{base_dir}/{mode}/threads", exist_ok=True)
+            os.makedirs(f"{base_dir}/{mode}/elements", exist_ok=True)
+
+    # per-thread
+    for mode, piv in [('old', pov), ('new', pnv)]:
+        if piv is None:
+            continue
+        for t in sorted(piv.index.get_level_values('Threads').unique()):
+            df_t = piv.xs(t, level='Threads')  # index=ParamValue
+            labels = [str(p) for p in df_t.index]
+            series = {chapel: df_t[chapel].tolist(), cpp: df_t[cpp].tolist()}
+            out = f"{base_dir}/{mode}/threads/T{t}.png"
+            make_line(labels, series,
+                      f"{base.upper()} {mode.upper()} - Threads={t}",
+                      "AverageTime (s)", out, actual=True)
+
+    # per-element
+    for mode, piv in [('old', pov), ('new', pnv)]:
+        if piv is None:
+            continue
+        for p in sorted(piv.index.get_level_values('ParamValue').unique()):
+            df_p = piv.xs(p, level='ParamValue')  # index=Threads
+            labels = [str(t) for t in df_p.index]
+            series = {chapel: df_p[chapel].tolist(), cpp: df_p[cpp].tolist()}
+            out = f"{base_dir}/{mode}/elements/P{p}.png"
+            make_line(labels, series,
+                      f"{base.upper()} {mode.upper()} - Param={p}",
+                      "AverageTime (s)", out, actual=True)
+
 
 def make_bar(labels, values, title, ylabel, outname):
     plt.figure(figsize=(12,5))
@@ -89,6 +129,8 @@ if __name__=="__main__":
     p.add_argument("--pattern")
     p.add_argument("--compare-variant", metavar='BASE')
     p.add_argument("--raw-line", action='store_true')
+    p.add_argument("--grouped-plots", action='store_true',
+                   help="Generate per-thread and per-element grouped line plots")
     args = p.parse_args()
 
     txt_old = download_text(args.old_url)
@@ -111,6 +153,17 @@ if __name__=="__main__":
         pivot = dfv.pivot(index=['Threads','ParamValue'], columns='Binary', values='AverageTime')
         return pivot, chapel, cpp
 
+    if args.grouped_plots:
+        txt_new = download_text(args.new_url)
+        base = args.compare_variant
+        # OLD variant
+        pov, _, cpp = prep_variant(df_old, base, 'old')
+        chapel = f"{base}_chapel"
+        df_new = parse_manual(txt_new)
+        pnv, _, _ = prep_variant(df_new, base, 'new')
+        make_grouped_plots(pov.sort_index(), pnv.sort_index(), chapel, cpp, base, args.output_prefix)
+        exit(0)
+        
     # variant mode
     if args.compare_variant:
         base = args.compare_variant
