@@ -56,8 +56,8 @@ if(CHPLX_WITH_FETCH_HPX)
     execute_process(
       COMMAND ./configure
               --prefix=${JEMALLOC_INSTALL_DIR}
-              --disable-shared    # static-only; drop if you want .so
-              --enable-static
+              --enable-shared
+              --disable-static
       WORKING_DIRECTORY ${jemalloc_SOURCE_DIR}
       OUTPUT_QUIET
     )
@@ -71,12 +71,14 @@ if(CHPLX_WITH_FETCH_HPX)
       WORKING_DIRECTORY ${jemalloc_SOURCE_DIR}
       OUTPUT_QUIET
     )
+
+    set(jemalloc_POPULATED ON CACHE BOOL "set it to prevent building again")
+    set(Jemalloc_ROOT ${JEMALLOC_INSTALL_DIR} CACHE PATH "Path for Jemalloc")
   endif()
 
   # Tell CMake to look in our staging area for find_package()
   list(APPEND CMAKE_PREFIX_PATH "${JEMALLOC_INSTALL_DIR}")
 
-  set(Jemalloc_ROOT ${JEMALLOC_INSTALL_DIR})
 
   FetchContent_Declare(hpx
     GIT_REPOSITORY ${hpx_repository}

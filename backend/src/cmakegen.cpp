@@ -62,7 +62,7 @@ endif()
 
 target_link_libraries({1} PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} ${MARCH_FLAG} ${INLINE_LIMIT_FLAG} -flto")
+    "${2} ${3} ${4} -flto")
 )";
 
 void CMakeGenerator::generate(std::filesystem::path const& p) {
@@ -125,5 +125,5 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
 
     std::filesystem::path opath = chplx::util::output_path / "CMakeLists.txt";
     std::ofstream ofs(opath.string());
-    ofs << fmt::format(CMakeListsTemplate, cppfilename, cppprefix, "{CMAKE_CXX_FLAGS}");
+    ofs << fmt::format(CMakeListsTemplate, cppfilename, cppprefix, "{CMAKE_CXX_FLAGS}", "{MARCH_FLAG}", "{INLINE_LIMIT_FLAG}");
 }

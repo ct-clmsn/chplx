@@ -759,6 +759,8 @@ def main():
     
     if not args.enable_riscv:
         cmake_args.append("-DHPX_WITH_MALLOC=jemalloc")
+    else:
+        cmake_args.append("-DHPX_WITH_MALLOC=system")
 
     if args.cc_path:
         cc_compiler_path = args.cc_path.replace("\\", "/")
