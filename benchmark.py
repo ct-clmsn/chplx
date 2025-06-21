@@ -268,7 +268,11 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
             cmd.append(f"export CHPL_HOME={chapel_dir}")
         else:
             cmd.append(f"set CHPL_HOME={chapel_dir}")
-        cmd.append(f"{chapel_compiler_path} {full_path} -o {output_dir} --fast")
+        cmd.append(f"{chapel_compiler_path} {full_path} -o {output_dir}")
+        if args.enable_riscv:
+            cmd[-1] += " --no-checks -O --ccflags \"-march=rv64g\""
+        else:
+            cmd[-1] += "--fast"
         full_script = "\n".join(cmd)
         logging.info(f"Executing: {full_script}")
         if execute_shell_string(full_script, platform_name) != 0:
