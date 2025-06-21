@@ -546,7 +546,10 @@ def build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args):
             shell_lines.append(f"export CHPL_GMP=bundled")
         shell_lines.append(f"export CHPL_HWLOC=bundled")
         shell_lines.append(f"export CHPL_RE2=bundled")
-        shell_lines.append(f"export CHPL_LLVM=system")
+        if args.enable_riscv:
+            shell_lines.append(f"export CHPL_LLVM=none")
+        else:
+            shell_lines.append(f"export CHPL_LLVM=system")
         shell_lines.append(f"export CHPL_AUX_FILESYS=none")
         shell_lines.append(f"export CHPL_CMAKE_PYTHON={sys.executable}")
         shell_lines.append(f"{chapel_dir}/util/printchplenv --all --internal")
