@@ -36,7 +36,7 @@ void forall_fkj(Tuple &t, F &&f, Args &&...args) {
 
   using base_tuple = typename Tuple::base_type;
   if constexpr (std::tuple_size_v<base_tuple> != 0) {
-
+    HPX_ASSERT(exec != nullptr);
     if constexpr (Tuple::isHomogenous()) {
 
       hpx::ranges::for_each(
@@ -125,6 +125,7 @@ template <typename T, BoundedRangeType BoundedType, bool Stridable, typename F,
           typename... Args>
 void forall(Range<T, BoundedType, Stridable> const &r, F &&f, Args &&...args) {
   if (chplx_fork_join_executor) {
+    HPX_ASSERT(exec != nullptr);
     hpx::ranges::experimental::for_loop(
         hpx::execution::par.on(*exec), detail::IteratorGenerator(r),
         [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
@@ -147,6 +148,7 @@ template <typename T, typename F, typename... Args>
 void forall(Range<T, BoundedRangeType::bounded, false> const &r, F &&f,
             Args &&...args) {
   if (chplx_fork_join_executor) {
+    HPX_ASSERT(exec != nullptr);
     hpx::ranges::experimental::for_loop(
         hpx::execution::par.on(*exec), r.these(),
         [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
@@ -171,6 +173,7 @@ void forall(Range<T, BoundedRangeType::bounded, false> const &r, F &&f,
 template <int N, typename T, bool Stridable, typename F, typename... Args>
 void forall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
   if (chplx_fork_join_executor) {
+    HPX_ASSERT(exec != nullptr);
     hpx::ranges::experimental::for_loop(
         hpx::execution::par.on(*exec), detail::IteratorGenerator(d),
         [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
@@ -192,6 +195,7 @@ void forall(Domain<N, T, Stridable> const &d, F &&f, Args &&...args) {
 template <typename Idx, typename F, typename... Args>
 void forall(Domain<1, Idx, false> const &d, F &&f, Args &&...args) {
   if (chplx_fork_join_executor) {
+    HPX_ASSERT(exec != nullptr);
     hpx::ranges::experimental::for_loop(
         hpx::execution::par.on(*exec), d.these(),
         [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
@@ -216,6 +220,7 @@ template <typename T, typename F, typename... Args>
 void forall(AssocDomain<T> const &d, F &&f, Args &&...args) {
 
   if (chplx_fork_join_executor) {
+    HPX_ASSERT(exec != nullptr);
     hpx::ranges::experimental::for_loop(
         hpx::execution::par.on(*exec),
         detail::IteratorGenerator(d, 0, d.size()),
@@ -241,6 +246,7 @@ void forall(AssocDomain<T> const &d, F &&f, Args &&...args) {
 template <typename... Rs, typename F, typename... Args>
 void forall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
   if (chplx_fork_join_executor) {
+    HPX_ASSERT(exec != nullptr);
     hpx::ranges::experimental::for_loop(
         hpx::execution::par.on(*exec), detail::IteratorGenerator(zr),
         [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
@@ -265,6 +271,7 @@ void forall(detail::ZipRange<Rs...> const &zr, F &&f, Args &&...args) {
 template <typename T, typename Domain, typename F, typename... Args>
 void forall(Array<T, Domain> const &a, F &&f, Args &&...args) {
   if (chplx_fork_join_executor) {
+    HPX_ASSERT(exec != nullptr);
     hpx::ranges::experimental::for_loop(
         hpx::execution::par.on(*exec), detail::IteratorGenerator(a),
         [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
@@ -288,6 +295,7 @@ void forall(Array<T, Domain> const &a, F &&f, Args &&...args) {
 template <typename T, typename F, typename... Args>
 void forall(Array<T, Domain<1>> const &a, F &&f, Args &&...args) {
   if (chplx_fork_join_executor) {
+    HPX_ASSERT(exec != nullptr);
     hpx::ranges::experimental::for_loop(
         hpx::execution::par.on(*exec), a.these(),
         [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
