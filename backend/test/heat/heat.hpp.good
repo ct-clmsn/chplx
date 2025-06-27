@@ -9,6 +9,9 @@
 #include <chplx.hpp>
 #include <functional>
 #include <iostream>
+extern bool chplx_fork_join_executor;
+extern int chplx_fork_join_executor_yield_delay;
+extern hpx::execution::experimental::fork_join_executor* exec;
 #line 1 "heat.chpl"
 namespace heat {
     extern struct __thisModule* __this;

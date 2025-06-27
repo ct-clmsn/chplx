@@ -240,9 +240,11 @@ Domain(Tuple<R, Rs...>) -> Domain<static_cast<int>(sizeof...(Rs) + 1),
 
 template <typename R, typename... Rs, int N, typename IndexType, bool Stridable>
   requires(isRangeType<R> && (isRangeType<Rs> && ...) && sizeof...(Rs) + 1 == N)
-Domain(Tuple<R, Rs...>, dmapBase<N, IndexType, Stridable>) -> Domain<
-    N, std::common_type_t<IndexType, detail::common_range_index_t<R, Rs...>>,
-    Stridable || detail::common_stridable_v<R, Rs...>>;
+Domain(Tuple<R, Rs...>, dmapBase<N, IndexType, Stridable>)
+    -> Domain<
+        N,
+        std::common_type_t<IndexType, detail::common_range_index_t<R, Rs...>>,
+        Stridable || detail::common_stridable_v<R, Rs...>>;
 
 template <typename R, typename... Rs>
   requires(isRangeType<R> && (isRangeType<Rs> && ...))

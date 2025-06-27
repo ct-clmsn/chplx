@@ -32,6 +32,54 @@ set(HPX_WITH_CXX20 ON CACHE BOOL "")
 set(hpx_repository https://github.com/STEllAR-GROUP/hpx.git CACHE STRING "URL for hpx")
 
 if(CHPLX_WITH_FETCH_HPX)
+  FetchContent_Declare(
+    jemalloc
+    GIT_REPOSITORY https://github.com/jemalloc/jemalloc.git
+    GIT_TAG        5.3.0
+  )
+
+  # 2) Populate & build/install via Autotools at configure time
+  FetchContent_GetProperties(jemalloc)
+  if(NOT jemalloc_POPULATED)
+    FetchContent_Populate(jemalloc)
+
+    # where we'll stage the install
+    set(JEMALLOC_INSTALL_DIR ${CMAKE_BINARY_DIR}/_deps/jemalloc-install)
+    file(MAKE_DIRECTORY ${JEMALLOC_INSTALL_DIR})
+
+    # run autogen/configure/make/install
+    execute_process(
+      COMMAND ${jemalloc_SOURCE_DIR}/autogen.sh
+      WORKING_DIRECTORY ${jemalloc_SOURCE_DIR}
+      OUTPUT_QUIET
+    )
+    execute_process(
+      COMMAND ./configure
+              --prefix=${JEMALLOC_INSTALL_DIR}
+              --enable-shared
+              --disable-static
+      WORKING_DIRECTORY ${jemalloc_SOURCE_DIR}
+      OUTPUT_QUIET
+    )
+    execute_process(
+      COMMAND make -j       # or make -j${CMAKE_BUILD_PARALLEL_LEVEL}
+      WORKING_DIRECTORY ${jemalloc_SOURCE_DIR}
+      OUTPUT_QUIET
+    )
+    execute_process(
+      COMMAND make install
+      WORKING_DIRECTORY ${jemalloc_SOURCE_DIR}
+      OUTPUT_QUIET
+    )
+
+    set(jemalloc_POPULATED ON CACHE BOOL "set it to prevent building again")
+    set(Jemalloc_ROOT ${JEMALLOC_INSTALL_DIR} CACHE PATH "Path for Jemalloc")
+  endif()
+
+  # Tell CMake to look in our staging area for find_package()
+  list(APPEND CMAKE_PREFIX_PATH "${JEMALLOC_INSTALL_DIR}")
+
+
   FetchContent_Declare(hpx
     GIT_REPOSITORY ${hpx_repository}
     GIT_TAG master
@@ -43,7 +91,8 @@ if(CHPLX_WITH_FETCH_HPX)
   set(HPX_WITH_FETCH_HWLOC ON CACHE BOOL "FETCH HWLOC for HPX")
   set(HPX_WITH_EXAMPLES OFF CACHE BOOL "Examples for HPX")
   set(HPX_WITH_TESTS OFF CACHE BOOL "Tests for HPX")
-  set(HPX_WITH_MALLOC system CACHE STRING "Malloc type for HPX") 
+  set(HPX_WITH_MALLOC jemalloc CACHE STRING "Malloc type for HPX")
+ 
   if (CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
     set(HPX_WITH_GENERIC_CONTEXT_COROUTINES ON CACHE BOOL "Enable generic context coroutines on AArch64" FORCE)
     message(STATUS "HPX_WITH_GENERIC_CONTEXT_COROUTINES: ON")
@@ -114,6 +163,8 @@ if(MSVC)
 endif()
 
 add_library(library STATIC ${chplx_library_sources} ${chplx_library_headers})
+
+set_property(TARGET library PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(library PRIVATE fmt::fmt-header-only HPX::hpx)
 

@@ -14,6 +14,10 @@
 #include <mutex>
 #include <set>
 
+bool chplx_fork_join_executor = true;
+hpx::execution::experimental::fork_join_executor *exec = nullptr;
+
+
 template <typename T, typename Domain>
 void testForallLoopArray(chplx::Array<T, Domain> d) {
 
@@ -190,6 +194,36 @@ void testForallLoopArrays4D(chplx::Tuple<Rs...> r) {
 }
 
 int main() {
+  chplx_fork_join_executor = true;
+  exec = new hpx::execution::experimental::fork_join_executor();
+
+  {
+    auto constexpr r1 = chplx::Range(0, 10);
+    auto constexpr r2 = chplx::BoundedRange<int, true>(0, 10, -1);
+    auto constexpr r3 = chplx::BoundedRange<int, true>(0, 10, 2);
+    auto constexpr r4 = chplx::BoundedRange<int, true>(0, 10, -2);
+
+    testForallLoopArrays1D<double>(chplx::Tuple(r1, r2, r3, r4));
+    testForallLoopArrays2D<double>(chplx::Tuple(r1, r2, r3, r4));
+    testForallLoopArrays3D<double>(chplx::Tuple(r1, r2, r3, r4));
+    testForallLoopArrays4D<double>(chplx::Tuple(r1, r2, r3, r4));
+  }
+
+  {
+    auto constexpr r1 = chplx::Range(1, 9);
+    auto constexpr r2 = chplx::BoundedRange<int, true>(1, 9, -1);
+    auto constexpr r3 = chplx::BoundedRange<int, true>(1, 9, 2);
+    auto constexpr r4 = chplx::BoundedRange<int, true>(1, 9, -2);
+
+    testForallLoopArrays1D<int>(chplx::Tuple(r1, r2, r3, r4));
+    testForallLoopArrays2D<int>(chplx::Tuple(r1, r2, r3, r4));
+    testForallLoopArrays3D<int>(chplx::Tuple(r1, r2, r3, r4));
+    testForallLoopArrays4D<int>(chplx::Tuple(r1, r2, r3, r4));
+  }
+
+  delete exec;
+
+  chplx_fork_join_executor = false;
 
   {
     auto constexpr r1 = chplx::Range(0, 10);

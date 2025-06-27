@@ -17,10 +17,10 @@ namespace heat {
         chplx::forall(chplx::Range{1, NX - 1}, [&](auto i) {
 #line 30 "heat.chpl"
             d2(i) = d(i) +
-                (((dt * k) / (dx * dx)) * ((d(1 + i) + d(1 - i)) - (2 * d(i))));
+                (((dt * k) / (dx * dx)) * ((d(i + 1) + d(i - 1)) - (2 * d(i))));
         });
 #line 32 "heat.chpl"
-        d2(0) = d2(1 - NX);
+        d2(0) = d2(NX - 1);
 #line 33 "heat.chpl"
         d2(NX) = d2(1);
     };
@@ -42,6 +42,13 @@ namespace heat {
 
     void __thisModule::__main()
     {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 38 "heat.chpl"
         auto NX = nx + 1;
 #line 40 "heat.chpl"
@@ -68,6 +75,8 @@ namespace heat {
         std::cout << "chapelng," << nx << "," << nt << ","
                   << hpx::resource::get_num_threads() << "," << dt << "," << dx
                   << "," << elapsed << ",0";
+
+        delete exec;
     }
 
 }    // namespace heat

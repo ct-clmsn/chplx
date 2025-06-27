@@ -268,7 +268,11 @@ def build_chplx_benchmarks(cxx_compiler_path, platform_name, chplx_binary, args)
             cmd.append(f"export CHPL_HOME={chapel_dir}")
         else:
             cmd.append(f"set CHPL_HOME={chapel_dir}")
-        cmd.append(f"{chapel_compiler_path} {full_path} -o {output_dir} --fast")
+        cmd.append(f"{chapel_compiler_path} {full_path} -o {output_dir}")
+        if args.enable_riscv:
+            cmd[-1] += " --no-checks -O --ccflags \"-march=rv64g\""
+        else:
+            cmd[-1] += "--fast"
         full_script = "\n".join(cmd)
         logging.info(f"Executing: {full_script}")
         if execute_shell_string(full_script, platform_name) != 0:
@@ -336,6 +340,8 @@ def run_benchmarks(args):
                     env = os.environ.copy()
                     if "chapel" not in binary.lower():
                         cmd.append(f"--hpx:threads={t}")
+                        cmd.append("--chplx-fork-join-executor")
+                        cmd.append("--chplx-fork-join-executor-yield-delay=128")
                     else:
                         env["CHPL_RT_NUM_THREADS_PER_LOCALE"] = str(t)
                     if is_gups:
@@ -358,6 +364,8 @@ def run_benchmarks(args):
                         env = os.environ.copy()
                         if "chapel" not in binary.lower():
                             cmd.append(f"--hpx:threads={t}")
+                            cmd.append("--chplx-fork-join-executor")
+                            cmd.append("--chplx-fork-join-executor-yield-delay=128")
                         else:
                             env["CHPL_RT_NUM_THREADS_PER_LOCALE"] = str(t)
                         if is_gups:
@@ -524,16 +532,28 @@ def build_chapel(platform_name, cxx_compiler_path, cc_compiler_path, args):
         shell_lines.append(f"export CHPL_TARGET_CPU=native")
         shell_lines.append(f"export CHPL_LOCALE_MODEL=flat")  # flat/gpu
         shell_lines.append(f"export CHPL_COMM=none")  # currently single locale
-        shell_lines.append(f"export CHPL_TASKS=qthreads")  # fifo/qthreads
+        if args.enable_riscv:
+            shell_lines.append(f"export CHPL_TASKS=fifo")  # fifo/qthreads
+        else:
+            shell_lines.append(f"export CHPL_TASKS=qthreads")  # fifo/qthreads
         shell_lines.append(f"export CHPL_LAUNCHER=none")
         shell_lines.append(f"export CHPL_TIMERS=generic")
         shell_lines.append(f"export CHPL_UNWIND=none")  # disabled stack tracing
-        shell_lines.append(f"export CHPL_MEM=jemalloc")  # cstdlib / jemalloc
+        if args.enable_riscv:
+            shell_lines.append(f"export CHPL_MEM=cstdlib")  # cstdlib / jemalloc
+        else:
+            shell_lines.append(f"export CHPL_MEM=jemalloc")  # cstdlib / jemalloc
         shell_lines.append(f"export CHPL_ATOMICS=cstdlib")
-        shell_lines.append(f"export CHPL_GMP=bundled")
+        if args.enable_riscv:
+            shell_lines.append(f"export CHPL_GMP=none")
+        else:
+            shell_lines.append(f"export CHPL_GMP=bundled")
         shell_lines.append(f"export CHPL_HWLOC=bundled")
         shell_lines.append(f"export CHPL_RE2=bundled")
-        shell_lines.append(f"export CHPL_LLVM=system")
+        if args.enable_riscv:
+            shell_lines.append(f"export CHPL_LLVM=none")
+        else:
+            shell_lines.append(f"export CHPL_LLVM=system")
         shell_lines.append(f"export CHPL_AUX_FILESYS=none")
         shell_lines.append(f"export CHPL_CMAKE_PYTHON={sys.executable}")
         shell_lines.append(f"{chapel_dir}/util/printchplenv --all --internal")
@@ -639,6 +659,11 @@ def main():
         help="If set, builds only the benchmarks in benchmarks directory",
     )
     parser.add_argument(
+        "--enable-riscv",
+        action="store_true",
+        help="If set, changes some configs for chapel",
+    )
+    parser.add_argument(
         "--run-benchmarks-only",
         action="store_true",
         help="If set, runs only the benchmarks in benchmarks directory",
@@ -738,6 +763,11 @@ def main():
         f"-DCMAKE_BUILD_TYPE={args.build_type}",
         f"-DCMAKE_INSTALL_PREFIX={args.cmake_prefix}",
     ]
+    
+    if not args.enable_riscv:
+        cmake_args.append("-DHPX_WITH_MALLOC=jemalloc")
+    else:
+        cmake_args.append("-DHPX_WITH_MALLOC=system")
 
     if args.cc_path:
         cc_compiler_path = args.cc_path.replace("\\", "/")

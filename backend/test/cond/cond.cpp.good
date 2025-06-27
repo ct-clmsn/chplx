@@ -22,6 +22,13 @@ namespace cond {
 
     void __thisModule::__main()
     {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 8 "cond.chpl"
         std::int64_t a = 1;
 #line 10 "cond.chpl"
@@ -70,6 +77,8 @@ namespace cond {
 #line 35 "cond.chpl"
             std::cout << c << std::endl;
         }
+
+        delete exec;
     }
 
 }    // namespace cond

@@ -26,6 +26,13 @@ namespace forall {
 
     void __thisModule::__main()
     {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 8 "forall.chpl"
         const std::int64_t N = 10;
 #line 10 "forall.chpl"
@@ -98,6 +105,8 @@ namespace forall {
 #line 68 "forall.chpl"
             std::cout << C(i) << std::endl;
         });
+
+        delete exec;
     }
 
 }    // namespace forall

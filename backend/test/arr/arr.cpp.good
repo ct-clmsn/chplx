@@ -16,6 +16,13 @@ namespace arr {
 
     void __thisModule::__main()
     {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 8 "arr.chpl"
         chplx::Array<std::int64_t, chplx::Domain<1>> k({1, 2, 3, 4, 5});
 #line 9 "arr.chpl"
@@ -81,6 +88,8 @@ namespace arr {
         aaa(zz) = aaa(zz);
 #line 49 "arr.chpl"
         aaa(zz) = aaa(zz);
+
+        delete exec;
     }
 
 }    // namespace arr

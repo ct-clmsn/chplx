@@ -41,8 +41,8 @@ template <typename Target>
 IteratorGenerator(Target &&target) -> IteratorGenerator<std::decay_t<Target>>;
 
 template <typename Target>
-IteratorGenerator(Target &&target, std::size_t, std::size_t)
-    -> IteratorGenerator<std::decay_t<Target>>;
+IteratorGenerator(Target &&target, std::size_t,
+                  std::size_t) -> IteratorGenerator<std::decay_t<Target>>;
 
 //-----------------------------------------------------------------------------
 template <typename R>

@@ -30,6 +30,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag("-march=native" HAS_MARCH_NATIVE)
+
 if(NOT Chplx_DIR)
   message(FATAL_ERROR "Chplx_DIR variable undefined")
 endif()
@@ -40,8 +43,26 @@ find_package(fmt REQUIRED CONFIG)
 find_package(HPX REQUIRED CONFIG)
 find_package(Chplx REQUIRED CONFIG)
 
+# pick the right “inline‐limit” flag
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(INLINE_LIMIT_FLAG "-finline-limit=1000")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  # clang uses an LLVM pass‐through flag
+  set(INLINE_LIMIT_FLAG "-mllvm" "-inline-threshold=1000")
+else()
+  set(INLINE_LIMIT_FLAG "")
+endif()
+
+# only pass -march=native if supported
+if (HAS_MARCH_NATIVE)
+  set(MARCH_FLAG "-march=native")
+else()
+  set(MARCH_FLAG "")
+endif()
+
 target_link_libraries({1} PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
-set(CMAKE_CXX_FLAGS "${2} -march=native -finline-limit=1000")
+set(CMAKE_CXX_FLAGS
+    "${2} ${3} ${4} -flto")
 )";
 
 void CMakeGenerator::generate(std::filesystem::path const& p) {
@@ -104,5 +125,5 @@ void CMakeGenerator::generate(std::filesystem::path const& p) {
 
     std::filesystem::path opath = chplx::util::output_path / "CMakeLists.txt";
     std::ofstream ofs(opath.string());
-    ofs << fmt::format(CMakeListsTemplate, cppfilename, cppprefix, "{CMAKE_CXX_FLAGS}");
+    ofs << fmt::format(CMakeListsTemplate, cppfilename, cppprefix, "{CMAKE_CXX_FLAGS}", "{MARCH_FLAG}", "{INLINE_LIMIT_FLAG}");
 }

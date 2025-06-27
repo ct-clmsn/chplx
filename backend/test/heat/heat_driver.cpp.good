@@ -6,6 +6,10 @@
 
 #include "heat_driver.hpp"
 
+bool chplx_fork_join_executor = false;
+
+hpx::execution::experimental::fork_join_executor* exec = nullptr;
+int chplx_fork_join_executor_yield_delay = 100;    //ns
 using namespace heat;
 
 int hpx_main(int argc, char* argv[])
@@ -17,8 +21,16 @@ int hpx_main(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
     chplx::registerModule<heat::__thisModule>();
+    bool help = false;
     hpx::program_options::options_description options;
-    options.add_options()("ghosts", hpx::program_options::value(&heat::ghosts),
+    options.add_options()("help", hpx::program_options::bool_switch(&help),
+        "config var help: bool")("chplx-fork-join-executor",
+        hpx::program_options::bool_switch(&::chplx_fork_join_executor),
+        "config var chplx_fork_join : bool")(
+        "chplx-fork-join-executor-yield-delay",
+        hpx::program_options::value(&::chplx_fork_join_executor_yield_delay),
+        "config var chplx_fork_join_yield_delay : int")("ghosts",
+        hpx::program_options::value(&heat::ghosts),
         "config const ghosts : std::int64_t")("k",
         hpx::program_options::value(&heat::k),
         "config const k : double")("dt", hpx::program_options::value(&heat::dt),
@@ -32,5 +44,17 @@ int main(int argc, char* argv[])
         "config const threads : std::int64_t");
     hpx::init_params init_args;
     init_args.desc_cmdline = options;
+    hpx::program_options::variables_map vm;
+    auto parser = hpx::program_options::command_line_parser(argc, argv)
+                      .options(options)
+                      .allow_unregistered()
+                      .run();
+    hpx::program_options::store(parser, vm);
+    hpx::program_options::notify(vm);
+    if (help)
+    {
+        std::cout << options << std::endl;
+        return 1;
+    }
     return hpx::init(argc, argv, init_args);
 }

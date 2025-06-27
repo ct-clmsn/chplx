@@ -34,6 +34,13 @@ namespace expr {
 
     void __thisModule::__main()
     {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 8 "expr.chpl"
         auto a = 1 + 1;
 #line 9 "expr.chpl"
@@ -190,6 +197,8 @@ namespace expr {
         auto w = valuea(a);
 #line 104 "expr.chpl"
         auto u = valuea(1);
+
+        delete exec;
     }
 
 }    // namespace expr
