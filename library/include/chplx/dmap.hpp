@@ -192,7 +192,7 @@ public:
     return derived().dsiDisplayRepresentation();
   }
 
-  // Return whether or not the two domain maps are "equal" (specify the same
+  // Return whether the two domain maps are "equal" (specify the same
   // distribution). This is invoked when == is applied to two domain maps.
   bool equalDMaps(GlobalDistribution const &rhs) {
     return derived().dsiEqualDMaps(rhs.derived());

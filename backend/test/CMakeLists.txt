@@ -26,6 +26,7 @@ set(tests
     fnc
     forall
     tup
+    heat
 )
 
 foreach(test ${tests})
@@ -33,8 +34,8 @@ foreach(test ${tests})
 
   if(CLANGFORMAT_FOUND)
     chplx_format_file(
-      ${test} SOURCES ${test}.cpp ${test}.hpp ${test}_driver.cpp
-                      ${test}_driver.hpp
+      ${test}
+      SOURCES ${test}.cpp ${test}.hpp ${test}_driver.cpp ${test}_driver.hpp
     )
   endif()
 

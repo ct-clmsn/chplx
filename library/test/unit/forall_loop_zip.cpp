@@ -14,6 +14,10 @@
 #include <mutex>
 #include <set>
 
+
+bool chplx_fork_join_executor = true;
+hpx::execution::experimental::fork_join_executor *exec = nullptr;
+
 template <typename... Rs> void testForallLoopZip(Rs &&...rs) {
 
   std::size_t count = 0;
@@ -42,31 +46,68 @@ template <typename... Rs> void testForallLoopZip(Rs &&...rs) {
 
 int main() {
 
-  testForallLoopZip(chplx::Range(0, 10));
-  testForallLoopZip(chplx::Range(0, 10), chplx::Range(0, 10));
-  testForallLoopZip(chplx::Range(0, 10), chplx::Range(0, 10),
-                    chplx::Range(0, 10));
+  chplx_fork_join_executor = true;
+  exec = new hpx::execution::experimental::fork_join_executor();
 
-  testForallLoopZip(chplx::BoundedRange<int, true>(0, 10, 2),
-                    chplx::Range(0, 10));
-  testForallLoopZip(chplx::Range(0, 10, chplx::BoundsCategoryType::Open),
-                    chplx::Range(0, 10));
-  testForallLoopZip(
-      chplx::BoundedRange<int, true>(0, 10, 2, chplx::BoundsCategoryType::Open),
-      chplx::Range(0, 10));
+  {
+    testForallLoopZip(chplx::Range(0, 10));
+    testForallLoopZip(chplx::Range(0, 10), chplx::Range(0, 10));
+    testForallLoopZip(chplx::Range(0, 10), chplx::Range(0, 10),
+                      chplx::Range(0, 10));
 
-  testForallLoopZip(chplx::Range(1, 0), chplx::Range(0, 10));
+    testForallLoopZip(chplx::BoundedRange<int, true>(0, 10, 2),
+                      chplx::Range(0, 10));
+    testForallLoopZip(chplx::Range(0, 10, chplx::BoundsCategoryType::Open),
+                      chplx::Range(0, 10));
+    testForallLoopZip(chplx::BoundedRange<int, true>(
+                          0, 10, 2, chplx::BoundsCategoryType::Open),
+                      chplx::Range(0, 10));
 
-  testForallLoopZip(chplx::BoundedRange<int, true>(1, 9, 2),
-                    chplx::Range(0, 10));
-  testForallLoopZip(
-      chplx::BoundedRange<int, true>(1, 9, 2, chplx::BoundsCategoryType::Open),
-      chplx::Range(0, 10));
+    testForallLoopZip(chplx::Range(1, 0), chplx::Range(0, 10));
 
-  testForallLoopZip(by(chplx::BoundedRange<int, true>(1, 10), -1),
-                    chplx::Range(0, 10));
-  testForallLoopZip(by(chplx::BoundedRange<int, true>(1, 10), -2),
-                    chplx::Range(0, 10));
+    testForallLoopZip(chplx::BoundedRange<int, true>(1, 9, 2),
+                      chplx::Range(0, 10));
+    testForallLoopZip(chplx::BoundedRange<int, true>(
+                          1, 9, 2, chplx::BoundsCategoryType::Open),
+                      chplx::Range(0, 10));
+
+    testForallLoopZip(by(chplx::BoundedRange<int, true>(1, 10), -1),
+                      chplx::Range(0, 10));
+    testForallLoopZip(by(chplx::BoundedRange<int, true>(1, 10), -2),
+                      chplx::Range(0, 10));
+  }
+
+  delete exec;
+
+  chplx_fork_join_executor = false;
+
+  {
+    testForallLoopZip(chplx::Range(0, 10));
+    testForallLoopZip(chplx::Range(0, 10), chplx::Range(0, 10));
+    testForallLoopZip(chplx::Range(0, 10), chplx::Range(0, 10),
+                      chplx::Range(0, 10));
+
+    testForallLoopZip(chplx::BoundedRange<int, true>(0, 10, 2),
+                      chplx::Range(0, 10));
+    testForallLoopZip(chplx::Range(0, 10, chplx::BoundsCategoryType::Open),
+                      chplx::Range(0, 10));
+    testForallLoopZip(chplx::BoundedRange<int, true>(
+                          0, 10, 2, chplx::BoundsCategoryType::Open),
+                      chplx::Range(0, 10));
+
+    testForallLoopZip(chplx::Range(1, 0), chplx::Range(0, 10));
+
+    testForallLoopZip(chplx::BoundedRange<int, true>(1, 9, 2),
+                      chplx::Range(0, 10));
+    testForallLoopZip(chplx::BoundedRange<int, true>(
+                          1, 9, 2, chplx::BoundsCategoryType::Open),
+                      chplx::Range(0, 10));
+
+    testForallLoopZip(by(chplx::BoundedRange<int, true>(1, 10), -1),
+                      chplx::Range(0, 10));
+    testForallLoopZip(by(chplx::BoundedRange<int, true>(1, 10), -2),
+                      chplx::Range(0, 10));
+  }
 
   return hpx::util::report_errors();
 }

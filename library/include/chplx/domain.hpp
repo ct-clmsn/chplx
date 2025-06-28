@@ -30,11 +30,10 @@ template <int N, typename IndexType, bool Stridable> class Domain {
 
   static_assert(N > 0, "the domains rank should be positive");
 
-  using rangeType = BoundedRange<IndexType, Stridable>;
-
 public:
   static constexpr int Rank = N;
 
+  using rangeType = BoundedRange<IndexType, Stridable>;
   using indexType = detail::generate_tuple_type_t<N, IndexType>;
   using indicesType = detail::generate_tuple_type_t<N, rangeType>;
 
@@ -146,19 +145,19 @@ public:
   // Return true if the domain has no indices.
   [[nodiscard]] constexpr bool isEmpty() const noexcept { return size() == 0; }
 
-  // Return true if this domain is a rectangular. Otherwise return false.
+  // Return true if this domain is a rectangular. Otherwise, return false.
   [[nodiscard]] static constexpr bool isRectangular() noexcept { return true; }
 
-  // Return true if d is an irregular domain; e.g. is not rectangular. Otherwise
-  // return false.
+  // Return true if d is an irregular domain; e.g. is not rectangular.
+  // Otherwise, return false.
   [[nodiscard]] static constexpr bool isIrregular() noexcept {
     return !isRectangular();
   }
 
-  // Return true if d is an associative domain. Otherwise return false.
+  // Return true if d is an associative domain. Otherwise, return false.
   [[nodiscard]] static constexpr bool isAssociative() noexcept { return false; }
 
-  // Return true if d is a sparse domain. Otherwise return false.
+  // Return true if d is a sparse domain. Otherwise, return false.
   [[nodiscard]] static constexpr bool isSparse() noexcept { return false; }
 
   [[nodiscard]] static constexpr int rank() noexcept { return N; }
@@ -241,9 +240,11 @@ Domain(Tuple<R, Rs...>) -> Domain<static_cast<int>(sizeof...(Rs) + 1),
 
 template <typename R, typename... Rs, int N, typename IndexType, bool Stridable>
   requires(isRangeType<R> && (isRangeType<Rs> && ...) && sizeof...(Rs) + 1 == N)
-Domain(Tuple<R, Rs...>, dmapBase<N, IndexType, Stridable>) -> Domain<
-    N, std::common_type_t<IndexType, detail::common_range_index_t<R, Rs...>>,
-    Stridable || detail::common_stridable_v<R, Rs...>>;
+Domain(Tuple<R, Rs...>, dmapBase<N, IndexType, Stridable>)
+    -> Domain<
+        N,
+        std::common_type_t<IndexType, detail::common_range_index_t<R, Rs...>>,
+        Stridable || detail::common_stridable_v<R, Rs...>>;
 
 template <typename R, typename... Rs>
   requires(isRangeType<R> && (isRangeType<Rs> && ...))

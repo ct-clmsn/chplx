@@ -14,6 +14,9 @@
 #include <tuple>
 #include <variant>
 
+bool chplx_fork_join_executor = true;
+hpx::execution::experimental::fork_join_executor *exec = nullptr;
+
 //-----------------------------------------------------------------------------
 // helper for testing below
 namespace chplx {
@@ -194,6 +197,35 @@ void testForallLoopTuple(T &&value, Ts... ts) {
 }
 
 int main() {
+
+  chplx_fork_join_executor = true;
+  exec = new hpx::execution::experimental::fork_join_executor();
+
+  {
+    testForallLoopHomogenousTuples(42, 42);
+    testForallLoopHomogenousTuples(42.0, 42.0);
+    testForallLoopHomogenousTuples(std::string("42"), std::string("42"));
+
+    chplx::Sync<int> sy(42);
+    testForallLoopHomogenousTuples(42, sy);
+    testForallLoopHomogenousTuples(42.0, sy);
+    testForallLoopHomogenousTuples(std::string("42"), sy);
+  }
+
+  {
+    testForallLoopTuple(10, 42);
+    testForallLoopTuple(10.0, 42, 43L);
+    testForallLoopTuple(std::string("10"), 42, 43L, std::string("42"));
+
+    chplx::Sync<int> sy(42);
+    testForallLoopTuple(sy, 42);
+    testForallLoopTuple(sy, 42, 43L);
+    testForallLoopTuple(sy, 42, 43L, std::string("42"));
+  }
+
+  delete exec;
+
+  chplx_fork_join_executor = false;
 
   {
     testForallLoopHomogenousTuples(42, 42);

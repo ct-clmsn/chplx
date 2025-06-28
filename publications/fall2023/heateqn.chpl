@@ -21,7 +21,7 @@ config const dx: real = 1.0;
 
 config const nx: int = 1000000;
 config const nt: int = 100;
-config const threads: int = 1;
+//config const threads: int = 1;
 
 proc update(d : []real, d2 : []real) {
   const NX : int = nx + 1;
@@ -35,7 +35,8 @@ proc update(d : []real, d2 : []real) {
 
 //proc main() {
 
-  const NX : int = nx + 1;
+  //const NX : int = nx + 1;
+  const NX : int = nx - 1;
 
   var data: [0..NX] real;
   var data2: [0..NX] real;

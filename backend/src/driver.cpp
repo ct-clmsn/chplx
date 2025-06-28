@@ -137,11 +137,7 @@ int main(int argc, char ** argv) {
    chpl::parsing::setFileText(ctx, *filePath, fileContent);
 
    uast::BuilderResult const& br =
-      parsing::parseFileToBuilderResult(ctx, chpl::UniqueString::get(ctx, *filePath), {});
-
-   for (auto & e : br.errors()) {
-      ctx->report(e);
-   }
+      parsing::parseFileToBuilderResultAndCheck(ctx, chpl::UniqueString::get(ctx, *filePath), {});
 
    uast::Module const* mod = br.singleModule();
 
@@ -183,7 +179,7 @@ int main(int argc, char ** argv) {
 
       chplx::ast::hpx::ProgramTree program;
 
-      chpl::ast::visitors::hpx::SymbolBuildingVisitor sbv{br, ofilePath};
+      chpl::ast::visitors::hpx::SymbolBuildingVisitor sbv{br, ctx, ofilePath};
       AstNode const* ast = static_cast<AstNode const*>(mod);
       if(chplx::util::compilerDebug) {
          std::cout << "[SymbolBuildingVisitor] Enter" << std::endl;
@@ -193,7 +189,7 @@ int main(int argc, char ** argv) {
          std::cout << "[SymbolBuildingVisitor] Exit" << std::endl;
       }
 
-      chplx::ast::visitors::hpx::ProgramTreeBuildingVisitor pbv{{}, nullptr, sbv.symbolTable.symbolTableRef, br, sbv.symbolTable, program, { &(program.statements) }, {}};
+      chplx::ast::visitors::hpx::ProgramTreeBuildingVisitor pbv{{}, nullptr, sbv.symbolTable.symbolTableRef, br, ctx, sbv.symbolTable, program, { &(program.statements) }, {}};
       if(chplx::util::compilerDebug) {
          std::cout << "[ProgramTreeBuildingVisitor] Enter" << std::endl;
       }
@@ -202,7 +198,7 @@ int main(int argc, char ** argv) {
          std::cout << "[ProgramTreeBuildingVisitor] Exit" << std::endl;
       }
 
-      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, sbv.configVars, program, br, ofilePath, chplFilePth.filename().string()};
+      chpl::ast::visitors::hpx::CodegenVisitor cgv{sbv.symbolTable, sbv.configVars, program, br, ofilePath, chplFilePth.filename().string(), ctx};
       cgv.indent += 1;
 
       cgv.visit();

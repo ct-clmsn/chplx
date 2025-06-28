@@ -12,5 +12,5 @@
 
 namespace chplx::detail {
 
-    std::string generate_annotation(hpx::source_location const& location);
-}    // namespace chplx::detail
+std::string generate_annotation(hpx::source_location const &location);
+} // namespace chplx::detail

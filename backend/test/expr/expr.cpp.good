@@ -29,11 +29,18 @@ namespace expr {
 #line 108 "expr.chpl"
         x = valuea(a);
 #line 109 "expr.chpl"
-        return valuea(a) + x;
+        return x + valuea(a);
     };
 
     void __thisModule::__main()
     {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 8 "expr.chpl"
         auto a = 1 + 1;
 #line 9 "expr.chpl"
@@ -101,11 +108,11 @@ namespace expr {
 #line 50 "expr.chpl"
         a = valuea(a);
 #line 51 "expr.chpl"
-        a = valuea(1 + a);
+        a = valuea(a + 1);
 #line 52 "expr.chpl"
-        a = 1 + valuea(1 + a);
+        a = 1 + valuea(a + 1);
 #line 53 "expr.chpl"
-        a = valuea(1 + a) + 1;
+        a = valuea(a + 1) + 1;
 #line 54 "expr.chpl"
         a = 1 + valuea(a);
 #line 55 "expr.chpl"
@@ -190,6 +197,8 @@ namespace expr {
         auto w = valuea(a);
 #line 104 "expr.chpl"
         auto u = valuea(1);
+
+        delete exec;
     }
 
 }    // namespace expr

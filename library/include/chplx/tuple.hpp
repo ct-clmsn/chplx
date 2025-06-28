@@ -367,8 +367,8 @@ constexpr decltype(auto) lift(Tuple<Ts...> const &t, F &&f) {
 
 template <typename... Ts1, typename... Ts2, typename F>
   requires(sizeof...(Ts1) == sizeof...(Ts2))
-constexpr decltype(auto)
-    lift(Tuple<Ts1...> const &t1, Tuple<Ts2...> const &t2, F &&f) {
+constexpr decltype(auto) lift(Tuple<Ts1...> const &t1, Tuple<Ts2...> const &t2,
+                              F &&f) {
   return binaryOperator(t1, t2, std::forward<F>(f),
                         std::make_index_sequence<sizeof...(Ts1)>{});
 }

@@ -1,0 +1,3 @@
+[submodule "extern/chapel"]
+	path = extern/chapel
+	url = https://github.com/chapel-lang/chapel.git

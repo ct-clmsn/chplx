@@ -34,9 +34,10 @@ CodegenVisitor::CodegenVisitor(
    ProgramTree & prgmTree,
    chpl::uast::BuilderResult const& chapelBr,
    std::string const& cppFilePath,
-   std::string const& chapelFilePath)
+   std::string const& chapelFilePath,
+   Context* ctx_)
    : symbolTable(st), cfgVars(configVars), programTree(prgmTree), br(chapelBr),
-     indent(0), scope(0),
+     indent(0), scope(0), ctx(ctx_),
      cppFilePathStr(cppFilePath),
      chplFilePathStr(chapelFilePath),
      headers(static_cast<std::size_t>(HeaderEnum::HeaderCount), false)
@@ -300,6 +301,11 @@ struct HppStatementVisitor {
                }
             }
          }
+
+         os << "extern bool chplx_fork_join_executor;" << std::endl;
+         os << "extern int chplx_fork_join_executor_yield_delay;" << std::endl;
+         os << "extern hpx::execution::experimental::fork_join_executor* exec;"
+            << std::endl;
 
          if(printChplLine) {
             os << node->chplLine;
@@ -944,7 +950,7 @@ struct StatementVisitor {
       
       std::filesystem::path ofile = chplx::util::output_path / node->symbol.identifier;
       std::fstream cppofs(ofile.string() + ".cpp", std::ios_base::out);
-      StatementVisitor cppv{symbolTable, br, cppofs, indent, headers, true, false, true};
+      StatementVisitor cppv{symbolTable, br, ctx, cppofs, indent, headers, true, false, true};
 
       // populate prologue of template
 
@@ -1016,12 +1022,28 @@ struct StatementVisitor {
       cppv.emitIndent();
 
       cppofs << "void __thisModule::__main() {" << std::endl << std::endl;
+      cppv.emitIndent();
+      cppofs << "if(chplx_fork_join_executor)"<<std::endl;
+      cppv.emitIndent();
+      cppofs
+          << "\texec = new hpx::execution::experimental::fork_join_executor(\n"
+          << "\t\t\thpx::threads::thread_priority::high,\n "
+             "\t\t\thpx::threads::thread_stacksize::small_,\n "
+             "\t\t\thpx::execution::experimental::fork_join_executor::loop_"
+             "schedule::"
+             "static_,\n\t\t\tstd::chrono::nanoseconds(chplx_fork_join_"
+             "executor_yield_"
+             "delay));"
+          << std::endl;
 
       for(const std::size_t i : main_scoped_statements) {
          auto const& stmt = node->statements[i];
          std::visit(cppv, stmt);
       }
 
+      cppofs << std::endl ;
+      cppv.emitIndent();
+      cppofs << "delete exec;";
       cppofs << std::endl << std::endl;
       cppv.emitIndent();
       cppofs << '}' << std::endl << std::endl;
@@ -1087,11 +1109,12 @@ struct StatementVisitor {
 
    void emitChapelLine(std::ostream & os, uast::AstNode const* ast) const {
       auto const fp = br.filePath();
-      os << chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ast->id(), fp).line());
+      os << chplx::util::emitLineDirective(fp.c_str(), br.idToLocation(ctx, ast->id(), fp).line());
    }
 
    SymbolTable & symbolTable;
    chpl::uast::BuilderResult const& br;
+   Context* ctx = nullptr;
    std::ostream & os;
    std::size_t indent;
    std::vector<bool> & headers;
@@ -1143,13 +1166,17 @@ static void generateSourceHeader(std::vector<Symbol> & cfgVars, std::ostream & f
    fos << "//" << std::endl;
             
    fos << "#include <hpx/hpx_init.hpp>" << std::endl;
-   if(0 < cfgVars.size()) {
-      fos << "#include <hpx/program_options.hpp>" << std::endl;
-   }
+   // We always include it as we need it for chplx_fork_join_executor
+   fos << "#include <hpx/program_options.hpp>" << std::endl;
    fos << std::endl;
 
    {        
       fos << "#include \"" << prefix << "_driver.hpp\"" << std::endl << std::endl;
+      fos << "bool chplx_fork_join_executor = false;" << std::endl << std::endl;
+      fos << "hpx::execution::experimental::fork_join_executor* exec = "
+             "nullptr;" << std::endl;
+      fos << "int chplx_fork_join_executor_yield_delay = 100; //ns"
+          << std::endl;
       fos << "using namespace " << prefix << ';' << std::endl;
    }        
 }
@@ -1165,31 +1192,77 @@ static void buildFullNamespaceString(std::string & str, SymbolTable & symtable, 
 }
 
 static void generateSourceFooter(std::string const& modStr, SymbolTable & symtable, std::vector<Symbol> & cfgVars, std::ostream & fos) {
-   fos << std::endl
-       << "int main(int argc, char * argv[]) {" << std::endl
-       << "    chplx::registerModule<" << modStr << "::__thisModule>();" << std::endl;
+    fos << std::endl
+        << "int main(int argc, char * argv[]) {" << std::endl
+        << "    chplx::registerModule<" << modStr << "::__thisModule>();"
+        << std::endl;
+    fos << "    bool help = false;\n    "
+           "hpx::program_options::options_description options;\n    "
+           "options.add_options()(\"help\",hpx::program_options::bool_switch(&help),"
+           "\"config var help: bool\")\n";
+    if (0 < cfgVars.size())
+    {
+        fos << "\t\t(\"chplx-fork-join-executor\",\n"
+               "\t\thpx::program_options::bool_switch(&::chplx_fork_join_executor), "
+               "\"config var chplx_fork_join : bool\")\n";
+        fos << "\t\t(\"chplx-fork-join-executor-yield-delay\",\n"
+               "\t\thpx::program_options::value(&::chplx_fork_join_executor_"
+               "yield_delay), "
+               "\"config var chplx_fork_join_yield_delay : int\")";
+        for (auto& opt : cfgVars)
+        {
+            fos << std::endl
+                << "        (\"" << opt.identifier << "\"," << std::endl;
+            FuncDeclArgVisitor v{fos};
+            fos << "            hpx::program_options::value";
 
-   if(0 < cfgVars.size()) {
-      fos << "    hpx::program_options::options_description options;\n    options.add_options()";
-      for(auto & opt : cfgVars) {
-         fos << std::endl << "        (\"" << opt.identifier << "\"," << std::endl;
-         FuncDeclArgVisitor v{fos};
-         fos << "            hpx::program_options::value";
+            std::string opt_identifier{opt.identifier};
+            buildFullNamespaceString(opt_identifier, symtable, opt);
 
-         std::string opt_identifier{opt.identifier};
-         buildFullNamespaceString(opt_identifier, symtable, opt);
-
-         fos << "(&" << opt_identifier << "), " << "\"config ";
-         if(0 < opt.kindqualifier) { VisitQualifierPrefix(fos, opt.kindqualifier); } else { fos <<  "var "; }
-         fos << opt.identifier << " : ";
-         std::visit(v, opt.kind);
-         fos << "\")";
-      }
-      fos << ';' << std::endl;
-      fos << "    hpx::init_params init_args;" << std::endl << "    init_args.desc_cmdline = options;" << std::endl;
+            fos << "(&" << opt_identifier << "), " << "\"config ";
+            if (0 < opt.kindqualifier)
+            {
+                VisitQualifierPrefix(fos, opt.kindqualifier);
+            }
+            else
+            {
+                fos << "var ";
+            }
+            fos << opt.identifier << " : ";
+            std::visit(v, opt.kind);
+            fos << "\")";
+        }
+        fos << ';' << std::endl;
+        fos << "    hpx::init_params init_args;" << std::endl
+            << "    init_args.desc_cmdline = options;" << std::endl;
+   }
+   else
+   {
+       fos << "\t\t(\"chplx-fork-join-executor\", "
+              "hpx::program_options::bool_switch(&::chplx_fork_join_executor), "
+              "\"config var chplx_fork_join : bool\")\n";
+       fos << "\t\t(\"chplx-fork-join-executor-yield-delay\",\n"
+              "\t\thpx::program_options::value(&::chplx_fork_join_executor_"
+              "yield_delay), "
+              "\"config var chplx_fork_join_yield_delay : int\");"
+           << std::endl;
    }
 
-   fos << "    return hpx::init(argc, argv" << ((0 < cfgVars.size()) ? ", init_args" : "") <<  ");" << std::endl
+   fos << "    hpx::program_options::variables_map vm;\n"
+       << "    auto parser = "
+          "hpx::program_options::command_line_parser(argc, argv)\n"
+       << "                          .options(options)\n"
+       << "                          .allow_unregistered()\n"
+       << "                          .run();\n"
+       << "    hpx::program_options::store(parser, vm);\n"
+       << "    hpx::program_options::notify(vm);\n"
+       << "    if (help)\n"
+       << "    {\n"
+       << "        std::cout << options << std::endl;\n"
+       << "        return 1;\n"
+       << "    }\n";
+   fos << "    return hpx::init(argc, argv"
+       << ((0 < cfgVars.size()) ? ", init_args" : "") << ");" << std::endl
        << "}" << std::endl;
 }        
    
@@ -1237,7 +1310,7 @@ void CodegenVisitor::visit() {
 
       // generate cpp code for each module from the program tree
       //
-      visit(StatementVisitor{symbolTable, br, rootos, indent, headers, true, false});
+      visit(StatementVisitor{symbolTable, br, ctx, rootos, indent, headers, true, false});
    }
 
 }

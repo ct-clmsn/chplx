@@ -8,6 +8,9 @@
 
 #include <chplx.hpp>
 #include <functional>
+extern bool chplx_fork_join_executor;
+extern int chplx_fork_join_executor_yield_delay;
+extern hpx::execution::experimental::fork_join_executor* exec;
 #line 1 "tup.chpl"
 namespace tup {
     extern struct __thisModule* __this;

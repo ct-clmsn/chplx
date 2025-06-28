@@ -1,4 +1,5 @@
 # Copyright (c) 2023 Hartmut Kaiser
+# Copyright (c) 2025 Shreyas Atre
 #
 # SPDX-License-Identifier: BSL-1.0
 # Distributed under the Boost Software License, Version 1.0. *(See accompanying
@@ -18,9 +19,6 @@ set(CHPLX_VERSION
     ${CHPLX_MAJOR_VERSION}.${CHPLX_MINOR_VERSION}.${CHPLX_PATCH_VERSION}.${CHPLX_BUILD_VERSION}
 )
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS_INIT "-std=c++20")
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE
       "Debug"
@@ -33,14 +31,19 @@ endif()
 
 project(chplx VERSION ${CHPLX_VERSION})
 
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_definitions(
-  $<$<BOOL:${MSVC}>:_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING>
-)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 include(CHPLX_Utils)
+
+# Ensure Python is found and set CHPL_CMAKE_PYTHON to the default Python
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+set(CHPL_CMAKE_PYTHON ${Python3_EXECUTABLE})
+message(STATUS "CHPL_CMAKE_PYTHON set to ${CHPL_CMAKE_PYTHON}")
 
 # ##############################################################################
 # build options
@@ -75,6 +78,22 @@ chplx_option(
   ADVANCED
 )
 
+set(
+  CHPLX_WITH_FETCH_FMT
+  ON
+  CACHE
+  BOOL
+  "Fetch FMT"
+)
+
+set(
+  CHPLX_WITH_FETCH_HPX
+  ON
+  CACHE
+  BOOL
+  "Fetch HPX"
+)
+
 add_chplx_pseudo_target(tests)
 add_chplx_pseudo_target(tests.unit)
 add_chplx_pseudo_dependencies(tests tests.unit)
@@ -84,7 +103,69 @@ if(CHPLX_WITH_TESTS)
   include(CTest)
 endif()
 
-add_subdirectory(frontend)
+set(CHAPEL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/extern/chapel")
+set(CHAPEL_PATCH "${CMAKE_CURRENT_SOURCE_DIR}/chapel-2.3.0-frontend.patch")
+set(CHAPEL_REQUIRED_COMMIT "3a18b7be6f70ff1dff29c70c73a3ecc84165efdc")
+
+# ---- Ensure submodule is initialized ----
+if(NOT EXISTS "${CHAPEL_PATH}/.git")
+    message(STATUS "Initializing Chapel submodule...")
+    execute_process(
+        COMMAND git submodule update --init --recursive extern/chapel
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        RESULT_VARIABLE GIT_SUBMODULE_RESULT
+    )
+    if(NOT GIT_SUBMODULE_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to initialize Chapel submodule.")
+    endif()
+endif()
+
+# ---- Get current commit SHA of chapel ----
+execute_process(
+    COMMAND git rev-parse HEAD
+    WORKING_DIRECTORY "${CHAPEL_PATH}"
+    OUTPUT_VARIABLE CHAPEL_CURRENT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+
+# ---- Check for commit mismatch ----
+if(NOT CHAPEL_CURRENT_COMMIT STREQUAL CHAPEL_REQUIRED_COMMIT)
+    message(WARNING
+        "Chapel submodule is not at the required commit.\n"
+        "Expected: ${CHAPEL_REQUIRED_COMMIT}\n"
+        "Found:    ${CHAPEL_CURRENT_COMMIT}\n"
+        "Please ensure changes in extern/chapel are intentional."
+    )
+endif()
+
+# ---- Check if patch is already applied ----
+execute_process(
+    COMMAND git apply --reverse --check "${CHAPEL_PATCH}"
+    WORKING_DIRECTORY "${CHAPEL_PATH}"
+    RESULT_VARIABLE PATCH_REVERSED_OK
+    OUTPUT_QUIET
+    ERROR_QUIET
+)
+
+if(PATCH_REVERSED_OK EQUAL 0)
+    message(STATUS "Patch already applied. Skipping.")
+else()
+    message(STATUS "Applying chapel-frontend.patch to Chapel...")
+
+    execute_process(
+        COMMAND git apply "${CHAPEL_PATCH}"
+        WORKING_DIRECTORY "${CHAPEL_PATH}"
+        RESULT_VARIABLE PATCH_RESULT
+        OUTPUT_VARIABLE PATCH_OUTPUT
+        ERROR_VARIABLE PATCH_ERROR
+    )
+    if(NOT PATCH_RESULT EQUAL 0)
+        message(WARNING "Could not apply chapel-frontend.patch.\nThis might be due to manual modifications in extern/chapel.\n\nPatch error:\n${PATCH_ERROR}")
+    endif()
+endif()
+
+# ---- Add frontend directory ----
+add_subdirectory("${CHAPEL_PATH}/frontend")
 add_subdirectory(backend)
 add_subdirectory(library)
-

@@ -52,20 +52,20 @@ int main() {
     HPX_TEST_EQ(a5.dim(0), chplx::Range(0, 4));
 
     a1 = a5;
-    HPX_TEST_EQ(a1(2), 20);
-    HPX_TEST_EQ(a1(chplx::Tuple(2)), 20);
+    HPX_TEST_EQ(a1(2), 30);
+    HPX_TEST_EQ(a1(chplx::Tuple(2)), 30);
 
     a1 = chplx::Range(20, 24);
-    HPX_TEST_EQ(a1(2), 21);
-    HPX_TEST_EQ(a1(chplx::Tuple(2)), 21);
+    HPX_TEST_EQ(a1(2), 22);
+    HPX_TEST_EQ(a1(chplx::Tuple(2)), 22);
 
     a1 = chplx::Tuple(1, 2, 3, 4, 5);
-    HPX_TEST_EQ(a1(2), 2);
-    HPX_TEST_EQ(a1(chplx::Tuple(2)), 2);
+    HPX_TEST_EQ(a1(2), 3);
+    HPX_TEST_EQ(a1(chplx::Tuple(2)), 3);
 
     a1 = chplx::Domain(chplx::Range(20, 24));
-    HPX_TEST_EQ(a1(2), 21);
-    HPX_TEST_EQ(a1(chplx::Tuple(2)), 21);
+    HPX_TEST_EQ(a1(2), 22);
+    HPX_TEST_EQ(a1(chplx::Tuple(2)), 22);
   }
 
   {

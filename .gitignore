@@ -8,4 +8,4 @@ frontend/include/chpl/config/config.h
 frontend/lib/util/git-version.cpp
 frontend/BUILD_VERSION
 .vscode/**
-build/**
+**/build/**

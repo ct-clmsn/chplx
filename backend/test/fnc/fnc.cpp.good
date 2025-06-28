@@ -39,11 +39,18 @@ namespace fnc {
     auto __thisModule::betad(std::int64_t b)
     {
 #line 22 "fnc.chpl"
-        return b + delta(b);
+        return delta(b) + b;
     };
 
     void __thisModule::__main()
     {
+        if (chplx_fork_join_executor)
+            exec = new hpx::execution::experimental::fork_join_executor(
+                hpx::threads::thread_priority::high,
+                hpx::threads::thread_stacksize::small_,
+                hpx::execution::experimental::fork_join_executor::
+                    loop_schedule::static_,
+                std::chrono::nanoseconds(chplx_fork_join_executor_yield_delay));
 #line 5 "fnc.chpl"
         alpha();
 #line 25 "fnc.chpl"
@@ -54,6 +61,8 @@ namespace fnc {
         c = beta(c);
 #line 28 "fnc.chpl"
         c = betad(c);
+
+        delete exec;
     }
 
 }    // namespace fnc

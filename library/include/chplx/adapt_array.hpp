@@ -1,4 +1,4 @@
-//  Copyright (c) 2023 Hartmut Kaiser
+//  Copyright (c) 2023-2025 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -12,6 +12,8 @@
 
 #include <hpx/config.hpp>
 #include <hpx/generator.hpp>
+
+#include <hpx/iterator_support/iterator_range.hpp>
 
 #include <iterator>
 
@@ -40,6 +42,17 @@ template <typename T, typename Domain>
 decltype(auto) iterate(Array<T, Domain> &&a) noexcept {
 
   return iterate(detail::IteratorGenerator(std::move(a)));
+}
+
+template <typename T>
+decltype(auto) iterate(Array<T, Domain<1>> const &a) noexcept {
+
+  return hpx::util::iterator_range(a.begin(), a.end());
+}
+
+template <typename T> decltype(auto) iterate(Array<T, Domain<1>> &&a) noexcept {
+
+  return hpx::util::iterator_range(a.begin(), a.end());
 }
 
 } // namespace chplx

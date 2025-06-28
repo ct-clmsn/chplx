@@ -14,6 +14,9 @@
 #include <mutex>
 #include <set>
 
+bool chplx_fork_join_executor = true;
+hpx::execution::experimental::fork_join_executor *exec = nullptr;
+
 template <typename T>
 void testForallLoopDomain(chplx::AssocDomain<T> const &d) {
 
@@ -52,6 +55,9 @@ template <typename T> void testForallLoopDomain(std::vector<T> const &values) {
 
 int main() {
 
+  chplx_fork_join_executor = true;
+  exec = new hpx::execution::experimental::fork_join_executor();
+
   {
     std::vector<int> const v = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     testForallLoopDomain(v);
@@ -62,6 +68,22 @@ int main() {
                                         "5", "6", "7", "8", "9"};
     testForallLoopDomain(v);
   }
+
+  delete exec;
+
+  chplx_fork_join_executor = false;
+
+  {
+    std::vector<int> const v = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    testForallLoopDomain(v);
+  }
+
+  {
+    std::vector<std::string> const v = {"0", "1", "2", "3", "4",
+                                        "5", "6", "7", "8", "9"};
+    testForallLoopDomain(v);
+  }
+
 
   return hpx::util::report_errors();
 }
