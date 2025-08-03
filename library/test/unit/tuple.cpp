@@ -156,10 +156,19 @@ void testNonHomogenous() {
   }
 }
 
+void testStructuredBindings() {
+  chplx::Tuple t(2, 4L, std::string("33"));
+  auto [a, b, c] = t;
+  HPX_TEST_EQ(a, 2);
+  HPX_TEST_EQ(b, 4L);
+  HPX_TEST_EQ(c, std::string("33"));
+}
+
 int main() {
 
   testHomogenous();
   testNonHomogenous();
+  testStructuredBindings();
 
   return hpx::util::report_errors();
 }

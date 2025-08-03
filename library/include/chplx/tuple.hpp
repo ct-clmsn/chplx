@@ -90,6 +90,42 @@ template <typename... Ts> struct Tuple : std::tuple<Ts...> {
 };
 
 template <typename... Ts> Tuple(Ts &&...) -> Tuple<Ts...>;
+} // namespace chplx
+
+//-----------------------------------------------------------------------------
+// Support structured bindings
+namespace std {
+
+template <typename... Ts>
+struct tuple_size<chplx::Tuple<Ts...>> : tuple_size<tuple<Ts...>> {};
+
+template <size_t I, typename... Ts>
+struct tuple_element<I, chplx::Tuple<Ts...>> : tuple_element<I, tuple<Ts...>> {
+};
+
+template <size_t I, typename... Ts>
+constexpr auto &&get(chplx::Tuple<Ts...> &t) noexcept {
+  return get<I>(t.base());
+}
+
+template <size_t I, typename... Ts>
+constexpr auto &&get(chplx::Tuple<Ts...> const &t) noexcept {
+  return get<I>(t.base());
+}
+
+template <size_t I, typename... Ts>
+constexpr auto &&get(chplx::Tuple<Ts...> &&t) noexcept {
+  return get<I>(std::move(t.base()));
+}
+
+template <size_t I, typename... Ts>
+constexpr auto &&get(chplx::Tuple<Ts...> const &&t) noexcept {
+  return get<I>(std::move(t.base()));
+}
+
+} // namespace std
+
+namespace chplx {
 
 //-----------------------------------------------------------------------------
 // Returns true if t is a tuple; otherwise false.
