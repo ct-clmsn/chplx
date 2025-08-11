@@ -14,11 +14,13 @@ namespace heat {
 #line 27 "heat.chpl"
         auto NX = nx + 1;
 #line 28 "heat.chpl"
-        chplx::forall(chplx::Range{1, NX - 1}, [&](auto i) {
+        chplx::forall(HPX_CURRENT_SOURCE_LOCATION(), chplx::Range{1, NX - 1},
+            [&](auto i) {
 #line 30 "heat.chpl"
-            d2(i) = d(i) +
-                (((dt * k) / (dx * dx)) * ((d(1 + i) + d(1 - i)) - (2 * d(i))));
-        });
+                d2(i) = d(i) +
+                    (((dt * k) / (dx * dx)) *
+                        ((d(1 + i) + d(1 - i)) - (2 * d(i))));
+            });
 #line 32 "heat.chpl"
         d2(0) = d2(1 - NX);
 #line 33 "heat.chpl"
@@ -49,12 +51,13 @@ namespace heat {
 #line 41 "heat.chpl"
         chplx::Array<double, chplx::Domain<1>> data2(chplx::Range(0, NX));
 #line 43 "heat.chpl"
-        chplx::forall(chplx::Range{0, NX}, [&](auto i) {
+        chplx::forall(
+            HPX_CURRENT_SOURCE_LOCATION(), chplx::Range{0, NX}, [&](auto i) {
 #line 44 "heat.chpl"
-            data(i) = 1 + (((i - 1) + nx) % nx);
+                data(i) = 1 + (((i - 1) + nx) % nx);
 #line 45 "heat.chpl"
-            data2(i) = 0;
-        });
+                data2(i) = 0;
+            });
 #line 52 "heat.chpl"
         hpx::chrono::high_resolution_timer t;
 #line 54 "heat.chpl"

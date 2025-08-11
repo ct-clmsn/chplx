@@ -625,7 +625,7 @@ struct StatementVisitor {
       //auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
       //auto & indices = rk->args;
 
-      os << "chplx::forall(chplx::Range{";
+      os << "chplx::forall(HPX_CURRENT_SOURCE_LOCATION(), chplx::Range{";
 
       if(node->indexSet.size() == 1) {
           ExprVisitor ev{os};
@@ -680,7 +680,7 @@ struct StatementVisitor {
       //auto const& rk = std::get<std::shared_ptr<range_kind>>(node->indexSet.kind);
       //auto & indices = rk->args;
 
-      os << "chplx::coforall(chplx::Range{";
+      os << "chplx::coforall(HPX_CURRENT_SOURCE_LOCATION(), chplx::Range{";
 /*
       if(std::holds_alternative<int_kind>(indices[0].kind)) {
          os << int_kind::value(indices[0].literal[0]);
