@@ -27,47 +27,244 @@ extern hpx::execution::experimental::fork_join_executor *exec;
 
 namespace chplx {
 
-//-----------------------------------------------------------------------------
-// forall loop for tuples
-namespace detail {
+    //-----------------------------------------------------------------------------
+    // forall loop for tuples
+    namespace detail {
 
-template <typename Tuple, typename F, typename... Args>
-void forall_fkj(Tuple &t, F &&f, Args &&...args) {
+        template <typename Tuple, typename F, typename... Args>
+        void forall(Tuple& t, F&& f, Args&&... args)
+        {
+            using base_tuple = typename Tuple::base_type;
+            if constexpr (std::tuple_size_v<base_tuple> != 0)
+            {
+                if constexpr (Tuple::isHomogenous())
+                {
+                    hpx::ranges::for_each(hpx::execution::par,
+                        HomogenousTupleRange(t.base()),
+                        [&,
+                            ... fargs =
+                                detail::task_intent<std::decay_t<Args>>::call(
+                                    std::forward<Args>(args))]<typename Arg>(
+                            Arg&& value) {
+                            f(std::forward<Arg>(value),
+                                hpx::util::decay_unwrap<decltype(fargs)>::call(
+                                    fargs)...);
+                        });
+                }
+                else
+                {
+                    using table = detail::forLoopTable<Tuple, F,
+                        std::make_index_sequence<std::tuple_size_v<base_tuple>>,
+                        Args...>;
 
-  using base_tuple = typename Tuple::base_type;
-  if constexpr (std::tuple_size_v<base_tuple> != 0) {
-    HPX_ASSERT(exec != nullptr);
-    if constexpr (Tuple::isHomogenous()) {
+                    hpx::experimental::for_loop(hpx::execution::par, 0,
+                        t.size(),
+                        [&,
+                            ... fargs =
+                                detail::task_intent<std::decay_t<Args>>::call(
+                                    std::forward<Args>(args))](
+                            std::size_t i) mutable {
+                            table::lookupTable[i](t, f,
+                                hpx::util::decay_unwrap<decltype(fargs)>::call(
+                                    fargs)...);
+                        });
+                }
+            }
+        }
+    }    // namespace detail
 
-      hpx::ranges::for_each(
-          hpx::execution::par.on(*exec), HomogenousTupleRange(t.base()),
-          [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
-                  std::forward<Args>(args))]<typename Arg>(Arg &&value) {
-            f(std::forward<Arg>(value),
-              hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
-          });
-    } else {
+    template <typename... Ts, typename F, typename... Args>
+    void forall(hpx::source_location const& location, Tuple<Ts...>& t, F&& f,
+        Args&&... args)
+    {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        detail::forall(t, std::forward<F>(f), std::forward<Args>(args)...);
+#else
+        detail::forall(t,
+            hpx::annotated_function(
+                std::forward<F>(f), detail::generate_annotation(location)),
+            std::forward<Args>(args)...);
+#endif
+    }
 
-      using table = detail::forLoopTable<
-          Tuple, F, std::make_index_sequence<std::tuple_size_v<base_tuple>>,
-          Args...>;
+    template <typename... Ts, typename F, typename... Args>
+    void forall(hpx::source_location const& location, Tuple<Ts...> const& t,
+        F&& f, Args&&... args)
+    {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        detail::forall(t, detail::generate_annotation(location),
+            std::forward<Args>(args)...);
+#else
+        detail::forall(t,
+            hpx::annotated_function(
+                std::forward<F>(f), detail::generate_annotation(location)),
+            std::forward<Args>(args)...);
+#endif
+    }
 
-      hpx::experimental::for_loop(
-          hpx::execution::par.on(*exec), 0, t.size(),
-          [&, ... fargs = detail::task_intent<std::decay_t<Args>>::call(
-                  std::forward<Args>(args))](std::size_t i) mutable {
-            table::lookupTable[i](
-                t, f, hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
-          });
+    //-----------------------------------------------------------------------------
+    // forall loop for ranges
+    template <typename T, BoundedRangeType BoundedType, bool Stridable,
+        typename F, typename... Args>
+    void forall(hpx::source_location const& location,
+        Range<T, BoundedType, Stridable> const& r, F&& f, Args&&... args)
+    {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(r),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#else
+        auto wrapped =
+            hpx::annotated_function(f, detail::generate_annotation(location));
+
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(r),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                wrapped(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#endif
+    }
+
+    //-----------------------------------------------------------------------------
+    // forall loop for domain
+    template <int N, typename T, bool Stridable, typename F, typename... Args>
+    void forall(hpx::source_location const& location,
+        Domain<N, T, Stridable> const& d, F&& f, Args&&... args)
+    {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(d),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#else
+        auto wrapped =
+            hpx::annotated_function(f, detail::generate_annotation(location));
+
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(d),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                wrapped(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#endif
+    }
+
+    //-----------------------------------------------------------------------------
+    // forall loop for associative domains
+    template <typename T, typename F, typename... Args>
+    void forall(hpx::source_location const& location, AssocDomain<T> const& d,
+        F&& f, Args&&... args)
+    {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(d, 0, d.size()),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#else
+        auto wrapped =
+            hpx::annotated_function(f, detail::generate_annotation(location));
+
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(d, 0, d.size()),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                wrapped(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#endif
+    }
+
+    //-----------------------------------------------------------------------------
+    // forall loop for zippered iteration
+    template <typename... Rs, typename F, typename... Args>
+    void forall(hpx::source_location const& location,
+        detail::ZipRange<Rs...> const& zr, F&& f, Args&&... args)
+    {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(zr),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#else
+        auto wrapped =
+            hpx::annotated_function(f, detail::generate_annotation(location));
+
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(zr),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                wrapped(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#endif
     }
   }
 }
 
-template <typename Tuple, typename F, typename... Args>
-void forall_nfkj(Tuple &t, F &&f, Args &&...args) {
+    //-----------------------------------------------------------------------------
+    // forall loop for array iteration
+    template <typename T, typename Domain, typename F, typename... Args>
+    void forall(hpx::source_location const& location, Array<T, Domain> const& a,
+        F&& f, Args&&... args)
+    {
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(a),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                f(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
 
-  using base_tuple = typename Tuple::base_type;
-  if constexpr (std::tuple_size_v<base_tuple> != 0) {
+#else
+        auto wrapped =
+            hpx::annotated_function(f, detail::generate_annotation(location));
+
+        hpx::ranges::experimental::for_loop(hpx::execution::par,
+            detail::IteratorGenerator(a),
+            [&,
+                ... fargs = detail::task_intent<std::decay_t<Args>>::call(
+                    std::forward<Args>(args))]<typename Arg>(
+                Arg&& value) mutable {
+                wrapped(std::forward<Arg>(value),
+                    hpx::util::decay_unwrap<decltype(fargs)>::call(fargs)...);
+            });
+#endif
+    }
 
     if constexpr (Tuple::isHomogenous()) {
 

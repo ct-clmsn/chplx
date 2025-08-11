@@ -19,6 +19,16 @@
 
 namespace chplx {
 
+#if defined(CHPLX_NO_SOURCE_LOCATION)
+    template <typename F, typename... Args>
+    void begin(F&& f, Args&&... args)
+    {
+        hpx::parallel::execution::post(hpx::execution::par.executor(),
+            std::forward<F>(f),
+            detail::task_intent<std::decay_t<Args>>::call(
+                std::forward<Args>(args))...);
+    }
+#else
     template <typename F, typename... Args>
     void begin(hpx::source_location const& location, F&& f, Args&&... args)
     {
@@ -28,12 +38,5 @@ namespace chplx {
             detail::task_intent<std::decay_t<Args>>::call(
                 std::forward<Args>(args))...);
     }
-
-    template <typename F, typename... Args>
-        requires(!std::is_same_v<std::decay_t<F>, hpx::source_location>)
-    void begin(F&& f, Args&&... args)
-    {
-        begin(HPX_CURRENT_SOURCE_LOCATION(), std::forward<F>(f),
-            std::forward<Args>(args)...);
-    }
+#endif
 }    // namespace chplx
