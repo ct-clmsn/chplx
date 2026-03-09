@@ -82,7 +82,7 @@ inlinecxx("{} = sizeof(decltype({}));",bytesPerType, memoryTarget_);
 param numTables = 1;
 
 var m2 : [0..randWidth] int;
-var val = computeM2Values(m2, randWidth);
+computeM2Values(m2, randWidth);
 
 var SZ = 0;
 inlinecxx("{} = {} / {};", SZ, memoryTarget_ , bytesPerType);

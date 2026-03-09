@@ -46,5 +46,6 @@ else()
 endif()
 
 target_link_libraries(forall PUBLIC fmt::fmt-header-only HPX::hpx Chplx::library)
+string(JOIN " " INLINE_LIMIT_FLAG_STR ${INLINE_LIMIT_FLAG})
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} ${MARCH_FLAG} ${INLINE_LIMIT_FLAG} -flto")
+    "${CMAKE_CXX_FLAGS} ${MARCH_FLAG} ${INLINE_LIMIT_FLAG_STR}")

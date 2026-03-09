@@ -90,7 +90,12 @@ target_include_directories(
 target_link_directories(
   chplx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../build/frontend/lib
 )
-target_link_libraries(chplx PRIVATE ChplFrontend ${llvm_libs})
+if(TARGET ChplFrontendShared)
+  set(CHPL_FRONTEND_TARGET ChplFrontendShared)
+else()
+  set(CHPL_FRONTEND_TARGET ChplFrontend)
+endif()
+target_link_libraries(chplx PRIVATE ${CHPL_FRONTEND_TARGET} ${llvm_libs})
 target_link_libraries(chplx PRIVATE fmt::fmt)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
